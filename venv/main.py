@@ -6,8 +6,17 @@ from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PIL import  Image
 import pyautogui
 from DefaultLayout import *
+from File import *
+from datetime import *
+import getpass
 
 WindowTitleLogo = "Logo.png"
+
+myFile = File()
+File.setCreatedDate(File, datetime.now())
+File.setModifiedDate(File, datetime.now())
+File.setModifiedBy(File, getpass.getuser())
+
 
 class OpenWindow(QFileDialog):
     def __init__(self):
@@ -50,6 +59,7 @@ class OpenWindow(QFileDialog):
         if fileName:
             print(fileName)
 
+
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -83,26 +93,26 @@ class Window(QMainWindow):
         toolsMenu = mainMenu.addMenu('Tools')
         helpMenu = mainMenu.addMenu('Help')
 
-        newFileButton = QAction(QtGui.QIcon('exit24.png'), 'New File', self)
+        newFileButton = QAction('New File', self)
         newFileButton.setShortcut('Ctrl+N')
         newFileButton.setStatusTip('New File')
         newFileButton.triggered.connect(self.NewFileWindow)
 
-        OpenFileButton = QAction(QtGui.QIcon('exit24.png'), 'Open File', self)
+        OpenFileButton = QAction('Open File', self)
         OpenFileButton.setShortcut('Ctrl+O')
         OpenFileButton.setStatusTip('Open File')
         OpenFileButton.triggered.connect(self.OpenFileWindow)
 
-        SaveButton = QAction(QtGui.QIcon('exit24.png'), 'Save', self)
+        SaveButton = QAction('Save', self)
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
 
-        printButton = QAction(QtGui.QIcon('exit24.png'), 'Print', self)
+        printButton = QAction('Print', self)
         printButton.setShortcut('Ctrl+P')
-        printButton.setStatusTip('Exit application')
+        printButton.setStatusTip('Print')
         printButton.triggered.connect(self.printWindow)
 
-        exitButton = QAction(QtGui.QIcon('exit24.png'), 'Exit', self)
+        exitButton = QAction('Exit', self)
         exitButton.setShortcut('Ctrl+Q')
         exitButton.setStatusTip('Exit application')
         exitButton.triggered.connect(self.close_application)
@@ -112,6 +122,12 @@ class Window(QMainWindow):
         fileMenu.addAction(SaveButton)
         fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
+
+        toggleToolBarButton = QAction('Show Toolbar', self, checkable=True)
+        toggleToolBarButton.setChecked(True)
+        toggleToolBarButton.triggered.connect(self.toolbarHide)
+        viewMenu.addAction(toggleToolBarButton)
+
 
         AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
         AboutButton.setStatusTip('About Us')
@@ -159,6 +175,12 @@ class Window(QMainWindow):
 
         if self.dialog.exec_() == QPrintDialog.Accepted:
             self.textedit.print_(printer)
+
+    def toolbarHide(self):
+        if self.toolbar.isHidden():
+            self.toolbar.show()
+        else:
+            self.toolbar.hide()
 
     def AboutWindow(self):
         self.myDialog = QDialog()

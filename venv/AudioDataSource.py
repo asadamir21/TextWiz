@@ -1,6 +1,7 @@
 from DataSource import *
 import wave
 from pydub import AudioSegment
+from pydub.silence import split_on_silence
 from ffmpeg import *
 import os
 import speech_recognition as sr
@@ -27,11 +28,15 @@ class Audio(DataSource):
 
         try:
             self.text = r.recognize_google(audioX)
-        except:
-            print("Exception: ")
+            print(self.text)
+        except Exception as e:
+            print("Exception: " + str(e))
 
-        if ext == '.mp3':
-            os.remove(os.getcwd() + "\CAudio.wav")
+        # if ext == '.mp3':
+            #  os.remove(audiopath)
 
-c = Audio("C:/Users/Asad/Desktop/Obama.mp3")
-c.CreateWordCloud(c.text)
+
+c = Audio("C:/Users/Asad/Desktop/Obama.wav")
+#print(c.text)
+#c.CreateWordCloud(c.text)
+

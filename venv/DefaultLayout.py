@@ -8,27 +8,31 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Expanding)
 
+
+
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(left, top, width/8, heigth-y-y))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(left, top, width/8, heigth - y - 30-30))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayoutWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
+        #self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
 
+        print(self.verticalLayoutWidget.height())
 
         self.toolBox = QtWidgets.QToolBox(self.verticalLayoutWidget)
         self.toolBox.setObjectName("toolBox")
         self.toolBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, self.verticalLayoutWidget.width(), self.verticalLayoutWidget.height()/5))
+        self.page.setGeometry(QtCore.QRect(0, 0, self.verticalLayoutWidget.width(), heigth - y))
         self.page.setObjectName("page")
         self.page.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.toolBox.addItem(self.page, "")
 
         self.page_2 = QtWidgets.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, self.verticalLayoutWidget.width(), self.verticalLayoutWidget.height()/5))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, self.verticalLayoutWidget.width(), y))
         self.page_2.setObjectName("page_2")
         self.page_2.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.toolBox.addItem(self.page_2, "")
@@ -76,6 +80,17 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+
+        _translate = QtCore.QCoreApplication.translate
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page), _translate("MainWindow", "Data Sources"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), _translate("MainWindow", "Visualization"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page_3), _translate("MainWindow", "Cases"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page_4), _translate("MainWindow", "Queries"))
+        self.toolBox.setItemText(self.toolBox.indexOf(self.page_5), _translate("MainWindow", "Reports"))
+
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Frequency Table"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Word Cloud"))
+
         self.toolBox.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 

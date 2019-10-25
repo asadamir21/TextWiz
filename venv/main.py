@@ -10,7 +10,7 @@ from File import *
 from datetime import *
 import getpass
 
-WindowTitleLogo = "Logo.png"
+WindowTitleLogo = "Images/Logo.png"
 
 myFile = File()
 File.setCreatedDate(File, datetime.now())
@@ -19,37 +19,23 @@ File.setModifiedBy(File, getpass.getuser())
 
 
 class OpenWindow(QFileDialog):
-    def __init__(self):
+    def __init__(self, title, ext):
         super().__init__()
-        self.title = 'Open File'
+        self.title = title
         self.width = pyautogui.size().width / 2
         self.height = pyautogui.size().height / 2
         self.left = pyautogui.size().width * 0.25
         self.top = pyautogui.size().height * 0.25
-        self.initUI()
 
-    def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-    def openFileNameDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "",
-                                                  "All Files (*);;Python Files (*.py)", options=options)
-        if fileName:
-            print(fileName)
+        home = os.path.join(os.path.expanduser('~'), 'Documents')
 
-    def openFileNamesDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        files, _ = QFileDialog.getOpenFileNames(self, "QFileDialog.getOpenFileNames()", "",
-                                                "All Files (*);;Python Files (*.py)", options=options)
-        if files:
-            print(files)
+        if os.path.isdir(home):
+            self.filepath =  self.getOpenFileName(self, title, home, ext)
 
     def saveFileDialog(self):
         options = QFileDialog.Options()
@@ -59,6 +45,8 @@ class OpenWindow(QFileDialog):
         if fileName:
             print(fileName)
 
+    def __del__(self):
+        self.delete = True
 
 class Window(QMainWindow):
     def __init__(self):
@@ -76,20 +64,38 @@ class Window(QMainWindow):
         self.showMaximized()
 
         # ToolBar
-        exitAct = QAction(QtGui.QIcon('exit24.png'), 'Exit', self)
-        exitAct.setShortcut('Ctrl+Q')
-        exitAct.triggered.connect(qApp.quit)
+        WordAct = QAction(QtGui.QIcon('Images/Word.png'), 'Word', self)
+        WordAct.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
 
-        self.toolbar = self.addToolBar('Exit')
-        self.toolbar.addAction(exitAct)
+        PDFAct = QAction(QtGui.QIcon('Images/PDF.png'), 'PDF', self)
+        PDFAct.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
 
+        NotepadAct = QAction(QtGui.QIcon('Images/Notepad.png'), 'Txt', self)
+        NotepadAct.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
+
+        RTFAct = QAction(QtGui.QIcon('Images/rtf.png'), 'RTF', self)
+        RTFAct.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
+
+        SoundAct = QAction(QtGui.QIcon('Images/Sound.png'), 'Sound', self)
+        SoundAct.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
+
+
+
+        self.toolbar = self.addToolBar("Show Toolbar")
+        self.toolbar.addAction(WordAct)
+        self.toolbar.addAction(PDFAct)
+        self.toolbar.addAction(NotepadAct)
+        self.toolbar.addAction(RTFAct)
+        self.toolbar.addAction(SoundAct)
+
+        self.toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
 
         #Menu Bar
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
         editMenu = mainMenu.addMenu('Edit')
         viewMenu = mainMenu.addMenu('View')
-        searchMenu = mainMenu.addMenu('Search')
+        importMenu = mainMenu.addMenu('Import')
         toolsMenu = mainMenu.addMenu('Tools')
         helpMenu = mainMenu.addMenu('Help')
 
@@ -128,22 +134,68 @@ class Window(QMainWindow):
         toggleToolBarButton.triggered.connect(self.toolbarHide)
         viewMenu.addAction(toggleToolBarButton)
 
-
         AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
         AboutButton.setStatusTip('About Us')
         AboutButton.triggered.connect(self.AboutWindow)
         helpMenu.addAction(AboutButton)
 
         self.statusBar().showMessage("Powered By TechNGate")
+        self.statusBar().show()
+
+        self.centralwidget = QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.verticalLayoutWidget = QWidget(self.centralwidget)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(self.left, self.top, self.width/8, self.height))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        # self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
+
+        self.tw = QTreeWidget()
+        self.tw.setHeaderLabel('Data Sources')
+        self.tw.setAlternatingRowColors(True)
+
+        word = QTreeWidgetItem(self.tw)
+        word.setText(0, "Word" + "(" + str(word.childCount()) + ")")
+
+        pdf = QTreeWidgetItem(self.tw)
+        pdf.setText(0, "PDF" + "(" + str(word.childCount()) + ")")
+
+        audioS = QTreeWidgetItem(self.tw)
+        audioS.setText(0, "Audio" + "(" + str(word.childCount()) + ")")
+        self.verticalLayout.addWidget(self.tw)
+
+        #pyautogui.rightClick()
 
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.toolBox.setItemText(self.toolBox.indexOf(self.page), _translate("MainWindow", "Page 1"))
-        self.toolBox.setItemText(self.toolBox.indexOf(self.page_2), _translate("MainWindow", "Page 2"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.height))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.tabWidget = QtWidgets.QTabWidget(self.horizontalLayoutWidget)
+        self.tabWidget.setObjectName("tabWidget")
+        self.tab = QtWidgets.QWidget()
+        self.tab.setObjectName("tab")
+        self.tabWidget.addTab(self.tab, "")
+        self.tab_2 = QtWidgets.QWidget()
+        self.tab_2.setObjectName("tab_2")
+        self.tabWidget.addTab(self.tab_2, "")
+        self.horizontalLayout.addWidget(self.tabWidget)
+
+        self.setCentralWidget(self.centralwidget)
+
+        self.statusbar = QtWidgets.QStatusBar(self)
+        self.statusbar.setObjectName("statusbar")
+        self.setStatusBar(self.statusbar)
+
+        #self.retranslateUi(self)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
 
     def close_application(self):
@@ -164,8 +216,31 @@ class Window(QMainWindow):
         self.myDialog.show()
 
     def OpenFileWindow(self):
-        self.w = OpenWindow()
-        self.w.exec_()
+        self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax")
+
+    def ImportFileWindow(self, check):
+        if check == "Word":
+            self.dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)")
+            path = self.dummyWindow.filepath
+            self.dummyWindow.__del__()
+        elif check == "PDF":
+            self.dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)")
+            path = self.dummyWindow.filepath
+            self.dummyWindow.__del__()
+        elif check == "Txt":
+            self.dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)")
+            path = self.dummyWindow.filepath
+            self.dummyWindow.__del__()
+        elif check == "RTF":
+            self.dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)")
+            path = self.dummyWindow.filepath
+            self.dummyWindow.__del__()
+        elif check == "Sound":
+            self.dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)")
+            path = self.dummyWindow.filepath
+            self.dummyWindow.__del__()
+
+
 
     def printWindow(self):
         printer = QPrinter(QPrinter.HighResolution)
@@ -217,11 +292,9 @@ class Window(QMainWindow):
         self.myDialog.show()
 
 
-
-
 App = QApplication(sys.argv)
 window = Window()
-ui = Ui_MainWindow()
-ui.setupUi(window, window.left, window.top, window.width, window.height, window.menuBar().height() + window.toolbar.height()+window.statusBar().height())
+#ui = Ui_MainWindow()
+#ui.setupUi(window, window.left, window.top, window.width, window.height, window.menuBar().height() + window.toolbar.height()+window.statusBar().height())
 window.show()
 sys.exit(App.exec())

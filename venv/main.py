@@ -9,6 +9,8 @@ from DefaultLayout import *
 from File import *
 from datetime import *
 import getpass
+from read_files import *
+import time
 
 WindowTitleLogo = "Images/Logo.png"
 
@@ -218,19 +220,33 @@ class Window(QMainWindow):
     def OpenFileWindow(self):
         self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax")
 
+
     def ImportFileWindow(self, check):
         if check == "Word":
             self.dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
+
+            #get text and print on console
+            read_file(path[0],'.docx')
+            # metadata of file
+            getMetaData(path[0])
+
         elif check == "PDF":
             self.dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
+
+            #get text and print on console
+            read_file(path[0],'.pdf')
+
         elif check == "Txt":
             self.dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
+
+            read_file(path[0],'.txt')
+
         elif check == "RTF":
             self.dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)")
             path = self.dummyWindow.filepath

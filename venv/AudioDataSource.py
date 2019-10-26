@@ -36,7 +36,7 @@ class Audio(DataSource):
             #  os.remove(audiopath)
 
 
-c = Audio("C:/Users/Asad/Desktop/Obama.wav")
+c = Audio("C:/Users/Asad/Desktop/Obama.mp3")
 #print(c.text)
 #c.CreateWordCloud(c.text)
 

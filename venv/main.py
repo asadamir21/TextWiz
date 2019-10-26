@@ -1,19 +1,20 @@
 import PyQt5
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
 import sys, os
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PIL import  Image
 import pyautogui
+
 from DefaultLayout import *
 from File import *
 from datetime import *
 import getpass
-from read_files import *
-import time
+import ntpath
 
 WindowTitleLogo = "Images/Logo.png"
-
+isSaveAs = True
 myFile = File()
 File.setCreatedDate(File, datetime.now())
 File.setModifiedDate(File, datetime.now())
@@ -72,21 +73,22 @@ class Window(QMainWindow):
         PDFAct = QAction(QtGui.QIcon('Images/PDF.png'), 'PDF', self)
         PDFAct.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
 
-        NotepadAct = QAction(QtGui.QIcon('Images/Notepad.png'), 'Txt', self)
+        NotepadAct = QAction(QtGui.QIcon('Images/Notepad.png'), 'txt', self)
         NotepadAct.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
 
         RTFAct = QAction(QtGui.QIcon('Images/rtf.png'), 'RTF', self)
         RTFAct.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
 
-        SoundAct = QAction(QtGui.QIcon('Images/Sound.png'), 'Sound', self)
+        SoundAct = QAction(QtGui.QIcon('Images/Sound.png'), 'Audio', self)
         SoundAct.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
-
-
 
         self.toolbar = self.addToolBar("Show Toolbar")
         self.toolbar.addAction(WordAct)
         self.toolbar.addAction(PDFAct)
         self.toolbar.addAction(NotepadAct)
+
+        #self.toolbar.setTabOrder()
+        self.toolbar.addSeparator()
         self.toolbar.addAction(RTFAct)
         self.toolbar.addAction(SoundAct)
 
@@ -157,19 +159,19 @@ class Window(QMainWindow):
         self.verticalLayout.setObjectName("verticalLayout")
         # self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
 
-        self.tw = QTreeWidget()
-        self.tw.setHeaderLabel('Data Sources')
-        self.tw.setAlternatingRowColors(True)
+        self.DataSourceTreeWidget = QTreeWidget()
+        self.DataSourceTreeWidget.setHeaderLabel('Data Sources')
+        self.DataSourceTreeWidget.setAlternatingRowColors(True)
 
-        word = QTreeWidgetItem(self.tw)
-        word.setText(0, "Word" + "(" + str(word.childCount()) + ")")
+        self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
 
-        pdf = QTreeWidgetItem(self.tw)
-        pdf.setText(0, "PDF" + "(" + str(word.childCount()) + ")")
+        self.pdfTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
 
-        audioS = QTreeWidgetItem(self.tw)
-        audioS.setText(0, "Audio" + "(" + str(word.childCount()) + ")")
-        self.verticalLayout.addWidget(self.tw)
+        self.audioSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         #pyautogui.rightClick()
 
@@ -220,41 +222,72 @@ class Window(QMainWindow):
     def OpenFileWindow(self):
         self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax")
 
-
     def ImportFileWindow(self, check):
         if check == "Word":
             self.dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
 
-            #get text and print on console
-            read_file(path[0],'.docx')
-            # metadata of file
-            getMetaData(path[0])
+            if all(path):
+                dummyDataSource = DataSource(path[0], path[1])
+
+                if not dummyDataSource.DataSourceLoadError:
+                    File.setDataSources(myFile, dummyDataSource)
+                    newNode = QTreeWidgetItem(self.wordTreeWidget)
+                    newNode.setText(0, ntpath.basename(path[0]))
+                    self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                else:
+                    dummyDataSource.__del__()
 
         elif check == "PDF":
             self.dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
 
-            #get text and print on console
-            read_file(path[0],'.pdf')
+            if all(path):
+                File.setDataSources(path)
+                print(path[0])
+                try:
+                    pdfReader = PyPDF2.PdfFileReader(path[0])
+                except Exception as e:
+                    print(str(e))
+
+                try:
+                    for page in range(pdfReader.getNumPages()):
+                        curr_page = pdfReader.getPage(page)
+                        print(curr_page.extractText())
+                except Exception as e:
+                    print(str(e))
+
+
+                newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                newNode.setText(0, ntpath.basename(path[0]))
+                self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+
 
         elif check == "Txt":
             self.dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
 
-            read_file(path[0],'.txt')
+            if all(path):
+                File.setDataSources(path)
 
         elif check == "RTF":
             self.dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
+
+            if all(path):
+                File.setDataSources(path)
+
         elif check == "Sound":
             self.dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)")
             path = self.dummyWindow.filepath
             self.dummyWindow.__del__()
+
+            if all(path):
+                File.setDataSources("Hello")
 
 
 

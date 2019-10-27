@@ -20,7 +20,6 @@ File.setCreatedDate(File, datetime.now())
 File.setModifiedDate(File, datetime.now())
 File.setModifiedBy(File, getpass.getuser())
 
-
 class OpenWindow(QFileDialog):
     def __init__(self, title, ext):
         super().__init__()
@@ -86,8 +85,6 @@ class Window(QMainWindow):
         self.toolbar.addAction(WordAct)
         self.toolbar.addAction(PDFAct)
         self.toolbar.addAction(NotepadAct)
-
-        #self.toolbar.setTabOrder()
         self.toolbar.addSeparator()
         self.toolbar.addAction(RTFAct)
         self.toolbar.addAction(SoundAct)
@@ -100,9 +97,10 @@ class Window(QMainWindow):
         editMenu = mainMenu.addMenu('Edit')
         viewMenu = mainMenu.addMenu('View')
         importMenu = mainMenu.addMenu('Import')
-        toolsMenu = mainMenu.addMenu('Tools')
+        VisualizationMenu = mainMenu.addMenu('Visualization')
         helpMenu = mainMenu.addMenu('Help')
 
+        #FileMenu Button
         newFileButton = QAction('New File', self)
         newFileButton.setShortcut('Ctrl+N')
         newFileButton.setStatusTip('New File')
@@ -133,11 +131,42 @@ class Window(QMainWindow):
         fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
 
+        #ViewMenu Button
         toggleToolBarButton = QAction('Show Toolbar', self, checkable=True)
         toggleToolBarButton.setChecked(True)
         toggleToolBarButton.triggered.connect(self.toolbarHide)
         viewMenu.addAction(toggleToolBarButton)
 
+        #ImportMenu Button
+        WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
+        WordFileButton.setStatusTip('Word File')
+        WordFileButton.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
+
+        PDFFileButton = QAction(QtGui.QIcon("Images/PDF.png"), 'PDF File', self)
+        PDFFileButton.setStatusTip('PDF File')
+        PDFFileButton.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
+
+        TXTFileButton = QAction(QtGui.QIcon("Images/Notepad.png"), 'Notepad File', self)
+        TXTFileButton.setStatusTip('Notepad File')
+        TXTFileButton.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
+
+        RTFFileButton = QAction(QtGui.QIcon("Images/rtf.png"), 'RTF File', self)
+        RTFFileButton.setStatusTip('RTF File')
+        RTFFileButton.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
+
+        SoundFileButton = QAction(QtGui.QIcon("Images/Sound.png"), 'Audio File', self)
+        SoundFileButton.setStatusTip('Word File')
+        SoundFileButton.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
+
+        importMenu.addAction(WordFileButton)
+        importMenu.addAction(PDFFileButton)
+        importMenu.addAction(TXTFileButton)
+        importMenu.addAction(RTFFileButton)
+        importMenu.addAction(SoundFileButton)
+
+
+
+        #HelpMenu Button
         AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
         AboutButton.setStatusTip('About Us')
         AboutButton.triggered.connect(self.AboutWindow)
@@ -168,6 +197,12 @@ class Window(QMainWindow):
 
         self.pdfTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+
+        self.txtTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+
+        self.rtfTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
 
         self.audioSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
@@ -245,24 +280,19 @@ class Window(QMainWindow):
             self.dummyWindow.__del__()
 
             if all(path):
-                File.setDataSources(path)
-                print(path[0])
-                try:
-                    pdfReader = PyPDF2.PdfFileReader(path[0])
-                except Exception as e:
-                    print(str(e))
+                dummyDataSource = DataSource(path[0], path[1])
 
-                try:
-                    for page in range(pdfReader.getNumPages()):
-                        curr_page = pdfReader.getPage(page)
-                        print(curr_page.extractText())
-                except Exception as e:
-                    print(str(e))
-
-
-                newNode = QTreeWidgetItem(self.pdfTreeWidget)
-                newNode.setText(0, ntpath.basename(path[0]))
-                self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                if not dummyDataSource.DataSourceLoadError:
+                    File.setDataSources(myFile, dummyDataSource)
+                    if not dummyDataSource.DataSourceLoadError:
+                        newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                        newNode.setText(0, ntpath.basename(path[0]))
+                        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
+                else:
+                    dummyDataSource.__del__()
 
 
         elif check == "Txt":
@@ -271,7 +301,16 @@ class Window(QMainWindow):
             self.dummyWindow.__del__()
 
             if all(path):
-                File.setDataSources(path)
+                dummyDataSource = DataSource(path[0], path[1])
+
+                if not dummyDataSource.DataSourceLoadError:
+                    File.setDataSources(myFile, dummyDataSource)
+                    newNode = QTreeWidgetItem(self.txtTreeWidget)
+                    newNode.setText(0, ntpath.basename(path[0]))
+                    self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                else:
+                    dummyDataSource.__del__()
+
 
         elif check == "RTF":
             self.dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)")
@@ -279,7 +318,15 @@ class Window(QMainWindow):
             self.dummyWindow.__del__()
 
             if all(path):
-                File.setDataSources(path)
+                dummyDataSource = DataSource(path[0], path[1])
+
+                if not dummyDataSource.DataSourceLoadError:
+                    File.setDataSources(myFile, dummyDataSource)
+                    newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                    newNode.setText(0, ntpath.basename(path[0]))
+                    self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+                else:
+                    dummyDataSource.__del__()
 
         elif check == "Sound":
             self.dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)")
@@ -287,9 +334,15 @@ class Window(QMainWindow):
             self.dummyWindow.__del__()
 
             if all(path):
-                File.setDataSources("Hello")
+                dummyDataSource = DataSource(path[0], path[1])
 
-
+                if not dummyDataSource.DataSourceLoadError:
+                    File.setDataSources(myFile, dummyDataSource)
+                    newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                    newNode.setText(0, ntpath.basename(path[0]))
+                    self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+                else:
+                    dummyDataSource.__del__()
 
     def printWindow(self):
         printer = QPrinter(QPrinter.HighResolution)

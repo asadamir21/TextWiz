@@ -1,8 +1,8 @@
 import os.path,time
 import PyPDF2
 import docx2txt
-from pyth.plugins.rtf15.reader import Rtf15Reader
-from pyth.plugins.plaintext.writer import PlaintextWriter
+# from pyth.plugins.rtf15.reader import Rtf15Reader
+# from pyth.plugins.plaintext.writer import PlaintextWriter
 
 def get_extension(filename):
     extension = os.path.splitext(filename)[1]
@@ -14,17 +14,20 @@ def read_file(filepath,extension):
         pdfReader = PyPDF2.PdfFileReader(filepath)
         for page in range(pdfReader.getNumPages()):
             curr_page = pdfReader.getPage(page)
-            print(curr_page.extractText())
+            # print(curr_page.extractText())
+            return curr_page.extractText()
     elif extension == ".txt":
         file = open(filepath,'r')
         file_text = file.read();
-        print(file_text)
+        # print(file_text)
+        return file_text
     elif extension == ".doc" or extension == ".docx":
         file_text = docx2txt.process(filepath)
-        print(file_text)
-    elif extension ==".rtf":
-        doc = Rtf15Reader.read(open(filepath))
-        print(PlaintextWriter.write(doc).getvalue())
+        # print(file_text)
+        return file_text
+    # elif extension ==".rtf":
+    #     doc = Rtf15Reader.read(open(filepath))
+    #     print(PlaintextWriter.write(doc).getvalue())
 
 
 def getMetaData(filename):

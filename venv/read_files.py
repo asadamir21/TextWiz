@@ -3,6 +3,7 @@ import PyPDF2
 import docx2txt
 # from pyth.plugins.rtf15.reader import Rtf15Reader
 # from pyth.plugins.plaintext.writer import PlaintextWriter
+import string
 
 def get_extension(filename):
     extension = os.path.splitext(filename)[1]

@@ -1,6 +1,7 @@
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
+
 import sys, os
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PIL import  Image
@@ -17,6 +18,7 @@ myFile = File()
 File.setCreatedDate(File, datetime.now())
 File.setModifiedDate(File, datetime.now())
 File.setModifiedBy(File, getpass.getuser())
+
 
 class OpenWindow(QFileDialog):
     def __init__(self, title, ext):
@@ -47,6 +49,8 @@ class OpenWindow(QFileDialog):
 
     def __del__(self):
         self.delete = True
+
+
 
 class Window(QMainWindow):
     def __init__(self):
@@ -189,7 +193,12 @@ class Window(QMainWindow):
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        # self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
+
+        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemIsMovable, True)
+        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemIsSelectable, True)
+        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemSendsGeometryChanges, True)
+        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemIsFocusable, True)
+        #self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,255,255); margin:5px; border:1px solid rgb(211,211,211); ")
 
         #DataSource Widget
         self.DataSourceLabel = QLabel()
@@ -335,7 +344,9 @@ class Window(QMainWindow):
 
             DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
 
+
             DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+            DataSourceRemove.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRemove(index))
 
             DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
 
@@ -348,7 +359,6 @@ class Window(QMainWindow):
             DataSourceRightClickMenu.addAction(DataSourceRemove)
             DataSourceRightClickMenu.addAction(DataSourceChildDetail)
             DataSourceRightClickMenu.popup(DataSourceWidgetPos)
-
 
 
     #Data Sources Expand/Collapse
@@ -368,32 +378,24 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
         DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-        groupBox1 = QGroupBox()
-        vBox1 = QVBoxLayout(DataSourceWidgetDetailDialogBox)
-
-
-        label = QLabel(DataSourceWidgetDetailDialogBox)
-        label.setText("No of Data Sources")
-
-        vBox1.addWidget(label)
-        groupBox1.setLayout(vBox1)
-        #
-        # groupBox2 = QGroupBox()
-        # vBox2 = QVBoxLayout(self.AboutWindowDialog)
-        # textpane = QTextEdit()
-        # textpane.setText("TextAs\nAnalysis Like Never Before")
-        # textpane.setStyleSheet("background:transparent;")
-        # textpane.setReadOnly(True)
-        #
-        # vBox2.addWidget(textpane)
-        # groupBox2.setLayout(vBox2)
-        #
-        hbox1 = QHBoxLayout(DataSourceWidgetDetailDialogBox)
-        hbox1.addWidget(groupBox1)
-        hbox1.setContentsMargins(0,0,0,0)
-        #hbox1.addWidget(groupBox2)
-
         DataSourceWidgetDetailDialogBox.exec()
+
+    #Data Source Remove
+    def DataSourceRemove(self, DataSourceWidgetItemName):
+        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file?", QMessageBox.Yes | QMessageBox.No)
+
+        if DataSourceRemoveChoice == QMessageBox.Yes:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    TempDataSource = DS
+
+
+            DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(DataSourceWidgetItemName.parent().childCount()-1) + ")")
+            DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
+            TempDataSource.__del__()
+
+        else:
+            pass
 
     #Close Application / Exit
     def close_application(self):

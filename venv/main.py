@@ -1,5 +1,4 @@
 import PyQt5
-
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
 import sys, os
@@ -7,7 +6,6 @@ from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PIL import  Image
 import pyautogui
 
-from DefaultLayout import *
 from File import *
 from datetime import *
 import getpass
@@ -188,10 +186,16 @@ class Window(QMainWindow):
         self.verticalLayout.setObjectName("verticalLayout")
         # self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
 
+        #DataSource Widget
+
         self.DataSourceTreeWidget = QTreeWidget()
         self.DataSourceTreeWidget.setHeaderLabel('Data Sources')
         self.DataSourceTreeWidget.setAlternatingRowColors(True)
+        self.DataSourceTreeWidget.header().setHidden(True)
+        self.DataSourceTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindDataSourceTreeWidgetContextMenu(index))
 
+        #DataSource Widget Item
         self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
 
@@ -208,33 +212,104 @@ class Window(QMainWindow):
         self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
         self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
-        #pyautogui.rightClick()
 
 
-        self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.height))
-        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.tabWidget = QtWidgets.QTabWidget(self.horizontalLayoutWidget)
-        self.tabWidget.setObjectName("tabWidget")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.tabWidget.addTab(self.tab, "")
-        self.tab_2 = QtWidgets.QWidget()
-        self.tab_2.setObjectName("tab_2")
-        self.tabWidget.addTab(self.tab_2, "")
-        self.horizontalLayout.addWidget(self.tabWidget)
+
+        # self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        # self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.height))
+        # self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        # self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        # self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        # self.horizontalLayout.setObjectName("horizontalLayout")
+        # self.tabWidget = QtWidgets.QTabWidget(self.horizontalLayoutWidget)
+        # self.tabWidget.setObjectName("tabWidget")
+        # self.tab = QtWidgets.QWidget()
+        # self.tab.setObjectName("tab")
+        # self.tabWidget.addTab(self.tab, "")
+        # self.tab_2 = QtWidgets.QWidget()
+        # self.tab_2.setObjectName("tab_2")
+        # self.tabWidget.addTab(self.tab_2, "")
+        # self.horizontalLayout.addWidget(self.tabWidget)
 
         self.setCentralWidget(self.centralwidget)
 
-        self.statusbar = QtWidgets.QStatusBar(self)
-        self.statusbar.setObjectName("statusbar")
-        self.setStatusBar(self.statusbar)
-
         #self.retranslateUi(self)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        #QtCore.QMetaObject.connectSlotsByName(self)
+
+    #Get Which Data Source Widget Item and its Position
+    def FindDataSourceTreeWidgetContextMenu(self, DataSourceMouseRightClickEvent):
+        if DataSourceMouseRightClickEvent.reason == DataSourceMouseRightClickEvent.Mouse:
+            DataSourceMouseRightClickPos = DataSourceMouseRightClickEvent.globalPos()
+            DataSourceMouseRightClickItem = self.DataSourceTreeWidget.itemAt(DataSourceMouseRightClickEvent.pos())
+        else:
+            DataSourceMouseRightClickPos = None
+            selection = self.DataSourceTreeWidget.selectedItems()
+
+            if selection:
+                DataSourceMouseRightClickItem = selection[0]
+            else:
+                DataSourceMouseRightClickItem = self.DataSourceTreeWidget.currentItem()
+                if DataSourceMouseRightClickItem is None:
+                    DataSourceMouseRightClickItem = self.DataSourceTreeWidget.invisibleRootItem().child(0)
+            if DataSourceMouseRightClickItem is not None:
+                parent = DataSourceMouseRightClickItem.parent()
+                while parent is not None:
+                    parent.setExpanded(True)
+                    parent = parent.parent()
+                itemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
+                portrect = self.DataSourceTreeWidget.viewport().rect()
+                if not portrect.contains(itemrect.topLeft()):
+                    self.DataSourceTreeWidget.scrollToItem(DataSourceMouseRightClickItem, QTreeWidget.PositionAtCenter)
+                    itemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
+
+                itemrect.setLeft(portrect.left())
+                itemrect.setWidth(portrect.width())
+                DataSourceMouseRightClickPos = self.DataSourceTreeWidget.mapToGlobal(itemrect.center())
+
+        if DataSourceMouseRightClickPos is not None:
+            self.DataSourceTreeWidgetContextMenu(DataSourceMouseRightClickItem, DataSourceMouseRightClickPos)
+
+
+    #Setting ContextMenu on Clicked Data Source
+    def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
+        #Parent Data Source
+        if DataSourceWidgetItemName.parent() == None:
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+
+            DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
+            DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+
+            if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
+                DataSourceExpand.setDisabled(True)
+            else:
+                DataSourceExpand.setDisabled(False)
+
+
+            DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
+            DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+
+            if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
+                DataSourceCollapse.setDisabled(True)
+            else:
+                DataSourceCollapse.setDisabled(False)
+
+            DataSourceRightClickMenu.addAction(DataSourceExpand)
+            DataSourceRightClickMenu.addAction(DataSourceCollapse)
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+
+        #Child DataSource
+        else:
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+
+
+
+
+    def DataSourceWidgetItemExpandCollapse(self, DataSourceWidgetItemName):
+        if DataSourceWidgetItemName.isExpanded():
+            DataSourceWidgetItemName.setExpanded(False)
+        else:
+            DataSourceWidgetItemName.setExpanded(True)
+
 
 
     def close_application(self):
@@ -396,7 +471,5 @@ class Window(QMainWindow):
 
 App = QApplication(sys.argv)
 window = Window()
-#ui = Ui_MainWindow()
-#ui.setupUi(window, window.left, window.top, window.width, window.height, window.menuBar().height() + window.toolbar.height()+window.statusBar().height())
 window.show()
 sys.exit(App.exec())

@@ -1,7 +1,7 @@
 import re
 from prettytable import PrettyTable
 
-document_text = open('files/screens.txt','r')
+document_text = open('C:/Users/Asad/Desktop/Sample.txt','r')
 frequency = {}
 text_string = document_text.read().lower()
 

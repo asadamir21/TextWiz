@@ -135,7 +135,7 @@ class DataSource(File):
             DataSourceLoadErrorBox = QMessageBox()
             DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
             DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
+            DataSourceLoadErrorBox.setText("An Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
             DataSourceLoadErrorBox.setDetailedText(str(e))
             DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceLoadErrorBox.exec_()

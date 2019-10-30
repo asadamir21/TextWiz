@@ -109,11 +109,11 @@ class Window(QMainWindow):
         OpenFileButton.setStatusTip('Open File')
         OpenFileButton.triggered.connect(self.OpenFileWindow)
 
-        SaveButton = QAction('Save', self)
+        SaveButton = QAction(QtGui.QIcon("Images/Save.png"), 'Save', self)
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
 
-        printButton = QAction('Print', self)
+        printButton = QAction(QtGui.QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
         printButton.triggered.connect(self.printWindow)
@@ -134,6 +134,11 @@ class Window(QMainWindow):
         toggleToolBarButton.setChecked(True)
         toggleToolBarButton.triggered.connect(self.toolbarHide)
         viewMenu.addAction(toggleToolBarButton)
+
+        toggleDataSourceButton = QAction('Show Data Sources', self, checkable=True)
+        toggleDataSourceButton.setChecked(True)
+        toggleDataSourceButton.triggered.connect(self.DataSoureHide)
+        viewMenu.addAction(toggleDataSourceButton)
 
         #ImportMenu Button
         WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
@@ -178,7 +183,7 @@ class Window(QMainWindow):
         self.centralwidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.verticalLayoutWidget = QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(self.left, self.top, self.width/8, self.height))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(self.left, self.top, self.width/8, self.height/8))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
@@ -187,6 +192,9 @@ class Window(QMainWindow):
         # self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,0,0); margin:5px; border:1px solid rgb(0, 255, 0); ")
 
         #DataSource Widget
+        self.DataSourceLabel = QLabel()
+        self.DataSourceLabel.setText("Data Sources")
+        self.verticalLayout.addWidget(self.DataSourceLabel)
 
         self.DataSourceTreeWidget = QTreeWidget()
         self.DataSourceTreeWidget.setHeaderLabel('Data Sources')
@@ -215,26 +223,39 @@ class Window(QMainWindow):
 
 
 
-        # self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        # self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.height))
-        # self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
-        # self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
-        # self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        # self.horizontalLayout.setObjectName("horizontalLayout")
-        # self.tabWidget = QtWidgets.QTabWidget(self.horizontalLayoutWidget)
-        # self.tabWidget.setObjectName("tabWidget")
-        # self.tab = QtWidgets.QWidget()
-        # self.tab.setObjectName("tab")
-        # self.tabWidget.addTab(self.tab, "")
-        # self.tab_2 = QtWidgets.QWidget()
-        # self.tab_2.setObjectName("tab_2")
-        # self.tabWidget.addTab(self.tab_2, "")
-        # self.horizontalLayout.addWidget(self.tabWidget)
 
+
+
+
+
+
+
+        #Right Tab Widget
+        self.horizontalLayoutWidget = QWidget(self.centralwidget)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.tabWidget = QTabWidget(self.horizontalLayoutWidget)
+        self.tabWidget.setObjectName("tabWidget")
+        self.horizontalLayout.addWidget(self.tabWidget)
+
+        self.TabCreation()
         self.setCentralWidget(self.centralwidget)
 
-        #self.retranslateUi(self)
-        #QtCore.QMetaObject.connectSlotsByName(self)
+    #Tab Creation
+    def TabCreation(self):
+        _translate = QtCore.QCoreApplication.translate
+        self.tab = QWidget()
+        self.tab.setObjectName("tab")
+
+        self.tabWidget.addTab(self.tab, "")
+        self.tab_2 = QWidget()
+        self.tab_2.setObjectName("tab_2")
+        self.tabWidget.addTab(self.tab_2, "")
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
 
     #Get Which Data Source Widget Item and its Position
     def FindDataSourceTreeWidgetContextMenu(self, DataSourceMouseRightClickEvent):
@@ -243,28 +264,28 @@ class Window(QMainWindow):
             DataSourceMouseRightClickItem = self.DataSourceTreeWidget.itemAt(DataSourceMouseRightClickEvent.pos())
         else:
             DataSourceMouseRightClickPos = None
-            selection = self.DataSourceTreeWidget.selectedItems()
+            DataSourceselection = self.DataSourceTreeWidget.selectedItems()
 
-            if selection:
-                DataSourceMouseRightClickItem = selection[0]
+            if DataSourceselection:
+                DataSourceMouseRightClickItem = DataSourceselection[0]
             else:
                 DataSourceMouseRightClickItem = self.DataSourceTreeWidget.currentItem()
                 if DataSourceMouseRightClickItem is None:
                     DataSourceMouseRightClickItem = self.DataSourceTreeWidget.invisibleRootItem().child(0)
             if DataSourceMouseRightClickItem is not None:
-                parent = DataSourceMouseRightClickItem.parent()
-                while parent is not None:
-                    parent.setExpanded(True)
-                    parent = parent.parent()
-                itemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
-                portrect = self.DataSourceTreeWidget.viewport().rect()
-                if not portrect.contains(itemrect.topLeft()):
+                DataSourceParent = DataSourceMouseRightClickItem.parent()
+                while DataSourceParent is not None:
+                    DataSourceParent.setExpanded(True)
+                    DataSourceParent = DataSourceParent.parent()
+                DataSourceitemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
+                DataSourceportrect = self.DataSourceTreeWidget.viewport().rect()
+                if not DataSourceportrect.contains(DataSourceitemrect.topLeft()):
                     self.DataSourceTreeWidget.scrollToItem(DataSourceMouseRightClickItem, QTreeWidget.PositionAtCenter)
-                    itemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
+                    DataSourceitemrect = self.DataSourceTreeWidget.visualItemRect(DataSourceMouseRightClickItem)
 
-                itemrect.setLeft(portrect.left())
-                itemrect.setWidth(portrect.width())
-                DataSourceMouseRightClickPos = self.DataSourceTreeWidget.mapToGlobal(itemrect.center())
+                DataSourceitemrect.setLeft(DataSourceportrect.left())
+                DataSourceitemrect.setWidth(DataSourceportrect.width())
+                DataSourceMouseRightClickPos = self.DataSourceTreeWidget.mapToGlobal(DataSourceitemrect.center())
 
         if DataSourceMouseRightClickPos is not None:
             self.DataSourceTreeWidgetContextMenu(DataSourceMouseRightClickItem, DataSourceMouseRightClickPos)
@@ -284,7 +305,6 @@ class Window(QMainWindow):
             else:
                 DataSourceExpand.setDisabled(False)
 
-
             DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
             DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
 
@@ -293,25 +313,89 @@ class Window(QMainWindow):
             else:
                 DataSourceCollapse.setDisabled(False)
 
+            DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
+
             DataSourceRightClickMenu.addAction(DataSourceExpand)
             DataSourceRightClickMenu.addAction(DataSourceCollapse)
+            DataSourceRightClickMenu.addAction(DataSourceDetail)
             DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
         #Child DataSource
         else:
             DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
+            DataSourcePreview = QAction('Preview', self.DataSourceTreeWidget)
+
+            DataSourceShowWordFrequency = QAction('Show Word Frequency Table', self.DataSourceTreeWidget)
+
+            DataSourceCreateWordCloud = QAction('Create Word Cloud', self.DataSourceTreeWidget)
+
+            DataSourceQuery = QAction('Query', self.DataSourceTreeWidget)
+
+            DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
+
+            DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+
+            DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+
+
+            DataSourceRightClickMenu.addAction(DataSourcePreview)
+            DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
+            DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
+            DataSourceRightClickMenu.addAction(DataSourceQuery)
+            DataSourceRightClickMenu.addAction(DataSourceRename)
+            DataSourceRightClickMenu.addAction(DataSourceRemove)
+            DataSourceRightClickMenu.addAction(DataSourceChildDetail)
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
 
 
+    #Data Sources Expand/Collapse
     def DataSourceWidgetItemExpandCollapse(self, DataSourceWidgetItemName):
         if DataSourceWidgetItemName.isExpanded():
             DataSourceWidgetItemName.setExpanded(False)
         else:
             DataSourceWidgetItemName.setExpanded(True)
 
+    #Parent Data Sources Details
+    def DataSourceWidgetItemDetail(self, DataSourceWidgetItemName):
+        DataSourceWidgetDetailDialogBox = QDialog()
+        DataSourceWidgetDetailDialogBox.setModal(True)
+        DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
+        DataSourceWidgetDetailDialogBox.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
+        DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        groupBox1 = QGroupBox()
+        vBox1 = QVBoxLayout(DataSourceWidgetDetailDialogBox)
 
 
+        label = QLabel(DataSourceWidgetDetailDialogBox)
+        label.setText("No of Data Sources")
+
+        vBox1.addWidget(label)
+        groupBox1.setLayout(vBox1)
+        #
+        # groupBox2 = QGroupBox()
+        # vBox2 = QVBoxLayout(self.AboutWindowDialog)
+        # textpane = QTextEdit()
+        # textpane.setText("TextAs\nAnalysis Like Never Before")
+        # textpane.setStyleSheet("background:transparent;")
+        # textpane.setReadOnly(True)
+        #
+        # vBox2.addWidget(textpane)
+        # groupBox2.setLayout(vBox2)
+        #
+        hbox1 = QHBoxLayout(DataSourceWidgetDetailDialogBox)
+        hbox1.addWidget(groupBox1)
+        hbox1.setContentsMargins(0,0,0,0)
+        #hbox1.addWidget(groupBox2)
+
+        DataSourceWidgetDetailDialogBox.exec()
+
+    #Close Application / Exit
     def close_application(self):
         choice = QMessageBox.question(self, 'Quit', "Are You Sure?", QMessageBox.Yes | QMessageBox.No)
         if choice == QMessageBox.Yes:
@@ -319,6 +403,7 @@ class Window(QMainWindow):
         else:
             pass
 
+    #Open New File
     def NewFileWindow(self):
         self.myDialog = QDialog()
         self.myDialog.setModal(True)
@@ -329,9 +414,11 @@ class Window(QMainWindow):
 
         self.myDialog.show()
 
+    #Open File
     def OpenFileWindow(self):
         self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax")
 
+    #Import DataSource Window
     def ImportFileWindow(self, check):
         if check == "Word":
             self.dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)")
@@ -419,41 +506,53 @@ class Window(QMainWindow):
                 else:
                     dummyDataSource.__del__()
 
+    #Print Window
     def printWindow(self):
         printer = QPrinter(QPrinter.HighResolution)
-        self.dialog = QPrintDialog(printer, self)
-        self.dialog.setWindowTitle('Print')
-        self.dialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
+        self.Printdialog = QPrintDialog(printer, self)
+        self.Printdialog.setWindowTitle('Print')
+        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
 
-        if self.dialog.exec_() == QPrintDialog.Accepted:
+        if self.Printdialog.exec_() == QPrintDialog.Accepted:
             self.textedit.print_(printer)
 
+    #Hide ToolBar
     def toolbarHide(self):
         if self.toolbar.isHidden():
             self.toolbar.show()
         else:
             self.toolbar.hide()
 
+    #Hide Data Sources
+    def DataSoureHide(self):
+        if self.DataSourceLabel.isHidden() and self.DataSourceTreeWidget.isHidden():
+            self.DataSourceLabel.show()
+            self.DataSourceTreeWidget.show()
+        else:
+            self.DataSourceLabel.hide()
+            self.DataSourceTreeWidget.hide()
+
+
     def AboutWindow(self):
-        self.myDialog = QDialog()
-        self.myDialog.setModal(True)
-        self.myDialog.setWindowTitle("About Us")
-        self.myDialog.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
-        self.myDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        self.myDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
-        self.myDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        self.AboutWindowDialog = QDialog()
+        self.AboutWindowDialog.setModal(True)
+        self.AboutWindowDialog.setWindowTitle("About Us")
+        self.AboutWindowDialog.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
+        self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
+        self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
         groupBox1 = QGroupBox()
-        vBox1 = QVBoxLayout(self.myDialog)
+        vBox1 = QVBoxLayout(self.AboutWindowDialog)
 
-        label = QLabel(self.myDialog)
-        label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.myDialog.width()/2))
+        label = QLabel(self.AboutWindowDialog)
+        label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
 
         vBox1.addWidget(label)
         groupBox1.setLayout(vBox1)
 
         groupBox2 = QGroupBox()
-        vBox2 = QVBoxLayout(self.myDialog)
+        vBox2 = QVBoxLayout(self.AboutWindowDialog)
         textpane = QTextEdit()
         textpane.setText("TextAs\nAnalysis Like Never Before")
         textpane.setStyleSheet("background:transparent;")
@@ -462,11 +561,11 @@ class Window(QMainWindow):
         vBox2.addWidget(textpane)
         groupBox2.setLayout(vBox2)
 
-        hbox1 = QHBoxLayout(self.myDialog)
+        hbox1 = QHBoxLayout(self.AboutWindowDialog)
         hbox1.addWidget(groupBox1)
         hbox1.addWidget(groupBox2)
-        self.myDialog.setLayout(hbox1)
-        self.myDialog.show()
+        self.AboutWindowDialog.setLayout(hbox1)
+        self.AboutWindowDialog.show()
 
 
 App = QApplication(sys.argv)

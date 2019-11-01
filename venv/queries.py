@@ -1,4 +1,3 @@
-from read_files import *
 import re
 from prettytable import PrettyTable
 import nltk

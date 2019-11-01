@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import numpy as np
+import matplotlib
+import threading
 import ntpath
 from PIL import  Image
 from wordcloud import WordCloud, STOPWORDS
@@ -19,6 +21,9 @@ class File():
     def __init__(self):
         super().__init__()
         self.DataSourceList = []
+        self.WordCloudBackgroundList = []
+        self.TabList = []
+        self.setBackGroundList()
 
     def setFileName(self, name):
         self.FileName = name
@@ -58,37 +63,43 @@ class File():
             DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceLoadErrorBox.exec_()
 
+    def setBackGroundList(self):
+        for colorname,colorhex in matplotlib.colors.cnames.items():
+            self.WordCloudBackgroundList.append(colorname)
 
-    def CreateWordCloud(self, text):
-        currdir = path.dirname(__file__)
+
+    def CreateWordCloud(self, WCDSName, WCBGColor, maxword, maskname):
+        for WCDS in self.DataSourceList:
+            if WCDS.DataSourceName == WCDSName:
+                tempDS = WCDS
+                break
+
         # create numpy araay for wordcloud mask image
-        mask = np.array(Image.open(path.join(currdir, "Images/cloud.png")))
-
-        # create set of stopwords
-        stopwords = set(STOPWORDS)
+        mask = np.array(Image.open("Word Cloud Maskes/" + maskname + ".png"))
 
         # create wordcloud object
-        wc = WordCloud(background_color="white",
-                       max_words=200,
-                       mask=mask,
-                       stopwords=stopwords)
+        wc = WordCloud(background_color=WCBGColor, max_words=int(maxword), mask=mask, stopwords=set(STOPWORDS))
 
         # generate wordcloud
-        wc.generate(text)
+        wc.generate(WCDS.DataSourcetext)
 
-        # save wordcloud
-        wc.to_file(path.join(currdir, "wc.png"))
-
+        return wc.to_image()
 
 
 class DataSource(File):
-    def __init__(self, path, ext):
+    def __init__(self, path, ext, MainWindow):
         super().__init__()
         self.DataSourcePath = path
         self.DataSourceName = ntpath.basename(path)
         self.DataSourceext = ext
         self.DataSourcetext = ""
         self.DataSourceLoadError = False
+        self.QueryList = []
+        try:
+            self.MainWindow = MainWindow
+        except Exception as e:
+            print(str(e))
+
 
         if(ext == "Doc files (*.doc *.docx)"):
             self.WordDataSource()
@@ -103,8 +114,20 @@ class DataSource(File):
 
     def WordDataSource(self):
         try:
+            # try:
+            #     AnimationEvent = threading.Event()
+            #     Animationthread = threading.Thread(name='blocking', target=self.Animation, args=(AnimationEvent,))
+            #     Animationthread.run()
+            #
+            #
+            # except Exception as e:
+            #     print(str(e))
+
             self.DataSourcetext = docx2txt.process(self.DataSourcePath)
             self.DataSourceLoadError = False
+
+            #AnimationEvent.set()
+
         except Exception as e:
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox()
@@ -218,5 +241,62 @@ class DataSource(File):
     def setNode(self, WidgetItemNode):
         self.DataSourceTreeWidgetItemNode = WidgetItemNode
 
+    def Animation(self, AnimationEvent):
+        loadingGIF = pyglet.image.load_animation("Loading gifs/Loading.gif")
+        loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
+
+        myLoadingDialog = QDialog()
+        myLoadingDialog.setParent(self.MainWindow)
+        myLoadingDialog.setModal(True)
+
+        LoadingGifMovie = QMovie()
+        LoadingGifMovie.setFileName("Loading gifs/Loading.gif")
+
+        gifWidth = loadingGIFSprite.width
+        gifheight = loadingGIFSprite.height
+
+        myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
+                                    pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
+        myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
+        myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
+
+        movie_screen = QLabel()
+        # Make label fit the gif
+        movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        movie_screen.setAlignment(Qt.AlignCenter)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(movie_screen)
+
+        css = qstylizer.style.StyleSheet()
+        css.setValues(backgroundColor="transparent")
+        myLoadingDialog.setStyleSheet(css.toString())
+        myLoadingDialog.setLayout(main_layout)
+
+        # Add the QMovie object to the label
+        LoadingGifMovie.setCacheMode(QMovie.CacheAll)
+        LoadingGifMovie.setSpeed(100)
+        movie_screen.setMovie(LoadingGifMovie)
+        LoadingGifMovie.start()
+
+        myLoadingDialog.exec_()
+
+    def setQuery(self):
+        print("Hello World")
+
+
     def __del__(self):
         self.DataSourceDelete = True
+
+
+
+
+
+class Tab(File):
+    def __init__(self, tabName, tabWidget):
+        self.TabName = tabName
+        self.tabWidget = tabWidget
+
+
+    def __del__(self):
+        self.TabDelete = True

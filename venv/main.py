@@ -1,17 +1,21 @@
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
-import sys, os
+from PyQt5.QtWebKit import *
+#from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
+#from PyQt5.QtWebEngineWidgets import QWebEngineSettings as QWebSettings
+
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PIL import  Image
+from datetime import *
+from File import *
+
 import glob
 import pyautogui
-from File import *
-from datetime import *
+import sys, os
 import getpass
 import ntpath
 
-from PyQt5.QtWidgets import QDialogButtonBox
 
 WindowTitleLogo = "Images/Logo.png"
 isSaveAs = True
@@ -150,6 +154,11 @@ class Window(QMainWindow):
         toggleDataSourceButton.triggered.connect(self.DataSoureHide)
         viewMenu.addAction(toggleDataSourceButton)
 
+        toggleQueryButton = QAction('Show Query', self, checkable=True)
+        toggleQueryButton.setChecked(True)
+        toggleQueryButton.triggered.connect(self.QueryHide)
+        viewMenu.addAction(toggleQueryButton)
+
         #ImportMenu Button
         WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
         WordFileButton.setStatusTip('Word File')
@@ -194,25 +203,17 @@ class Window(QMainWindow):
         self.statusBar().showMessage("Powered By TechNGate")
         self.statusBar().show()
 
-        #Central WorkSpace
+        # ***************************Central WorkSpace***************************
         self.centralwidget = QWidget(self)
-        self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.verticalLayoutWidget = QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(self.left, self.top, self.width/8, self.height/4))
-        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
 
-
-        #self.verticalLayoutWidget.setWindowFlag(QGraphicsItem.ItemIsMovable)
-        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemIsSelectable, True)
-        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemSendsGeometryChanges, True)
-        #self.verticalLayoutWidget.setWindowFlags(QGraphicsItem.ItemIsFocusable, True)
-        #self.verticalLayoutWidget.setStyleSheet("background-color: rgb(255,255,255); margin:5px; border:1px solid rgb(211,211,211); ")
+        # *******************************Left Pane******************************
 
         #DataSource Widget
         self.DataSourceLabel = QLabel()
@@ -252,46 +253,38 @@ class Window(QMainWindow):
         self.QueryTreeWidget.setHeaderLabel('Query')
         self.QueryTreeWidget.setAlternatingRowColors(True)
         self.QueryTreeWidget.header().setHidden(True)
+        self.QueryTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
         self.QueryTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.QueryTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindDataSourceTreeWidgetContextMenu(index))
+        self.QueryTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindQueryTreeWidgetContextMenu(index))
+
+        self.verticalLayout.addWidget(self.QueryTreeWidget)
 
 
+        # ********************************** Right Tab Widget *******************************
 
-
-
-
-
-
-        #Right Tab Widget
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height-self.statusBar().height()-self.menuBar().height() - self.toolbar.height()))
+        self.horizontalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout.setObjectName("horizontalLayout")
+
         self.tabWidget = QTabWidget(self.horizontalLayoutWidget)
         self.tabWidget.setObjectName("tabWidget")
         self.tabWidget.setTabsClosable(True)
-        self.horizontalLayout.addWidget(self.tabWidget)
+        self.tabWidget.setMovable(True)
+        self.tabWidget.setElideMode(Qt.ElideRight)
+        self.tabWidget.setUsesScrollButtons(True)
 
+        self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
+
+        self.horizontalLayout.addWidget(self.tabWidget)
         self.setCentralWidget(self.centralwidget)
 
-    #Tab Creation
-    def TabCreation(self):
-
-        self.tab = QWidget()
-        self.tab.setObjectName("tab")
-
-
-        self.tabWidget.addTab(self.tab, "")
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName("tab_2")
-        self.tabWidget.addTab(self.tab_2, "")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), "Tab 1")
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), "Tab 2")
-
-        #print(self.tabWidget.tabText(self.tabWidget.indexOf(self.tab)))
-        #self.tabWidget.removeTab(self.tabWidget.indexOf(self.tab))
+    #Tab Close Handler
+    def tabCloseHandler(self, index):
+        self.tabWidget.removeTab(index)
 
     #Get Which Data Source Widget Item and its Position
     def FindDataSourceTreeWidgetContextMenu(self, DataSourceMouseRightClickEvent):
@@ -369,8 +362,8 @@ class Window(QMainWindow):
             DataSourceCreateWordCloud = QAction('Create Word Cloud', self.DataSourceTreeWidget)
             DataSourceCreateWordCloud.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCloud(index))
 
-            DataSourceQuery = QAction('Create Query', self.DataSourceTreeWidget)
-            DataSourceQuery.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateQuery(index))
+            DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
+            DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
 
             DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
             DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
@@ -384,11 +377,13 @@ class Window(QMainWindow):
             DataSourceRightClickMenu.addAction(DataSourcePreview)
             DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
             DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
-            DataSourceRightClickMenu.addAction(DataSourceQuery)
+            DataSourceRightClickMenu.addAction(DataSourceStemWords)
             DataSourceRightClickMenu.addAction(DataSourceRename)
             DataSourceRightClickMenu.addAction(DataSourceRemove)
             DataSourceRightClickMenu.addAction(DataSourceChildDetail)
             DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+
+    # ***************************** Parent Context Method ************************************
 
     #Data Sources Expand/Collapse
     def DataSourceWidgetItemExpandCollapse(self, DataSourceWidgetItemName):
@@ -409,13 +404,129 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
         DataSourceWidgetDetailDialogBox.exec()
 
+    # ***************************** Child Context Method ************************************
+
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
-        print("Hello World")
+        DataSourcePreviewTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0,0,0,0)
+        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Cloud Tab
+        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        try:
+
+            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourcePreview.setGeometry(0,0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview.setReadOnly(True)
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DataSourcePreview.setText(DS.DataSourcetext)
+                    break;
+
+        except Exception as e:
+            print(str(e))
+
+        myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+        self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
 
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
-        print("Hello World")
+        try:
+            WordFrequencyTab = QWidget()
+            WordFrequencyTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+
+            # LayoutWidget For within Word Frequency Tab
+            WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
+            WordFrequencyTabverticalLayoutWidget.setGeometry(0, 0, WordFrequencyTab.width(), WordFrequencyTab.height())
+            WordFrequencyTabverticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+            # Box Layout for Word Frequency Tab
+            WordFrequencyverticalLayout = QVBoxLayout(WordFrequencyTabverticalLayoutWidget)
+            WordFrequencyverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Table for Word Frequency
+            WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
+            WordFrequencyTable.setColumnCount(4)
+            WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(), WordFrequencyTabverticalLayoutWidget.height())
+            WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage"])
+            WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(WordFrequencyTable.columnCount()):
+                WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont(WordFrequencyTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            dummyQuery = Query()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
+
+
+            for row in rowList:
+                WordFrequencyTable.insertRow(rowList.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
+                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+
+            WordFrequencyTable.resizeColumnsToContents()
+            WordFrequencyTable.resizeRowsToContents()
+
+            WordFrequencyTable.setSortingEnabled(True)
+            WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+
+            # print("Tab")
+            # print(WordFrequencyTab.frameGeometry().width())
+            # print(WordFrequencyTab.frameGeometry().height())
+            # print(WordFrequencyTab.width())
+            # print(WordFrequencyTab.height())
+            #
+            # print("Table")
+            # print(WordFrequencyTable.width())
+            # print(WordFrequencyTable.height())
+            #
+            # print("Layout")
+            # print(WordFrequencyTabverticalLayoutWidget.width())
+            # print(WordFrequencyTabverticalLayoutWidget.height())
+            #
+            # print("tabwidget")
+            # print(self.tabWidget.width())
+            # print(self.tabWidget.height())
+
+            row_width = 0
+
+            for i in range(WordFrequencyTable.columnCount()):
+                WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Word Frequency Query
+            WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceWidgetItemName.text(0) + ")")
+
+            # Adding Word Frequency Query to QueryList
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DS.setQuery(WordFreqencyQueryTreeWidget, WordFrequencyTab)
+
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
+
+        except Exception as e:
+            print(str(e))
 
     # Data Source Create World Cloud
     def DataSourceCreateCloud(self, DataSourceWidgetItemName):
@@ -447,17 +558,13 @@ class Window(QMainWindow):
         WordCloudDSComboBox = QComboBox(CreateWordCloudDialog)
         WordCloudDSComboBox.setGeometry(QtCore.QRect(200, 30, 141, 22))
 
-        try:
-            if DataSourceWidgetItemName is None:
-                for DS in myFile.DataSourceList:
-                    WordCloudDSComboBox.addItem(DS.DataSourceName)
-            else:
-                WordCloudDSComboBox.addItem(DataSourceWidgetItemName.text(0))
-                WordCloudDSComboBox.setDisabled(True)
 
-        except Exception as e:
-            print(str(e))
-
+        if DataSourceWidgetItemName is None:
+            for DS in myFile.DataSourceList:
+                WordCloudDSComboBox.addItem(DS.DataSourceName)
+        else:
+            WordCloudDSComboBox.addItem(DataSourceWidgetItemName.text(0))
+            WordCloudDSComboBox.setDisabled(True)
 
         WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
         WordCloudBackgroundColor.setGeometry(QtCore.QRect(200, 80, 141, 22))
@@ -465,7 +572,6 @@ class Window(QMainWindow):
 
         for BGColor in myFile.WordCloudBackgroundList:
             WordCloudBackgroundColor.addItem(BGColor)
-
 
         WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
         WordCloudMaxWords.setGeometry(QtCore.QRect(200, 130, 141, 20))
@@ -497,38 +603,56 @@ class Window(QMainWindow):
     def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
         WordCloudImage = myFile.CreateWordCloud(WCDSName, WCBGColor, maxword, maskname)
 
+        #Creating New Tab for WordCloud
         WordCloudTab = QWidget()
 
+        #LayoutWidget For within Word Cloud Tab
         WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
-        WordCloudTabverticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, self.tabWidget.width(), self.tabWidget.height()))
+        WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
+        #Box Layout for Word Cloud Tab
         WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
         WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
 
+        #Label for Word Cloud Image
         WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
+
+        #Resizing label to Layout
         WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
 
+        #Converting WordCloud Image to Pixmap
         WordCloudPixmap = WordCloudImage.toqpixmap()
+
+        # Scaling Pixmap image
         dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
         WordCloudLabel.setPixmap(dummypixmap)
         WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width()-dummypixmap.width())/2, (WordCloudTabverticalLayoutWidget.height()-dummypixmap.height())/2, dummypixmap.width(), dummypixmap.height())
 
+        #Setting ContextMenu Policies on Label
         WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
         WordCloudLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
-        self.tabWidget.addTab(WordCloudTab, "Word Cloud Tab")
+
+        #Adding Word Cloud Tab to QTabWidget
+        myFile.TabList.append(Tab("Word Cloud", WordCloudTab, WCDSName))
+
+        WordCloudQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+        WordCloudQueryTreeWidget.setText(0, "Word Cloud (" + WCDSName + ")")
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == WCDSName:
+                DS.setQuery(WordCloudQueryTreeWidget, WordCloudTab)
+
+        self.tabWidget.addTab(WordCloudTab, "Word Cloud")
 
     #Word Cloud ContextMenu
     def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
-        try:
-            WordCloudClickMenu = QMenu()
-            WordCloudImageDownload = QAction('Download Image')
-            WordCloudImageDownload.triggered.connect(lambda: self.WordCloudDownload(dummypixmap))
-            WordCloudClickMenu.addAction(WordCloudImageDownload)
+        WordCloudClickMenu = QMenu()
 
-            WordCloudClickMenu.exec(WordCloudClickEvent)
+        WordCloudImageDownload = QAction('Download Image')
+        WordCloudImageDownload.triggered.connect(lambda: self.WordCloudDownload(dummypixmap))
+        WordCloudClickMenu.addAction(WordCloudImageDownload)
 
-        except Exception as e:
-            print(str(e))
+        WordCloudClickMenu.exec(WordCloudClickEvent)
 
     #WordCloud Download
     def WordCloudDownload(self, dummypixmap):
@@ -539,27 +663,189 @@ class Window(QMainWindow):
             dummypixmap.save(path[0] + ".png", "PNG")
 
     # Data Source Rename
-    def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
-        print("Hello World")
+    def DataSourceRename(self, DataSourceWidgetItemName):
+        DataSourceRename = QDialog()
+        DataSourceRename.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
+        DataSourceRename.setWindowTitle("Rename")
+        DataSourceRename.setGeometry(self.width * 0.375, self.height * 0.425, self.width/4, self.height*0.15)
+        DataSourceRename.setParent(self)
+        DataSourceRename.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceRename.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        RenameLabel = QLabel(DataSourceRename)
+        RenameLabel.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.3, DataSourceRename.width()/4, DataSourceRename.height()*0.15)
+        RenameLabel.setText("Rename")
+        RenameLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        QFontMetrics(RenameLabel.font()).boundingRect(RenameLabel.text())
+
+        RenameTextEdit = QTextEdit(DataSourceRename)
+        RenameTextEdit.setGeometry(DataSourceRename.width()*0.4, DataSourceRename.height()*0.3, DataSourceRename.width()/2, DataSourceRename.height()*0.15)
+        RenameTextEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        RenameTextEdit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        RenameTextEdit.setText(DataSourceWidgetItemName.text(0))
+
+        RenamebuttonBox = QDialogButtonBox(DataSourceRename)
+        RenamebuttonBox.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.7, DataSourceRename.width()*3/4, DataSourceRename.height()/5)
+        RenamebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+
+        RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        RenameTextEdit.textChanged.connect(lambda: self.OkButtonEnable(RenameTextEdit, RenamebuttonBox))
+
+        RenamebuttonBox.accepted.connect(DataSourceRename.accept)
+        RenamebuttonBox.rejected.connect(DataSourceRename.reject)
+
+        RenamebuttonBox.accepted.connect(lambda: DataSourceWidgetItemName.setText(0, RenameTextEdit.toPlainText()))
+
+        DataSourceRename.exec()
 
     # Data Source Create Query
-    def DataSourceCreateQuery(self, DataSourceWidgetItemName):
+    def DataSourceFindStemWords(self, DataSourceWidgetItemName):
+        DataSourceStemWord = QDialog()
+        DataSourceStemWord.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
+        DataSourceStemWord.setWindowTitle("Find Stem Words")
+        DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
+        DataSourceStemWord.setParent(self)
+        DataSourceStemWord.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceStemWord.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        WordStemlabel = QLabel(DataSourceStemWord)
+        WordStemlabel.setGeometry(DataSourceStemWord.width() * 0.125, DataSourceStemWord.height() * 0.3,
+                                  DataSourceStemWord.width() / 4, DataSourceStemWord.height() * 0.15)
+        WordStemlabel.setText("Word")
+        WordStemlabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        QFontMetrics(WordStemlabel.font()).boundingRect(WordStemlabel.text())
+
+        StemWordTextEdit = QTextEdit(DataSourceStemWord)
+        StemWordTextEdit.setGeometry(DataSourceStemWord.width() * 0.4, DataSourceStemWord.height() * 0.3,
+                                     DataSourceStemWord.width() / 2, DataSourceStemWord.height() * 0.15)
+        StemWordTextEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        StemWordTextEdit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        StemWordbuttonBox = QDialogButtonBox(DataSourceStemWord)
+        StemWordbuttonBox.setGeometry(DataSourceStemWord.width() * 0.125, DataSourceStemWord.height() * 0.7,
+                                      DataSourceStemWord.width() * 3 / 4, DataSourceStemWord.height() / 5)
+        StemWordbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        StemWordbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        StemWordTextEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordTextEdit, StemWordbuttonBox))
+
+        StemWordbuttonBox.accepted.connect(DataSourceStemWord.accept)
+        StemWordbuttonBox.rejected.connect(DataSourceStemWord.reject)
+
+        StemWordbuttonBox.accepted.connect(
+            lambda: self.mapStemWordonTab(StemWordTextEdit.toPlainText(), DataSourceWidgetItemName))
+
+        DataSourceStemWord.exec()
+
+    def mapStemWordonTab(self, word, DataSourceItemWidget):
         print("Hello World")
+
+    #Enable Ok Button
+    def OkButtonEnable(self, TextEdit, ButtonBox):
+        if len(TextEdit.toPlainText()) > 0:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
+
         DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file?", QMessageBox.Yes | QMessageBox.No)
 
         if DataSourceRemoveChoice == QMessageBox.Yes:
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    TempDataSource = DS
-            DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(DataSourceWidgetItemName.parent().childCount()-1) + ")")
-            DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
-            TempDataSource.__del__()
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(DataSourceWidgetItemName.parent().childCount()-1) + ")")
+                    DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
+                    myFile.DataSourceList.remove(DS)
+                    DS.__del__()
+                    break
         else:
             pass
 
+    # Get Which Query Widget Item and its Position
+    def FindQueryTreeWidgetContextMenu(self, QueryMouseRightClickEvent):
+        if QueryMouseRightClickEvent.reason == QueryMouseRightClickEvent.Mouse:
+            QueryMouseRightClickPos = QueryMouseRightClickEvent.globalPos()
+            QueryMouseRightClickItem = self.QueryTreeWidget.itemAt(QueryMouseRightClickEvent.pos())
+        else:
+            QueryMouseRightClickPos = None
+            Queryselection = self.QueryTreeWidget.selectedItems()
+
+            if Queryselection:
+                QueryMouseRightClickItem = Queryselection[0]
+            else:
+                QueryMouseRightClickItem = self.QueryTreeWidget.currentItem()
+                if QueryMouseRightClickItem is None:
+                    QueryMouseRightClickItem = self.QueryTreeWidget.invisibleRootItem().child(0)
+            if QueryMouseRightClickItem is not None:
+                QueryParent = QueryMouseRightClickItem.parent()
+                while QueryParent is not None:
+                    QueryParent.setExpanded(True)
+                    QueryParent = QueryParent.parent()
+                Queryitemrect = self.QueryTreeWidget.visualItemRect(QueryMouseRightClickItem)
+                Queryportrect = self.QueryTreeWidget.viewport().rect()
+                if not Queryportrect.contains(Queryitemrect.topLeft()):
+                    self.QueryTreeWidget.scrollToItem(QueryMouseRightClickItem, QTreeWidget.PositionAtCenter)
+                    Queryitemrect = self.QueryTreeWidget.visualItemRect(QueryMouseRightClickItem)
+
+                Queryitemrect.setLeft(Queryportrect.left())
+                Queryitemrect.setWidth(Queryportrect.width())
+                QueryMouseRightClickPos = self.QueryTreeWidget.mapToGlobal(Queryitemrect.center())
+
+        if QueryMouseRightClickPos is not None:
+            self.QueryTreeWidgetContextMenu(QueryMouseRightClickItem, QueryMouseRightClickPos)
+
+    # Setting ContextMenu on Clicked Query
+    def QueryTreeWidgetContextMenu(self, QueryItemName, QueryWidgetPos):
+        QueryRightClickMenu = QMenu(self.QueryTreeWidget)
+
+        QueryRemove = QAction('Remove', self.QueryTreeWidget)
+        QueryRemove.triggered.connect(lambda checked, index=QueryItemName: self.QueryRemove(index))
+
+        QueryRightClickMenu.addAction(QueryRemove)
+        QueryRightClickMenu.popup(QueryWidgetPos)
+
+    # Remove Query (Tab)
+    def QueryRemove(self, QueryItemName):
+
+        for letter in QueryItemName.text(0):
+            if letter == '(':
+                QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
+                DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        for query in DS.QueryList:
+                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
+                                myFile.TabList.remove(tabs)
+                                DS.QueryList.remove(query)
+                                tabs.__del__()
+                                break
+
+
+
+
+        self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
+
+    # Preview Query/Tab on double click
+    def QueryDoubleClickHandler(self, QueryItemName):
+        for letter in QueryItemName.text(0):
+            if letter == '(':
+                QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
+                DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        for query in DS.QueryList:
+                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
+                                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                                break
 
     #Close Application / Exit
     def close_application(self):
@@ -588,9 +874,9 @@ class Window(QMainWindow):
     #Import DataSource Window
     def ImportFileWindow(self, check):
         if check == "Word":
-            self.dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)", 0)
-            path = self.dummyWindow.filepath
-            self.dummyWindow.__del__()
+            dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
@@ -604,9 +890,9 @@ class Window(QMainWindow):
                     dummyDataSource.__del__()
 
         elif check == "PDF":
-            self.dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
-            path = self.dummyWindow.filepath
-            self.dummyWindow.__del__()
+            dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
@@ -625,9 +911,9 @@ class Window(QMainWindow):
 
 
         elif check == "Txt":
-            self.dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)", 0)
-            path = self.dummyWindow.filepath
-            self.dummyWindow.__del__()
+            dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
@@ -642,9 +928,9 @@ class Window(QMainWindow):
 
 
         elif check == "RTF":
-            self.dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
-            path = self.dummyWindow.filepath
-            self.dummyWindow.__del__()
+            dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
@@ -658,9 +944,9 @@ class Window(QMainWindow):
                     dummyDataSource.__del__()
 
         elif check == "Sound":
-            self.dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
-            path = self.dummyWindow.filepath
-            self.dummyWindow.__del__()
+            dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
@@ -699,7 +985,16 @@ class Window(QMainWindow):
             self.DataSourceLabel.hide()
             self.DataSourceTreeWidget.hide()
 
+    # Hide Query
+    def QueryHide(self):
+        if self.QueryLabel.isHidden() and self.QueryLabel.isHidden():
+            self.QueryLabel.show()
+            self.QueryTreeWidget.show()
+        else:
+            self.QueryLabel.hide()
+            self.QueryTreeWidget.hide()
 
+    # About Window Tab
     def AboutWindow(self):
         self.AboutWindowDialog = QDialog()
         self.AboutWindowDialog.setModal(True)
@@ -735,7 +1030,6 @@ class Window(QMainWindow):
         hbox1.addWidget(groupBox2)
         self.AboutWindowDialog.setLayout(hbox1)
         self.AboutWindowDialog.show()
-
 
 App = QApplication(sys.argv)
 TextASMainwindow = Window()

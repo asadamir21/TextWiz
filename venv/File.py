@@ -1,21 +1,24 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import numpy as np
-import matplotlib
-import threading
-import ntpath
+from nltk.stem import PorterStemmer
+from nltk.stem import LancasterStemmer
+from threading import *
 from PIL import  Image
 from wordcloud import WordCloud, STOPWORDS
-import pyglet
-from pyglet import *
-import docx2txt
-import PyPDF2
-import os
-import time
 from stat import *
-import pyautogui
-import qstylizer.style
+from pyglet import *
+
+import numpy as np
+import matplotlib
+import re
+import nltk
+import ntpath, pyglet
+import docx2txt, PyPDF2
+import os, time
+
+import pyautogui, qstylizer.style
+
 
 class File():
     def __init__(self):
@@ -43,15 +46,13 @@ class File():
     def setDataSources(self, myDataSource):
         isAvailable = False
 
-        try:
-            for DataSourceIndex in self.DataSourceList:
-                if DataSourceIndex.DataSourcePath == myDataSource.DataSourcePath:
-                    myDataSource.DataSourceLoadError = True
-                    isAvailable = True
-                    break
+        for DataSourceIndex in self.DataSourceList:
+            if DataSourceIndex.DataSourcePath == myDataSource.DataSourcePath:
+                myDataSource.DataSourceLoadError = True
+                isAvailable = True
+                break
 
-        except Exception as e:
-            print(str(e))
+
 
         if not isAvailable:
             self.DataSourceList.append(myDataSource)
@@ -67,7 +68,6 @@ class File():
         for colorname,colorhex in matplotlib.colors.cnames.items():
             self.WordCloudBackgroundList.append(colorname)
 
-
     def CreateWordCloud(self, WCDSName, WCBGColor, maxword, maskname):
         for WCDS in self.DataSourceList:
             if WCDS.DataSourceName == WCDSName:
@@ -81,7 +81,7 @@ class File():
         wc = WordCloud(background_color=WCBGColor, max_words=int(maxword), mask=mask, stopwords=set(STOPWORDS))
 
         # generate wordcloud
-        wc.generate(WCDS.DataSourcetext)
+        wc.generate(tempDS.DataSourcetext)
 
         return wc.to_image()
 
@@ -95,11 +95,8 @@ class DataSource(File):
         self.DataSourcetext = ""
         self.DataSourceLoadError = False
         self.QueryList = []
-        try:
-            self.MainWindow = MainWindow
-        except Exception as e:
-            print(str(e))
 
+        self.MainWindow = MainWindow
 
         if(ext == "Doc files (*.doc *.docx)"):
             self.WordDataSource()
@@ -114,20 +111,8 @@ class DataSource(File):
 
     def WordDataSource(self):
         try:
-            # try:
-            #     AnimationEvent = threading.Event()
-            #     Animationthread = threading.Thread(name='blocking', target=self.Animation, args=(AnimationEvent,))
-            #     Animationthread.run()
-            #
-            #
-            # except Exception as e:
-            #     print(str(e))
-
             self.DataSourcetext = docx2txt.process(self.DataSourcePath)
             self.DataSourceLoadError = False
-
-            #AnimationEvent.set()
-
         except Exception as e:
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox()
@@ -144,6 +129,10 @@ class DataSource(File):
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
+
+    def onIntReady(self, availablecc):  # This method receives the list from the worker
+        print('availablecc', availablecc)  # This is for debugging reasons to verify that I receive the list with the correct content
+        self.availablecc = availablecc
 
     def PDFDataSource(self):
         try:
@@ -170,7 +159,6 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
-
     def TxtDataSource(self):
         try:
             file = open(self.DataSourcePath, 'r')
@@ -192,7 +180,6 @@ class DataSource(File):
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
-
 
     def rtfDataSource(self):
         try:
@@ -217,7 +204,6 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
-
     def AudioDataSource(self):
         try:
             self.DataSourceLoadError = False
@@ -241,62 +227,186 @@ class DataSource(File):
     def setNode(self, WidgetItemNode):
         self.DataSourceTreeWidgetItemNode = WidgetItemNode
 
-    def Animation(self, AnimationEvent):
-        loadingGIF = pyglet.image.load_animation("Loading gifs/Loading.gif")
-        loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
+    def Animation(self, name):
+        try:
+            loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
+            loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
 
-        myLoadingDialog = QDialog()
-        myLoadingDialog.setParent(self.MainWindow)
-        myLoadingDialog.setModal(True)
+            self.myLoadingDialog = QDialog()
+            self.myLoadingDialog.setModal(True)
+            self.myLoadingDialog.setParent(self.MainWindow)
 
-        LoadingGifMovie = QMovie()
-        LoadingGifMovie.setFileName("Loading gifs/Loading.gif")
+            LoadingGifMovie = QMovie()
+            LoadingGifMovie.setFileName("Loading gifs/" + name)
 
-        gifWidth = loadingGIFSprite.width
-        gifheight = loadingGIFSprite.height
+            gifWidth = loadingGIFSprite.width
+            gifheight = loadingGIFSprite.height
 
-        myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
-                                    pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
-        myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
-        myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
+            self.myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
+                                             pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
+            self.myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
+            self.myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
 
-        movie_screen = QLabel()
-        # Make label fit the gif
-        movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        movie_screen.setAlignment(Qt.AlignCenter)
+            movie_screen = QLabel()
 
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(movie_screen)
+            # Make label fit the gif
+            movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            movie_screen.setAlignment(Qt.AlignCenter)
 
-        css = qstylizer.style.StyleSheet()
-        css.setValues(backgroundColor="transparent")
-        myLoadingDialog.setStyleSheet(css.toString())
-        myLoadingDialog.setLayout(main_layout)
+            main_layout = QVBoxLayout()
+            main_layout.addWidget(movie_screen)
 
-        # Add the QMovie object to the label
-        LoadingGifMovie.setCacheMode(QMovie.CacheAll)
-        LoadingGifMovie.setSpeed(100)
-        movie_screen.setMovie(LoadingGifMovie)
-        LoadingGifMovie.start()
+            css = qstylizer.style.StyleSheet()
+            css.setValues(backgroundColor="transparent")
+            self.myLoadingDialog.setStyleSheet(css.toString())
+            self.myLoadingDialog.setLayout(main_layout)
 
-        myLoadingDialog.exec_()
+            # Add the QMovie object to the label
+            LoadingGifMovie.setCacheMode(QMovie.CacheAll)
+            LoadingGifMovie.setSpeed(100)
+            movie_screen.setMovie(LoadingGifMovie)
+            LoadingGifMovie.start()
 
-    def setQuery(self):
-        print("Hello World")
+            self.myLoadingDialog.exec_()
 
+        except Exception as e:
+            print(str(e))
+
+    def setQuery(self, QueryTreeWidgetItem, TabItem):
+        self.QueryList.append([QueryTreeWidgetItem, TabItem])
 
     def __del__(self):
         self.DataSourceDelete = True
 
 
-
-
-
 class Tab(File):
-    def __init__(self, tabName, tabWidget):
+    def __init__(self, tabName, tabWidget, DataSourceName):
         self.TabName = tabName
         self.tabWidget = tabWidget
-
+        self.DataSourceName = DataSourceName
 
     def __del__(self):
         self.TabDelete = True
+
+
+class Query():
+    def GenerateFrequencyList(self, match_pattern):
+            frequency = {}
+
+            for word in match_pattern:
+                count = frequency.get(word, 0)
+                frequency[word] = count + 1
+
+
+            frequency_list = frequency.keys()
+
+            return frequency_list,frequency
+
+    def find_exact_word(self, word, document_text):
+        doc_text = document_text.lower()
+        match_pattern = re.findall(r'\b[a-z]{3,15}\b', doc_text)
+        frequency_list,frequency = self.GenerateFrequencyList(match_pattern)
+
+
+        count = 0;
+        for words in frequency_list:
+            if word == words:
+                count = frequency[words]
+
+        print("Word: ", word, "\tReferences: ", count)
+
+    def FindWordFrequency(self, DataSourceText):
+        WordFrequencyRow = []
+
+        DataSourceTextLower = DataSourceText.lower()
+        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+
+        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
+
+        total_count = 0;
+
+        for words in frequency_list:
+            total_count += frequency[words]
+
+        for words in frequency_list:
+            weighted_percentage = round((frequency[words]/total_count)*100,2)
+            WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage])
+
+
+        return WordFrequencyRow
+
+    def FindStemmedWords(self, StemWord, DataSourceText):
+        DataSourceTextLower = DataSourceText.lower()
+
+        match_pattern = re.findall(r'\b[a-z]{3,15}\b', doc_text)
+        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
+
+        porter = PorterStemmer()
+
+        stem_word = porter.stem(word)
+
+        count = 0;
+        for words in frequency_list:
+            if stem_word == porter.stem(words):
+                count = frequency[words]
+                print("Word:",words,"\tReferences:",count)
+
+
+class Animation(QObject):
+    finished = pyqtSignal()
+    intReady = pyqtSignal(list)
+
+    def __init__(self, name, MainWindow):
+        super().__init__()
+        self.name = name
+        self.MainWindow = MainWindow
+
+    def run(self):
+        try:
+            self.myLoadingDialog = QDialog()
+
+            loadingGIF = pyglet.image.load_animation("Loading gifs/" + self.name)
+            loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
+
+            self.myLoadingDialog.setParent(self.MainWindow)
+            self.myLoadingDialog.setModal(True)
+
+            LoadingGifMovie = QMovie()
+            LoadingGifMovie.setFileName("Loading gifs/" + self.name)
+
+            gifWidth = loadingGIFSprite.width
+            gifheight = loadingGIFSprite.height
+
+            self.myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
+                                             pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
+            self.myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
+            self.myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
+
+            movie_screen = QLabel()
+            # Make label fit the gif
+            movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            movie_screen.setAlignment(Qt.AlignCenter)
+
+            main_layout = QVBoxLayout()
+            main_layout.addWidget(movie_screen)
+
+            css = qstylizer.style.StyleSheet()
+            css.setValues(backgroundColor="transparent")
+            self.myLoadingDialog.setStyleSheet(css.toString())
+            self.myLoadingDialog.setLayout(main_layout)
+
+            # Add the QMovie object to the label
+            LoadingGifMovie.setCacheMode(QMovie.CacheAll)
+            LoadingGifMovie.setSpeed(100)
+            movie_screen.setMovie(LoadingGifMovie)
+            LoadingGifMovie.start()
+            self.myLoadingDialog.exec()
+
+        except Exception as e:
+            print(str(e))
+
+    def stop(self):
+        self.terminate()
+
+
+

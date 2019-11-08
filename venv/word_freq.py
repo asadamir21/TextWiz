@@ -1,9 +1,9 @@
 import re
 from prettytable import PrettyTable
 
-document_text = "trouble, troubling "
+document_text = open('C:/Users/Asad/Desktop/Sample.txt','r')
 frequency = {}
-text_string = document_text.lower()
+text_string = document_text.read().lower()
 
 match_pattern = re.findall(r'\b[a-z]{3,15}\b',text_string)
 

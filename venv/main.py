@@ -462,23 +462,51 @@ class Window(QMainWindow):
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
+        DataSourcePreviewTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Cloud Tab
+        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
         try:
-            DataSourcePreviewTab = QWidget()
+            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview.setReadOnly(True)
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    PDFWeb = QWebView(DataSourcePreviewTab)
-                    PDFWeb.settings().setAttribute(QWebSettings.PluginsEnabled, True)
-                    PDFWeb.show()
+                    DataSourcePreview.setText(DS.DataSourcetext)
                     break
 
-
-            myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+            myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,DataSourceWidgetItemName.text(0)))
             self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
             self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
         except Exception as e:
             print(str(e))
+
+        # try:
+        #     DataSourcePreviewTab = QWidget()
+        #
+        #     for DS in myFile.DataSourceList:
+        #         if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+        #             PDFWeb = QWebView(DataSourcePreviewTab)
+        #             PDFWeb.settings().setAttribute(QWebSettings.PluginsEnabled, True)
+        #             PDFWeb.show()
+        #             break
+        #
+        #
+        #     myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+        #     self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+        #     self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+        #
+        # except Exception as e:
+        #     print(str(e))
 
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
@@ -912,7 +940,6 @@ class Window(QMainWindow):
             StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
             StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
             StemWordErrorBox.exec_()
-
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceText):

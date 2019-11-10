@@ -2,22 +2,24 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
 from PyQt5.QtWebKit import *
-#from PyQt5.QtWebEngineWidgets import QWebEngineView as QWebView,QWebEnginePage as QWebPage
-#from PyQt5.QtWebEngineWidgets import QWebEngineSettings as QWebSettings
+
+from PyQt5.QtWebKitWidgets import *
 
 from PyQt5 import QtGui, QtCore, QtPrintSupport
+from win32api import GetMonitorInfo, MonitorFromPoint
+
 from PIL import  Image
 from datetime import *
 from File import *
-
 import glob
-import pyautogui
 import sys, os
 import getpass
 import ntpath
+import win32gui
+import math
 
-
-WindowTitleLogo = "Images/Logo.png"
+#WindowTitleLogo = "Images/Logo.png"
+WindowTitleLogo = "Images/DummyLogo.png"
 isSaveAs = True
 myFile = File()
 myFile.setCreatedDate(datetime.now())
@@ -65,7 +67,12 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = "TextAS"
-        self.width, self.height = pyautogui.size()
+
+        Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
+
+        self.width = Monitor_Resolution_Info.get("Work")[2]
+        self.height = Monitor_Resolution_Info.get("Work")[3]
+
         self.left = 0;
         self.top = 0;
         self.initWindows()
@@ -74,6 +81,7 @@ class Window(QMainWindow):
         self.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         self.setWindowTitle(self.title)
         self.setGeometry(self.left,self.top, self.width, self.height)
+        self.setMinimumSize(self.width/2, self.height/2)
         self.showMaximized()
 
         # ToolBar
@@ -199,17 +207,20 @@ class Window(QMainWindow):
         AboutButton.triggered.connect(self.AboutWindow)
         helpMenu.addAction(AboutButton)
 
-        #Status Bar
-        self.statusBar().showMessage("Powered By TechNGate")
-        self.statusBar().show()
 
         # ***************************Central WorkSpace***************************
+        self.sizePolicy = QSizePolicy()
+        self.sizePolicy.setVerticalPolicy(QSizePolicy.Minimum)
+        self.sizePolicy.setHorizontalPolicy(QSizePolicy.Minimum)
+        self.sizePolicy.setHeightForWidth(True)
+
         self.centralwidget = QWidget(self)
-        self.centralwidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.centralwidget.setSizePolicy(self.sizePolicy)
+
 
         self.verticalLayoutWidget = QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(self.left, self.top, self.width/8, self.height/4))
-        self.verticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.verticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -217,7 +228,8 @@ class Window(QMainWindow):
 
         #DataSource Widget
         self.DataSourceLabel = QLabel()
-        self.DataSourceLabel.setText("  Data Sources")
+        self.DataSourceLabel.setText("Data Sources")
+        self.DataSourceLabel.setAlignment(Qt.AlignCenter)
         self.verticalLayout.addWidget(self.DataSourceLabel)
 
         self.DataSourceTreeWidget = QTreeWidget()
@@ -246,7 +258,8 @@ class Window(QMainWindow):
 
         # Query Widget
         self.QueryLabel = QLabel()
-        self.QueryLabel.setText("   Query")
+        self.QueryLabel.setText("Query")
+        self.QueryLabel.setAlignment(Qt.AlignCenter)
         self.verticalLayout.addWidget(self.QueryLabel)
 
         self.QueryTreeWidget = QTreeWidget()
@@ -259,27 +272,69 @@ class Window(QMainWindow):
 
         self.verticalLayout.addWidget(self.QueryTreeWidget)
 
+        # Visualiztion Widget
+        self.VisualizationLabel = QLabel()
+        self.VisualizationLabel.setText("Visualization")
+        self.VisualizationLabel.setAlignment(Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.VisualizationLabel)
+
+        self.VisualizationTreeWidget = QTreeWidget()
+        self.VisualizationTreeWidget.setHeaderLabel('Visualization')
+        self.VisualizationTreeWidget.setAlternatingRowColors(True)
+        self.VisualizationTreeWidget.header().setHidden(True)
+        #self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
+        self.VisualizationTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+
+
+        self.verticalLayout.addWidget(self.VisualizationTreeWidget)
+
+        # Report Widget
+        self.ReportLabel = QLabel()
+        self.ReportLabel.setText("Reports")
+        self.ReportLabel.setAlignment(Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.ReportLabel)
+
+        self.ReportTreeWidget = QTreeWidget()
+        self.ReportTreeWidget.setHeaderLabel('Report')
+        self.ReportTreeWidget.setAlternatingRowColors(True)
+        self.ReportTreeWidget.header().setHidden(True)
+        # self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
+        self.ReportTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        self.verticalLayout.addWidget(self.ReportTreeWidget)
 
         # ********************************** Right Tab Widget *******************************
 
+        # Windows Title Bar Size
+        rect = win32gui.GetWindowRect(self.winId())
+        clientRect = win32gui.GetClientRect(self.winId())
+        windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)
+        titleOffset = ((rect[3] - rect[1]) - clientRect[3]) - windowOffset
+
+        self.verticalLayoutWidget.setGeometry(self.left, self.top, self.width / 8, self.height - titleOffset - self.toolbar.height())
+
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height-self.statusBar().height()-self.menuBar().height() - self.toolbar.height()))
-        self.horizontalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayoutWidget.setSizePolicy(self.sizePolicy)
+
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+
 
         self.tabWidget = QTabWidget(self.horizontalLayoutWidget)
-        self.tabWidget.setObjectName("tabWidget")
+        self.tabWidget.setSizePolicy(self.sizePolicy)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setMovable(True)
         self.tabWidget.setElideMode(Qt.ElideRight)
         self.tabWidget.setUsesScrollButtons(True)
-
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
 
+
+
+        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.toolbar.height())
+
         self.horizontalLayout.addWidget(self.tabWidget)
+
+        self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
         self.setCentralWidget(self.centralwidget)
 
     #Tab Close Handler
@@ -398,7 +453,6 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setModal(True)
         DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
         DataSourceWidgetDetailDialogBox.setParent(self)
-        DataSourceWidgetDetailDialogBox.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.35, self.width/3, self.height/3)
         DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
@@ -408,44 +462,38 @@ class Window(QMainWindow):
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
-        DataSourcePreviewTab = QWidget()
-
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0,0,0,0)
-        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-        # Box Layout for Word Cloud Tab
-        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
         try:
-
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0,0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourcePreview.setReadOnly(True)
+            DataSourcePreviewTab = QWidget()
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourcePreview.setText(DS.DataSourcetext)
-                    break;
+                    PDFWeb = QWebView(DataSourcePreviewTab)
+                    PDFWeb.settings().setAttribute(QWebSettings.PluginsEnabled, True)
+                    PDFWeb
+                    PDFWeb.show()
+                    break
+
+
+            myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
         except Exception as e:
             print(str(e))
-
-        myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
-        self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
 
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
         try:
             WordFrequencyTab = QWidget()
             WordFrequencyTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+            WordFrequencyTab.setSizePolicy(self.sizePolicy)
+
 
             # LayoutWidget For within Word Frequency Tab
             WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
-            WordFrequencyTabverticalLayoutWidget.setGeometry(0, 0, WordFrequencyTab.width(), WordFrequencyTab.height())
-            WordFrequencyTabverticalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            WordFrequencyTabverticalLayoutWidget.setGeometry(0, 0, WordFrequencyTab.width(), WordFrequencyTab.height()-self.tabBoxHeight)
+            WordFrequencyTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
 
             # Box Layout for Word Frequency Tab
             WordFrequencyverticalLayout = QVBoxLayout(WordFrequencyTabverticalLayoutWidget)
@@ -455,10 +503,15 @@ class Window(QMainWindow):
             WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
             WordFrequencyTable.setColumnCount(4)
             WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(), WordFrequencyTabverticalLayoutWidget.height())
+
+            WordFrequencyTable.setSizePolicy(self.sizePolicy)
+
             WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
             WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage"])
             WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            #WordFrequencyTable.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
             for i in range(WordFrequencyTable.columnCount()):
                 WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -469,61 +522,52 @@ class Window(QMainWindow):
             for DS in myFile.DataSourceList:
                 if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                     rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
+                    break
 
+            if len(rowList) != 0:
+                for row in rowList:
+                    WordFrequencyTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
+                        WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
-            for row in rowList:
-                WordFrequencyTable.insertRow(rowList.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
-                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                WordFrequencyTable.resizeColumnsToContents()
+                WordFrequencyTable.resizeRowsToContents()
 
+                WordFrequencyTable.setSortingEnabled(True)
+                WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
 
-            WordFrequencyTable.resizeColumnsToContents()
-            WordFrequencyTable.resizeRowsToContents()
+                for i in range(WordFrequencyTable.columnCount()):
+                    WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            WordFrequencyTable.setSortingEnabled(True)
-            WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceWidgetItemName.text(0)))
 
-            # print("Tab")
-            # print(WordFrequencyTab.frameGeometry().width())
-            # print(WordFrequencyTab.frameGeometry().height())
-            # print(WordFrequencyTab.width())
-            # print(WordFrequencyTab.height())
-            #
-            # print("Table")
-            # print(WordFrequencyTable.width())
-            # print(WordFrequencyTable.height())
-            #
-            # print("Layout")
-            # print(WordFrequencyTabverticalLayoutWidget.width())
-            # print(WordFrequencyTabverticalLayoutWidget.height())
-            #
-            # print("tabwidget")
-            # print(self.tabWidget.width())
-            # print(self.tabWidget.height())
+                # Adding Word Frequency Query
+                WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceWidgetItemName.text(0) + ")")
 
-            row_width = 0
+                # Adding Word Frequency Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                        DS.setQuery(WordFreqencyQueryTreeWidget, WordFrequencyTab)
 
-            for i in range(WordFrequencyTable.columnCount()):
-                WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
+                self.tabWidget.setCurrentWidget(WordFrequencyTab)
 
-            # Adding Word Frequency Tab to TabList
-            myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceWidgetItemName.text(0)))
+            else:
 
-            # Adding Word Frequency Query
-            WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceWidgetItemName.text(0) + ")")
-
-            # Adding Word Frequency Query to QueryList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DS.setQuery(WordFreqencyQueryTreeWidget, WordFrequencyTab)
-
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
+                WordFrequencyErrorBox = QMessageBox()
+                WordFrequencyErrorBox.setIcon(QMessageBox.Critical)
+                WordFrequencyErrorBox.setWindowTitle("Word Frequency Error")
+                WordFrequencyErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceWidgetItemName.text(0))
+                WordFrequencyErrorBox.setStandardButtons(QMessageBox.Ok)
+                WordFrequencyErrorBox.exec_()
 
         except Exception as e:
             print(str(e))
@@ -539,25 +583,27 @@ class Window(QMainWindow):
         CreateWordCloudDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
         WordCloudDSLabel = QLabel(CreateWordCloudDialog)
-        WordCloudDSLabel.setGeometry(QtCore.QRect(70, 30, 61, 16))
+        WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
         WordCloudDSLabel.setText("Data Source")
+        WordCloudDSLabel.adjustSize()
 
         WordCloudBackgroundLabel = QLabel(CreateWordCloudDialog)
-        WordCloudBackgroundLabel.setGeometry(QtCore.QRect(70, 80, 61, 16))
-
-        WordCloudBackgroundLabel.setText("Background")
+        WordCloudBackgroundLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        WordCloudBackgroundLabel.setText("Background Color")
+        WordCloudBackgroundLabel.adjustSize()
 
         WordCloudMaxWordLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaxWordLabel.setGeometry(QtCore.QRect(70, 130, 61, 16))
+        WordCloudMaxWordLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
         WordCloudMaxWordLabel.setText("Max Words")
+        WordCloudMaxWordLabel.adjustSize()
 
         WordCloudMaskLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaskLabel.setGeometry(QtCore.QRect(70, 180, 51, 16))
+        WordCloudMaskLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
         WordCloudMaskLabel.setText("Mask")
+        WordCloudMaskLabel.adjustSize()
 
         WordCloudDSComboBox = QComboBox(CreateWordCloudDialog)
-        WordCloudDSComboBox.setGeometry(QtCore.QRect(200, 30, 141, 22))
-
+        WordCloudDSComboBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
 
         if DataSourceWidgetItemName is None:
             for DS in myFile.DataSourceList:
@@ -567,14 +613,14 @@ class Window(QMainWindow):
             WordCloudDSComboBox.setDisabled(True)
 
         WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
-        WordCloudBackgroundColor.setGeometry(QtCore.QRect(200, 80, 141, 22))
+        WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
         WordCloudBackgroundColor.setLayoutDirection(QtCore.Qt.LeftToRight)
 
         for BGColor in myFile.WordCloudBackgroundList:
             WordCloudBackgroundColor.addItem(BGColor)
 
         WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
-        WordCloudMaxWords.setGeometry(QtCore.QRect(200, 130, 141, 20))
+        WordCloudMaxWords.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
         WordCloudMaxWords.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         WordCloudMaxWords.setDecimals(0)
         WordCloudMaxWords.setMinimum(10.0)
@@ -582,13 +628,13 @@ class Window(QMainWindow):
 
 
         WordCloudMask = QComboBox(CreateWordCloudDialog)
-        WordCloudMask.setGeometry(QtCore.QRect(200, 180, 141, 22))
+        WordCloudMask.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
 
         for Imagefilename in glob.glob('Word Cloud Maskes/*.png'):  # assuming gif
             WordCloudMask.addItem(os.path.splitext(ntpath.basename(Imagefilename))[0])
 
         CreateWorldCloudbuttonBox = QDialogButtonBox(CreateWordCloudDialog)
-        CreateWorldCloudbuttonBox.setGeometry(QtCore.QRect(210, 250, 156, 23))
+        CreateWorldCloudbuttonBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.8, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
         CreateWorldCloudbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setText('Create')
 
@@ -643,6 +689,7 @@ class Window(QMainWindow):
                 DS.setQuery(WordCloudQueryTreeWidget, WordCloudTab)
 
         self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+        self.tabWidget.setCurrentWidget(WordCloudTab)
 
     #Word Cloud ContextMenu
     def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
@@ -665,7 +712,6 @@ class Window(QMainWindow):
     # Data Source Rename
     def DataSourceRename(self, DataSourceWidgetItemName):
         DataSourceRename = QDialog()
-        DataSourceRename.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         DataSourceRename.setWindowTitle("Rename")
         DataSourceRename.setGeometry(self.width * 0.375, self.height * 0.425, self.width/4, self.height*0.15)
         DataSourceRename.setParent(self)
@@ -702,7 +748,6 @@ class Window(QMainWindow):
     # Data Source Create Query
     def DataSourceFindStemWords(self, DataSourceWidgetItemName):
         DataSourceStemWord = QDialog()
-        DataSourceStemWord.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         DataSourceStemWord.setWindowTitle("Find Stem Words")
         DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
         DataSourceStemWord.setParent(self)
@@ -738,8 +783,78 @@ class Window(QMainWindow):
 
         DataSourceStemWord.exec()
 
+    # Show StemWords on Tab
     def mapStemWordonTab(self, word, DataSourceItemWidget):
+        try:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceItemWidget.text(0):
+                    dummyText = DS.DataSourcetext
+                    break
+
+            # Creating New Tab for Stem Word
+            StemWordTab = QWidget()
+
+            # LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / (self.tabWidget.height() - self.tabWidget.height()/1.25))
+
+            # Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout = QVBoxLayout(StemWordTabVerticalLayoutWidget)
+            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            #
+            # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+            # sizePolicy.setHorizontalStretch(0)
+            # sizePolicy.setVerticalStretch(0)
+            # sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
+            #
+            # Form.setSizePolicy(sizePolicy)
+
+            StemWordTextEdit = QTextEdit(StemWordTabVerticalLayoutWidget)
+            StemWordTextEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            StemWordTextEdit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+            StemWordTextEdit.textChanged.connect(lambda : self.WordSuggestion(StemWordTextEdit.toPlainText, dummyText))
+
+            StemWordTabVerticalLayout.addWidget(StemWordTextEdit)
+
+            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
+            StemWordTabVerticalLayout.addWidget(StemWordSubmitButton)
+
+            # 2nd LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget2.setGeometry(StemWordTabVerticalLayoutWidget.width(), StemWordTabVerticalLayoutWidget.height(), self.tabWidget.width(), self.tabWidget.height()/1.25)
+
+            # 2nd Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
+            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+            StemWordTable.setColumnCount(4)
+
+            StemWordTabVerticalLayout2.addWidget(StemWordTable)
+
+
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceItemWidget.text(0)))
+
+            StemWordQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            StemWordQueryTreeWidget.setText(0, "Stem Word (" + DataSourceItemWidget.text(0) + ")")
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceItemWidget.text(0):
+                    DS.setQuery(StemWordQueryTreeWidget, StemWordTab)
+
+            self.tabWidget.addTab(StemWordTab, "Stem Word")
+            self.tabWidget.setCurrentWidget(StemWordTab)
+
+        except Exception as e:
+            print(str(e))
+
+    #Word Suggestion
+    def WordSuggestion(self, CurrentText, DataSourceText):
         print("Hello World")
+        print(CurrentText)
+        #print(DataSourceText)
 
     #Enable Ok Button
     def OkButtonEnable(self, TextEdit, ButtonBox):
@@ -861,7 +976,6 @@ class Window(QMainWindow):
         myDialog.setModal(True)
         myDialog.setWindowTitle("New File")
         myDialog.setParent(self)
-        myDialog.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         myDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         myDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
@@ -886,6 +1000,7 @@ class Window(QMainWindow):
                     newNode = QTreeWidgetItem(self.wordTreeWidget)
                     newNode.setText(0, ntpath.basename(path[0]))
                     self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                    dummyDataSource.setNode(newNode)
                 else:
                     dummyDataSource.__del__()
 
@@ -923,6 +1038,7 @@ class Window(QMainWindow):
                     newNode = QTreeWidgetItem(self.txtTreeWidget)
                     newNode.setText(0, ntpath.basename(path[0]))
                     self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                    dummyDataSource.setNode(newNode)
                 else:
                     dummyDataSource.__del__()
 
@@ -940,6 +1056,7 @@ class Window(QMainWindow):
                     newNode = QTreeWidgetItem(self.rtfTreeWidget)
                     newNode.setText(0, ntpath.basename(path[0]))
                     self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+                    dummyDataSource.setNode(newNode)
                 else:
                     dummyDataSource.__del__()
 
@@ -956,6 +1073,7 @@ class Window(QMainWindow):
                     newNode = QTreeWidgetItem(self.audioSTreeWidget)
                     newNode.setText(0, ntpath.basename(path[0]))
                     self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+                    dummyDataSource.setNode(newNode)
                 else:
                     dummyDataSource.__del__()
 
@@ -999,7 +1117,6 @@ class Window(QMainWindow):
         self.AboutWindowDialog = QDialog()
         self.AboutWindowDialog.setModal(True)
         self.AboutWindowDialog.setWindowTitle("About Us")
-        self.AboutWindowDialog.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
         self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
         self.AboutWindowDialog.setParent(self)
         self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)

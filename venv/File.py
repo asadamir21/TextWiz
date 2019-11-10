@@ -318,7 +318,7 @@ class Query():
     def FindWordFrequency(self, DataSourceText):
         WordFrequencyRow = []
 
-        DataSourceTextLower = DataSourceText.lower()
+        DataSourceTextLower = DataSourceText
 
         match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
@@ -336,6 +336,8 @@ class Query():
         return WordFrequencyRow
 
     def FindStemmedWords(self, StemWord, DataSourceText):
+        StemWordList = []
+
         DataSourceTextLower = DataSourceText.lower()
 
         match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
@@ -343,19 +345,23 @@ class Query():
 
         porter = PorterStemmer()
 
-        stem_word = porter.stem(word)
+        stem_word = porter.stem(StemWord)
 
         count = 0;
         for words in frequency_list:
             if stem_word == porter.stem(words):
                 count = frequency[words]
-                print("Word:",words,"\tReferences:",count)
+                StemWordList.append([words, count])
+
+        return StemWordList
 
     def GetDistinctWords(self, DataSourceText):
         DataSourceTextLower = DataSourceText.lower()
         match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
         return frequency_list
+
+
 
 class Animation(QObject):
     finished = pyqtSignal()

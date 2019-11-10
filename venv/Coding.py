@@ -48,6 +48,13 @@ class Code:
                    new_node = Node(text, parent = node)
                    Node("% coverage in file ", parent=new_node)
                    Node("References", parent=new_node)
+        elif code_type == 'sentiments':
+           for node in PreOrderIter(self.sentiments):
+               if node.name == head:
+                   new_node = Node(text, parent = node)
+                   Node("% coverage in file ", parent=new_node)
+                   Node("References", parent=new_node)
+
 
 mycode = Code()
 mycode.create_code(mycode.cases,"Dr.Ahmed","Text1") # create new case
@@ -58,6 +65,15 @@ mycode.append_to_code("cases","Dr.Ahmed","Text2") # adding selected text to same
 mycode.save_codes(mycode.cases,"cases")
 mycode.cases = mycode.retrieve_code("cases")
 mycode.print_codes(mycode.cases)
+
+# mycode.create_code(mycode.sentiments,"Positive","Txt3")
+# mycode.save_codes(mycode.sentiments,"sentiments")
+mycode.sentiments = mycode.retrieve_code("sentiments")
+mycode.print_codes(mycode.sentiments)
+mycode.append_to_code("sentiments","Positive","Txt 4")
+mycode.save_codes(mycode.sentiments,"sentiments")
+mycode.sentiments = mycode.retrieve_code("sentiments")
+mycode.print_codes(mycode.sentiments)
 
 
 

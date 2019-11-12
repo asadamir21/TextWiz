@@ -12,14 +12,14 @@ class Query():
                 count = frequency.get(word, 0)
                 frequency[word] = count + 1
 
-
             frequency_list = frequency.keys()
 
             return frequency_list,frequency
 
     def find_exact_word(self, word, document_text):
         doc_text = document_text.lower()
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', doc_text)
+        # match_pattern = re.findall(r'\b[a-z]{3,15}\b', doc_text)
+        match_pattern = re.findall(r'\w+', doc_text)
         frequency_list,frequency = self.GenerateFrequencyList(match_pattern)
 
 
@@ -35,10 +35,10 @@ class Query():
 
         DataSourceTextLower = DataSourceText
 
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
 
-        total_count = 0;
+        total_count = 0
 
         for words in frequency_list:
             total_count += frequency[words]
@@ -54,7 +54,7 @@ class Query():
 
         DataSourceTextLower = DataSourceText.lower()
 
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
 
         porter = PorterStemmer()
@@ -71,15 +71,15 @@ class Query():
 
     def GetDistinctWords(self, DataSourceText):
         DataSourceTextLower = DataSourceText.lower()
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
         return frequency_list
 
 
 # testing
-myquery = Query()
-document_text = "trouble troubling trouble"
-#myquery.find_exact_word("hello",document_text)
-#myquery.FindWordFrequency(document_text)
-print(myquery.FindStemmedWords("trouble",document_text))
+# myquery = Query()
+# document_text = "trouble troubling trouble"
+# #myquery.find_exact_word("hello",document_text)
+# #myquery.FindWordFrequency(document_text)
+# print(myquery.FindStemmedWords("trouble",document_text))
 

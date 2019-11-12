@@ -74,7 +74,3 @@ mycode.append_to_code("sentiments","Positive","Txt 4")
 mycode.save_codes(mycode.sentiments,"sentiments")
 mycode.sentiments = mycode.retrieve_code("sentiments")
 mycode.print_codes(mycode.sentiments)
-
-
-
-

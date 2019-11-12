@@ -199,7 +199,13 @@ class Window(QMainWindow):
         CreateWordCloudTool.setStatusTip('Create Word Cloud')
         CreateWordCloudTool.triggered.connect(lambda checked, index=None: self.DataSourceCreateCloud(index))
 
+        FindSimilarity = QAction('Find Similarity', self)
+        FindSimilarity.setStatusTip('Find Similarity Between Data Sources')
+        FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
+
+
         ToolMenu.addAction(CreateWordCloudTool)
+        ToolMenu.addAction(FindSimilarity)
 
         #HelpMenu Button
         AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
@@ -340,6 +346,93 @@ class Window(QMainWindow):
     #Tab Close Handler
     def tabCloseHandler(self, index):
         self.tabWidget.removeTab(index)
+
+    #Find Similarity Between Data Sources
+    def DataSourcesSimilarity(self):
+        DataSourceSimilarityTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == None and tabs.TabName == 'Data Sources Similarity':
+                if tabs.tabWidget.isHidden():
+                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                else:
+                    self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                DataSourceSimilarityTabFlag = True
+                break
+
+        if not DataSourceSimilarityTabFlag:
+            # Creating New Tab for Data Sources Similarity
+            DataSourcesSimilarityTab = QWidget()
+
+
+            # LayoutWidget For within DataSourcesSimilarity Tab
+            DataSourcesSimilarityTabVerticalLayoutWidget = QWidget(DataSourcesSimilarityTab)
+            DataSourcesSimilarityTabVerticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10,
+                                                                     self.tabWidget.width(),
+                                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
+
+            # Box Layout for DataSourcesSimilarity Tab
+            DataSourcesSimilarityTabVerticalLayout = QVBoxLayout(DataSourcesSimilarityTabVerticalLayoutWidget)
+            DataSourcesSimilarityTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            DataSourcesSimilarityTable = QTableWidget(DataSourcesSimilarityTabVerticalLayoutWidget)
+            DataSourcesSimilarityTable.setColumnCount(3)
+            DataSourcesSimilarityTable.setGeometry(0, 0, DataSourcesSimilarityTabVerticalLayoutWidget.width(),
+                                                   DataSourcesSimilarityTabVerticalLayoutWidget.height())
+
+            DataSourcesSimilarityTable.setSizePolicy(self.sizePolicy)
+            DataSourcesSimilarityTable.setWindowFlags(
+                DataSourcesSimilarityTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+            DataSourcesSimilarityTable.setHorizontalHeaderLabels(
+                ["First Data Source", "Second Data Source", "Similarity Percentage (%)"])
+            DataSourcesSimilarityTable.horizontalHeader().setStyleSheet(
+                "::section {""background-color: grey;  color: white;}")
+
+            for i in range(DataSourcesSimilarityTable.columnCount()):
+                DataSourcesSimilarityTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                DataSourcesSimilarityTable.horizontalHeaderItem(i).setFont(
+                    QFont(DataSourcesSimilarityTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            rowList = myFile.FindSimilarityBetweenDataSource()
+
+            if len(rowList) > 0:
+                for row in rowList:
+                    DataSourcesSimilarityTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        DataSourcesSimilarityTable.setItem(rowList.index(row), row.index(item), intItem)
+                        DataSourcesSimilarityTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        DataSourcesSimilarityTable.item(rowList.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                DataSourcesSimilarityTable.resizeColumnsToContents()
+                DataSourcesSimilarityTable.resizeRowsToContents()
+
+                DataSourcesSimilarityTable.setSortingEnabled(True)
+                DataSourcesSimilarityTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(DataSourcesSimilarityTable.columnCount()):
+                    DataSourcesSimilarityTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, None))
+
+                DataSourcesSimilarityQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DataSourcesSimilarityQueryTreeWidget.setText(0, "Data Sources Similarity")
+
+                self.tabWidget.addTab(DataSourcesSimilarityTab, "Data Sources Similarity")
+                self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
+
+            else:
+                DataSourcesSimilarityErrorBox = QMessageBox()
+                DataSourcesSimilarityErrorBox.setIcon(QMessageBox.Critical)
+                DataSourcesSimilarityErrorBox.setWindowTitle("Data Sources Similarity Error")
+                DataSourcesSimilarityErrorBox.setText("An Error Occured! Similarity can only be found if Data Sources are more than one")
+                DataSourcesSimilarityErrorBox.setStandardButtons(QMessageBox.Ok)
+                DataSourcesSimilarityErrorBox.exec_()
 
     #Get Which Data Source Widget Item and its Position
     def FindDataSourceTreeWidgetContextMenu(self, DataSourceMouseRightClickEvent):
@@ -1004,14 +1097,21 @@ class Window(QMainWindow):
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
-
-        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file?", QMessageBox.Yes | QMessageBox.No)
+        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file?",
+                                                      QMessageBox.Yes | QMessageBox.No)
 
         if DataSourceRemoveChoice == QMessageBox.Yes:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(DataSourceWidgetItemName.parent().childCount()-1) + ")")
+                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(
+                        DataSourceWidgetItemName.parent().childCount() - 1) + ")")
                     DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
+
+                    count = len(DS.QueryList)
+
+                    for query in range(count):
+                        self.QueryRemove(DS.QueryList[0][0])
+
                     myFile.DataSourceList.remove(DS)
                     DS.__del__()
                     break
@@ -1063,43 +1163,54 @@ class Window(QMainWindow):
 
     # Remove Query (Tab)
     def QueryRemove(self, QueryItemName):
+        if QueryItemName.text(0) == 'Data Sources Similarity':
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == None and tabs.TabName == 'Data Sources Similarity':
+                    myFile.TabList.remove(tabs)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    tabs.__del__()
 
-        for letter in QueryItemName.text(0):
-            if letter == '(':
-                QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
-                DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+        else:
+            for letter in QueryItemName.text(0):
+                if letter == '(':
+                    QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
+                    DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
 
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == tabs.DataSourceName:
-                        for query in DS.QueryList:
-                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
-                                myFile.TabList.remove(tabs)
-                                DS.QueryList.remove(query)
-                                tabs.__del__()
-                                break
-
-
-
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName:
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            for query in DS.QueryList:
+                                if query[0] == QueryItemName and query[1] == tabs.tabWidget:
+                                    myFile.TabList.remove(tabs)
+                                    DS.QueryList.remove(query)
+                                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                    tabs.__del__()
+                                    break
 
         self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
 
     # Preview Query/Tab on double click
     def QueryDoubleClickHandler(self, QueryItemName):
-        for letter in QueryItemName.text(0):
-            if letter == '(':
-                QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
-                DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+        if QueryItemName.text(0) == 'Data Sources Similarity':
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == None and tabs.TabName == 'Data Sources Similarity':
+                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
 
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == tabs.DataSourceName:
-                        for query in DS.QueryList:
-                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
-                                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                                break
+        else:
+            for letter in QueryItemName.text(0):
+                if letter == '(':
+                    QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
+                    DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName:
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            for query in DS.QueryList:
+                                if query[0] == QueryItemName and query[1] == tabs.tabWidget:
+                                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                                    break
 
     #Close Application / Exit
     def close_application(self):
@@ -1286,6 +1397,8 @@ class Window(QMainWindow):
         hbox1.addWidget(groupBox2)
         self.AboutWindowDialog.setLayout(hbox1)
         self.AboutWindowDialog.show()
+        myFile.FindSimilarityBetweenDataSource()
+
 
 App = QApplication(sys.argv)
 TextASMainwindow = Window()

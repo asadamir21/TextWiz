@@ -6,6 +6,7 @@ from nltk.stem import LancasterStemmer
 from threading import *
 from PIL import  Image
 from wordcloud import WordCloud, STOPWORDS
+from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
 from pyglet import *
 
@@ -52,8 +53,6 @@ class File():
                 isAvailable = True
                 break
 
-
-
         if not isAvailable:
             self.DataSourceList.append(myDataSource)
         else:
@@ -85,6 +84,40 @@ class File():
 
         return wc.to_image()
 
+    def FindSimilarityBetweenDataSource(self):
+        SimilarityCorpus = []
+
+        for DS in self.DataSourceList:
+            SimilarityCorpus.append(DS.DataSourcetext)
+
+        vect = TfidfVectorizer(min_df=1, stop_words="english")
+        tfidf = vect.fit_transform(SimilarityCorpus)
+        pairwise_similarity = tfidf * tfidf.T
+
+        high = pairwise_similarity.toarray().tolist()
+
+        highlist = []
+
+        for row in range(len(high)):
+            for column in range(len(high[row])):
+                if row != column and row < column:
+
+                    column2 = round(high[row][column] * 100, 5)
+
+                    for DS in self.DataSourceList:
+                        if SimilarityCorpus[column] == DS.DataSourcetext:
+                            index = DS.DataSourceName
+
+                    for DS in self.DataSourceList:
+                        if SimilarityCorpus[row] == DS.DataSourcetext:
+                            index2 = DS.DataSourceName
+
+                    dummylist = [index, index2, column2]
+                    highlist.append(dummylist)
+
+        highlist = sorted(highlist, key=lambda l: l[2], reverse=True)
+
+        return highlist
 
 class DataSource(File):
     def __init__(self, path, ext, MainWindow):
@@ -304,9 +337,8 @@ class Query():
 
     def find_exact_word(self, word, document_text):
         doc_text = document_text.lower()
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', doc_text)
+        match_pattern = re.findall(r'\w+', doc_text)
         frequency_list,frequency = self.GenerateFrequencyList(match_pattern)
-
 
         count = 0;
         for words in frequency_list:
@@ -320,7 +352,7 @@ class Query():
 
         DataSourceTextLower = DataSourceText
 
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
 
         total_count = 0;
@@ -340,7 +372,7 @@ class Query():
 
         DataSourceTextLower = DataSourceText.lower()
 
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
 
         porter = PorterStemmer()
@@ -357,7 +389,7 @@ class Query():
 
     def GetDistinctWords(self, DataSourceText):
         DataSourceTextLower = DataSourceText.lower()
-        match_pattern = re.findall(r'\b[a-z]{3,15}\b', DataSourceTextLower)
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
         frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
         return frequency_list
 

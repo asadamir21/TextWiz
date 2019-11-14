@@ -6,12 +6,12 @@ from nltk.stem import LancasterStemmer
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from threading import *
-from PIL import  Image
+from PIL import Image
+from gensim import *
 from wordcloud import WordCloud, STOPWORDS
 from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
 from pyglet import *
-
 import numpy as np
 import matplotlib
 import re
@@ -86,6 +86,7 @@ class File():
 
         return wc.to_image()
 
+    #Data Source Similarity
     def FindSimilarityBetweenDataSource(self):
         SimilarityCorpus = []
 
@@ -121,6 +122,10 @@ class File():
 
         return highlist
 
+    #Data Source Similar Phrases
+    def FindSimilarPhrases(self):
+        print("Hello World")
+
 class DataSource(File):
     def __init__(self, path, ext, MainWindow):
         super().__init__()
@@ -144,6 +149,7 @@ class DataSource(File):
         elif (ext == "Audio files (*.wav *.mp3)"):
             self.AudioDataSource()
 
+    # Word File
     def WordDataSource(self):
         try:
             self.DataSourcetext = docx2txt.process(self.DataSourcePath)
@@ -165,10 +171,7 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
-    def onIntReady(self, availablecc):  # This method receives the list from the worker
-        print('availablecc', availablecc)  # This is for debugging reasons to verify that I receive the list with the correct content
-        self.availablecc = availablecc
-
+    # PDF File
     def PDFDataSource(self):
         try:
             pdfReader = PyPDF2.PdfFileReader(self.DataSourcePath)
@@ -194,6 +197,7 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
+    # TXT File
     def TxtDataSource(self):
         try:
             file = open(self.DataSourcePath, 'r')
@@ -216,6 +220,7 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
+    # RTF File
     def rtfDataSource(self):
         try:
             file = open(self.DataSourcePath, 'r')
@@ -239,6 +244,7 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
+    # Audio File
     def AudioDataSource(self):
         try:
             self.DataSourceLoadError = False
@@ -259,9 +265,11 @@ class DataSource(File):
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
+    # Set Node
     def setNode(self, WidgetItemNode):
         self.DataSourceTreeWidgetItemNode = WidgetItemNode
 
+    # Set Animation
     def Animation(self, name):
         try:
             loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
@@ -307,6 +315,7 @@ class DataSource(File):
         except Exception as e:
             print(str(e))
 
+    # Set Query
     def setQuery(self, QueryTreeWidgetItem, TabItem):
         self.QueryList.append([QueryTreeWidgetItem, TabItem])
 
@@ -356,9 +365,7 @@ class Query():
                 count = frequency.get(word, 0)
                 frequency[word] = count + 1
 
-
             frequency_list = frequency.keys()
-
             return frequency_list,frequency
 
     def find_exact_word(self, word, document_text):
@@ -390,7 +397,6 @@ class Query():
             weighted_percentage = round((frequency[words]/total_count)*100,2)
             WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage])
 
-
         return WordFrequencyRow
 
     def FindStemmedWords(self, StemWord, DataSourceText):
@@ -416,7 +422,14 @@ class Query():
         frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
 
-
+    def Summarize(self, DataSourceText, Default, Criteria, Value):
+        if Default:
+            return summarization.summarizer.summarize(DataSourceText)
+        else:
+            if Criteria == "Ratio":
+                return summarization.summarizer.summarize(DataSourceText, ratio = Value)
+            elif Criteria == "Total Word Count":
+                return summarization.summarizer.summarize(DataSourceText, word_count = Value)
 
 class Animation(QObject):
     finished = pyqtSignal()
@@ -473,6 +486,3 @@ class Animation(QObject):
 
     def stop(self):
         self.terminate()
-
-
-

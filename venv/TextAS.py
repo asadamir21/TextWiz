@@ -541,8 +541,18 @@ class Window(QMainWindow):
             DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
             DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
 
-            DataSourceSummary = QAction('Summarize', self.DataSourceTreeWidget)
-            DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
+            DataSourceSummize = QAction('Summarize', self.DataSourceTreeWidget)
+            DataSourceSummize.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
+
+            DataSourceSummary = QAction('Show Summary', self.DataSourceTreeWidget)
+            DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummaryPreview(index))
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    if hasattr(DS, 'DataSourceTextSummary'):
+                        DataSourceSummary.setEnabled(True)
+                    else:
+                        DataSourceSummary.setEnabled(False)
 
             DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
             DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
@@ -557,6 +567,7 @@ class Window(QMainWindow):
             DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
             DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
             DataSourceRightClickMenu.addAction(DataSourceStemWords)
+            DataSourceRightClickMenu.addAction(DataSourceSummize)
             DataSourceRightClickMenu.addAction(DataSourceSummary)
             DataSourceRightClickMenu.addAction(DataSourceRename)
             DataSourceRightClickMenu.addAction(DataSourceRemove)
@@ -1330,15 +1341,55 @@ class Window(QMainWindow):
                     DS.Summarize(False, "Total Word Count", SummarizeWord)
                 elif RatioRadioButton:
                     DS.Summarize(False, "Ratio", SummarizeRatio)
-                try:
+
+                if(len(DS.DataSourceTextSummary.split()) > 0):
                     SummarySuccess = QMessageBox()
                     SummarySuccess.setIcon(QMessageBox.Information)
                     SummarySuccess.setText(DS.DataSourceName + " summarize successfully! The Summarize Text now contains " + str(len(DS.DataSourceTextSummary.split())))
                     SummarySuccess.setWindowTitle("Success")
                     SummarySuccess.setStandardButtons(QMessageBox.Ok)
                     SummarySuccess.exec_()
-                except Exception as e:
-                    print(str(e))
+                else:
+                    delattr(DS, 'DataSourceTextSummary')
+                    SummaryError = QMessageBox()
+                    SummaryError.setIcon(QMessageBox.Warning)
+                    SummaryError.setText(DS.DataSourceName + " summarization failed! The Text may contains no words or is already summarized")
+                    SummaryError.setWindowTitle("Error")
+                    SummaryError.setStandardButtons(QMessageBox.Ok)
+                    SummaryError.exec_()
+                break
+
+    #Data Source Summary Preview
+    def DataSourceSummaryPreview(self, DataSourceWidgetItemName):
+        DataSourcePreviewTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Cloud Tab
+        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        try:
+            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview.setReadOnly(True)
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DataSourcePreview.setText(DS.DataSourceTextSummary)
+                    break
+
+            myFile.TabList.append(
+                Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
+                    DataSourceWidgetItemName.text(0)))
+            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+
+        except Exception as e:
+            print(str(e))
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):

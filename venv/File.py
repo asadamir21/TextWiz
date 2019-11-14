@@ -3,6 +3,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from nltk.stem import PorterStemmer
 from nltk.stem import LancasterStemmer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from threading import *
 from PIL import  Image
 from wordcloud import WordCloud, STOPWORDS
@@ -323,6 +325,30 @@ class Tab(File):
 
 
 class Query():
+
+    def text_preprocessing(self,document_text):
+        # convert all text to lowercase
+        doc_text = document_text.lower()
+
+        # remove numbers
+        doc_text = re.sub(r'\d+', '', doc_text)
+
+        # remove punctuation, characters and whitespaces
+        doc_text = re.sub('\W+', ' ', doc_text)
+
+        # remove stopwords and tokenize
+        stop_words = set(stopwords.words('english'))
+        tokens = word_tokenize(doc_text)
+        result = [i for i in tokens if not i in stop_words]
+
+        result2 = []
+
+        for word in result:
+            if len(word) > 2:
+                result2.append(word)
+
+        return result2
+
     def GenerateFrequencyList(self, match_pattern):
             frequency = {}
 
@@ -340,7 +366,7 @@ class Query():
         match_pattern = re.findall(r'\w+', doc_text)
         frequency_list,frequency = self.GenerateFrequencyList(match_pattern)
 
-        count = 0;
+        count = 0
         for words in frequency_list:
             if word == words:
                 count = frequency[words]
@@ -348,14 +374,14 @@ class Query():
         print("Word: ", word, "\tReferences: ", count)
 
     def FindWordFrequency(self, DataSourceText):
+
         WordFrequencyRow = []
 
-        DataSourceTextLower = DataSourceText
+        result = self.text_preprocessing(DataSourceText)
+        frequency_list, frequency = self.GenerateFrequencyList(result)
 
-        match_pattern = re.findall(r'\w+', DataSourceTextLower)
-        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
-
-        total_count = 0;
+        total_count = 0
+        # stop_words = set(stopwords.words('english'))
 
         for words in frequency_list:
             total_count += frequency[words]
@@ -370,16 +396,14 @@ class Query():
     def FindStemmedWords(self, StemWord, DataSourceText):
         StemWordList = []
 
-        DataSourceTextLower = DataSourceText.lower()
-
-        match_pattern = re.findall(r'\w+', DataSourceTextLower)
-        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
+        result = self.text_preprocessing(DataSourceText)
+        frequency_list, frequency = self.GenerateFrequencyList(result)
 
         porter = PorterStemmer()
 
         stem_word = porter.stem(StemWord)
 
-        count = 0;
+        count = 0
         for words in frequency_list:
             if stem_word == porter.stem(words):
                 count = frequency[words]
@@ -388,9 +412,8 @@ class Query():
         return StemWordList
 
     def GetDistinctWords(self, DataSourceText):
-        DataSourceTextLower = DataSourceText.lower()
-        match_pattern = re.findall(r'\w+', DataSourceTextLower)
-        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
+        result = self.text_preprocessing(DataSourceText)
+        frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
 
 

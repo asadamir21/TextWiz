@@ -1,12 +1,8 @@
-from builtins import bytes
-
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
 from PyQt5.QtWebKit import *
-
 from PyQt5.QtWebKitWidgets import *
-
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from win32api import GetMonitorInfo, MonitorFromPoint
 
@@ -202,12 +198,16 @@ class Window(QMainWindow):
         CreateWordCloudTool.setStatusTip('Create Word Cloud')
         CreateWordCloudTool.triggered.connect(lambda checked, index=None: self.DataSourceCreateCloud(index))
 
+        SummarizeTool = QAction('Summarize', self)
+        SummarizeTool.setStatusTip('Summarize')
+        SummarizeTool.triggered.connect(lambda checked, index=None: self.DataSourceSummarize(index))
+
         FindSimilarity = QAction('Find Similarity', self)
         FindSimilarity.setStatusTip('Find Similarity Between Data Sources')
         FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
 
-
         ToolMenu.addAction(CreateWordCloudTool)
+        ToolMenu.addAction(SummarizeTool)
         ToolMenu.addAction(FindSimilarity)
 
         #HelpMenu Button
@@ -337,8 +337,6 @@ class Window(QMainWindow):
         self.tabWidget.setElideMode(Qt.ElideRight)
         self.tabWidget.setUsesScrollButtons(True)
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
-
-
 
         self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.toolbar.height())
 
@@ -543,6 +541,9 @@ class Window(QMainWindow):
             DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
             DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
 
+            DataSourceSummary = QAction('Summarize', self.DataSourceTreeWidget)
+            DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
+
             DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
             DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
 
@@ -556,6 +557,7 @@ class Window(QMainWindow):
             DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
             DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
             DataSourceRightClickMenu.addAction(DataSourceStemWords)
+            DataSourceRightClickMenu.addAction(DataSourceSummary)
             DataSourceRightClickMenu.addAction(DataSourceRename)
             DataSourceRightClickMenu.addAction(DataSourceRemove)
             DataSourceRightClickMenu.addAction(DataSourceChildDetail)
@@ -1178,6 +1180,165 @@ class Window(QMainWindow):
             StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
             StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
             StemWordErrorBox.exec_()
+
+    # Data Source Summary
+    def DataSourceSummarize(self, DataSourceWidgetItemName):
+        SummarizeDialog = QDialog()
+        SummarizeDialog.setWindowTitle("Summarize")
+        SummarizeDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        SummarizeDialog.setParent(self)
+        SummarizeDialog.setAttribute(Qt.WA_DeleteOnClose)
+        SummarizeDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        SummarizeDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        SummarizeDSLabel = QLabel(SummarizeDialog)
+        SummarizeDSLabel.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.1,
+                                     SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
+        SummarizeDSLabel.setText("Data Source")
+        SummarizeDSLabel.adjustSize()
+
+        DefaultRadioButton = QRadioButton(SummarizeDialog)
+        DefaultRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.25,
+                                       SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
+        DefaultRadioButton.setText("Default")
+        DefaultRadioButton.adjustSize()
+
+        TotalWordCountRadioButton = QRadioButton(SummarizeDialog)
+        TotalWordCountRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.4,
+                                              SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
+        TotalWordCountRadioButton.setText("Total Word Count")
+        TotalWordCountRadioButton.adjustSize()
+
+        RatioRadioButton = QRadioButton(SummarizeDialog)
+        RatioRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.65,
+                                     SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
+        RatioRadioButton.setText("Ratio")
+        RatioRadioButton.adjustSize()
+
+        SummarizeDSComboBox = QComboBox(SummarizeDialog)
+        SummarizeDSComboBox.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.1,
+                                        SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
+
+        if DataSourceWidgetItemName is None:
+            for DS in myFile.DataSourceList:
+                SummarizeDSComboBox.addItem(DS.DataSourceName)
+        else:
+            SummarizeDSComboBox.addItem(DataSourceWidgetItemName.text(0))
+            SummarizeDSComboBox.setDisabled(True)
+
+        # SummarizeWord
+        SummarizeWord = QDoubleSpinBox(SummarizeDialog)
+        SummarizeWord.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.4,
+                                  SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
+        SummarizeWord.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        SummarizeWord.setDecimals(0)
+        SummarizeWord.setEnabled(False)
+
+        # Max Word Label
+        SummarizeMaxWord = QLabel(SummarizeDialog)
+        SummarizeMaxWord.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.5,
+                                     SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
+        SummarizeMaxWord.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+        MaxWordFont = QFont()
+        MaxWordFont.setPixelSize(9)
+        SummarizeMaxWord.setFont(MaxWordFont)
+
+        if SummarizeDSComboBox.currentText() != None:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == SummarizeDSComboBox.currentText():
+                    SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
+                    SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
+                    SummarizeWord.setValue(SummarizeWord.minimum())
+                    SummarizeMaxWord.setText("(Max. Words: " + str(len(DS.DataSourcetext.split())) + ")")
+                    break
+
+        TotalWordCountRadioButton.toggled.connect(lambda: self.RadioButtonTrigger(SummarizeWord))
+
+        # SummarizeRatio
+        SummarizeRatio = QDoubleSpinBox(SummarizeDialog)
+        SummarizeRatio.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.65,
+                                   SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
+        SummarizeRatio.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        SummarizeRatio.setEnabled(False)
+        SummarizeRatio.setDecimals(2)
+        SummarizeRatio.setSingleStep(0.01)
+        SummarizeRatio.setMinimum(.20)
+        SummarizeRatio.setMaximum(1.00)
+
+        RatioRadioButton.toggled.connect(lambda: self.RadioButtonTrigger(SummarizeRatio))
+
+        SummarizeDSComboBox.currentTextChanged.connect(lambda: self.ComboBoxTextChange(SummarizeWord, SummarizeMaxWord))
+
+        SummarizebuttonBox = QDialogButtonBox(SummarizeDialog)
+        SummarizebuttonBox.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.8,
+                                       SummarizeDialog.width() / 3, SummarizeDialog.height() / 5)
+        SummarizebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        SummarizebuttonBox.button(QDialogButtonBox.Ok).setText('Summarize')
+        SummarizebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        DefaultRadioButton.toggled.connect(
+            lambda: self.EnableOkonRadioButtonToggle(TotalWordCountRadioButton, RatioRadioButton, SummarizebuttonBox))
+        TotalWordCountRadioButton.toggled.connect(
+            lambda: self.EnableOkonRadioButtonToggle(DefaultRadioButton, RatioRadioButton, SummarizebuttonBox))
+        RatioRadioButton.toggled.connect(
+            lambda: self.EnableOkonRadioButtonToggle(DefaultRadioButton, TotalWordCountRadioButton, SummarizebuttonBox))
+
+        SummarizebuttonBox.accepted.connect(SummarizeDialog.accept)
+        SummarizebuttonBox.rejected.connect(SummarizeDialog.reject)
+
+        SummarizebuttonBox.accepted.connect(
+            lambda: self.DSSummarizeFromDialog(DataSourceWidgetItemName, DefaultRadioButton.isChecked(),
+                                               TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),
+                                               SummarizeWord.value(), SummarizeRatio.value()))
+
+        SummarizeDialog.exec()
+
+    # Radio Button Toggle
+    def RadioButtonTrigger(self, Widget):
+        RadioButton = self.sender()
+
+        if RadioButton.isChecked():
+            Widget.setEnabled(True)
+        else:
+            Widget.setEnabled(False)
+
+    # Combo Box Text Change
+    def ComboBoxTextChange(self, SummarizeWord, SummarizeMaxWord):
+        ComboBox = self.sender()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == ComboBox.currentText():
+                SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
+                SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
+                SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
+                SummarizeWord.setValue(SummarizeWord.minimum())
+
+    def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox):
+        Button = self.sender()
+        if(not Button.isChecked() and not SecondButton.isChecked() and not ThirdButton.isChecked()):
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+    # Data Source Summarize
+    def DSSummarizeFromDialog(self, DataSourceWidgetItemName, DefaultRadioButton, TotalWordCountRadioButton, RatioRadioButton, SummarizeWord, SummarizeRatio):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DefaultRadioButton:
+                    DS.Summarize(True, None, None)
+                elif TotalWordCountRadioButton:
+                    DS.Summarize(False, "Total Word Count", SummarizeWord)
+                elif RatioRadioButton:
+                    DS.Summarize(False, "Ratio", SummarizeRatio)
+                try:
+                    SummarySuccess = QMessageBox()
+                    SummarySuccess.setIcon(QMessageBox.Information)
+                    SummarySuccess.setText(DS.DataSourceName + " summarize successfully! The Summarize Text now contains " + str(len(DS.DataSourceTextSummary.split())))
+                    SummarySuccess.setWindowTitle("Success")
+                    SummarySuccess.setStandardButtons(QMessageBox.Ok)
+                    SummarySuccess.exec_()
+                except Exception as e:
+                    print(str(e))
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):

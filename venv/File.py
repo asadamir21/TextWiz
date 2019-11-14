@@ -269,6 +269,16 @@ class DataSource(File):
     def setNode(self, WidgetItemNode):
         self.DataSourceTreeWidgetItemNode = WidgetItemNode
 
+    # Summary
+    def Summarize(self, Default, Criteria, Value):
+        if Default:
+            self.DataSourceTextSummary = summarization.summarizer.summarize(self.DataSourcetext)
+        else:
+            if Criteria == "Ratio":
+                self.DataSourceTextSummary = summarization.summarizer.summarize(self.DataSourcetext, ratio=Value)
+            elif Criteria == "Total Word Count":
+                self.DataSourceTextSummary = summarization.summarizer.summarize(self.DataSourcetext, word_count=Value)
+
     # Set Animation
     def Animation(self, name):
         try:
@@ -331,7 +341,6 @@ class Tab(File):
 
     def __del__(self):
         self.TabDelete = True
-
 
 class Query():
 
@@ -422,14 +431,6 @@ class Query():
         frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
 
-    def Summarize(self, DataSourceText, Default, Criteria, Value):
-        if Default:
-            return summarization.summarizer.summarize(DataSourceText)
-        else:
-            if Criteria == "Ratio":
-                return summarization.summarizer.summarize(DataSourceText, ratio = Value)
-            elif Criteria == "Total Word Count":
-                return summarization.summarizer.summarize(DataSourceText, word_count = Value)
 
 class Animation(QObject):
     finished = pyqtSignal()

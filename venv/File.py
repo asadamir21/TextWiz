@@ -8,6 +8,8 @@ from nltk.tokenize import word_tokenize
 from threading import *
 from PIL import Image
 from gensim import *
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 from wordcloud import WordCloud, STOPWORDS
 from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
@@ -279,6 +281,46 @@ class DataSource(File):
             elif Criteria == "Total Word Count":
                 self.DataSourceTextSummary = summarization.summarizer.summarize(self.DataSourcetext, word_count=Value)
 
+    #detection
+    def detect(self):
+        blob = TextBlob(self.DataSourcetext)
+        if blob.detect_language() != 'en':
+            self.isEnglish = False
+        else:
+            self.isEnglish = True
+
+    #translation
+    def translate(self):
+        if not self.isEnglish and not hasattr(self, 'DataSourceTranslatedText'):
+            blob = TextBlob(self.DataSourcetext)
+            try:
+                self.DataSourceTranslatedText = blob.translate(to='en')
+
+                TranslationSuccessBox = QMessageBox()
+                TranslationSuccessBox.setIcon(QMessageBox.Information)
+                TranslationSuccessBox.setWindowTitle("Translation Success")
+                TranslationSuccessBox.setText(self.DataSourceName + " is Translated Successfully!")
+                TranslationSuccessBox.setStandardButtons(QMessageBox.Ok)
+                TranslationSuccessBox.exec_()
+
+                self.isTranslated = True
+            except Exception as e:
+                TranslationErrorBox = QMessageBox()
+                TranslationErrorBox.setIcon(QMessageBox.Critical)
+                TranslationErrorBox.setWindowTitle("Translation Error")
+                TranslationErrorBox.setText("An Error occurred. The language is undetectable")
+                TranslationErrorBox.setDetailedText(str(e))
+                TranslationErrorBox.setStandardButtons(QMessageBox.Ok)
+                TranslationErrorBox.exec_()
+
+        elif hasattr(self, 'DataSourceTranslatedText'):
+            TranslationErrorBox = QMessageBox()
+            TranslationErrorBox.setIcon(QMessageBox.Information)
+            TranslationErrorBox.setWindowTitle("Translation Error")
+            TranslationErrorBox.setText(self.DataSourceName + " is already Translated!")
+            TranslationErrorBox.setStandardButtons(QMessageBox.Ok)
+            TranslationErrorBox.exec_()
+
     # Set Animation
     def Animation(self, name):
         try:
@@ -368,14 +410,14 @@ class Query():
         return result2
 
     def GenerateFrequencyList(self, match_pattern):
-            frequency = {}
+        frequency = {}
 
-            for word in match_pattern:
-                count = frequency.get(word, 0)
-                frequency[word] = count + 1
+        for word in match_pattern:
+            count = frequency.get(word, 0)
+            frequency[word] = count + 1
 
-            frequency_list = frequency.keys()
-            return frequency_list,frequency
+        frequency_list = frequency.keys()
+        return frequency_list,frequency
 
     def find_exact_word(self, word, document_text):
         doc_text = document_text.lower()
@@ -390,9 +432,7 @@ class Query():
         print("Word: ", word, "\tReferences: ", count)
 
     def FindWordFrequency(self, DataSourceText):
-
         WordFrequencyRow = []
-
         result = self.text_preprocessing(DataSourceText)
         frequency_list, frequency = self.GenerateFrequencyList(result)
 
@@ -430,6 +470,36 @@ class Query():
         result = self.text_preprocessing(DataSourceText)
         frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Animation(QObject):

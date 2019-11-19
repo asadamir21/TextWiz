@@ -1085,14 +1085,59 @@ class Window(QMainWindow):
 
         RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
-        RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenameLineEdit, RenamebuttonBox))
+        RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenameLineEdit, RenamebuttonBox, True))
 
         RenamebuttonBox.accepted.connect(DataSourceRename.accept)
         RenamebuttonBox.rejected.connect(DataSourceRename.reject)
 
-        RenamebuttonBox.accepted.connect(lambda: DataSourceWidgetItemName.setText(0, RenameLineEdit.text()))
+        RenamebuttonBox.accepted.connect(lambda: self.DSRename(DataSourceWidgetItemName, RenameLineEdit.text()))
 
         DataSourceRename.exec()
+
+    # Rename Data Source and Widget
+    def DSRename(self, DataSourceWidgetItemName, name):
+        DataSourceRenameCheck = False
+
+        for DSN in myFile.DataSourceList:
+            if DSN.DataSourceName == name:
+                DataSourceRenameCheck = True
+                break
+
+        if not DataSourceRenameCheck:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    for tab in myFile.TabList:
+                        if tab.DataSourceName == DS.DataSourceName:
+                            tab.DataSourceName = name
+
+                    for query in DS.QueryList:
+                        for letter in query[0].text(0):
+                            if letter == '(':
+                                QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
+                                DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
+
+                                if DataSourceName == DS.DataSourceName:
+                                    query[0].setText(0, QueryName + "(" + name + ")")
+
+                    DS.DataSourceName = name
+                    break
+
+            DataSourceWidgetItemName.setText(0, name)
+
+            DataSourceRenameSuccessBox = QMessageBox()
+            DataSourceRenameSuccessBox.setIcon(QMessageBox.Information)
+            DataSourceRenameSuccessBox.setWindowTitle("Rename Success")
+            DataSourceRenameSuccessBox.setText("Data Source Rename Successfully!")
+            DataSourceRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceRenameSuccessBox.exec_()
+
+        else:
+            DataSourceRenameErrorBox = QMessageBox()
+            DataSourceRenameErrorBox.setIcon(QMessageBox.Critical)
+            DataSourceRenameErrorBox.setWindowTitle("Rename Error")
+            DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
+            DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceRenameErrorBox.exec_()
 
     # Data Source Create Query
     def DataSourceFindStemWords(self, DataSourceWidgetItemName):
@@ -1310,8 +1355,6 @@ class Window(QMainWindow):
             StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
             StemWordErrorBox.exec_()
 
-
-
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):
         for DS in myFile.DataSourceList:
@@ -1332,7 +1375,6 @@ class Window(QMainWindow):
             if len(LineEdit.text()) > 0:
                 ButtonBox.setEnabled(True)
             else:
-
                 ButtonBox.setEnabled(False)
 
     # Enable Ok Button (Combo Box)

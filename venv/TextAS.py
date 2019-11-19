@@ -1857,14 +1857,28 @@ class Window(QMainWindow):
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
 
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
-                    newNode = QTreeWidgetItem(self.wordTreeWidget)
-                    newNode.setText(0, ntpath.basename(path[0]))
-                    self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
-                    dummyDataSource.setNode(newNode)
+                DataSourceNameCheck = False
+
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
+                    if not dummyDataSource.DataSourceLoadError:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.wordTreeWidget)
+                        newNode.setText(0, ntpath.basename(path[0]))
+                        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
                 else:
-                    dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
 
         elif check == "PDF":
             dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
@@ -1874,17 +1888,31 @@ class Window(QMainWindow):
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
 
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
+                DataSourceNameCheck = False
+
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
                     if not dummyDataSource.DataSourceLoadError:
-                        newNode = QTreeWidgetItem(self.pdfTreeWidget)
-                        newNode.setText(0, ntpath.basename(path[0]))
-                        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
-                        dummyDataSource.setNode(newNode)
+                        myFile.setDataSources(dummyDataSource)
+                        if not dummyDataSource.DataSourceLoadError:
+                            newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                            newNode.setText(0, ntpath.basename(path[0]))
+                            self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                            dummyDataSource.setNode(newNode)
+                        else:
+                            dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
                 else:
-                    dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
 
 
         elif check == "Txt":

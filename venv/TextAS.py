@@ -1168,105 +1168,127 @@ class Window(QMainWindow):
 
     # Show StemWords on Tab
     def mapStemWordonTab(self, word, DataSourceItemWidget):
-        try:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceItemWidget:
-                    dummyText = DS.DataSourcetext
-                    break
+        DataSourceStemWordTabFlag = False
 
-            # Creating New Tab for Stem Word
-            StemWordTab = QWidget()
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceItemWidget and tabs.TabName == 'Stem Word':
+                DataSourceStemWordTabFlag = True
+                break
 
-            # LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                        self.tabWidget.height() / 10)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceItemWidget:
+                dummyText = DS.DataSourcetext
+                break
 
-            # Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
-            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Creating New Tab for Stem Word
+        StemWordTab = QWidget()
 
-            # StemWord Text Edit
-            StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
-            StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
+        # LayoutWidget For within Stem Word Tab
+        StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
+        StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                    self.tabWidget.height() / 10)
+
+        # Box Layout for Stem Word Tab
+        StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
+        StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # StemWord Text Edit
+        StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
+        StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
+                                     StemWordTabVerticalLayoutWidget.height() * 0.375,
+                                     StemWordTabVerticalLayoutWidget.width() / 4,
+                                     StemWordTabVerticalLayoutWidget.height() / 4)
+        StemWordCompleter = QCompleter()
+        StemWordLineEdit.setCompleter(StemWordCompleter)
+        StemWordModel = QStringListModel()
+        StemWordCompleter.setModel(StemWordModel)
+
+        StemWordLineEdit.textChanged.connect(
+            lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceItemWidget))
+
+        # StemWord Submit Button
+        StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
+        StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
                                          StemWordTabVerticalLayoutWidget.height() * 0.375,
                                          StemWordTabVerticalLayoutWidget.width() / 4,
                                          StemWordTabVerticalLayoutWidget.height() / 4)
-            StemWordCompleter = QCompleter()
-            StemWordLineEdit.setCompleter(StemWordCompleter)
-            StemWordModel = QStringListModel()
-            StemWordCompleter.setModel(StemWordModel)
+        StemWordSubmitButton.setText("Find Stem Words")
+        StemWordSubmitButton.setEnabled(False)
 
-            StemWordLineEdit.textChanged.connect(
-                lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceItemWidget))
+        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordLineEdit, StemWordSubmitButton, False))
 
-            # StemWord Submit Button
-            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
-            StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
-                                             StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                             StemWordTabVerticalLayoutWidget.width() / 4,
-                                             StemWordTabVerticalLayoutWidget.height() / 4)
-            StemWordSubmitButton.setText("Find Stem Words")
-            StemWordSubmitButton.setEnabled(False)
+        # 2nd LayoutWidget For within Stem Word Tab
+        StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
+        StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordLineEdit, StemWordSubmitButton, False))
+        # 2nd Box Layout for Stem Word Tab
+        StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
+        StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-            # 2nd LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+        StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+        StemWordTable.setColumnCount(2)
+        StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
+                                  StemWordTabVerticalLayoutWidget2.height())
 
-            # 2nd Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
-            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        StemWordTable.setSizePolicy(self.sizePolicy)
+        StemWordTable.setWindowFlags(StemWordTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
+        StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
-            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
-            StemWordTable.setColumnCount(2)
-            StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
-                                      StemWordTabVerticalLayoutWidget2.height())
+        for i in range(StemWordTable.columnCount()):
+            StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            StemWordTable.horizontalHeaderItem(i).setFont(
+                QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            StemWordTable.setSizePolicy(self.sizePolicy)
-            StemWordTable.setWindowFlags(StemWordTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-            StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
-            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        StemWordSubmitButton.clicked.connect(
+            lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceItemWidget, StemWordTable))
+
+        dummyQuery = Query()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceItemWidget:
+                rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
+                break
+
+        if len(rowList) != 0:
+            for row in rowList:
+                StemWordTable.insertRow(rowList.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
+                    StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            StemWordTable.resizeColumnsToContents()
+            StemWordTable.resizeRowsToContents()
+
+            StemWordTable.setSortingEnabled(True)
+            StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
 
             for i in range(StemWordTable.columnCount()):
-                StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                StemWordTable.horizontalHeaderItem(i).setFont(
-                    QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            StemWordSubmitButton.clicked.connect(
-                lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceItemWidget, StemWordTable))
+            if DataSourceStemWordTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceItemWidget:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = StemWordTab
+                                break
 
-            dummyQuery = Query()
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(StemWordTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(StemWordTab)
+                tabs.tabWidget = StemWordTab
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceItemWidget:
-                    rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
-                    break
-
-            if len(rowList) != 0:
-                for row in rowList:
-                    StemWordTable.insertRow(rowList.index(row))
-                    for item in row:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
-                        StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
-                        StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
-                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-                StemWordTable.resizeColumnsToContents()
-                StemWordTable.resizeRowsToContents()
-
-                StemWordTable.setSortingEnabled(True)
-                StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
-
-                for i in range(StemWordTable.columnCount()):
-                    StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
+            else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceItemWidget))
 
@@ -1280,16 +1302,15 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(StemWordTab, "Stem Word")
                 self.tabWidget.setCurrentWidget(StemWordTab)
 
-            else:
-                StemWordErrorBox = QMessageBox()
-                StemWordErrorBox.setIcon(QMessageBox.Critical)
-                StemWordErrorBox.setWindowTitle("Stem Word Error")
-                StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
-                StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
-                StemWordErrorBox.exec_()
+        else:
+            StemWordErrorBox = QMessageBox()
+            StemWordErrorBox.setIcon(QMessageBox.Critical)
+            StemWordErrorBox.setWindowTitle("Stem Word Error")
+            StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
+            StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
+            StemWordErrorBox.exec_()
 
-        except Exception as e:
-            print(str(e))
+
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):

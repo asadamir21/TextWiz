@@ -587,6 +587,7 @@ class Window(QMainWindow):
 
             # Data Source Child Detail
             DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceChildDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceChildDetail(index))
             DataSourceRightClickMenu.addAction(DataSourceChildDetail)
 
             DataSourceRightClickMenu.popup(DataSourceWidgetPos)
@@ -1726,6 +1727,99 @@ class Window(QMainWindow):
         else:
             pass
 
+    # Data Source Child Detail
+    def DataSourceChildDetail(self, DataSourceWidgetItemName):
+        DataSourceWidgetDetailDialogBox = QDialog()
+        DataSourceWidgetDetailDialogBox.setModal(True)
+        DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
+        DataSourceWidgetDetailDialogBox.setParent(self)
+        DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.2, self.width/3,
+                                                    self.height*3/ 5)
+        DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceNameLabel.setText("Name:")
+        DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.05, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourcePathLabel.setText("Path:")
+        DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.1, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourcePathLabel)
+
+        DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceExtLabel.setText("Extension:")
+        DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.15, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceExtLabel)
+
+        DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceSize.setText("Size:")
+        DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.20, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceSize)
+
+        DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceAccessTime.setText("Last Access Time:")
+        DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.25, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceAccessTime)
+
+        DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceModifiedTime.setText("Last Modified Time:")
+        DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.3, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceModifiedTime)
+
+        DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceChangeTime.setText("Last Change Time:")
+        DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.35, DataSourceWidgetDetailDialogBox.width()/4, DataSourceWidgetDetailDialogBox.height()/10)
+        DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceChangeTime)
+
+        DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceWordCount.setText("Total Words:")
+        DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1, DataSourceWidgetDetailDialogBox.height() * 0.4, DataSourceWidgetDetailDialogBox.width() / 4, DataSourceWidgetDetailDialogBox.height() / 10)
+        DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceWordCount)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # DataSourceChildLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        # DataSourceChildLabel.setText("No. of Data Sources:")
+        # DataSourceChildLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.2,
+        #                                  DataSourceWidgetDetailDialogBox.height() * 0.5,
+        #                                  DataSourceWidgetDetailDialogBox.width() / 2,
+        #                                  DataSourceWidgetDetailDialogBox.height() / 5)
+        # DataSourceChildLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        # self.LabelSizeAdjustment(DataSourceChildLabel)
+        #
+        # DataSourceChildCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        # DataSourceChildCountLabel.setText(str(DataSourceWidgetItemName.childCount()))
+        # DataSourceChildCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.5,
+        #                                       DataSourceWidgetDetailDialogBox.height() * 0.5,
+        #                                       DataSourceWidgetDetailDialogBox.width() / 2,
+        #                                       DataSourceWidgetDetailDialogBox.height() / 5)
+        # DataSourceChildCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        # self.LabelSizeAdjustment(DataSourceChildCountLabel)
+
+        DataSourceWidgetDetailDialogBox.exec_()
+
     # Get Which Query Widget Item and its Position
     def FindQueryTreeWidgetContextMenu(self, QueryMouseRightClickEvent):
         if QueryMouseRightClickEvent.reason == QueryMouseRightClickEvent.Mouse:
@@ -1873,6 +1967,7 @@ class Window(QMainWindow):
                     else:
                         dummyDataSource.__del__()
                 else:
+                    dummyDataSource.__del__()
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
@@ -1907,6 +2002,7 @@ class Window(QMainWindow):
                     else:
                         dummyDataSource.__del__()
                 else:
+                    dummyDataSource.__del__()
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
@@ -1923,15 +2019,27 @@ class Window(QMainWindow):
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
 
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
-                    newNode = QTreeWidgetItem(self.txtTreeWidget)
-                    newNode.setText(0, ntpath.basename(path[0]))
-                    self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
-                    dummyDataSource.setNode(newNode)
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
+                    if not dummyDataSource.DataSourceLoadError:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.txtTreeWidget)
+                        newNode.setText(0, ntpath.basename(path[0]))
+                        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
 
         elif check == "RTF":
             dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
@@ -1941,14 +2049,27 @@ class Window(QMainWindow):
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
 
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
-                    newNode = QTreeWidgetItem(self.rtfTreeWidget)
-                    newNode.setText(0, ntpath.basename(path[0]))
-                    self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
-                    dummyDataSource.setNode(newNode)
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
+                    if not dummyDataSource.DataSourceLoadError:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                        newNode.setText(0, ntpath.basename(path[0]))
+                        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
 
         elif check == "Sound":
             dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
@@ -1958,14 +2079,27 @@ class Window(QMainWindow):
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
 
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
-                    newNode = QTreeWidgetItem(self.audioSTreeWidget)
-                    newNode.setText(0, ntpath.basename(path[0]))
-                    self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
-                    dummyDataSource.setNode(newNode)
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
+                    if not dummyDataSource.DataSourceLoadError:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                        newNode.setText(0, ntpath.basename(path[0]))
+                        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
 
     #Print Window
     def printWindow(self):

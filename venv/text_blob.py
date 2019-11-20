@@ -1,4 +1,3 @@
-
 # coding=utf-8
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
@@ -6,9 +5,18 @@ from anytree import Node, RenderTree, PreOrderIter
 import numpy as np
 from queries import *
 from read_files import *
+from anytree.exporter import DotExporter
+from graphviz import Source
+from graphviz import render
+from graphviz import Digraph
+import os
+import spacy
+
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
 # pip install -U textblob
 # python -m textblob.download_corpora
+
 
 # noun phrases
 def noun_phrases(text):
@@ -28,15 +36,16 @@ def pos_tagging(text,limit): #limit is the top n words required
 
     str = " "
     list_to_string = str.join(word_list)
-    blob = TextBlob(list_to_string)
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(list_to_string)
 
     pos_list = []
     i = 0
-    for word, tag in blob.tags:
-        pos_list.append([word,tag,freq_list[i]])
+    for token in doc:
+        pos_list.append([token,token.pos_,freq_list[i]])
         i += 1
 
-    #print(pos_list)
+    # print(pos_list)
     pos_list = sorted(pos_list, key=lambda l: l[2], reverse=True)
 
     root = Node("Root")
@@ -47,29 +56,32 @@ def pos_tagging(text,limit): #limit is the top n words required
     noun_limit = 0
     verb_limit = 0
     adj_limit = 0
-
     for word, tag, freq in pos_list:
-        if (tag == "NN" or tag == "NNP" or tag == "NNS" or tag == "NNPS") and (noun_limit < limit):
-            # tag = "noun"
-            # print(word,tag)
-            word_tag = Node(word, parent=noun_node)
-            Node(freq, parent=word_tag)
-            noun_limit += 1
+                if (tag == "NOUN") and (noun_limit < limit):
+                    # tag = "noun"
+                    # print(word,tag)
+                    word_tag = Node(word, parent=noun_node)
+                    # Node(freq, parent = word_tag)
+                    noun_limit += 1
 
-        elif (tag == "VB" or tag == "VBZ" or tag == "VBP" or tag == "VBD" or tag == "VBN" or tag == "VBG") and (
-                verb_limit < limit):
-            # tag = "verb"
-            # print(word,tag)
-            word_tag = Node(word, parent=verb_node)
-            Node(freq, parent=word_tag)
-            verb_limit += 1
+                elif (tag == "VERB") and (verb_limit < limit):
+                    # tag = "verb"
+                    # print(word,tag)
+                    word_tag = Node(word, parent=verb_node)
+                    # Node(freq, parent = word_tag)
+                    verb_limit += 1
 
-        elif (tag == "JJ" or tag == "JJR" or tag == "JJS") and (adj_limit < limit):
-            # tag = "adjective"
-            # print(word,tag)
-            word_tag = Node(word, parent=adj_node)
-            Node(freq, parent=word_tag)
-            adj_limit += 1
+                elif (tag == "ADJ") and (adj_limit < limit):
+                    # tag = "adjective"
+                    # print(word,tag)
+                    word_tag = Node(word, parent=adj_node)
+                    # Node(freq, parent = word_tag)
+                    adj_limit += 1
+
+    # png image of tree
+    DotExporter(root).to_dotfile('tree.dot')
+    Source.from_file('tree.dot')
+    render('dot', 'png', 'tree.dot')
 
     # printing tree
     for pre, fill, node in RenderTree(root):
@@ -80,21 +92,19 @@ def pos_tagging(text,limit): #limit is the top n words required
     adj_count = 0
 
     blob2 = TextBlob(text)
-
-    for word, tag in blob2.tags:
-        if tag == "NN" or tag == "NNP" or tag == "NNS" or tag == "NNPS":
-            # tag = "noun"
-            # print(word,tag)
-            noun_count += 1
-        elif tag == "VB" or tag == "VBZ" or tag == "VBP" or tag == "VBD" or tag == "VBN" or tag == "VBG":
-            # tag = "verb"
-            # print(word,tag)
-            verb_count += 1
-        elif tag == "JJ" or tag == "JJR" or tag == "JJS":
-            # tag = "adjective"
-            # print(word,tag)
-            adj_count += 1
-
+    for word, tag, freq in pos_list:
+                if tag == "NOUN":
+                    # tag = "noun"
+                    # print(word,tag)
+                    noun_count += 1
+                elif tag == "VERB":
+                    # tag = "verb"
+                    # print(word,tag)
+                    verb_count += 1
+                elif tag == "ADJ":
+                    # tag = "adjective"
+                    # print(word,tag)
+                    adj_count += 1
     #counts
     print("Number of nouns in this text:", noun_count)
     print("Number of verbs in this text:", verb_count)
@@ -132,7 +142,7 @@ def detection_and_translation(text):
         if blob.detect_language() == 'en':
             print("Text is already in english")
         else:
-            print(blob.translate(to = 'en'))
+            print(blob.translate(to='en'))
     except:
         print("Language not detected or text could not be translated")
 
@@ -142,18 +152,15 @@ def spelling_correction(text):
     print(blob.correct())
 
 
-#testing
-#text = "Interstellar is a flawed, ambitious, gorgeous film that has the potential to either emotionally gob smack or " \
-#       "befuddle. Interstellar is a flawed, ambitious, gorgeous film flawed"
-
-text = " Jeder hat das Recht auf Bildung. Die Bildung ist unentgeltlich, zum mindesten der Grundschulunterricht und die grundlegende Bildung. Der Grundschulunterricht ist obligatorisch. Fach- und Berufsschulunterricht müssen allgemein verfügbar gemacht werden, und der Hochschulunterricht muß allen gleichermaßen entsprechend ihren Fähigkeiten offenstehen. Die Bildung muß auf die volle Entfaltung der menschlichen Persönlichkeit und auf die Stärkung der Achtung vor den Menschenrechten und Grundfreiheiten gerichtet sein. Sie muß zu Verständnis, Toleranz und Freundschaft zwischen allen Nationen und allen rassischen oder religiösen Gruppen beitragen und der Tätigkeit der Vereinten Nationen für die Wahrung des Friedens förderlich sein. Die Eltern haben ein vorrangiges Recht, die Art der Bildung zu wählen, die ihren Kindern zuteil werden soll."
-
-chinese_text = "美丽优于丑陋"
-
-filename = "C:/Users/Asad/Desktop/Sample.txt"
+# testing
+# text = "Interstellar is a flawed, ambitious, gorgeous film that has the potential to either emotionally gob smack or " \
+#        "befuddle. Interstellar is a flawed, ambitious, gorgeous film flawed"
+# chinese_text = "美丽优于丑陋"
+#
+filename = "C:/Users/farma/Desktop/internship docs/submissions/IBA INTERNSHIP REPORT.docx"
 file_text = read_file(filename,get_extension(filename))
-#pos_tagging(file_text,5)
-detection_and_translation(text)
+pos_tagging(file_text,2)
+# detection_and_translation(chinese_text)
 
-#sentiment_analysis(text)
-#sentiment_pos_or_neg(text)
+# sentiment_analysis(text)
+# sentiment_pos_or_neg(text)

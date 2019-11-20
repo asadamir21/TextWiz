@@ -1,0 +1,21 @@
+digraph tree {
+    "Root";
+    "Noun";
+    "projects";
+    "internship";
+    "Verb";
+    "like";
+    "help";
+    "Adj";
+    "neural";
+    "final";
+    "Root" -> "Noun";
+    "Root" -> "Verb";
+    "Root" -> "Adj";
+    "Noun" -> "projects";
+    "Noun" -> "internship";
+    "Verb" -> "like";
+    "Verb" -> "help";
+    "Adj" -> "neural";
+    "Adj" -> "final";
+}

@@ -11,8 +11,10 @@ from gensim import *
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
 from wordcloud import WordCloud, STOPWORDS
+from anytree import Node, RenderTree, PreOrderIter, exporter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
+from PIL import *
 from pyglet import *
 import numpy as np
 import matplotlib
@@ -21,6 +23,7 @@ import nltk
 import ntpath, pyglet
 import docx2txt, PyPDF2
 import os, time
+import spacy
 
 import pyautogui, qstylizer.style
 
@@ -471,36 +474,75 @@ class Query():
         frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
 
+    def PartOfSpeech(self, DataSourceName, DataSourceText, limit):
+        os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
 
+        WordFrequencyTable = self.FindWordFrequency(DataSourceText)
 
+        word_list = [i[0] for i in WordFrequencyTable]
 
+        freq_list = [i[2] for i in WordFrequencyTable]
 
+        stra = " "
+        list_to_string = stra.join(word_list)
 
+        nlp = spacy.load("en_core_web_sm")
 
+        doc = nlp(list_to_string)
 
+        pos_list = []
+        i = 0
+        for token in doc:
+            pos_list.append([token.text, token.pos_, freq_list[i]])
+            i += 1
 
+        # print(pos_list)
+        pos_list = sorted(pos_list, key=lambda l: l[2], reverse=True)
 
+        root = Node(DataSourceName)
+        noun_node = Node("Noun", parent=root)
+        verb_node = Node("Verb", parent=root)
+        adj_node = Node("Adj", parent=root)
 
+        noun_limit = 0
+        verb_limit = 0
+        adj_limit = 0
 
+        for word, tag, freq in pos_list:
+            if (tag == "NOUN") and (noun_limit < limit):
+                word_tag = Node(word + "\n" + str(freq), parent=noun_node)
+                noun_limit += 1
 
+            elif (tag == "VERB") and (verb_limit < limit):
+                word_tag = Node(word + "\n" + str(freq), parent=verb_node)
+                verb_limit += 1
 
+            elif (tag == "ADJ") and (adj_limit < limit):
+                word_tag = Node(word + "\n" + str(freq), parent=adj_node)
+                adj_limit += 1
 
+        # png image of tree
+        exporter.DotExporter(root).to_picture("tree.png")
+        POSTreeImage = Image.open("tree.png")
+        ImageArray = np.array(POSTreeImage)
+        POSTreeImage = Image.fromarray(ImageArray)
+        os.remove('tree.png')
 
+        noun_count = 0
+        verb_count = 0
+        adj_count = 0
 
+        blob2 = TextBlob(DataSourceText)
 
+        for word, tag, freq in pos_list:
+            if tag == "NOUN":
+                noun_count += 1
+            elif tag == "VERB":
+                verb_count += 1
+            elif tag == "ADJ":
+                adj_count += 1
 
-
-
-
-
-
-
-
-
-
-
-
-
+        return ([POSTreeImage, pos_list, noun_count, verb_count, adj_count])
 
 class Animation(QObject):
     finished = pyqtSignal()

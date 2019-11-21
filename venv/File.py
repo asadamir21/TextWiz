@@ -16,6 +16,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
 from PIL import *
 from pyglet import *
+from spacy import displacy
+from collections import Counter
+import en_core_web_sm
 import numpy as np
 import matplotlib
 import re
@@ -543,6 +546,16 @@ class Query():
                 adj_count += 1
 
         return ([POSTreeImage, pos_list, noun_count, verb_count, adj_count])
+
+    def EntityRelationShip(self, DataSourceText):
+        nlp = en_core_web_sm.load()
+        DataSourceTextER = nlp(DataSourceText)
+
+        Entity_List = [(X.text, X.label_) for X in DataSourceTextER.ents]
+
+        Entity_Labels = [x.label_ for x in DataSourceTextER.ents]
+
+        return [Entity_List, Entity_Labels, displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='ent'), displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='dep')]
 
 class Animation(QObject):
     finished = pyqtSignal()

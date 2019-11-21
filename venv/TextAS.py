@@ -2,6 +2,7 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
 from PyQt5.QtWebKit import *
+from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWebKitWidgets import *
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from matplotlib.container import StemContainer
@@ -10,6 +11,7 @@ from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
 from datetime import *
 from File import *
+from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
 
 #WindowTitleLogo = "Images/Logo.png"
@@ -544,6 +546,11 @@ class Window(QMainWindow):
             DataSourcePOS = QAction('Part of Speech', self.DataSourceTreeWidget)
             DataSourcePOS.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePOS(index))
             DataSourceRightClickMenu.addAction(DataSourcePOS)
+
+            # Data Source Part of Speech
+            DataSourceEntityRelationShip = QAction('Entity Relationship', self.DataSourceTreeWidget)
+            DataSourceEntityRelationShip.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceEntityRelationShip(index))
+            DataSourceRightClickMenu.addAction(DataSourceEntityRelationShip)
 
             # Data Source Summarize
             DataSourceSummarize = QAction('Summarize', self.DataSourceTreeWidget)
@@ -1432,161 +1439,164 @@ class Window(QMainWindow):
 
     # Data Source Part of Speech
     def DataSourcePOS(self, DataSourceWidgetItemName):
-        try:
-            DataSourcePOSTabFlag = False
+        DataSourcePOSTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Stem Word':
-                    DataSourcePOSTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Part of Speech':
+                DataSourcePOSTabFlag = True
+                break
 
-            dummyQuery = Query()
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName, DS.DataSourcetext, 3)
-                    break
+        dummyQuery = Query()
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName,
+                                                                                               DS.DataSourcetext, 3)
+                break
 
-            # Creating New Tab for Stem Word
-            POSTab = QWidget()
+        # Creating New Tab for Stem Word
+        POSTab = QWidget()
 
-            # LayoutWidget For within Stem Word Tab
-            POSTabVerticalLayoutWidget = QWidget(POSTab)
-            POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+        # LayoutWidget For within Stem Word Tab
+        POSTabVerticalLayoutWidget = QWidget(POSTab)
+        POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
-            POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
-            POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Stem Word Tab
+        POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
+        POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Noun_Count Label
-            POSNounCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSNounCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05, POSTabVerticalLayoutWidget.height() * 0.142, POSTabVerticalLayoutWidget.width()/20, POSTabVerticalLayoutWidget.height() / 7)
-            POSNounCountLabel.setText("Noun Count: " + str(noun_count))
-            POSNounCountLabel.setAlignment(Qt.AlignVCenter)
-            POSNounCountLabel.adjustSize()
+        # Noun_Count Label
+        POSNounCountLabel = QLabel(POSTabVerticalLayoutWidget)
+        POSNounCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                      POSTabVerticalLayoutWidget.height() * 0.142,
+                                      POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+        POSNounCountLabel.setText("Noun Count: " + str(noun_count))
+        POSNounCountLabel.setAlignment(Qt.AlignVCenter)
+        POSNounCountLabel.adjustSize()
 
-            # Verb_Count Label
-            POSVerbCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSVerbCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,POSTabVerticalLayoutWidget.height() * 0.428, POSTabVerticalLayoutWidget.width()/20,POSTabVerticalLayoutWidget.height() / 7)
-            POSVerbCountLabel.setText("Verb Count: " + str(verb_count))
-            POSVerbCountLabel.setAlignment(Qt.AlignVCenter)
-            POSVerbCountLabel.adjustSize()
+        # Verb_Count Label
+        POSVerbCountLabel = QLabel(POSTabVerticalLayoutWidget)
+        POSVerbCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                      POSTabVerticalLayoutWidget.height() * 0.428,
+                                      POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+        POSVerbCountLabel.setText("Verb Count: " + str(verb_count))
+        POSVerbCountLabel.setAlignment(Qt.AlignVCenter)
+        POSVerbCountLabel.adjustSize()
 
-            # Adjective_Count Label
-            POSAdjCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSAdjCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05, POSTabVerticalLayoutWidget.height() * 0.714, POSTabVerticalLayoutWidget.width()/20, POSTabVerticalLayoutWidget.height()/7)
-            POSAdjCountLabel.setText("Adjective Count: " + str(adj_count))
-            POSAdjCountLabel.setAlignment(Qt.AlignVCenter)
-            POSAdjCountLabel.adjustSize()
+        # Adjective_Count Label
+        POSAdjCountLabel = QLabel(POSTabVerticalLayoutWidget)
+        POSAdjCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                     POSTabVerticalLayoutWidget.height() * 0.714,
+                                     POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+        POSAdjCountLabel.setText("Adjective Count: " + str(adj_count))
+        POSAdjCountLabel.setAlignment(Qt.AlignVCenter)
+        POSAdjCountLabel.adjustSize()
 
-            # Part of speech ComboBox
-            POSComboBox = QComboBox(POSTabVerticalLayoutWidget)
-            POSComboBox.setGeometry(POSTabVerticalLayoutWidget.width() * 0.8, POSTabVerticalLayoutWidget.height() * 0.4, POSTabVerticalLayoutWidget.width()/10, POSTabVerticalLayoutWidget.height()/5)
-            POSComboBox.addItem("Show Table")
-            POSComboBox.addItem("Show Graph")
-            self.LineEditSizeAdjustment(POSComboBox)
+        # Part of speech ComboBox
+        POSComboBox = QComboBox(POSTabVerticalLayoutWidget)
+        POSComboBox.setGeometry(POSTabVerticalLayoutWidget.width() * 0.8, POSTabVerticalLayoutWidget.height() * 0.4,
+                                POSTabVerticalLayoutWidget.width() / 10, POSTabVerticalLayoutWidget.height() / 5)
+        POSComboBox.addItem("Show Table")
+        POSComboBox.addItem("Show Graph")
+        self.LineEditSizeAdjustment(POSComboBox)
 
-            # 2nd LayoutWidget For within Stem Word Tab
-            POSTabVerticalLayoutWidget2 = QWidget(POSTab)
-            POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height() / 10)
+        # 2nd LayoutWidget For within Stem Word Tab
+        POSTabVerticalLayoutWidget2 = QWidget(POSTab)
+        POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
-            POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
-            POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        # 2nd Box Layout for Stem Word Tab
+        POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
+        POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-            POSTable = QTableWidget(POSTabVerticalLayoutWidget2)
-            POSTable.setColumnCount(3)
-            POSTable.setGeometry(0, 0, POSTabVerticalLayoutWidget2.width(),
-                                      POSTabVerticalLayoutWidget2.height())
+        POSTable = QTableWidget(POSTabVerticalLayoutWidget2)
+        POSTable.setColumnCount(3)
+        POSTable.setGeometry(0, 0, POSTabVerticalLayoutWidget2.width(),
+                             POSTabVerticalLayoutWidget2.height())
 
-            POSTable.setSizePolicy(self.sizePolicy)
-            POSTable.setWindowFlags(POSTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-            POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
-            POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        POSTable.setSizePolicy(self.sizePolicy)
+        POSTable.setWindowFlags(POSTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
+        POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(POSTable.columnCount()):
+            POSTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            POSTable.horizontalHeaderItem(i).setFont(QFont(POSTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        # StemWordSubmitButton.clicked.connect(lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceWidgetItemName, POSTable))
+
+        if len(rowList) != 0:
+            for row in rowList:
+                POSTable.insertRow(rowList.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    POSTable.setItem(rowList.index(row), row.index(item), intItem)
+                    POSTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            POSTable.resizeColumnsToContents()
+            POSTable.resizeRowsToContents()
+
+            POSTable.setSortingEnabled(True)
+            POSTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
 
             for i in range(POSTable.columnCount()):
-                POSTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                POSTable.horizontalHeaderItem(i).setFont(QFont(POSTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            #StemWordSubmitButton.clicked.connect(lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceWidgetItemName, POSTable))
+        # Label for Word Cloud Image
+        POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
+        # Resizing label to Layout
+        POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
 
+        # Converting WordCloud Image to Pixmap
+        POSGraphPixmap = POSGraph.toqpixmap()
 
-            if len(rowList) != 0:
-                for row in rowList:
-                    POSTable.insertRow(rowList.index(row))
-                    for item in row:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        POSTable.setItem(rowList.index(row), row.index(item), intItem)
-                        POSTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                        POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        # Scaling Pixmap image
+        dummypixmap = POSGraphPixmap.scaled(POSTabVerticalLayoutWidget2.width(),
+                                            POSTabVerticalLayoutWidget2.height(), Qt.KeepAspectRatio)
 
-                POSTable.resizeColumnsToContents()
-                POSTable.resizeRowsToContents()
+        POSGraphLabel.setPixmap(dummypixmap)
+        POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
+                                  (POSTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
+                                  dummypixmap.width(), dummypixmap.height())
+        POSGraphLabel.hide()
 
-                POSTable.setSortingEnabled(True)
-                POSTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
+        # Setting ContextMenu Policies on Label
+        # POSGraphLabel.setContextMenuPolicy(Qt.CustomContextMenu)
+        # POSGraphLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
 
-                for i in range(POSTable.columnCount()):
-                    POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+        POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
 
+        if DataSourcePOSTabFlag:
+            # change tab in query
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    for query in DS.QueryList:
+                        if query[1] == tabs.tabWidget:
+                            query[1] = POSTab
+                            break
 
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(POSTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(POSTab)
+            tabs.tabWidget = POSTab
 
-            #Label for Word Cloud Image
-            POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
-            # Resizing label to Layout
-            POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Part of Speech", POSTab, DataSourceWidgetItemName.text(0)))
 
-            # Converting WordCloud Image to Pixmap
-            POSGraphPixmap = POSGraph.toqpixmap()
+            POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            POSQueryTreeWidget.setText(0, "Parts of Speech (" + DataSourceWidgetItemName.text(0) + ")")
 
-            # Scaling Pixmap image
-            dummypixmap = POSGraphPixmap.scaled(POSTabVerticalLayoutWidget2.width(),
-                                                 POSTabVerticalLayoutWidget2.height(), Qt.KeepAspectRatio)
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    DS.setQuery(POSQueryTreeWidget, POSTab)
 
-            POSGraphLabel.setPixmap(dummypixmap)
-            POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
-                                       (POSTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
-                                       dummypixmap.width(), dummypixmap.height())
-            POSGraphLabel.hide()
-
-            #Setting ContextMenu Policies on Label
-            #POSGraphLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-            #POSGraphLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
-
-            POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
-
-            if DataSourcePOSTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = POSTab
-                                break
-
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(POSTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(POSTab)
-                tabs.tabWidget = POSTab
-
-            else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Stem Word", POSTab, DataSourceWidgetItemName.text(0)))
-
-                POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                POSQueryTreeWidget.setText(0, "Parts of Speech (" + DataSourceWidgetItemName.text(0) + ")")
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        DS.setQuery(POSQueryTreeWidget, POSTab)
-
-                self.tabWidget.addTab(POSTab, "Parts of Speech")
-                self.tabWidget.setCurrentWidget(POSTab)
-
-        except Exception as e:
-            print(str(e))
+            self.tabWidget.addTab(POSTab, "Parts of Speech")
+            self.tabWidget.setCurrentWidget(POSTab)
 
     # Toggle POS View
     def togglePOSView(self, Table, Label):
@@ -1598,6 +1608,145 @@ class Window(QMainWindow):
         else:
             Table.hide()
             Label.show()
+
+    # Data Source Entity Relationship
+    def DataSourceEntityRelationShip(self, DataSourceWidgetItemName):
+        DataSourceERTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Entity Relationship':
+                DataSourceERTabFlag = True
+                break
+
+        dummyQuery = Query()
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                Entity_List, Entity_Labels, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
+                    DS.DataSourcetext)
+                break
+
+        # Creating New Tab for Stem Word
+        DSERTab = QWidget()
+
+        # LayoutWidget For within Stem Word Tab
+        DSERTabVerticalLayoutWidget = QWidget(DSERTab)
+        DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+
+        # Box Layout for Stem Word Tab
+        DSERTabVerticalLayout = QHBoxLayout(DSERTabVerticalLayoutWidget)
+        DSERTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Part of speech ComboBox
+        DSERComboBox = QComboBox(DSERTabVerticalLayoutWidget)
+        DSERComboBox.setGeometry(DSERTabVerticalLayoutWidget.width() * 0.8, DSERTabVerticalLayoutWidget.height() * 0.4,
+                                 DSERTabVerticalLayoutWidget.width() / 10, DSERTabVerticalLayoutWidget.height() / 5)
+        DSERComboBox.addItem("Show Table")
+        DSERComboBox.addItem("Show Dependency")
+        DSERComboBox.addItem("Show Entities")
+
+        self.LineEditSizeAdjustment(DSERComboBox)
+
+        # 2nd LayoutWidget For within Stem Word Tab
+        DSERTabVerticalLayoutWidget2 = QWidget(DSERTab)
+        DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                 self.tabWidget.height() - self.tabWidget.height() / 10)
+
+        # 2nd Box Layout for Stem Word Tab
+        DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
+
+        DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
+        DSERTable.setColumnCount(2)
+        DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
+
+        DSERTable.setSizePolicy(self.sizePolicy)
+        DSERTable.setWindowFlags(DSERTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DSERTable.setHorizontalHeaderLabels(["Word", "Entity"])
+        DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(DSERTable.columnCount()):
+            DSERTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            DSERTable.horizontalHeaderItem(i).setFont(
+                QFont(DSERTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        if len(Entity_List) != 0:
+            for row in Entity_List:
+                DSERTable.insertRow(Entity_List.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    DSERTable.setItem(Entity_List.index(row), row.index(item), intItem)
+                    DSERTable.item(Entity_List.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    DSERTable.item(Entity_List.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            DSERTable.resizeColumnsToContents()
+            DSERTable.resizeRowsToContents()
+
+            DSERTable.setSortingEnabled(True)
+            DSERTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
+
+            for i in range(DSERTable.columnCount()):
+                DSERTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        EntityHTMLWeb = QWebEngineView()
+        DSERTabVerticalLayout2.addWidget(EntityHTMLWeb)
+        EntityHTMLWeb.setHtml(EntityHTML)
+        EntityHTMLWeb.hide()
+
+        DependencyHTMLWeb = QWebEngineView()
+        DSERTabVerticalLayout2.addWidget(DependencyHTMLWeb)
+        DependencyHTMLWeb.setHtml(DependencyHTML)
+        DependencyHTMLWeb.hide()
+
+        DSERComboBox.currentTextChanged.connect(lambda: self.toggleERView(DSERTable, EntityHTMLWeb, DependencyHTMLWeb))
+
+        if DataSourceERTabFlag:
+            # change tab in query
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    for query in DS.QueryList:
+                        if query[1] == tabs.tabWidget:
+                            query[1] = DSERTab
+                            break
+
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(DSERTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(DSERTab)
+            tabs.tabWidget = DSERTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceWidgetItemName.text(0)))
+
+            POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            POSQueryTreeWidget.setText(0, "Entity Relationship (" + DataSourceWidgetItemName.text(0) + ")")
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    DS.setQuery(POSQueryTreeWidget, DSERTab)
+
+            self.tabWidget.addTab(DSERTab, "Entity Relationship")
+            self.tabWidget.setCurrentWidget(DSERTab)
+
+    # Toggle POS View
+    def toggleERView(self, Table, HTMLViewer1, HTMLViewer2):
+        ComboBox = self.sender()
+
+        if ComboBox.currentText() == "Show Table":
+            HTMLViewer1.hide()
+            HTMLViewer2.hide()
+            Table.show()
+        elif ComboBox.currentText() == "Show Dependency":
+            HTMLViewer2.show()
+            HTMLViewer1.hide()
+            Table.hide()
+        else:
+            HTMLViewer1.show()
+            Table.hide()
+            HTMLViewer2.hide()
 
     # Data Source Summary
     def DataSourceSummarize(self, DataSourceWidgetItemName):
@@ -2145,7 +2294,8 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
 
@@ -2180,7 +2330,8 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
 
@@ -2192,6 +2343,8 @@ class Window(QMainWindow):
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
+
+                DataSourceNameCheck = False
 
                 for DS in myFile.DataSourceList:
                     if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
@@ -2211,7 +2364,8 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
 
@@ -2222,6 +2376,8 @@ class Window(QMainWindow):
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
+
+                DataSourceNameCheck = False
 
                 for DS in myFile.DataSourceList:
                     if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
@@ -2241,7 +2397,8 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
 
@@ -2252,6 +2409,8 @@ class Window(QMainWindow):
 
             if all(path):
                 dummyDataSource = DataSource(path[0], path[1], self)
+
+                DataSourceNameCheck = False
 
                 for DS in myFile.DataSourceList:
                     if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
@@ -2271,7 +2430,8 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
 

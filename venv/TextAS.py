@@ -15,7 +15,7 @@ from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
 
 #WindowTitleLogo = "Images/Logo.png"
-WindowTitleLogo = "Images/DummyLogo.png"
+WindowTitleLogo = "Images/TextASLogo.png"
 isSaveAs = True
 myFile = File()
 myFile.setCreatedDate(datetime.now())
@@ -551,6 +551,11 @@ class Window(QMainWindow):
             DataSourceEntityRelationShip = QAction('Entity Relationship', self.DataSourceTreeWidget)
             DataSourceEntityRelationShip.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceEntityRelationShip(index))
             DataSourceRightClickMenu.addAction(DataSourceEntityRelationShip)
+
+            # Data Source Topic Modelling
+            DataSourceTopicModelling = QAction('Topic Modelling', self.DataSourceTreeWidget)
+            DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
+            DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
 
             # Data Source Summarize
             DataSourceSummarize = QAction('Summarize', self.DataSourceTreeWidget)
@@ -1747,6 +1752,75 @@ class Window(QMainWindow):
             HTMLViewer1.show()
             Table.hide()
             HTMLViewer2.hide()
+
+    # Data Source Topic Modelling
+    def DataSourceTopicModelling(self, DataSourceWidgetItemName):
+        try:
+            DataSourceTotalModellingTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Topic Modelling':
+                    DataSourceTotalModellingTabFlag = True
+                    break
+
+            TopicModellingTab = QWidget()
+            TopicModellingTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+            TopicModellingTab.setSizePolicy(self.sizePolicy)
+
+            # LayoutWidget For within Topic Modelling Tab
+            TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
+            TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+            # Box Layout for Topic Modelling Tab
+            TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
+            TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Data Source Topic Modelling HTML
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    dummyQuery = Query()
+                    TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
+                    break
+
+            # Topic Modelling HTML Viewer
+            TopicModellingHTMLWeb = QWebEngineView()
+            TopicModellingTabVerticalLayout.addWidget(TopicModellingHTMLWeb)
+            TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
+
+            if DataSourceTotalModellingTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = TopicModellingTab
+                                break
+
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(TopicModellingTab)
+                tabs.tabWidget = TopicModellingTab
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceWidgetItemName.text(0)))
+
+                # Adding Word Frequency Query
+                WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                WordFreqencyQueryTreeWidget.setText(0, "Topic Modelling (" + DataSourceWidgetItemName.text(0) + ")")
+
+                # Adding Word Frequency Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        DS.setQuery(WordFreqencyQueryTreeWidget, TopicModellingTab)
+
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
+                self.tabWidget.setCurrentWidget(TopicModellingTab)
+
+        except Exception as e:
+            print(str(e))
+
 
     # Data Source Summary
     def DataSourceSummarize(self, DataSourceWidgetItemName):

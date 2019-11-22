@@ -18,6 +18,14 @@ from PIL import *
 from pyglet import *
 from spacy import displacy
 from collections import Counter
+
+from nltk.stem.wordnet import WordNetLemmatizer
+from spacy.lang.en import English
+from nltk.corpus import wordnet as wn
+from gensim import *
+import pickle
+import pyLDAvis.gensim
+
 import en_core_web_sm
 import numpy as np
 import matplotlib
@@ -30,6 +38,8 @@ import spacy
 
 import pyautogui, qstylizer.style
 
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 class File():
     def __init__(self):
@@ -547,6 +557,7 @@ class Query():
 
         return ([POSTreeImage, pos_list, noun_count, verb_count, adj_count])
 
+    #Entity RelationShip
     def EntityRelationShip(self, DataSourceText):
         nlp = en_core_web_sm.load()
         DataSourceTextER = nlp(DataSourceText)
@@ -556,6 +567,72 @@ class Query():
         Entity_Labels = [x.label_ for x in DataSourceTextER.ents]
 
         return [Entity_List, Entity_Labels, displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='ent'), displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='dep')]
+
+    #  *********************************** Topic Modelling **********************************
+
+    def tokenize(self, DataSourceText):
+        parser = English()
+        lda_tokens = []
+        tokens = parser(DataSourceText)
+        for token in tokens:
+            if token.orth_.isspace():
+                continue
+            elif token.like_url:
+                lda_tokens.append('URL')
+            elif token.orth_.startswith('@'):
+                lda_tokens.append('SCREEN_NAME')
+            else:
+                lda_tokens.append(token.lower_)
+        return lda_tokens
+
+    def get_lemma(self, word):
+        lemma = wn.morphy(word)
+        if lemma is None:
+            return word
+        else:
+            return lemma
+
+    def get_lemma2(self, word):
+        return WordNetLemmatizer().lemmatize(word)
+
+    def prepare_text_for_lda(self, text):
+        en_stop = set(nltk.corpus.stopwords.words('english'))
+        tokens = self.tokenize(text)
+        tokens = [token for token in tokens if len(token) > 4]
+        tokens = [token for token in tokens if token not in en_stop]
+        tokens = [self.get_lemma(token) for token in tokens]
+        return tokens
+
+    def TopicModelling(self, DataSourceText, Topic_NUM):
+        spacy.load('en_core_web_sm')
+
+        text_data = []
+
+        tokens = self.prepare_text_for_lda(DataSourceText)
+
+        text_data.append(tokens)
+
+        dictionary = corpora.Dictionary(text_data)
+        corpus = [dictionary.doc2bow(text) for text in text_data]
+        pickle.dump(corpus, open('Topic Modelling Files/corpus.pkl', 'wb'))
+        dictionary.save('Topic Modelling Files/dictionary.gensim')
+
+        ldamodel = models.ldamodel.LdaModel(corpus, num_topics=Topic_NUM, id2word=dictionary, passes=15)
+        ldamodel.save('Topic Modelling Files/model5.gensim')
+        topics = ldamodel.print_topics(num_words=4)
+
+        new_doc = 'Practical Bayesian Optimization of Machine Learning Algorithms'
+        new_doc = self.prepare_text_for_lda(new_doc)
+        new_doc_bow = dictionary.doc2bow(new_doc)
+
+        dictionary = corpora.Dictionary.load('Topic Modelling Files/dictionary.gensim')
+        corpus = pickle.load(open('Topic Modelling Files/corpus.pkl', 'rb'))
+        lda = models.ldamodel.LdaModel.load('Topic Modelling Files/model5.gensim')
+
+        lda_display = pyLDAvis.gensim.prepare(lda, corpus, dictionary, sort_topics=True)
+
+        return pyLDAvis.prepared_data_to_html(lda_display)
+
 
 class Animation(QObject):
     finished = pyqtSignal()

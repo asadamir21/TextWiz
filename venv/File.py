@@ -17,14 +17,18 @@ from stat import *
 from PIL import *
 from pyglet import *
 from spacy import displacy
+from urllib.parse import urlparse
 from collections import Counter
-
 from nltk.stem.wordnet import WordNetLemmatizer
 from spacy.lang.en import English
 from nltk.corpus import wordnet as wn
 from gensim import *
+from bs4 import BeautifulSoup
 import pickle
 import pyLDAvis.gensim
+import requests
+import cv2
+import pytesseract
 
 import en_core_web_sm
 import numpy as np
@@ -45,9 +49,7 @@ class File():
     def __init__(self):
         super().__init__()
         self.DataSourceList = []
-        self.WordCloudBackgroundList = []
         self.TabList = []
-        self.setBackGroundList()
 
     def setFileName(self, name):
         self.FileName = name
@@ -82,27 +84,6 @@ class File():
             DataSourceLoadErrorBox.setText(myDataSource.DataSourceName + " is Already Added")
             DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceLoadErrorBox.exec_()
-
-    def setBackGroundList(self):
-        for colorname,colorhex in matplotlib.colors.cnames.items():
-            self.WordCloudBackgroundList.append(colorname)
-
-    def CreateWordCloud(self, WCDSName, WCBGColor, maxword, maskname):
-        for WCDS in self.DataSourceList:
-            if WCDS.DataSourceName == WCDSName:
-                tempDS = WCDS
-                break
-
-        # create numpy araay for wordcloud mask image
-        mask = np.array(Image.open("Word Cloud Maskes/" + maskname + ".png"))
-
-        # create wordcloud object
-        wc = WordCloud(background_color=WCBGColor, max_words=int(maxword), mask=mask, stopwords=set(STOPWORDS))
-
-        # generate wordcloud
-        wc.generate(tempDS.DataSourcetext)
-
-        return wc.to_image()
 
     #Data Source Similarity
     def FindSimilarityBetweenDataSource(self):
@@ -148,7 +129,14 @@ class DataSource(File):
     def __init__(self, path, ext, MainWindow):
         super().__init__()
         self.DataSourcePath = path
-        self.DataSourceName = ntpath.basename(path)
+
+        if ext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+            self.DataSourceName = ntpath.basename(path[0])
+        elif ext == "URL":
+            self.DataSourceName = path
+        else:
+            self.DataSourceName = ntpath.basename(path)
+
         self.DataSourceext = ext
         self.DataSourcetext = ""
         self.DataSourceLoadError = False
@@ -160,12 +148,16 @@ class DataSource(File):
             self.WordDataSource()
         elif(ext == "Pdf files (*.pdf)"):
             self.PDFDataSource()
-        elif (ext == "Notepad files (*.txt)"):
+        elif(ext == "Notepad files (*.txt)"):
             self.TxtDataSource()
-        elif (ext == "Rich Text Format files (*.rtf)"):
+        elif(ext == "Rich Text Format files (*.rtf)"):
             self.rtfDataSource()
-        elif (ext == "Audio files (*.wav *.mp3)"):
+        elif(ext == "Audio files (*.wav *.mp3)"):
             self.AudioDataSource()
+        elif(ext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)"):
+            self.ImageDataSource()
+        elif(ext == 'URL'):
+            self.WebDataSource()
 
     # Word File
     def WordDataSource(self):
@@ -242,8 +234,7 @@ class DataSource(File):
     def rtfDataSource(self):
         try:
             file = open(self.DataSourcePath, 'r')
-            self.DataSourcetext = file.read();
-            print(self.DataSourcetext)
+            self.DataSourcetext = self.RTFtoPlainText(file.read())
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
@@ -261,6 +252,129 @@ class DataSource(File):
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
+
+    # RTFtoPlainText
+    def RTFtoPlainText(self, text):
+        pattern = re.compile(r"\\([a-z]{1,32})(-?\d{1,10})?[ ]?|\\'([0-9a-f]{2})|\\([^a-z])|([{}])|[\r\n]+|(.)", re.I)
+        # control words which specify a "destionation".
+        destinations = frozenset((
+            'aftncn', 'aftnsep', 'aftnsepc', 'annotation', 'atnauthor', 'atndate', 'atnicn', 'atnid',
+            'atnparent', 'atnref', 'atntime', 'atrfend', 'atrfstart', 'author', 'background',
+            'bkmkend', 'bkmkstart', 'blipuid', 'buptim', 'category', 'colorschememapping',
+            'colortbl', 'comment', 'company', 'creatim', 'datafield', 'datastore', 'defchp', 'defpap',
+            'do', 'doccomm', 'docvar', 'dptxbxtext', 'ebcend', 'ebcstart', 'factoidname', 'falt',
+            'fchars', 'ffdeftext', 'ffentrymcr', 'ffexitmcr', 'ffformat', 'ffhelptext', 'ffl',
+            'ffname', 'ffstattext', 'field', 'file', 'filetbl', 'fldinst', 'fldrslt', 'fldtype',
+            'fname', 'fontemb', 'fontfile', 'fonttbl', 'footer', 'footerf', 'footerl', 'footerr',
+            'footnote', 'formfield', 'ftncn', 'ftnsep', 'ftnsepc', 'g', 'generator', 'gridtbl',
+            'header', 'headerf', 'headerl', 'headerr', 'hl', 'hlfr', 'hlinkbase', 'hlloc', 'hlsrc',
+            'hsv', 'htmltag', 'info', 'keycode', 'keywords', 'latentstyles', 'lchars', 'levelnumbers',
+            'leveltext', 'lfolevel', 'linkval', 'list', 'listlevel', 'listname', 'listoverride',
+            'listoverridetable', 'listpicture', 'liststylename', 'listtable', 'listtext',
+            'lsdlockedexcept', 'macc', 'maccPr', 'mailmerge', 'maln', 'malnScr', 'manager', 'margPr',
+            'mbar', 'mbarPr', 'mbaseJc', 'mbegChr', 'mborderBox', 'mborderBoxPr', 'mbox', 'mboxPr',
+            'mchr', 'mcount', 'mctrlPr', 'md', 'mdeg', 'mdegHide', 'mden', 'mdiff', 'mdPr', 'me',
+            'mendChr', 'meqArr', 'meqArrPr', 'mf', 'mfName', 'mfPr', 'mfunc', 'mfuncPr', 'mgroupChr',
+            'mgroupChrPr', 'mgrow', 'mhideBot', 'mhideLeft', 'mhideRight', 'mhideTop', 'mhtmltag',
+            'mlim', 'mlimloc', 'mlimlow', 'mlimlowPr', 'mlimupp', 'mlimuppPr', 'mm', 'mmaddfieldname',
+            'mmath', 'mmathPict', 'mmathPr', 'mmaxdist', 'mmc', 'mmcJc', 'mmconnectstr',
+            'mmconnectstrdata', 'mmcPr', 'mmcs', 'mmdatasource', 'mmheadersource', 'mmmailsubject',
+            'mmodso', 'mmodsofilter', 'mmodsofldmpdata', 'mmodsomappedname', 'mmodsoname',
+            'mmodsorecipdata', 'mmodsosort', 'mmodsosrc', 'mmodsotable', 'mmodsoudl',
+            'mmodsoudldata', 'mmodsouniquetag', 'mmPr', 'mmquery', 'mmr', 'mnary', 'mnaryPr',
+            'mnoBreak', 'mnum', 'mobjDist', 'moMath', 'moMathPara', 'moMathParaPr', 'mopEmu',
+            'mphant', 'mphantPr', 'mplcHide', 'mpos', 'mr', 'mrad', 'mradPr', 'mrPr', 'msepChr',
+            'mshow', 'mshp', 'msPre', 'msPrePr', 'msSub', 'msSubPr', 'msSubSup', 'msSubSupPr', 'msSup',
+            'msSupPr', 'mstrikeBLTR', 'mstrikeH', 'mstrikeTLBR', 'mstrikeV', 'msub', 'msubHide',
+            'msup', 'msupHide', 'mtransp', 'mtype', 'mvertJc', 'mvfmf', 'mvfml', 'mvtof', 'mvtol',
+            'mzeroAsc', 'mzeroDesc', 'mzeroWid', 'nesttableprops', 'nextfile', 'nonesttables',
+            'objalias', 'objclass', 'objdata', 'object', 'objname', 'objsect', 'objtime', 'oldcprops',
+            'oldpprops', 'oldsprops', 'oldtprops', 'oleclsid', 'operator', 'panose', 'password',
+            'passwordhash', 'pgp', 'pgptbl', 'picprop', 'pict', 'pn', 'pnseclvl', 'pntext', 'pntxta',
+            'pntxtb', 'printim', 'private', 'propname', 'protend', 'protstart', 'protusertbl', 'pxe',
+            'result', 'revtbl', 'revtim', 'rsidtbl', 'rxe', 'shp', 'shpgrp', 'shpinst',
+            'shppict', 'shprslt', 'shptxt', 'sn', 'sp', 'staticval', 'stylesheet', 'subject', 'sv',
+            'svb', 'tc', 'template', 'themedata', 'title', 'txe', 'ud', 'upr', 'userprops',
+            'wgrffmtfilter', 'windowcaption', 'writereservation', 'writereservhash', 'xe', 'xform',
+            'xmlattrname', 'xmlattrvalue', 'xmlclose', 'xmlname', 'xmlnstbl',
+            'xmlopen',
+        ))
+        # Translation of some special characters.
+        specialchars = {
+            'par': '\n',
+            'sect': '\n\n',
+            'page': '\n\n',
+            'line': '\n',
+            'tab': '\t',
+            'emdash': '\u2014',
+            'endash': '\u2013',
+            'emspace': '\u2003',
+            'enspace': '\u2002',
+            'qmspace': '\u2005',
+            'bullet': '\u2022',
+            'lquote': '\u2018',
+            'rquote': '\u2019',
+            'ldblquote': '\201C',
+            'rdblquote': '\u201D',
+        }
+        stack = []
+        ignorable = False  # Whether this group (and all inside it) are "ignorable".
+        ucskip = 1  # Number of ASCII characters to skip after a unicode character.
+        curskip = 0  # Number of ASCII characters left to skip
+        out = []  # Output buffer.
+        for match in pattern.finditer(text):
+            word, arg, hex, char, brace, tchar = match.groups()
+            if brace:
+                curskip = 0
+                if brace == '{':
+                    # Push state
+                    stack.append((ucskip, ignorable))
+                elif brace == '}':
+                    # Pop state
+                    ucskip, ignorable = stack.pop()
+            elif char:  # \x (not a letter)
+                curskip = 0
+                if char == '~':
+                    if not ignorable:
+                        out.append('\xA0')
+                elif char in '{}\\':
+                    if not ignorable:
+                        out.append(char)
+                elif char == '*':
+                    ignorable = True
+            elif word:  # \foo
+                curskip = 0
+                if word in destinations:
+                    ignorable = True
+                elif ignorable:
+                    pass
+                elif word in specialchars:
+                    out.append(specialchars[word])
+                elif word == 'uc':
+                    ucskip = int(arg)
+                elif word == 'u':
+                    c = int(arg)
+                    if c < 0: c += 0x10000
+                    if c > 127:
+                        out.append(chr(c))  # NOQA
+                    else:
+                        out.append(chr(c))
+                    curskip = ucskip
+            elif hex:  # \'xx
+                if curskip > 0:
+                    curskip -= 1
+                elif not ignorable:
+                    c = int(hex, 16)
+                    if c > 127:
+                        out.append(chr(c))  # NOQA
+                    else:
+                        out.append(chr(c))
+            elif tchar:
+                if curskip > 0:
+                    curskip -= 1
+                elif not ignorable:
+                    out.append(tchar)
+        return ''.join(out)
 
     # Audio File
     def AudioDataSource(self):
@@ -282,6 +396,100 @@ class DataSource(File):
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
+
+    # Image File
+    def ImageDataSource(self):
+        try:
+            pytesseract.pytesseract.tesseract_cmd = 'Tesseract-OCR/tesseract.exe'
+            self.DataSourceImage = []
+            self.DataSourcetext = ""
+
+            for paths in self.DataSourcePath:
+                dummyImage = cv2.imread(self.DataSourcePath)
+                self.DataSourceImage.append(dummyImage)
+                self.DataSourcetext += pytesseract.image_to_string(dummyImage)
+
+            print(self.DataSourcetext)
+
+            self.DataSourceLoadError = False
+        except Exception as e:
+            self.DataSourceLoadError = True
+            DataSourceLoadErrorBox = QMessageBox()
+            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
+            DataSourceLoadErrorBox.setWindowTitle("Load Error")
+            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
+            DataSourceLoadErrorBox.setDetailedText(str(e))
+            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceLoadErrorBox.exec_()
+
+        if not self.DataSourceLoadError:
+            self.DataSourceSize = []
+            self.DataSourceAccessTime = []
+            self.DataSourceModifiedTime = []
+            self.DataSourceChangeTime = []
+
+            for paths in self.DataSourcePath:
+                st = os.stat(paths)
+                self.DataSourceSize.append(st[ST_SIZE])
+                self.DataSourceAccessTime.append(time.asctime(time.localtime(st[ST_ATIME])))
+                self.DataSourceModifiedTime.append(time.asctime(time.localtime(st[ST_MTIME])))
+                self.DataSourceChangeTime.append(time.asctime(time.localtime(st[ST_CTIME])))
+
+    # Web URL
+    def WebDataSource(self):
+        try:
+            response = requests.get(self.DataSourcePath)
+            self.DataSourceLoadError = False
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                self.DataSourceLoadError = True
+                URLErrorBox = QMessageBox()
+                URLErrorBox.setIcon(QMessageBox.Critical)
+                URLErrorBox.setWindowTitle("URL Error")
+                URLErrorBox.setText(str(e))
+                URLErrorBox.setStandardButtons(QMessageBox.Ok)
+                URLErrorBox.exec_()
+        except requests.exceptions.ConnectionError as e:
+            self.DataSourceLoadError = True
+            URLErrorBox = QMessageBox()
+            URLErrorBox.setIcon(QMessageBox.Critical)
+            URLErrorBox.setWindowTitle("URL Error")
+            URLErrorBox.setText("Unable to Connect to url: " + self.DataSourcePath)
+            URLErrorBox.setStandardButtons(QMessageBox.Ok)
+            URLErrorBox.exec_()
+        except requests.exceptions.MissingSchema as e:
+            self.DataSourceLoadError = True
+            URLErrorBox = QMessageBox()
+            URLErrorBox.setIcon(QMessageBox.Critical)
+            URLErrorBox.setWindowTitle("URL Error")
+            URLErrorBox.setText(str(e))
+            URLErrorBox.setStandardButtons(QMessageBox.Ok)
+            URLErrorBox.exec_()
+
+        if not self.DataSourceLoadError:
+            self.DataSourceHTML = response.content
+            soup = BeautifulSoup(self.DataSourceHTML, 'html.parser')
+            HTMLText = soup.find_all(text=True)
+
+            output = ''
+            blacklist = [
+                '[document]',
+                'noscript',
+                'header',
+                'html',
+                'meta',
+                'head',
+                'input',
+                'script',
+                # there may be more elements you don't want, such as "style", etc.
+            ]
+
+            for t in HTMLText:
+                if t.parent.name not in blacklist:
+                    output += '{} '.format(t)
+
+            self.DataSourcetext = output
 
     # Set Node
     def setNode(self, WidgetItemNode):
@@ -401,6 +609,19 @@ class Tab(File):
         self.TabDelete = True
 
 class Query():
+
+    # Word Cloud
+    def CreateWordCloud(self, DataSourceText, WCBGColor, maxword, maskname):
+        # create numpy araay for wordcloud mask image
+        mask = np.array(Image.open("Word Cloud Maskes/" + maskname + ".png"))
+
+        # create wordcloud object
+        wc = WordCloud(background_color=WCBGColor, max_words=int(maxword), mask=mask, stopwords=set(STOPWORDS))
+
+        # generate wordcloud
+        wc.generate(DataSourceText)
+
+        return wc.to_image()
 
     def text_preprocessing(self,document_text):
         # convert all text to lowercase

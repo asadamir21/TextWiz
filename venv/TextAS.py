@@ -1,3 +1,4 @@
+
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtPrintSupport import *
@@ -9,12 +10,12 @@ from matplotlib.container import StemContainer
 from win32api import GetMonitorInfo, MonitorFromPoint
 
 from PIL import  Image
-from datetime import *
+from datetime import datetime
 from File import *
 from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
 
-#WindowTitleLogo = "Images/Logo.png"
+
 WindowTitleLogo = "Images/TextASLogo.png"
 isSaveAs = True
 myFile = File()
@@ -47,6 +48,12 @@ class OpenWindow(QFileDialog):
 
             if os.path.isdir(home):
                 self.filepath = self.getSaveFileName(self, title, home, ext)
+
+        elif flag == 2:
+            home = os.path.join(os.path.expanduser('~'), 'Pictures')
+
+            if os.path.isdir(home):
+                self.filepath = self.getOpenFileNames(self, title, home, ext)
 
     def __del__(self):
         self.delete = True
@@ -88,6 +95,15 @@ class Window(QMainWindow):
         SoundAct = QAction(QtGui.QIcon('Images/Sound.png'), 'Audio', self)
         SoundAct.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
 
+        ImageAct = QAction(QtGui.QIcon('Images/ImageDataSource.png'), 'Audio', self)
+        ImageAct.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
+
+        TwitterAct = QAction(QtGui.QIcon('Images/Twitter.png'), 'Twitter', self)
+        TwitterAct.triggered.connect(lambda checked: self.ImportTweetWindow())
+
+        WebAct = QAction(QtGui.QIcon('Images/Web.png'), 'Twitter', self)
+        WebAct.triggered.connect(lambda checked: self.ImportURLWindow())
+
         self.toolbar = self.addToolBar("Show Toolbar")
         self.toolbar.addAction(WordAct)
         self.toolbar.addAction(PDFAct)
@@ -95,6 +111,9 @@ class Window(QMainWindow):
         self.toolbar.addSeparator()
         self.toolbar.addAction(RTFAct)
         self.toolbar.addAction(SoundAct)
+        self.toolbar.addAction(ImageAct)
+        self.toolbar.addAction(TwitterAct)
+        self.toolbar.addAction(WebAct)
 
         self.toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
 
@@ -176,11 +195,25 @@ class Window(QMainWindow):
         SoundFileButton.setStatusTip('Word File')
         SoundFileButton.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
 
+        ImageFileButton = QAction(QtGui.QIcon("Images\ImageDataSource.png"), 'Image File', self)
+        ImageFileButton.setStatusTip('Image File')
+        ImageFileButton.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
+
+        TwitterButton = QAction(QtGui.QIcon("Images\Twitter.png"), 'Twitter', self)
+        TwitterButton.setStatusTip('Tweets')
+        TwitterButton.triggered.connect(lambda checked: self.ImportTweetWindow())
+
+        URLButton = QAction(QtGui.QIcon("Images\Web.png"), 'Web', self)
+        URLButton.setStatusTip('Get Data From URL')
+        URLButton.triggered.connect(lambda checked: self.ImportURLWindow())
+
         importMenu.addAction(WordFileButton)
         importMenu.addAction(PDFFileButton)
         importMenu.addAction(TXTFileButton)
         importMenu.addAction(RTFFileButton)
         importMenu.addAction(SoundFileButton)
+        importMenu.addAction(ImageFileButton)
+        importMenu.addAction(TwitterButton)
 
         # *****************************  ToolsMenuItem ******************************************
 
@@ -252,18 +285,33 @@ class Window(QMainWindow):
         #DataSource Widget Item
         self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+        self.wordTreeWidget.setHidden(True)
 
         self.pdfTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+        self.pdfTreeWidget.setHidden(True)
 
         self.txtTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+        self.txtTreeWidget.setHidden(True)
 
         self.rtfTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+        self.rtfTreeWidget.setHidden(True)
 
         self.audioSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+        self.audioSTreeWidget.setHidden(True)
+        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
+
+        self.ImageSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
+        self.ImageSTreeWidget.setHidden(True)
+        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
+
+        self.WebTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+        self.WebTreeWidget.setHidden(True)
         self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         # Query Widget
@@ -488,126 +536,138 @@ class Window(QMainWindow):
         if DataSourceMouseRightClickPos is not None:
             self.DataSourceTreeWidgetContextMenu(DataSourceMouseRightClickItem, DataSourceMouseRightClickPos)
 
-    #Setting ContextMenu on Clicked Data Source
+    # Setting ContextMenu on Clicked Data Source
     def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
-        #Parent Data Source
-        if DataSourceWidgetItemName.parent() == None:
-            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+        try:
+            #Parent Data Source
+            if DataSourceWidgetItemName.parent() == None:
+                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-            DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
-            DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+                DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
+                DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
 
-            if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
-                DataSourceExpand.setDisabled(True)
+                if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
+                    DataSourceExpand.setDisabled(True)
+                else:
+                    DataSourceExpand.setDisabled(False)
+
+                DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
+                DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+
+                if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
+                    DataSourceCollapse.setDisabled(True)
+                else:
+                    DataSourceCollapse.setDisabled(False)
+
+                DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
+                DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
+
+                DataSourceRightClickMenu.addAction(DataSourceExpand)
+                DataSourceRightClickMenu.addAction(DataSourceCollapse)
+                DataSourceRightClickMenu.addAction(DataSourceDetail)
+                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+
+            #Child DataSource
             else:
-                DataSourceExpand.setDisabled(False)
+                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-            DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
-            DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+                # Data Source Preview Web Page
+                DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
+                DataSourcePreviewWeb.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreviewWeb(index))
 
-            if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
-                DataSourceCollapse.setDisabled(True)
-            else:
-                DataSourceCollapse.setDisabled(False)
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'DataSourceHTML'):
+                            DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
-            DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
-            DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
+                # Data Source Preview
+                DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
+                DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
 
-            DataSourceRightClickMenu.addAction(DataSourceExpand)
-            DataSourceRightClickMenu.addAction(DataSourceCollapse)
-            DataSourceRightClickMenu.addAction(DataSourceDetail)
-            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+                # Data Source Frequency Table
+                DataSourceShowWordFrequency = QAction('Show Word Frequency Table', self.DataSourceTreeWidget)
+                DataSourceShowWordFrequency.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowFrequencyTable(index))
+                DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
 
-        #Child DataSource
-        else:
-            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+                # Data Source Word Cloud
+                DataSourceCreateWordCloud = QAction('Create Word Cloud', self.DataSourceTreeWidget)
+                DataSourceCreateWordCloud.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCloud(index))
+                DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
 
-            # Data Source Preview
-            DataSourcePreview = QAction('Preview', self.DataSourceTreeWidget)
-            DataSourcePreview.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
-            DataSourceRightClickMenu.addAction(DataSourcePreview)
+                # Data Source Stem Words
+                DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
+                DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
+                DataSourceRightClickMenu.addAction(DataSourceStemWords)
 
-            # Data Source Frequency Table
-            DataSourceShowWordFrequency = QAction('Show Word Frequency Table', self.DataSourceTreeWidget)
-            DataSourceShowWordFrequency.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowFrequencyTable(index))
-            DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
+                # Data Source Part of Speech
+                DataSourcePOS = QAction('Part of Speech', self.DataSourceTreeWidget)
+                DataSourcePOS.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePOS(index))
+                DataSourceRightClickMenu.addAction(DataSourcePOS)
 
-            # Data Source Word Cloud
-            DataSourceCreateWordCloud = QAction('Create Word Cloud', self.DataSourceTreeWidget)
-            DataSourceCreateWordCloud.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCloud(index))
-            DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
+                # Data Source Part of Speech
+                DataSourceEntityRelationShip = QAction('Entity Relationship', self.DataSourceTreeWidget)
+                DataSourceEntityRelationShip.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceEntityRelationShip(index))
+                DataSourceRightClickMenu.addAction(DataSourceEntityRelationShip)
 
-            # Data Source Stem Words
-            DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
-            DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
-            DataSourceRightClickMenu.addAction(DataSourceStemWords)
+                # Data Source Topic Modelling
+                DataSourceTopicModelling = QAction('Topic Modelling', self.DataSourceTreeWidget)
+                DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
+                DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
 
-            # Data Source Part of Speech
-            DataSourcePOS = QAction('Part of Speech', self.DataSourceTreeWidget)
-            DataSourcePOS.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePOS(index))
-            DataSourceRightClickMenu.addAction(DataSourcePOS)
+                # Data Source Summarize
+                DataSourceSummarize = QAction('Summarize', self.DataSourceTreeWidget)
+                DataSourceSummarize.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
+                DataSourceRightClickMenu.addAction(DataSourceSummarize)
 
-            # Data Source Part of Speech
-            DataSourceEntityRelationShip = QAction('Entity Relationship', self.DataSourceTreeWidget)
-            DataSourceEntityRelationShip.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceEntityRelationShip(index))
-            DataSourceRightClickMenu.addAction(DataSourceEntityRelationShip)
+                # Data Source Show Summary
+                DataSourceSummary = QAction('Show Summary', self.DataSourceTreeWidget)
+                DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummaryPreview(index))
 
-            # Data Source Topic Modelling
-            DataSourceTopicModelling = QAction('Topic Modelling', self.DataSourceTreeWidget)
-            DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
-            DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'DataSourceTextSummary'):
+                            DataSourceRightClickMenu.addAction(DataSourceSummary)
 
-            # Data Source Summarize
-            DataSourceSummarize = QAction('Summarize', self.DataSourceTreeWidget)
-            DataSourceSummarize.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
-            DataSourceRightClickMenu.addAction(DataSourceSummarize)
+                # Data Source Translate
+                DataSourceTranslate = QAction('Translate', self.DataSourceTreeWidget)
+                DataSourceTranslate.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTranslate(index))
 
-            # Data Source Show Summary
-            DataSourceSummary = QAction('Show Summary', self.DataSourceTreeWidget)
-            DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummaryPreview(index))
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if not hasattr(DS, 'isEnglish'):
+                            DS.detect()
+                        if not DS.isEnglish:
+                            DataSourceRightClickMenu.addAction(DataSourceTranslate)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    if hasattr(DS, 'DataSourceTextSummary'):
-                        DataSourceRightClickMenu.addAction(DataSourceSummary)
+                # Data Source Show Translation
+                DataSourceShowTranslation = QAction('Show Translation', self.DataSourceTreeWidget)
+                DataSourceShowTranslation.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTranslation(index))
 
-            # Data Source Translate
-            DataSourceTranslate = QAction('Translate', self.DataSourceTreeWidget)
-            DataSourceTranslate.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTranslate(index))
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'DataSourceTranslatedText'):
+                            DataSourceRightClickMenu.removeAction(DataSourceTranslate)
+                            DataSourceRightClickMenu.addAction(DataSourceShowTranslation)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    if not hasattr(DS, 'isEnglish'):
-                        DS.detect()
-                    if not DS.isEnglish:
-                        DataSourceRightClickMenu.addAction(DataSourceTranslate)
+                # Data Source Rename
+                DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
+                DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
+                DataSourceRightClickMenu.addAction(DataSourceRename)
 
-            # Data Source Show Translation
-            DataSourceShowTranslation = QAction('Show Translation', self.DataSourceTreeWidget)
-            DataSourceShowTranslation.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTranslation(index))
+                # Data Source Remove
+                DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+                DataSourceRemove.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRemove(index))
+                DataSourceRightClickMenu.addAction(DataSourceRemove)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    if hasattr(DS, 'DataSourceTranslatedText'):
-                        DataSourceRightClickMenu.removeAction(DataSourceTranslate)
-                        DataSourceRightClickMenu.addAction(DataSourceShowTranslation)
+                # Data Source Child Detail
+                DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+                DataSourceChildDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceChildDetail(index))
+                DataSourceRightClickMenu.addAction(DataSourceChildDetail)
 
-            # Data Source Rename
-            DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
-            DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
-            DataSourceRightClickMenu.addAction(DataSourceRename)
-
-            # Data Source Remove
-            DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
-            DataSourceRemove.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRemove(index))
-            DataSourceRightClickMenu.addAction(DataSourceRemove)
-
-            # Data Source Child Detail
-            DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
-            DataSourceChildDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceChildDetail(index))
-            DataSourceRightClickMenu.addAction(DataSourceChildDetail)
-
-            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+        except Exception as e:
+            print(str(e))
 
     # Label Size Adjustment
     def LabelSizeAdjustment(self, label):
@@ -679,6 +739,63 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.exec_()
 
     # ***************************** Child Context Method ************************************
+
+    # Data Source Web Preview
+    def DataSourcePreviewWeb(self, DataSourceWidgetItemName):
+        DataSourcePreviewWebTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Web Preview':
+                DataSourcePreviewWebTabFlag = True
+                break
+
+        # Creating New Tab for Stem Word
+        PreviewWebTab = QWidget()
+
+        # LayoutWidget For within Stem Word Tab
+        PreviewWebTabVerticalLayoutWidget = QWidget(PreviewWebTab)
+        PreviewWebTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Stem Word Tab
+        PreviewWebTabVerticalLayout = QHBoxLayout(PreviewWebTabVerticalLayoutWidget)
+        PreviewWebTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        PreviewHTMLWebPage = QWebEngineView()
+        PreviewWebTabVerticalLayout.addWidget(PreviewHTMLWebPage)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("utf-8"))
+                break
+
+        if DataSourcePreviewWebTabFlag:
+            # change tab in query
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    for query in DS.QueryList:
+                        if query[1] == tabs.tabWidget:
+                            query[1] = PreviewWebTab
+                            break
+
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(PreviewWebTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(PreviewWebTab)
+            tabs.tabWidget = PreviewWebTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Web Preview", PreviewWebTab, DataSourceWidgetItemName.text(0)))
+
+            WebPreviewQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            WebPreviewQueryTreeWidget.setText(0, "Web Preview (" + DataSourceWidgetItemName.text(0) + ")")
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    DS.setQuery(WebPreviewQueryTreeWidget, PreviewWebTab)
+
+            self.tabWidget.addTab(PreviewWebTab, "Web Preview")
+            self.tabWidget.setCurrentWidget(PreviewWebTab)
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
@@ -943,8 +1060,8 @@ class Window(QMainWindow):
         WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
         WordCloudBackgroundColor.setLayoutDirection(QtCore.Qt.LeftToRight)
 
-        for BGColor in myFile.WordCloudBackgroundList:
-            WordCloudBackgroundColor.addItem(BGColor)
+        for colorname, colorhex in matplotlib.colors.cnames.items():
+            WordCloudBackgroundColor.addItem(colorname)
 
         self.LineEditSizeAdjustment(WordCloudBackgroundColor)
 
@@ -994,7 +1111,11 @@ class Window(QMainWindow):
                 DataSourceWordCloudTabFlag = True
                 break
 
-        WordCloudImage = myFile.CreateWordCloud(WCDSName, WCBGColor, maxword, maskname)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == WCDSName:
+                dummyQuery = Query()
+                WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+                break
 
         # Creating New Tab for WordCloud
         WordCloudTab = QWidget()
@@ -1384,16 +1505,19 @@ class Window(QMainWindow):
 
     # Enable Ok Button (Line Edit)
     def OkButtonEnable(self, LineEdit, ButtonBox, check):
-        if check:
-            if len(LineEdit.text()) > 0:
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        try:
+            if check:
+                if len(LineEdit.text()) > 0:
+                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+                else:
+                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
             else:
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
-            if len(LineEdit.text()) > 0:
-                ButtonBox.setEnabled(True)
-            else:
-                ButtonBox.setEnabled(False)
+                if len(LineEdit.text()) > 0:
+                    ButtonBox.setEnabled(True)
+                else:
+                    ButtonBox.setEnabled(False)
+        except Exception as e:
+            print(str(e))
 
     # Enable Ok Button (Combo Box)
     def OkButtonEnableCombo(self, ComboBox, ButtonBox):
@@ -1821,7 +1945,6 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
-
     # Data Source Summary
     def DataSourceSummarize(self, DataSourceWidgetItemName):
         # Summarization Dialog Box
@@ -1892,7 +2015,6 @@ class Window(QMainWindow):
         MaxWordFont = QFont()
         MaxWordFont.setPixelSize(9)
         SummarizeMaxWord.setFont(MaxWordFont)
-        self.LabelSizeAdjustment(SummarizeMaxWord)
 
         if SummarizeDSComboBox.currentText() != None:
             for DS in myFile.DataSourceList:
@@ -1901,6 +2023,7 @@ class Window(QMainWindow):
                     SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
                     SummarizeWord.setValue(SummarizeWord.minimum())
                     SummarizeMaxWord.setText("(Max. Words: " + str(len(DS.DataSourcetext.split())) + ")")
+                    self.LabelSizeAdjustment(SummarizeMaxWord)
                     break
 
         TotalWordCountRadioButton.toggled.connect(lambda: self.RadioButtonTrigger(SummarizeWord))
@@ -2012,6 +2135,7 @@ class Window(QMainWindow):
                 SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
                 SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
                 SummarizeWord.setValue(SummarizeWord.minimum())
+                self.LabelSizeAdjustment(SummarizeMaxWord)
 
     # Ok Button Enable on Radio Button Toggling
     def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
@@ -2109,8 +2233,9 @@ class Window(QMainWindow):
         if DataSourceRemoveChoice == QMessageBox.Yes:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0)[0:-2] + str(
-                        DataSourceWidgetItemName.parent().childCount() - 1) + ")")
+                    if DataSourceWidgetItemName.parent().childCount() == 1:
+                        DataSourceWidgetItemName.parent().setHidden(True)
+
                     DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
 
                     count = len(DS.QueryList)
@@ -2360,6 +2485,11 @@ class Window(QMainWindow):
                         newNode = QTreeWidgetItem(self.wordTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
                         self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+
+                        if self.wordTreeWidget.isHidden():
+                            self.wordTreeWidget.setHidden(False)
+                            self.wordTreeWidget.setExpanded(True)
+
                         dummyDataSource.setNode(newNode)
                     else:
                         dummyDataSource.__del__()
@@ -2394,6 +2524,11 @@ class Window(QMainWindow):
                             newNode = QTreeWidgetItem(self.pdfTreeWidget)
                             newNode.setText(0, ntpath.basename(path[0]))
                             self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+
+                            if self.pdfTreeWidget.isHidden():
+                                self.pdfTreeWidget.setHidden(False)
+                                self.pdfTreeWidget.setExpanded(True)
+
                             dummyDataSource.setNode(newNode)
                         else:
                             dummyDataSource.__del__()
@@ -2430,6 +2565,11 @@ class Window(QMainWindow):
                         newNode = QTreeWidgetItem(self.txtTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
                         self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+
+                        if self.txtTreeWidget.isHidden():
+                            self.txtTreeWidget.setHidden(False)
+                            self.txtTreeWidget.setExpanded(True)
+
                         dummyDataSource.setNode(newNode)
                     else:
                         dummyDataSource.__del__()
@@ -2463,6 +2603,10 @@ class Window(QMainWindow):
                         newNode = QTreeWidgetItem(self.rtfTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
                         self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+
+                        if self.rtfTreeWidget.isHidden():
+                            self.rtfTreeWidget.setHidden(False)
+
                         dummyDataSource.setNode(newNode)
                     else:
                         dummyDataSource.__del__()
@@ -2496,6 +2640,11 @@ class Window(QMainWindow):
                         newNode = QTreeWidgetItem(self.audioSTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
                         self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+
+                        if self.audioSTreeWidget.isHidden():
+                            self.audioSTreeWidget.setHidden(False)
+                            self.audioSTreeWidget.setExpanded(True)
+
                         dummyDataSource.setNode(newNode)
                     else:
                         dummyDataSource.__del__()
@@ -2508,6 +2657,198 @@ class Window(QMainWindow):
                         "A Data Source with Similar Name Exist! Please Rename the File then try Again")
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
+
+        elif check == "Image":
+            dummyWindow = OpenWindow("Open Image File",
+                                     "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)",
+                                     2)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
+
+            if all(path):
+                dummyDataSource = DataSource(path[0], path[1], self)
+
+                DataSourceNameCheck = False
+
+                for DS in myFile.DataSourceList:
+                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                        DataSourceNameCheck = True
+
+                if not DataSourceNameCheck:
+                    if not dummyDataSource.DataSourceLoadError:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.ImageSTreeWidget)
+                        newNode.setText(0, ntpath.basename(dummyDataSource.DataSourceName))
+                        self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
+
+                        if self.ImageSTreeWidget.isHidden():
+                            self.ImageSTreeWidget.setHidden(False)
+                            self.ImageSTreeWidget.setExpanded(True)
+
+                        dummyDataSource.setNode(newNode)
+                    else:
+                        dummyDataSource.__del__()
+                else:
+                    dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText(
+                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
+
+    # Import Tweet Window
+    def ImportTweetWindow(self):
+        TweetDialog = QDialog()
+        TweetDialog.setWindowTitle("Import From Twitter")
+        TweetDialog.setGeometry(self.width * 0.375, self.height * 0.375, self.width / 4, self.height / 4)
+        TweetDialog.setParent(self)
+        TweetDialog.setAttribute(Qt.WA_DeleteOnClose)
+        TweetDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        TweetDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        #Tweet HashTag Label
+        TweetHashtagLabel = QLabel(TweetDialog)
+        TweetHashtagLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.1,
+                                     TweetDialog.width() / 5, TweetDialog.height() / 15)
+        TweetHashtagLabel.setText("Hastag")
+        self.LabelSizeAdjustment(TweetHashtagLabel)
+
+        # Tweet Date Label
+        DateLabel = QLabel(TweetDialog)
+        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.3,
+                              TweetDialog.width() / 5, TweetDialog.height() / 15)
+        DateLabel.setText("Since")
+        self.LabelSizeAdjustment(DateLabel)
+
+        # No. of Tweets Label Label
+        NTweetLabel = QLabel(TweetDialog)
+        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.5,
+                                TweetDialog.width() / 5, TweetDialog.height() / 15)
+        NTweetLabel.setText("No of Tweets")
+        self.LabelSizeAdjustment(NTweetLabel)
+
+        # Twitter HashTag LineEdit
+        TweetHashtagLineEdit = QLineEdit(TweetDialog)
+        TweetHashtagLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.1,
+                                        TweetDialog.width() / 3, TweetDialog.height() / 15)
+        TweetHashtagLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        self.LineEditSizeAdjustment(TweetHashtagLineEdit)
+
+        # Tweet Since Date
+        DateCalendar = QDateEdit(TweetDialog)
+        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.3,
+                                 TweetDialog.width() / 3, TweetDialog.height() / 15)
+        DateCalendar.setCalendarPopup(True)
+        DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        DateCalendar.setMaximumDate(QDate(datetime.today()))
+        DateCalendar.setMinimumDate(datetime.strptime("2006-03-21", '%Y-%m-%d'))
+        DateCalendar.setDate(datetime.today())
+        self.LineEditSizeAdjustment(DateCalendar)
+
+        # Tweet No Label
+        NTweetLineEdit = QDoubleSpinBox(TweetDialog)
+        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.5,
+                                         TweetDialog.width() / 3, TweetDialog.height() / 15)
+        NTweetLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        NTweetLineEdit.setDecimals(0)
+        NTweetLineEdit.setMinimum(1)
+        self.LineEditSizeAdjustment(NTweetLineEdit)
+
+        # TweetDialog ButtonBox
+        TweetbuttonBox = QDialogButtonBox(TweetDialog)
+        TweetbuttonBox.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.8,
+                                   TweetDialog.width() / 3, TweetDialog.height() / 15)
+        TweetbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        TweetbuttonBox.button(QDialogButtonBox.Ok).setText('Get')
+        self.LineEditSizeAdjustment(TweetbuttonBox)
+
+        #WordCloudDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(WordCloudDSComboBox, CreateWorldCloudbuttonBox))
+
+        TweetbuttonBox.accepted.connect(TweetDialog.accept)
+        TweetbuttonBox.rejected.connect(TweetDialog.reject)
+
+        #CreateWorldCloudbuttonBox.accepted.connect(lambda: self.mapWordCloudonTab(str(WordCloudDSComboBox.currentText()),str(WordCloudBackgroundColor.currentText()), WordCloudMaxWords.value(),str(WordCloudMask.currentText())))
+
+        TweetDialog.exec_()
+
+    # Import URL Window
+    def ImportURLWindow(self):
+        URLDialog = QDialog()
+        URLDialog.setWindowTitle("Import From URL")
+        URLDialog.setGeometry(self.width * 0.3, self.height * 0.425, self.width*2/5 , self.height*0.15)
+        URLDialog.setParent(self)
+        URLDialog.setAttribute(Qt.WA_DeleteOnClose)
+        URLDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        URLDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Tweet HashTag Label
+        URLLabel = QLabel(URLDialog)
+        URLLabel.setGeometry(URLDialog.width() * 0.1, URLDialog.height() * 0.3,
+                             URLDialog.width()/10 , URLDialog.height() / 10)
+        URLLabel.setText("URL")
+        self.LabelSizeAdjustment(URLLabel)
+
+        # Twitter HashTag LineEdit
+        URLLineEdit = QLineEdit(URLDialog)
+        URLLineEdit.setGeometry(URLDialog.width() * 0.25, URLDialog.height() * 0.3,
+                                URLDialog.width() * 0.7, URLDialog.height() /10)
+        URLLineEdit.setAlignment(Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(URLLineEdit)
+
+        # TweetDialog ButtonBox
+        URLbuttonBox = QDialogButtonBox(URLDialog)
+        URLbuttonBox.setGeometry(URLDialog.width() * 0.5, URLDialog.height() * 0.7,
+                                 URLDialog.width() / 3, URLDialog.height() / 10)
+        URLbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        URLbuttonBox.button(QDialogButtonBox.Ok).setText('Get Data')
+        URLbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.LineEditSizeAdjustment(URLbuttonBox)
+
+        URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(URLLineEdit, URLbuttonBox, True))
+
+        URLbuttonBox.accepted.connect(URLDialog.accept)
+        URLbuttonBox.rejected.connect(URLDialog.reject)
+
+        URLbuttonBox.accepted.connect(lambda: self.ImportFromURL(URLLineEdit.text()))
+        URLDialog.exec_()
+
+    # Import From URL
+    def ImportFromURL(self, URL):
+        try:
+            dummyDataSource = DataSource(URL, "URL", self)
+            DataSourceNameCheck = False
+
+            for DS in myFile.DataSourceList:
+                if DS != dummyDataSource and DS.DataSourceext == dummyDataSource.DataSourceext:
+                    DataSourceNameCheck = True
+
+            if not DataSourceNameCheck:
+                if not dummyDataSource.DataSourceLoadError:
+                    myFile.setDataSources(dummyDataSource)
+                    newNode = QTreeWidgetItem(self.WebTreeWidget)
+                    newNode.setText(0, URL)
+                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+
+                    if self.WebTreeWidget.isHidden():
+                        self.WebTreeWidget.setHidden(False)
+                        self.WebTreeWidget.setExpanded(True)
+
+                    dummyDataSource.setNode(newNode)
+                else:
+                    dummyDataSource.__del__()
+            else:
+                dummyDataSource.__del__()
+                DataSourceImportNameErrorBox = QMessageBox()
+                DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+                DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                DataSourceImportNameErrorBox.setText("A Data Source with Similar URL Exist!")
+                DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceImportNameErrorBox.exec_()
+
+        except Exception as e:
+            print(str(e))
 
     #Print Window
     def printWindow(self):

@@ -1,27 +1,15 @@
-
 import PyQt5
 from PyQt5.QtWidgets import *
-from PyQt5.QtPrintSupport import *
-from PyQt5.QtWebKit import *
-from PyQt5.QtWebEngineWidgets import *
-from PyQt5.QtWebKitWidgets import *
 from PyQt5 import QtGui, QtCore, QtPrintSupport
+from PyQt5.QtWebEngineWidgets import *
 from matplotlib.container import StemContainer
 from win32api import GetMonitorInfo, MonitorFromPoint
-
 from PIL import  Image
 from datetime import datetime
 from File import *
 from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
 
-
-WindowTitleLogo = "Images/TextASLogo.png"
-isSaveAs = True
-myFile = File()
-myFile.setCreatedDate(datetime.now())
-myFile.setCreatedDate(datetime.now())
-myFile.setCreatedDate(getpass.getuser())
 
 class OpenWindow(QFileDialog):
     def __init__(self, title, ext, flag):
@@ -635,9 +623,11 @@ class Window(QMainWindow):
 
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if not hasattr(DS, 'isEnglish'):
-                            DS.detect()
-                        if not DS.isEnglish:
+                        # if not hasattr(DS, 'isEnglish') and not hasattr(DS, 'LanguageDetectionError'):
+                        #     DS.detect()
+                        if not hasattr(DS, 'isEnglish') and hasattr(DS, 'LanguageDetectionError'):
+                            pass
+                        elif not DS.isEnglish:
                             DataSourceRightClickMenu.addAction(DataSourceTranslate)
 
                 # Data Source Show Translation
@@ -2852,12 +2842,12 @@ class Window(QMainWindow):
 
     #Print Window
     def printWindow(self):
-        printer = QPrinter(QPrinter.HighResolution)
-        self.Printdialog = QPrintDialog(printer, self)
+        printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+        self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
         self.Printdialog.setWindowTitle('Print')
         self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
 
-        if self.Printdialog.exec_() == QPrintDialog.Accepted:
+        if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
             self.textedit.print_(printer)
 
     #Hide ToolBar
@@ -2921,7 +2911,38 @@ class Window(QMainWindow):
         self.AboutWindowDialog.setLayout(hbox1)
         self.AboutWindowDialog.show()
 
-App = QApplication(sys.argv)
-TextASMainwindow = Window()
-TextASMainwindow.show()
-sys.exit(App.exec())
+
+if __name__ == "__main__":
+    WindowTitleLogo = "Images/TextASLogo.png"
+    isSaveAs = True
+    myFile = File()
+    myFile.setCreatedDate(datetime.now())
+    myFile.setCreatedDate(datetime.now())
+    myFile.setCreatedDate(getpass.getuser())
+
+    App = QApplication(sys.argv)
+
+    TextASSplash = QSplashScreen()
+    TextASSplash.resize(200, 100)
+    TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
+    TextASSplash.setPixmap(TextASSplashPixmap)
+
+    SplahScreenProgressBar = QProgressBar(TextASSplash)
+    SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
+                            TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
+    SplahScreenProgressBar.setTextVisible(False)
+    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+
+    TextASSplash.show()
+
+    for i in range(0, 100):
+        SplahScreenProgressBar.setValue(i)
+        t = time.time()
+        while time.time() < t + 0.1:
+            App.processEvents()
+
+    TextASSplash.close()
+
+    TextASMainwindow = Window()
+    TextASMainwindow.show()
+    sys.exit(App.exec())

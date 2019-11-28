@@ -1,3 +1,5 @@
+from builtins import print, dict
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -16,16 +18,18 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from stat import *
 from PIL import *
 from pyglet import *
+from Cases import *
+from Sentiments import *
 from spacy import displacy
 from urllib.parse import urlparse
 from collections import Counter
 from nltk.stem.wordnet import WordNetLemmatizer
 from spacy.lang.en import English
 from nltk.corpus import wordnet as wn
-from gensim import *
 from bs4 import BeautifulSoup
 import pickle
 import pyLDAvis.gensim
+import urllib
 import requests
 import cv2
 import pytesseract
@@ -39,6 +43,9 @@ import ntpath, pyglet
 import docx2txt, PyPDF2
 import os, time
 import spacy
+import tweepy
+import csv
+import pandas as pd
 
 import pyautogui, qstylizer.style
 
@@ -132,7 +139,7 @@ class DataSource(File):
 
         if ext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             self.DataSourceName = ntpath.basename(path[0])
-        elif ext == "URL":
+        elif ext == "URL" or ext ==  'Tweet':
             self.DataSourceName = path
         else:
             self.DataSourceName = ntpath.basename(path)
@@ -141,7 +148,8 @@ class DataSource(File):
         self.DataSourcetext = ""
         self.DataSourceLoadError = False
         self.QueryList = []
-
+        self.CasesList = []
+        self.SentimentList = []
         self.MainWindow = MainWindow
 
         if(ext == "Doc files (*.doc *.docx)"):
@@ -405,11 +413,9 @@ class DataSource(File):
             self.DataSourcetext = ""
 
             for paths in self.DataSourcePath:
-                dummyImage = cv2.imread(self.DataSourcePath)
+                dummyImage = cv2.imread(paths)
                 self.DataSourceImage.append(dummyImage)
                 self.DataSourcetext += pytesseract.image_to_string(dummyImage)
-
-            print(self.DataSourcetext)
 
             self.DataSourceLoadError = False
         except Exception as e:
@@ -468,28 +474,84 @@ class DataSource(File):
             URLErrorBox.exec_()
 
         if not self.DataSourceLoadError:
-            self.DataSourceHTML = response.content
-            soup = BeautifulSoup(self.DataSourceHTML, 'html.parser')
-            HTMLText = soup.find_all(text=True)
+            try:
+                self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
 
-            output = ''
-            blacklist = [
-                '[document]',
-                'noscript',
-                'header',
-                'html',
-                'meta',
-                'head',
-                'input',
-                'script',
-                # there may be more elements you don't want, such as "style", etc.
-            ]
+                soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
 
-            for t in HTMLText:
-                if t.parent.name not in blacklist:
-                    output += '{} '.format(t)
+                # kill all script and style elements
+                for script in soup(["script", "style"]):
+                    script.extract()  # rip it out
 
-            self.DataSourcetext = output
+                # get text
+                text = soup.get_text()
+
+                # break into lines and remove leading and trailing space on each
+                lines = (line.strip() for line in text.splitlines())
+                # break multi-headlines into a line each
+                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                # drop blank lines
+                text = '\n'.join(chunk for chunk in chunks if chunk)
+
+                self.DataSourcetext = text
+            except Exception as e:
+                print(str(e))
+
+    # Twitter Tweet
+    def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
+        try:
+            consumer_key = 's3MT03IsWkMrTj41HxH6InNzr'
+            consumer_secret = 'jaqHc7GLjmxaM8xITLHWdcHC10nhzPXfG6RTwtUOmAJo673nRg'
+            access_token = '1115595365380550659-1q2eKGnzYESKSujOTKQ16fhWbHRWAk'
+            access_token_secret = 'le5JNnMhFM3iLbbRODsJyLblIZCltKwwjIXsdVokxsG20'
+
+            auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+            auth.set_access_token(access_token, access_token_secret)
+            api = tweepy.API(auth, wait_on_rate_limit=True)
+
+            self.TweetData = []
+
+            for tweet in tweepy.Cursor(api.search, q=Hashtag, count=NoOfTweet, lang=Language, since=Since).items():
+                self.DataSourcetext = self.DataSourcetext + tweet.text
+
+                eachtweet = [tweet.user.screen_name,
+                             tweet.user.name,
+                             str(tweet.created_at),
+                             tweet.text,
+                             str(tweet.user.location),
+                             str(tweet.coordinates),
+                             str(tweet.retweet_count),
+                             str(tweet.retweeted),
+                             str(tweet.source),
+                             str(tweet.favorite_count),
+                             str(tweet.favorited),
+                             str(tweet.in_reply_to_status_id_str)]
+
+
+
+                #
+                # dict_ = {'Screen Name': tweet.user.screen_name,
+                #          'User Name': tweet.user.name,
+                #          'Tweet Created At': str(tweet.created_at),
+                #          'Tweet Text': tweet.text,
+                #          'User Location': str(tweet.user.location),
+                #          'Tweet Coordinates': str(tweet.coordinates),
+                #          'Retweet Count': str(tweet.retweet_count),
+                #          'Retweeted': str(tweet.retweeted),
+                #          'Phone Type': str(tweet.source),
+                #          'Favorite Count': str(tweet.favorite_count),
+                #          'Favorited': str(tweet.favorited),
+                #          'Replied': str(tweet.in_reply_to_status_id_str)
+                #          }
+                self.TweetData.append(eachtweet)
+
+            if len(self.TweetData) == 0:
+                self.DataSourceRetrieveZeroError = True
+            else:
+                self.DataSourceRetrieveZeroError = False
+
+        except:
+            self.DataSourceLoadError = True
 
     # Set Node
     def setNode(self, WidgetItemNode):
@@ -508,10 +570,13 @@ class DataSource(File):
     #detection
     def detect(self):
         blob = TextBlob(self.DataSourcetext)
-        if blob.detect_language() != 'en':
-            self.isEnglish = False
-        else:
-            self.isEnglish = True
+        try:
+            if blob.detect_language() != 'en':
+                self.isEnglish = False
+            else:
+                self.isEnglish = True
+        except:
+            self.LanguageDetectionError = True
 
     #translation
     def translate(self):
@@ -544,6 +609,32 @@ class DataSource(File):
             TranslationErrorBox.setText(self.DataSourceName + " is already Translated!")
             TranslationErrorBox.setStandardButtons(QMessageBox.Ok)
             TranslationErrorBox.exec_()
+
+    # Create Case
+    def CreateCase(self, CaseTopic, selectedText):
+        self.CasesNameConflict = False
+
+        for cases in self.CasesList:
+            if cases.CaseTopic == CaseTopic:
+                self.CasesNameConflict = True
+
+        if not self.CasesNameConflict:
+            self.CasesList.append(Cases(CaseTopic))
+            self.AddtoCase(CaseTopic, selectedText)
+        else:
+            CasesCreationErrorBox = QMessageBox()
+            CasesCreationErrorBox.setIcon(QMessageBox.Information)
+            CasesCreationErrorBox.setWindowTitle("Creation Error")
+            CasesCreationErrorBox.setText("A Case with that Topic is already created")
+            CasesCreationErrorBox.setStandardButtons(QMessageBox.Ok)
+            CasesCreationErrorBox.exec_()
+
+    # Add to Case
+    def AddtoCase(self, CaseTopic, SelectedText):
+        for cases in self.CasesList:
+            if cases.CaseTopic == CaseTopic:
+                cases.addtoCase(SelectedText)
+                break
 
     # Set Animation
     def Animation(self, name):
@@ -597,7 +688,6 @@ class DataSource(File):
 
     def __del__(self):
         self.DataSourceDelete = True
-
 
 class Tab(File):
     def __init__(self, tabName, tabWidget, DataSourceName):
@@ -853,6 +943,32 @@ class Query():
         lda_display = pyLDAvis.gensim.prepare(lda, corpus, dictionary, sort_topics=True)
 
         return pyLDAvis.prepared_data_to_html(lda_display)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Animation(QObject):

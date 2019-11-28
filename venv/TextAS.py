@@ -3,13 +3,13 @@ from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtPrintSupport
 from PyQt5.QtWebEngineWidgets import *
 from matplotlib.container import StemContainer
+from tweepy import TweepError
 from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
 from datetime import datetime
 from File import *
 from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
-
 
 class OpenWindow(QFileDialog):
     def __init__(self, title, ext, flag):
@@ -58,6 +58,214 @@ class Window(QMainWindow):
 
         self.left = 0;
         self.top = 0;
+
+        self.languages = [
+            ('aa', 'Afar'),
+            ('ab', 'Abkhazian'),
+            ('af', 'Afrikaans'),
+            ('ak', 'Akan'),
+            ('sq', 'Albanian'),
+            ('am', 'Amharic'),
+            ('ar', 'Arabic'),
+            ('an', 'Aragonese'),
+            ('hy', 'Armenian'),
+            ('as', 'Assamese'),
+            ('av', 'Avaric'),
+            ('ae', 'Avestan'),
+            ('ay', 'Aymara'),
+            ('az', 'Azerbaijani'),
+            ('ba', 'Bashkir'),
+            ('bm', 'Bambara'),
+            ('eu', 'Basque'),
+            ('be', 'Belarusian'),
+            ('bn', 'Bengali'),
+            ('bh', 'Bihari languages'),
+            ('bi', 'Bislama'),
+            ('bo', 'Tibetan'),
+            ('bs', 'Bosnian'),
+            ('br', 'Breton'),
+            ('bg', 'Bulgarian'),
+            ('my', 'Burmese'),
+            ('ca', 'Catalan; Valencian'),
+            ('cs', 'Czech'),
+            ('ch', 'Chamorro'),
+            ('ce', 'Chechen'),
+            ('zh', 'Chinese'),
+            ('cu', 'Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church Slavonic'),
+            ('cv', 'Chuvash'),
+            ('kw', 'Cornish'),
+            ('co', 'Corsican'),
+            ('cr', 'Cree'),
+            ('cy', 'Welsh'),
+            ('cs', 'Czech'),
+            ('da', 'Danish'),
+            ('de', 'German'),
+            ('dv', 'Divehi; Dhivehi; Maldivian'),
+            ('nl', 'Dutch; Flemish'),
+            ('dz', 'Dzongkha'),
+            ('el', 'Greek, Modern (1453-)'),
+            ('en', 'English'),
+            ('eo', 'Esperanto'),
+            ('et', 'Estonian'),
+            ('eu', 'Basque'),
+            ('ee', 'Ewe'),
+            ('fo', 'Faroese'),
+            ('fa', 'Persian'),
+            ('fj', 'Fijian'),
+            ('fi', 'Finnish'),
+            ('fr', 'French'),
+            ('fr', 'French'),
+            ('fy', 'Western Frisian'),
+            ('ff', 'Fulah'),
+            ('Ga', 'Georgian'),
+            ('de', 'German'),
+            ('gd', 'Gaelic; Scottish Gaelic'),
+            ('ga', 'Irish'),
+            ('gl', 'Galician'),
+            ('gv', 'Manx'),
+            ('el', 'Greek, Modern (1453-)'),
+            ('gn', 'Guarani'),
+            ('gu', 'Gujarati'),
+            ('ht', 'Haitian; Haitian Creole'),
+            ('ha', 'Hausa'),
+            ('he', 'Hebrew'),
+            ('hz', 'Herero'),
+            ('hi', 'Hindi'),
+            ('ho', 'Hiri Motu'),
+            ('hr', 'Croatian'),
+            ('hu', 'Hungarian'),
+            ('hy', 'Armenian'),
+            ('ig', 'Igbo'),
+            ('is', 'Icelandic'),
+            ('io', 'Ido'),
+            ('ii', 'Sichuan Yi; Nuosu'),
+            ('iu', 'Inuktitut'),
+            ('ie', 'Interlingue; Occidental'),
+            ('ia', 'Interlingua (International Auxiliary Language Association)'),
+            ('id', 'Indonesian'),
+            ('ik', 'Inupiaq'),
+            ('is', 'Icelandic'),
+            ('it', 'Italian'),
+            ('jv', 'Javanese'),
+            ('ja', 'Japanese'),
+            ('kl', 'Kalaallisut; Greenlandic'),
+            ('kn', 'Kannada'),
+            ('ks', 'Kashmiri'),
+            ('ka', 'Georgian'),
+            ('kr', 'Kanuri'),
+            ('kk', 'Kazakh'),
+            ('km', 'Central Khmer'),
+            ('ki', 'Kikuyu; Gikuyu'),
+            ('rw', 'Kinyarwanda'),
+            ('ky', 'Kirghiz; Kyrgyz'),
+            ('kv', 'Komi'),
+            ('kg', 'Kongo'),
+            ('ko', 'Korean'),
+            ('kj', 'Kuanyama; Kwanyama'),
+            ('ku', 'Kurdish'),
+            ('lo', 'Lao'),
+            ('la', 'Latin'),
+            ('lv', 'Latvian'),
+            ('li', 'Limburgan; Limburger; Limburgish'),
+            ('ln', 'Lingala'),
+            ('lt', 'Lithuanian'),
+            ('lb', 'Luxembourgish; Letzeburgesch'),
+            ('lu', 'Luba-Katanga'),
+            ('lg', 'Ganda'),
+            ('mk', 'Macedonian'),
+            ('mh', 'Marshallese'),
+            ('ml', 'Malayalam'),
+            ('mi', 'Maori'),
+            ('mr', 'Marathi'),
+            ('ms', 'Malay'),
+            ('Mi', 'Micmac'),
+            ('mk', 'Macedonian'),
+            ('mg', 'Malagasy'),
+            ('mt', 'Maltese'),
+            ('mn', 'Mongolian'),
+            ('mi', 'Maori'),
+            ('ms', 'Malay'),
+            ('my', 'Burmese'),
+            ('na', 'Nauru'),
+            ('nv', 'Navajo; Navaho'),
+            ('nr', 'Ndebele, South; South Ndebele'),
+            ('nd', 'Ndebele, North; North Ndebele'),
+            ('ng', 'Ndonga'),
+            ('ne', 'Nepali'),
+            ('nl', 'Dutch; Flemish'),
+            ('nn', 'Norwegian Nynorsk; Nynorsk, Norwegian'),
+            ('nb', 'Bokmål, Norwegian; Norwegian Bokmål'),
+            ('no', 'Norwegian'),
+            ('oc', 'Occitan (post 1500)'),
+            ('oj', 'Ojibwa'),
+            ('or', 'Oriya'),
+            ('om', 'Oromo'),
+            ('os', 'Ossetian; Ossetic'),
+            ('pa', 'Panjabi; Punjabi'),
+            ('fa', 'Persian'),
+            ('pi', 'Pali'),
+            ('pl', 'Polish'),
+            ('pt', 'Portuguese'),
+            ('ps', 'Pushto; Pashto'),
+            ('qu', 'Quechua'),
+            ('rm', 'Romansh'),
+            ('ro', 'Romanian; Moldavian; Moldovan'),
+            ('ro', 'Romanian; Moldavian; Moldovan'),
+            ('rn', 'Rundi'),
+            ('ru', 'Russian'),
+            ('sg', 'Sango'),
+            ('sa', 'Sanskrit'),
+            ('si', 'Sinhala; Sinhalese'),
+            ('sk', 'Slovak'),
+            ('sk', 'Slovak'),
+            ('sl', 'Slovenian'),
+            ('se', 'Northern Sami'),
+            ('sm', 'Samoan'),
+            ('sn', 'Shona'),
+            ('sd', 'Sindhi'),
+            ('so', 'Somali'),
+            ('st', 'Sotho, Southern'),
+            ('es', 'Spanish; Castilian'),
+            ('sq', 'Albanian'),
+            ('sc', 'Sardinian'),
+            ('sr', 'Serbian'),
+            ('ss', 'Swati'),
+            ('su', 'Sundanese'),
+            ('sw', 'Swahili'),
+            ('sv', 'Swedish'),
+            ('ty', 'Tahitian'),
+            ('ta', 'Tamil'),
+            ('tt', 'Tatar'),
+            ('te', 'Telugu'),
+            ('tg', 'Tajik'),
+            ('tl', 'Tagalog'),
+            ('th', 'Thai'),
+            ('bo', 'Tibetan'),
+            ('ti', 'Tigrinya'),
+            ('to', 'Tonga (Tonga Islands)'),
+            ('tn', 'Tswana'),
+            ('ts', 'Tsonga'),
+            ('tk', 'Turkmen'),
+            ('tr', 'Turkish'),
+            ('tw', 'Twi'),
+            ('ug', 'Uighur; Uyghur'),
+            ('uk', 'Ukrainian'),
+            ('ur', 'Urdu'),
+            ('uz', 'Uzbek'),
+            ('ve', 'Venda'),
+            ('vi', 'Vietnamese'),
+            ('vo', 'Volapük'),
+            ('cy', 'Welsh'),
+            ('wa', 'Walloon'),
+            ('wo', 'Wolof'),
+            ('xh', 'Xhosa'),
+            ('yi', 'Yiddish'),
+            ('yo', 'Yoruba'),
+            ('za', 'Zhuang; Chuang'),
+            ('zh', 'Chinese'),
+            ('zu', 'Zulu')
+        ]
+
         self.initWindows()
 
     def initWindows(self):
@@ -302,6 +510,11 @@ class Window(QMainWindow):
         self.WebTreeWidget.setHidden(True)
         self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
+        self.TweetTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
+        self.TweetTreeWidget.setHidden(True)
+        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
+
         # Query Widget
         self.QueryLabel = QLabel()
         self.QueryLabel.setText("Query")
@@ -317,6 +530,33 @@ class Window(QMainWindow):
         self.QueryTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindQueryTreeWidgetContextMenu(index))
 
         self.verticalLayout.addWidget(self.QueryTreeWidget)
+
+        # Cases Widget
+        self.CasesLabel = QLabel()
+        self.CasesLabel.setText("Cases")
+        self.CasesLabel.setAlignment(Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.CasesLabel)
+
+        self.CasesTreeWidget = QTreeWidget()
+        self.CasesTreeWidget.setHeaderLabel('Cases')
+        self.CasesTreeWidget.setAlternatingRowColors(True)
+        self.CasesTreeWidget.header().setHidden(True)
+        self.CasesTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.CasesTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindCasesTreeWidgetContextMenu(index))
+        self.verticalLayout.addWidget(self.CasesTreeWidget)
+
+        # Sentiment Widget
+        self.SentimentLabel = QLabel()
+        self.SentimentLabel.setText("Sentiments")
+        self.SentimentLabel.setAlignment(Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.SentimentLabel)
+
+        self.SentimentTreeWidget = QTreeWidget()
+        self.SentimentTreeWidget.setHeaderLabel('Sentiments')
+        self.SentimentTreeWidget.setAlternatingRowColors(True)
+        self.SentimentTreeWidget.header().setHidden(True)
+        self.SentimentTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
         # Visualiztion Widget
         self.VisualizationLabel = QLabel()
@@ -579,7 +819,7 @@ class Window(QMainWindow):
                 DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
 
                 # Data Source Word Cloud
-                DataSourceCreateWordCloud = QAction('Create Word Cloud', self.DataSourceTreeWidget)
+                DataSourceCreateWordCloud = QAction('Create Word Cloud...', self.DataSourceTreeWidget)
                 DataSourceCreateWordCloud.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCloud(index))
                 DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
 
@@ -603,6 +843,21 @@ class Window(QMainWindow):
                 DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
                 DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
 
+                # Data Source Create Node
+                DataSourceCreateNodes = QAction('Create Nodes...', self.DataSourceTreeWidget)
+                DataSourceCreateNodes.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateNodes(index))
+                DataSourceRightClickMenu.addAction(DataSourceCreateNodes)
+
+                # Data Source Create Cases
+                DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
+                DataSourceCreateCases.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCases(index))
+                DataSourceRightClickMenu.addAction(DataSourceCreateCases)
+
+                # Data Source Create Sentiments
+                DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
+                DataSourceCreateSentiments.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateSentiments(index))
+                DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
+
                 # Data Source Summarize
                 DataSourceSummarize = QAction('Summarize', self.DataSourceTreeWidget)
                 DataSourceSummarize.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummarize(index))
@@ -623,8 +878,8 @@ class Window(QMainWindow):
 
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        # if not hasattr(DS, 'isEnglish') and not hasattr(DS, 'LanguageDetectionError'):
-                        #     DS.detect()
+                        if not hasattr(DS, 'isEnglish') and not hasattr(DS, 'LanguageDetectionError'):
+                            DS.detect()
                         if not hasattr(DS, 'isEnglish') and hasattr(DS, 'LanguageDetectionError'):
                             pass
                         elif not DS.isEnglish:
@@ -796,44 +1051,25 @@ class Window(QMainWindow):
         DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
         DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        # Box Layout for Word Cloud Tab
+        # Box Layout for Data SourceTab
         DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
         DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        try:
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourcePreview.setReadOnly(True)
+        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        DataSourcePreview.setReadOnly(True)
+        DataSourcePreview.setContextMenuPolicy(Qt.CustomContextMenu)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourcePreview.setText(DS.DataSourcetext)
-                    break
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                DataSourcePreview.setText(DS.DataSourcetext)
+                break
 
-            myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,DataSourceWidgetItemName.text(0)))
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-
-        except Exception as e:
-            print(str(e))
-
-        # try:
-        #     DataSourcePreviewTab = QWidget()
-        #
-        #     for DS in myFile.DataSourceList:
-        #         if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-        #             PDFWeb = QWebView(DataSourcePreviewTab)
-        #             PDFWeb.settings().setAttribute(QWebSettings.PluginsEnabled, True)
-        #             PDFWeb.show()
-        #             break
-        #
-        #
-        #     myFile.TabList.append(Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
-        #     self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-        #     self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-        #
-        # except Exception as e:
-        #     print(str(e))
+        myFile.TabList.append(
+            Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
+                DataSourceWidgetItemName.text(0)))
+        self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
@@ -1214,7 +1450,7 @@ class Window(QMainWindow):
 
         RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
-        RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenameLineEdit, RenamebuttonBox, True))
+        RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenamebuttonBox, True))
 
         RenamebuttonBox.accepted.connect(DataSourceRename.accept)
         RenamebuttonBox.rejected.connect(DataSourceRename.reject)
@@ -1328,7 +1564,7 @@ class Window(QMainWindow):
 
         StemWordLineEdit.textChanged.connect(
             lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), StemWordDSComboBox.currentText()))
-        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordLineEdit, StemWordbuttonBox, True))
+        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordbuttonBox, True))
 
         StemWordDSComboBox.currentTextChanged.connect(StemWordLineEdit.clear)
 
@@ -1389,7 +1625,7 @@ class Window(QMainWindow):
         StemWordSubmitButton.setText("Find Stem Words")
         StemWordSubmitButton.setEnabled(False)
 
-        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordLineEdit, StemWordSubmitButton, False))
+        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
 
         # 2nd LayoutWidget For within Stem Word Tab
         StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
@@ -1494,7 +1730,8 @@ class Window(QMainWindow):
                 StemWordModel.setStringList(matching)
 
     # Enable Ok Button (Line Edit)
-    def OkButtonEnable(self, LineEdit, ButtonBox, check):
+    def OkButtonEnable(self, ButtonBox, check):
+        LineEdit = self.sender()
         try:
             if check:
                 if len(LineEdit.text()) > 0:
@@ -1935,6 +2172,193 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+    # Data Source Create Nodes
+    def DataSourceCreateNodes(self, DataSourceWidgetItemName):
+        print("Hello")
+
+    # Data Source Create Cases
+    def DataSourceCreateCases(self, DataSourceWidgetItemName):
+        DataSourceCreateCasesTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
+        CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Data SourceTab
+        CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
+        CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
+        CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        CreateCasesPreview.setReadOnly(True)
+
+        CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
+        CreateCasesPreview.customContextMenuRequested.connect(
+            lambda checked, index=QtGui.QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                CreateCasesPreview.setText(DS.DataSourcetext)
+                break
+
+        self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
+        self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+
+    def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
+        TextEdit = self.sender()
+        TextCursor = TextEdit.textCursor()
+
+        if TextCursor.selectionStart() == TextCursor.selectionEnd():
+            pass
+        else:
+            CasesSelectedTextClickMenu = QMenu(TextEdit)
+
+            # Create Cases
+            CreateCase = QAction('Create Case', TextEdit)
+            CreateCase.triggered.connect(lambda: self.CreateCaseDialog(TextCursor.selectedText(), DataSourceWidgetItemName))
+            CasesSelectedTextClickMenu.addAction(CreateCase)
+
+            # Add to Case / Append
+            AddToCase = QAction('Add to Case', TextEdit)
+            AddToCase.triggered.connect(lambda: self.AddtoCaseDialog(TextCursor.selectedText(), DataSourceWidgetItemName))
+            AddToCase.setEnabled(False)
+            CasesSelectedTextClickMenu.addAction(AddToCase)
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    if len(DS.CasesList) > 0:
+                        AddToCase.setEnabled(True)
+                        break
+
+            CasesSelectedTextClickMenu.popup(TextEdit.cursor().pos())
+
+    # Create Case onClick
+    def CreateCaseDialog(self, selectedText, DataSourceWidgetItemName):
+        CreateCaseDialogBox = QDialog()
+        CreateCaseDialogBox.setModal(True)
+        CreateCaseDialogBox.setWindowTitle("Create New Case")
+        CreateCaseDialogBox.setParent(self)
+        CreateCaseDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CreateCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3,
+                                                    self.height / 10)
+        CreateCaseDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        CaseNameLabel = QLabel(CreateCaseDialogBox)
+        CaseNameLabel.setText("Case Name")
+        CaseNameLabel.setGeometry(CreateCaseDialogBox.width() * 0.1,
+                                  CreateCaseDialogBox.height() * 0.15,
+                                  CreateCaseDialogBox.width()/4,
+                                  CreateCaseDialogBox.height()/5)
+        CaseNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(CaseNameLabel)
+
+        CaseNameLineEdit = QLineEdit(CreateCaseDialogBox)
+        CaseNameLineEdit.setGeometry(CreateCaseDialogBox.width() * 0.4,
+                                       CreateCaseDialogBox.height() * 0.15,
+                                       CreateCaseDialogBox.width() / 2,
+                                       CreateCaseDialogBox.height() / 5)
+        CaseNameLineEdit.setAlignment(Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(CaseNameLineEdit)
+
+        CreateCaseButtonBox = QDialogButtonBox(CreateCaseDialogBox)
+        CreateCaseButtonBox.setGeometry(CreateCaseDialogBox.width() * 0.4, CreateCaseDialogBox.height() * 0.5,
+                                        CreateCaseDialogBox.width() / 2, CreateCaseDialogBox.height()/2)
+        CreateCaseButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        CreateCaseButtonBox.button(QDialogButtonBox.Ok).setText('Create')
+        CreateCaseButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.LineEditSizeAdjustment(CreateCaseButtonBox)
+
+        CaseNameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(CreateCaseButtonBox, True))
+
+        CreateCaseButtonBox.accepted.connect(CreateCaseDialogBox.accept)
+        CreateCaseButtonBox.rejected.connect(CreateCaseDialogBox.reject)
+
+        CreateCaseButtonBox.accepted.connect(lambda : self.CreateCaseClick(CaseNameLineEdit.text(), selectedText, DataSourceWidgetItemName))
+
+        CreateCaseDialogBox.exec_()
+
+    # Case Create Click
+    def CreateCaseClick(self, CaseTopic, selectedText, DataSourceWidgetItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                DS.CreateCase(CaseTopic, selectedText)
+                break
+
+        if not DS.CasesNameConflict:
+            if (len(DS.CasesList) == 1):
+                DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
+                DSCaseWidget.setText(0, DS.DataSourceName)
+                DSCaseWidget.setExpanded(True)
+
+            ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly, 0)
+
+            for widgets in ItemsWidget:
+                DSNewCaseNode = QTreeWidgetItem(widgets)
+                DSNewCaseNode.setText(0, CaseTopic)
+
+    # Add to Case onClick
+    def AddtoCaseDialog(self, selectedText, DataSourceWidgetItemName):
+        AddtoCaseDialogBox = QDialog()
+        AddtoCaseDialogBox.setModal(True)
+        AddtoCaseDialogBox.setWindowTitle("Add to Case")
+        AddtoCaseDialogBox.setParent(self)
+        AddtoCaseDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        AddtoCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
+                                       self.height / 10)
+        AddtoCaseDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        AddtoCaseLabel = QLabel(AddtoCaseDialogBox)
+        AddtoCaseLabel.setText("Case Name")
+        AddtoCaseLabel.setGeometry(AddtoCaseDialogBox.width() * 0.1,
+                                   AddtoCaseDialogBox.height() * 0.15,
+                                   AddtoCaseDialogBox.width() / 4,
+                                   AddtoCaseDialogBox.height() / 5)
+        AddtoCaseLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(AddtoCaseLabel)
+
+        AddtoCaseComboBox = QComboBox(AddtoCaseDialogBox)
+        AddtoCaseComboBox.setGeometry(AddtoCaseDialogBox.width() * 0.4,
+                                      AddtoCaseDialogBox.height() * 0.15,
+                                      AddtoCaseDialogBox.width() / 2,
+                                      AddtoCaseDialogBox.height() / 5)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                for cases in DS.CasesList:
+                    AddtoCaseComboBox.addItem(cases.CaseTopic)
+                break
+
+        self.LineEditSizeAdjustment(AddtoCaseComboBox)
+
+        AddtoCaseButtonBox = QDialogButtonBox(AddtoCaseDialogBox)
+        AddtoCaseButtonBox.setGeometry(AddtoCaseDialogBox.width() * 0.4, AddtoCaseDialogBox.height() * 0.5,
+                                       AddtoCaseDialogBox.width() / 2, AddtoCaseDialogBox.height() / 2)
+        AddtoCaseButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        AddtoCaseButtonBox.button(QDialogButtonBox.Ok).setText('Add')
+        self.LineEditSizeAdjustment(AddtoCaseButtonBox)
+
+        AddtoCaseButtonBox.accepted.connect(AddtoCaseDialogBox.accept)
+        AddtoCaseButtonBox.rejected.connect(AddtoCaseDialogBox.reject)
+
+        AddtoCaseButtonBox.accepted.connect(
+            lambda: self.AddtoCaseClick(AddtoCaseComboBox.currentText(), selectedText, DataSourceWidgetItemName))
+
+        AddtoCaseDialogBox.exec_()
+
+    # Case Create Click
+    def AddtoCaseClick(self, CaseTopic, selectedText, DataSourceWidgetItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CaseTopic:
+                        cases.addtoCase(selectedText)
+                        break
+
+    # Data Source Create Sentiments
+    def DataSourceCreateSentiments(self, DataSourceWidgetItemName):
+        print("Hello")
+
     # Data Source Summary
     def DataSourceSummarize(self, DataSourceWidgetItemName):
         # Summarization Dialog Box
@@ -2067,77 +2491,6 @@ class Window(QMainWindow):
 
         SummarizeDialog.exec()
 
-    # Data Source Translate
-    def DataSourceTranslate(self, DataSourceWidgetItemName):
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                DS.translate()
-                break
-
-    # Data Source Show Translation
-    def DataSourceShowTranslation(self, DataSourceWidgetItemName):
-        DataSourcePreviewTab = QWidget()
-
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-        # Box Layout for Word Cloud Tab
-        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        try:
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourcePreview.setReadOnly(True)
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourcePreview.setText(str(DS.DataSourceTranslatedText))
-                    break
-
-            myFile.TabList.append(
-                Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
-                    DataSourceWidgetItemName.text(0)))
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-
-        except Exception as e:
-            print(str(e))
-
-    # Radio Button Toggle
-    def RadioButtonTrigger(self, Widget):
-        RadioButton = self.sender()
-
-        if RadioButton.isChecked():
-            Widget.setEnabled(True)
-        else:
-            Widget.setEnabled(False)
-
-    # Combo Box Text Change
-    def ComboBoxTextChange(self, SummarizeWord, SummarizeMaxWord):
-        ComboBox = self.sender()
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == ComboBox.currentText():
-                SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
-                SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
-                SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
-                SummarizeWord.setValue(SummarizeWord.minimum())
-                self.LabelSizeAdjustment(SummarizeMaxWord)
-
-    # Ok Button Enable on Radio Button Toggling
-    def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
-        if len(ComboBox.currentText()) != 0:
-            Button = self.sender()
-            if(not Button.isChecked() and not SecondButton.isChecked() and not ThirdButton.isChecked()):
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-            else:
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-        else:
-            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
     # Data Source Summarize
     def DSSummarizeFromDialog(self, DataSourceWidgetItemName, DSName, DefaultRadioButton, TotalWordCountRadioButton, RatioRadioButton, SummarizeWord, SummarizeRatio):
         # if Selected using Context Menu
@@ -2214,6 +2567,77 @@ class Window(QMainWindow):
 
         except Exception as e:
             print(str(e))
+
+    # Data Source Translate
+    def DataSourceTranslate(self, DataSourceWidgetItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                DS.translate()
+                break
+
+    # Data Source Show Translation
+    def DataSourceShowTranslation(self, DataSourceWidgetItemName):
+        DataSourcePreviewTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Cloud Tab
+        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        try:
+            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview.setReadOnly(True)
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DataSourcePreview.setText(str(DS.DataSourceTranslatedText))
+                    break
+
+            myFile.TabList.append(
+                Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
+                    DataSourceWidgetItemName.text(0)))
+            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+
+        except Exception as e:
+            print(str(e))
+
+    # Radio Button Toggle
+    def RadioButtonTrigger(self, Widget):
+        RadioButton = self.sender()
+
+        if RadioButton.isChecked():
+            Widget.setEnabled(True)
+        else:
+            Widget.setEnabled(False)
+
+    # Combo Box Text Change
+    def ComboBoxTextChange(self, SummarizeWord, SummarizeMaxWord):
+        ComboBox = self.sender()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == ComboBox.currentText():
+                SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
+                SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
+                SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
+                SummarizeWord.setValue(SummarizeWord.minimum())
+                self.LabelSizeAdjustment(SummarizeMaxWord)
+
+    # Ok Button Enable on Radio Button Toggling
+    def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
+        if len(ComboBox.currentText()) != 0:
+            Button = self.sender()
+            if(not Button.isChecked() and not SecondButton.isChecked() and not ThirdButton.isChecked()):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
@@ -2429,6 +2853,108 @@ class Window(QMainWindow):
                                         self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
                                     break
+
+    # Get Which Cases Widget Item and its Position
+    def FindCasesTreeWidgetContextMenu(self, CasesMouseRightClickEvent):
+        try:
+            if CasesMouseRightClickEvent.reason == CasesMouseRightClickEvent.Mouse:
+                CasesMouseRightClickPos = CasesMouseRightClickEvent.globalPos()
+                CasesMouseRightClickItem = self.CasesTreeWidget.itemAt(CasesMouseRightClickEvent.pos())
+            else:
+                CasesMouseRightClickPos = None
+                Casesselection = self.CasesTreeWidget.selectedItems()
+
+                if Casesselection:
+                    CasesMouseRightClickItem = Casesselection[0]
+                else:
+                    CasesMouseRightClickItem = self.CasesTreeWidget.currentItem()
+                    if CasesMouseRightClickItem is None:
+                        CasesMouseRightClickItem = self.CasesTreeWidget.invisibleRootItem().child(0)
+                if CasesMouseRightClickItem is not None:
+                    CasesParent = CasesMouseRightClickItem.parent()
+                    while CasesParent is not None:
+                        CasesParent.setExpanded(True)
+                        CasesParent = CasesParent.parent()
+                    Casesitemrect = self.CasesTreeWidget.visualItemRect(CasesMouseRightClickItem)
+                    Casesportrect = self.CasesTreeWidget.viewport().rect()
+                    if not Casesportrect.contains(Casesitemrect.topLeft()):
+                        self.CasesTreeWidget.scrollToItem(CasesMouseRightClickItem, QTreeWidget.PositionAtCenter)
+                        Casesitemrect = self.CasesTreeWidget.visualItemRect(CasesMouseRightClickItem)
+
+                    Casesitemrect.setLeft(Casesportrect.left())
+                    Casesitemrect.setWidth(Casesportrect.width())
+                    CasesMouseRightClickPos = self.CasesTreeWidget.mapToGlobal(Casesitemrect.center())
+
+            if CasesMouseRightClickPos is not None:
+                self.CasesTreeWidgetContextMenu(CasesMouseRightClickItem, CasesMouseRightClickPos)
+        except Exception as e:
+            print(str(e))
+
+    # Setting ContextMenu on Clicked Query
+    def CasesTreeWidgetContextMenu(self, CasesItemName, CasesWidgetPos):
+        # Parent Data Source
+        if CasesItemName.parent() == None:
+            CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+
+            # Cases Expand
+            CasesExpand = QAction('Expand', self.CasesTreeWidget)
+            CasesExpand.triggered.connect(
+                lambda checked, index=CasesItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
+                CasesExpand.setDisabled(True)
+            else:
+                CasesExpand.setDisabled(False)
+            CasesRightClickMenu.addAction(CasesExpand)
+
+            # Cases Collapse
+            CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
+            CasesCollapse.triggered.connect(
+                lambda checked, index=CasesItemName: self.DataSourceWidgetItemExpandCollapse(index))
+
+            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
+                CasesCollapse.setDisabled(True)
+            else:
+                CasesCollapse.setDisabled(False)
+            CasesRightClickMenu.addAction(CasesCollapse)
+
+            # Cases Detail
+            CasesDetail = QAction('Details', self.CasesTreeWidget)
+            CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
+            CasesRightClickMenu.addAction(CasesDetail)
+            CasesRightClickMenu.popup(CasesWidgetPos)
+
+        # Child DataSource
+        else:
+            CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+
+            # Data Source Child Detail
+            CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
+            CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
+            CasesRightClickMenu.addAction(CasesShowTopicText)
+
+            # Data Source Child Detail
+            CasesRemove = QAction('Remove', self.CasesTreeWidget)
+            CasesRemove.triggered.connect(lambda: self.CasesRemove(CasesItemName))
+            CasesRightClickMenu.addAction(CasesRemove)
+
+            # Data Source Child Detail
+            CasesDetail = QAction('Details', self.CasesTreeWidget)
+            CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
+            CasesRightClickMenu.addAction(CasesDetail)
+
+            CasesRightClickMenu.popup(CasesWidgetPos)
+
+    def CasesParentDetail(self, CasesItemName):
+        print("Hello")
+
+    def CasesShowTopicComponent(self, CasesItemName):
+        print("Hello")
+
+    def CasesRemove(self, CasesItemName):
+        print("Hello")
+
+    def CasesChildDetail(self, CasesItemName):
+        print("Hello")
 
     #Close Application / Exit
     def close_application(self):
@@ -2698,23 +3224,30 @@ class Window(QMainWindow):
         TweetDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         TweetDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-        #Tweet HashTag Label
+        # Tweet HashTag Label
         TweetHashtagLabel = QLabel(TweetDialog)
         TweetHashtagLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.1,
-                                     TweetDialog.width() / 5, TweetDialog.height() / 15)
+                                      TweetDialog.width() / 5, TweetDialog.height() / 15)
         TweetHashtagLabel.setText("Hastag")
         self.LabelSizeAdjustment(TweetHashtagLabel)
 
         # Tweet Date Label
         DateLabel = QLabel(TweetDialog)
-        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.3,
+        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.25,
                               TweetDialog.width() / 5, TweetDialog.height() / 15)
         DateLabel.setText("Since")
         self.LabelSizeAdjustment(DateLabel)
 
+        # Tweet Language Label
+        TweetLanguageLabel = QLabel(TweetDialog)
+        TweetLanguageLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.4,
+                                       TweetDialog.width() / 5, TweetDialog.height() / 15)
+        TweetLanguageLabel.setText("Language")
+        self.LabelSizeAdjustment(TweetLanguageLabel)
+
         # No. of Tweets Label Label
         NTweetLabel = QLabel(TweetDialog)
-        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.5,
+        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.55,
                                 TweetDialog.width() / 5, TweetDialog.height() / 15)
         NTweetLabel.setText("No of Tweets")
         self.LabelSizeAdjustment(NTweetLabel)
@@ -2722,13 +3255,13 @@ class Window(QMainWindow):
         # Twitter HashTag LineEdit
         TweetHashtagLineEdit = QLineEdit(TweetDialog)
         TweetHashtagLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.1,
-                                        TweetDialog.width() / 3, TweetDialog.height() / 15)
+                                         TweetDialog.width() / 3, TweetDialog.height() / 15)
         TweetHashtagLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.LineEditSizeAdjustment(TweetHashtagLineEdit)
 
         # Tweet Since Date
         DateCalendar = QDateEdit(TweetDialog)
-        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.3,
+        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.25,
                                  TweetDialog.width() / 3, TweetDialog.height() / 15)
         DateCalendar.setCalendarPopup(True)
         DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
@@ -2737,13 +3270,23 @@ class Window(QMainWindow):
         DateCalendar.setDate(datetime.today())
         self.LineEditSizeAdjustment(DateCalendar)
 
+        # Tweet Language ComboBox
+        TweetLanguageComboBox = QComboBox(TweetDialog)
+        TweetLanguageComboBox.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.4,
+                                          TweetDialog.width() / 3, TweetDialog.height() / 15)
+
+        for languagecode, language in self.languages:
+            TweetLanguageComboBox.addItem(language)
+
+        self.LineEditSizeAdjustment(TweetLanguageComboBox)
+
         # Tweet No Label
         NTweetLineEdit = QDoubleSpinBox(TweetDialog)
-        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.5,
-                                         TweetDialog.width() / 3, TweetDialog.height() / 15)
+        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.55,
+                                   TweetDialog.width() / 3, TweetDialog.height() / 15)
         NTweetLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         NTweetLineEdit.setDecimals(0)
-        NTweetLineEdit.setMinimum(1)
+        NTweetLineEdit.setMinimum(10)
         self.LineEditSizeAdjustment(NTweetLineEdit)
 
         # TweetDialog ButtonBox
@@ -2752,16 +3295,81 @@ class Window(QMainWindow):
                                    TweetDialog.width() / 3, TweetDialog.height() / 15)
         TweetbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         TweetbuttonBox.button(QDialogButtonBox.Ok).setText('Get')
+        TweetbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.LineEditSizeAdjustment(TweetbuttonBox)
 
-        #WordCloudDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(WordCloudDSComboBox, CreateWorldCloudbuttonBox))
+        TweetHashtagLineEdit.textChanged.connect(lambda: self.GetButtonEnableTweet(TweetbuttonBox))
 
         TweetbuttonBox.accepted.connect(TweetDialog.accept)
         TweetbuttonBox.rejected.connect(TweetDialog.reject)
 
-        #CreateWorldCloudbuttonBox.accepted.connect(lambda: self.mapWordCloudonTab(str(WordCloudDSComboBox.currentText()),str(WordCloudBackgroundColor.currentText()), WordCloudMaxWords.value(),str(WordCloudMask.currentText())))
+        TweetbuttonBox.accepted.connect(
+            lambda: self.ImportFromTweet(str(TweetHashtagLineEdit.text()), str(DateCalendar.text()),
+                                         TweetLanguageComboBox.currentText(), NTweetLineEdit.text()))
 
         TweetDialog.exec_()
+
+    # Import From Tweet
+    def ImportFromTweet(self, Hashtag, Since, language, NoOfTweet):
+        dummyDataSource = DataSource(Hashtag, "Tweet", self)
+        DataSourceNameCheck = False
+
+        for DS in myFile.DataSourceList:
+            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                DataSourceNameCheck = True
+
+        if not DataSourceNameCheck:
+            for languagecode, lang in self.languages:
+                if lang == language:
+                    dummyDataSource.TweetDataSource(Hashtag, Since, languagecode, NoOfTweet)
+                    break
+
+            if not dummyDataSource.DataSourceLoadError:
+                if not dummyDataSource.DataSourceRetrieveZeroError:
+                    myFile.setDataSources(dummyDataSource)
+                    newNode = QTreeWidgetItem(self.TweetTreeWidget)
+                    newNode.setText(0, Hashtag)
+                    self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
+
+                    if self.TweetTreeWidget.isHidden():
+                        self.TweetTreeWidget.setHidden(False)
+                        self.TweetTreeWidget.setExpanded(True)
+
+                    dummyDataSource.setNode(newNode)
+                else:
+                    dummyDataSource.__del__()
+                    DataSourceImportNameErrorBox = QMessageBox()
+                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Information)
+                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                    DataSourceImportNameErrorBox.setText("Unable to Retrieve Tweet with Hashtag : " + Hashtag)
+                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                    DataSourceImportNameErrorBox.exec_()
+            else:
+                dummyDataSource.__del__()
+                DataSourceImportNameErrorBox = QMessageBox()
+                DataSourceImportNameErrorBox.setIcon(QMessageBox.Information)
+                DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+                DataSourceImportNameErrorBox.setText("TextAS is unable to retrive any tweet")
+                DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceImportNameErrorBox.exec_()
+        else:
+            dummyDataSource.__del__()
+            DataSourceImportNameErrorBox = QMessageBox()
+            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+            DataSourceImportNameErrorBox.setText("A Tweet with Similar Hashtag Exist!")
+            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceImportNameErrorBox.exec_()
+
+    # Enable Get on perfect Hashtag
+    def GetButtonEnableTweet(self, buttonbox):
+        TweetHashtagLineEdit = self.sender()
+        item = TweetHashtagLineEdit.text()
+
+        if len(item) > 1 and len(item) < 256 and item.startswith("#"):
+            buttonbox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            buttonbox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     # Import URL Window
     def ImportURLWindow(self):
@@ -2796,7 +3404,7 @@ class Window(QMainWindow):
         URLbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.LineEditSizeAdjustment(URLbuttonBox)
 
-        URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(URLLineEdit, URLbuttonBox, True))
+        URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(URLbuttonBox, True))
 
         URLbuttonBox.accepted.connect(URLDialog.accept)
         URLbuttonBox.rejected.connect(URLDialog.reject)
@@ -2806,39 +3414,35 @@ class Window(QMainWindow):
 
     # Import From URL
     def ImportFromURL(self, URL):
-        try:
-            dummyDataSource = DataSource(URL, "URL", self)
-            DataSourceNameCheck = False
+        dummyDataSource = DataSource(URL, "URL", self)
+        DataSourceNameCheck = False
 
-            for DS in myFile.DataSourceList:
-                if DS != dummyDataSource and DS.DataSourceext == dummyDataSource.DataSourceext:
-                    DataSourceNameCheck = True
+        for DS in myFile.DataSourceList:
+            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                DataSourceNameCheck = True
 
-            if not DataSourceNameCheck:
-                if not dummyDataSource.DataSourceLoadError:
-                    myFile.setDataSources(dummyDataSource)
-                    newNode = QTreeWidgetItem(self.WebTreeWidget)
-                    newNode.setText(0, URL)
-                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+        if not DataSourceNameCheck:
+            if not dummyDataSource.DataSourceLoadError:
+                myFile.setDataSources(dummyDataSource)
+                newNode = QTreeWidgetItem(self.WebTreeWidget)
+                newNode.setText(0, URL)
+                self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
 
-                    if self.WebTreeWidget.isHidden():
-                        self.WebTreeWidget.setHidden(False)
-                        self.WebTreeWidget.setExpanded(True)
+                if self.WebTreeWidget.isHidden():
+                    self.WebTreeWidget.setHidden(False)
+                    self.WebTreeWidget.setExpanded(True)
 
-                    dummyDataSource.setNode(newNode)
-                else:
-                    dummyDataSource.__del__()
+                dummyDataSource.setNode(newNode)
             else:
                 dummyDataSource.__del__()
-                DataSourceImportNameErrorBox = QMessageBox()
-                DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                DataSourceImportNameErrorBox.setText("A Data Source with Similar URL Exist!")
-                DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceImportNameErrorBox.exec_()
-
-        except Exception as e:
-            print(str(e))
+        else:
+            dummyDataSource.__del__()
+            DataSourceImportNameErrorBox = QMessageBox()
+            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+            DataSourceImportNameErrorBox.setText("A Web Source with Similar URL Exist!")
+            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceImportNameErrorBox.exec_()
 
     #Print Window
     def printWindow(self):

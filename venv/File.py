@@ -619,7 +619,7 @@ class DataSource(File):
                 self.CasesNameConflict = True
 
         if not self.CasesNameConflict:
-            self.CasesList.append(Cases(CaseTopic))
+            self.CasesList.append(Cases(CaseTopic, len(self.DataSourcetext)))
             self.AddtoCase(CaseTopic, selectedText)
         else:
             CasesCreationErrorBox = QMessageBox()

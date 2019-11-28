@@ -808,6 +808,15 @@ class Window(QMainWindow):
                         if hasattr(DS, 'DataSourceHTML'):
                             DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
+                # Data Source Preview Web Page
+                DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
+                DataSourceShowTweetData.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTweetData(index))
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'TweetData'):
+                            DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
+
                 # Data Source Preview
                 DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
                 DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
@@ -1042,6 +1051,91 @@ class Window(QMainWindow):
             self.tabWidget.addTab(PreviewWebTab, "Web Preview")
             self.tabWidget.setCurrentWidget(PreviewWebTab)
 
+    # Data Source Show Tweet Data
+    def DataSourceShowTweetData(self, DataSourceWidgetItemName):
+        try:
+            DataSourceShowTweetDataTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data':
+                    DataSourceShowTweetDataTabFlag = True
+                    break
+
+            ShowTweetDataTab = QWidget()
+            ShowTweetDataTab.setGeometry(
+                QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                             self.horizontalLayoutWidget.height()))
+            ShowTweetDataTab.setSizePolicy(self.sizePolicy)
+
+            # LayoutWidget For within Word Frequency Tab
+            ShowTweetDataTabverticalLayoutWidget = QWidget(ShowTweetDataTab)
+            ShowTweetDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            ShowTweetDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+            # Box Layout for Word Frequency Tab
+            ShowTweetDataTabverticalLayout = QVBoxLayout(ShowTweetDataTabverticalLayoutWidget)
+            ShowTweetDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Table for Word Frequency
+            ShowTweetDataTable = QTableWidget(ShowTweetDataTabverticalLayoutWidget)
+            ShowTweetDataTable.setColumnCount(12)
+            ShowTweetDataTable.setGeometry(0, 0, ShowTweetDataTabverticalLayoutWidget.width(),
+                                           ShowTweetDataTabverticalLayoutWidget.height())
+            ShowTweetDataTable.setSizePolicy(self.sizePolicy)
+
+            ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            ShowTweetDataTable.setHorizontalHeaderLabels(["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates", "Retweet Count", "Retweeted", "Phone Type", "Favorite Count", "Favorited", "Replied"])
+            ShowTweetDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(ShowTweetDataTable.columnCount()):
+                ShowTweetDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                ShowTweetDataTable.horizontalHeaderItem(i).setFont(
+                    QFont(ShowTweetDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    rowList = DS.TweetData
+                    break
+
+            for row in rowList:
+                ShowTweetDataTable.insertRow(rowList.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
+                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            ShowTweetDataTable.resizeColumnsToContents()
+            ShowTweetDataTable.resizeRowsToContents()
+
+            ShowTweetDataTable.setSortingEnabled(True)
+            #ShowTweetDataTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
+
+            # for i in range(ShowTweetDataTable.columnCount()):
+            #     ShowTweetDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            if DataSourceShowTweetDataTabFlag:
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+                tabs.tabWidget = ShowTweetDataTab
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
+
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ShowTweetDataTab, "Word Frequency")
+                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+
+        except Exception as e:
+            print(str(e))
+
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTab = QWidget()
@@ -1225,17 +1319,25 @@ class Window(QMainWindow):
                 self, 'Save File', '', 'CSV(*.csv)')
 
             if all(path):
-                with open(path[0], 'wb') as stream:
+                with open(path[0], 'w') as stream:
                     writer = csv.writer(stream)
                     for row in range(Table.rowCount()):
                         rowdata = []
                         for column in range(Table.columnCount()):
                             item = Table.item(row, column)
                             if item is not None:
-                                rowdata.append(item.text().encode('utf8'))
+                                rowdata.append(item.text())
                             else:
                                 rowdata.append('')
                         writer.writerow(rowdata)
+
+        except PermissionError:
+            SaveAsCSVErrorBox = QMessageBox()
+            SaveAsCSVErrorBox.setIcon(QMessageBox.Critical)
+            SaveAsCSVErrorBox.setWindowTitle("Saving Error")
+            SaveAsCSVErrorBox.setText("Permission Denied!")
+            SaveAsCSVErrorBox.setStandardButtons(QMessageBox.Ok)
+            SaveAsCSVErrorBox.exec_()
 
         except Exception as e:
             print(str(e))
@@ -2756,6 +2858,8 @@ class Window(QMainWindow):
 
         DataSourceWidgetDetailDialogBox.exec_()
 
+    # ******************************************* Query Context Menu *****************************
+
     # Get Which Query Widget Item and its Position
     def FindQueryTreeWidgetContextMenu(self, QueryMouseRightClickEvent):
         if QueryMouseRightClickEvent.reason == QueryMouseRightClickEvent.Mouse:
@@ -2854,6 +2958,8 @@ class Window(QMainWindow):
                                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
                                     break
 
+    # ******************************************* Cases Context Menu *****************************
+
     # Get Which Cases Widget Item and its Position
     def FindCasesTreeWidgetContextMenu(self, CasesMouseRightClickEvent):
         try:
@@ -2944,18 +3050,124 @@ class Window(QMainWindow):
 
             CasesRightClickMenu.popup(CasesWidgetPos)
 
+    # Cases Parent Detail
     def CasesParentDetail(self, CasesItemName):
         print("Hello")
 
+    # Cases Show Topic
     def CasesShowTopicComponent(self, CasesItemName):
-        print("Hello")
+        CaseShowComponentTabFlag = False
 
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == CasesItemName.parent().text(0) and tabs.TabName == 'Case Show Topic Component':
+                CaseShowComponentTabFlag = True
+                break
+
+        # Creating New Tab for Stem Word
+        CaseShowComponentTab = QWidget()
+
+        # LayoutWidget For within Stem Word Tab
+        CaseShowComponentTabVerticalLayoutWidget = QWidget(CaseShowComponentTab)
+        CaseShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+
+        # Box Layout for Stem Word Tab
+        CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
+        CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # 2nd LayoutWidget For within Stem Word Tab
+        CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
+        CaseShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                              self.tabWidget.height() - self.tabWidget.height() / 10)
+
+        # 2nd Box Layout for Stem Word Tab
+        CaseShowComponentTabVerticalLayout2 = QVBoxLayout(CaseShowComponentTabVerticalLayoutWidget2)
+
+        CaseShowComponentTable = QTableWidget(CaseShowComponentTabVerticalLayoutWidget2)
+        CaseShowComponentTable.setColumnCount(5)
+        CaseShowComponentTable.setGeometry(0, 0, CaseShowComponentTabVerticalLayoutWidget2.width(),
+                                           CaseShowComponentTabVerticalLayoutWidget2.height())
+        CaseShowComponentTable.setUpdatesEnabled(True)
+        CaseShowComponentTable.setDragEnabled(True)
+        CaseShowComponentTable.setMouseTracking(True)
+
+        CaseShowComponentTable.setSizePolicy(self.sizePolicy)
+        CaseShowComponentTable.setWindowFlags(
+            CaseShowComponentTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CaseShowComponentTable.setHorizontalHeaderLabels(
+            ["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
+        CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(CaseShowComponentTable.columnCount()):
+            CaseShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            CaseShowComponentTable.horizontalHeaderItem(i).setFont(
+                QFont(CaseShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.parent().text(0):
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CasesItemName.text(0):
+                        Case_List = cases.TopicCases
+                        break
+
+        if len(Case_List) != 0:
+            for row in Case_List:
+                CaseShowComponentTable.insertRow(Case_List.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
+                    CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            CaseShowComponentTable.resizeColumnsToContents()
+            CaseShowComponentTable.resizeRowsToContents()
+
+            CaseShowComponentTable.setSortingEnabled(True)
+            CaseShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
+
+            for i in range(CaseShowComponentTable.columnCount()):
+                CaseShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        if CaseShowComponentTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+            tabs.tabWidget = CaseShowComponentTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(
+                Tab("Case Show Topic Component", CaseShowComponentTab, CasesItemName.parent().text(0)))
+
+            self.tabWidget.addTab(CaseShowComponentTab, "Case Show Topic Component")
+            self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+
+    # Cases Remove
     def CasesRemove(self, CasesItemName):
-        print("Hello")
+        CasesRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Case?",
+                                                 QMessageBox.Yes | QMessageBox.No)
 
+        if CasesRemoveChoice == QMessageBox.Yes:
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.parent().text(0):
+                    CasesItemName.parent().removeChild(CasesItemName)
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            DS.CasesList.remove(cases)
+                            break
+        else:
+            pass
+
+    # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
         print("Hello")
 
+    # ************************************** Application Basic Features **************************
     #Close Application / Exit
     def close_application(self):
         choice = QMessageBox.question(self, 'Quit', "Are You Sure?", QMessageBox.Yes | QMessageBox.No)
@@ -3287,6 +3499,7 @@ class Window(QMainWindow):
         NTweetLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         NTweetLineEdit.setDecimals(0)
         NTweetLineEdit.setMinimum(10)
+        NTweetLineEdit.setMaximum(1000)
         self.LineEditSizeAdjustment(NTweetLineEdit)
 
         # TweetDialog ButtonBox
@@ -3526,26 +3739,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    TextASSplash = QSplashScreen()
-    TextASSplash.resize(200, 100)
-    TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
-    TextASSplash.setPixmap(TextASSplashPixmap)
-
-    SplahScreenProgressBar = QProgressBar(TextASSplash)
-    SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
-                            TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
-    SplahScreenProgressBar.setTextVisible(False)
-    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-
-    TextASSplash.show()
-
-    for i in range(0, 100):
-        SplahScreenProgressBar.setValue(i)
-        t = time.time()
-        while time.time() < t + 0.1:
-            App.processEvents()
-
-    TextASSplash.close()
+    # TextASSplash = QSplashScreen()
+    # TextASSplash.resize(200, 100)
+    # TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
+    # TextASSplash.setPixmap(TextASSplashPixmap)
+    #
+    # SplahScreenProgressBar = QProgressBar(TextASSplash)
+    # SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
+    #                         TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
+    # SplahScreenProgressBar.setTextVisible(False)
+    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    #
+    # TextASSplash.show()
+    #
+    # for i in range(0, 100):
+    #     SplahScreenProgressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.1:
+    #         App.processEvents()
+    #
+    # TextASSplash.close()
 
     TextASMainwindow = Window()
     TextASMainwindow.show()

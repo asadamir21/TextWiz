@@ -30,6 +30,7 @@ from bs4 import BeautifulSoup
 import pickle
 import pyLDAvis.gensim
 import urllib
+import datetime
 import requests
 import cv2
 import pytesseract
@@ -441,6 +442,30 @@ class DataSource(File):
                 self.DataSourceModifiedTime.append(time.asctime(time.localtime(st[ST_MTIME])))
                 self.DataSourceChangeTime.append(time.asctime(time.localtime(st[ST_CTIME])))
 
+    # Add Image
+    def AddImage(self, ImagePaths):
+        self.AddImagePathDoublingError = []
+        self.AddImagePathDouble = []
+
+        pytesseract.pytesseract.tesseract_cmd = 'Tesseract-OCR/tesseract.exe'
+
+
+        for imgPth in ImagePaths:
+            imgPthError = False
+
+            for pth in self.DataSourcePath:
+                if imgPth == pth:
+                    self.AddImagePathDoublingError.append(True)
+                    self.AddImagePathDouble.append(pth)
+                    imgPthError = True
+                    break
+
+            if not imgPthError:
+                dummyImage = cv2.imread(imgPth)
+                self.DataSourceImage.append(dummyImage)
+                self.DataSourcetext += pytesseract.image_to_string(dummyImage)
+
+
     # Web URL
     def WebDataSource(self):
         try:
@@ -511,7 +536,7 @@ class DataSource(File):
 
             self.TweetData = []
 
-            for tweet in tweepy.Cursor(api.search, q=Hashtag, count=NoOfTweet, lang=Language, since=Since).items():
+            for tweet in tweepy.Cursor(api.search, q=Hashtag, count=NoOfTweet, lang="en", since=Since).items():
                 self.DataSourcetext = self.DataSourcetext + tweet.text
 
                 eachtweet = [tweet.user.screen_name,
@@ -527,22 +552,6 @@ class DataSource(File):
                              str(tweet.favorited),
                              str(tweet.in_reply_to_status_id_str)]
 
-
-
-                #
-                # dict_ = {'Screen Name': tweet.user.screen_name,
-                #          'User Name': tweet.user.name,
-                #          'Tweet Created At': str(tweet.created_at),
-                #          'Tweet Text': tweet.text,
-                #          'User Location': str(tweet.user.location),
-                #          'Tweet Coordinates': str(tweet.coordinates),
-                #          'Retweet Count': str(tweet.retweet_count),
-                #          'Retweeted': str(tweet.retweeted),
-                #          'Phone Type': str(tweet.source),
-                #          'Favorite Count': str(tweet.favorite_count),
-                #          'Favorited': str(tweet.favorited),
-                #          'Replied': str(tweet.in_reply_to_status_id_str)
-                #          }
                 self.TweetData.append(eachtweet)
 
             if len(self.TweetData) == 0:
@@ -550,7 +559,7 @@ class DataSource(File):
             else:
                 self.DataSourceRetrieveZeroError = False
 
-        except:
+        except Exception as e:
             self.DataSourceLoadError = True
 
     # Set Node

@@ -6,10 +6,21 @@ from matplotlib.container import StemContainer
 from tweepy import TweepError
 from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
-from datetime import datetime
 from File import *
 from spacy import displacy
 import glob, sys, os, getpass, ntpath, win32gui, math, csv
+
+class PicButton(QAbstractButton):
+    def __init__(self, pixmap, parent=None):
+        super(PicButton, self).__init__(parent)
+        self.pixmap = pixmap
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawPixmap(event.rect(), self.pixmap)
+
+    def sizeHint(self):
+        return self.pixmap.size()
 
 class OpenWindow(QFileDialog):
     def __init__(self, title, ext, flag):
@@ -817,10 +828,28 @@ class Window(QMainWindow):
                         if hasattr(DS, 'TweetData'):
                             DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
 
+                # Data Source View Images
+                DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
+                DataSourceViewImages.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceViewImage(index))
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'DataSourceImage'):
+                            DataSourceRightClickMenu.addAction(DataSourceViewImages)
+
                 # Data Source Preview
                 DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
                 DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
                 DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+
+                # Data Source Add Image
+                DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
+                DataSourceAddImage.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceAddImage(index))
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        if hasattr(DS, 'DataSourceImage'):
+                            DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
                 # Data Source Frequency Table
                 DataSourceShowWordFrequency = QAction('Show Word Frequency Table', self.DataSourceTreeWidget)
@@ -1053,85 +1082,241 @@ class Window(QMainWindow):
 
     # Data Source Show Tweet Data
     def DataSourceShowTweetData(self, DataSourceWidgetItemName):
+        DataSourceShowTweetDataTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data':
+                DataSourceShowTweetDataTabFlag = True
+                break
+
+        ShowTweetDataTab = QWidget()
+        ShowTweetDataTab.setGeometry(
+            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height()))
+        ShowTweetDataTab.setSizePolicy(self.sizePolicy)
+
+        # LayoutWidget For within Word Frequency Tab
+        ShowTweetDataTabverticalLayoutWidget = QWidget(ShowTweetDataTab)
+        ShowTweetDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        ShowTweetDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+        # Box Layout for Word Frequency Tab
+        ShowTweetDataTabverticalLayout = QVBoxLayout(ShowTweetDataTabverticalLayoutWidget)
+        ShowTweetDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Table for Word Frequency
+        ShowTweetDataTable = QTableWidget(ShowTweetDataTabverticalLayoutWidget)
+        ShowTweetDataTable.setColumnCount(12)
+        ShowTweetDataTable.setGeometry(0, 0, ShowTweetDataTabverticalLayoutWidget.width(),
+                                       ShowTweetDataTabverticalLayoutWidget.height())
+        ShowTweetDataTable.setSizePolicy(self.sizePolicy)
+
+        ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        ShowTweetDataTable.setHorizontalHeaderLabels(
+            ["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates",
+             "Retweet Count", "Retweeted", "Phone Type", "Favorite Count", "Favorited", "Replied"])
+        ShowTweetDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(ShowTweetDataTable.columnCount()):
+            ShowTweetDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            ShowTweetDataTable.horizontalHeaderItem(i).setFont(
+                QFont(ShowTweetDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                rowList = DS.TweetData
+                break
+
+        for row in rowList:
+            ShowTweetDataTable.insertRow(rowList.index(row))
+            for item in row:
+                intItem = QTableWidgetItem()
+                intItem.setData(Qt.EditRole, QVariant(item))
+                ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
+                ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                    Qt.AlignHCenter | Qt.AlignVCenter)
+                ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(
+                    Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+        ShowTweetDataTable.resizeColumnsToContents()
+        ShowTweetDataTable.resizeRowsToContents()
+
+        ShowTweetDataTable.setSortingEnabled(True)
+        # ShowTweetDataTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        row_width = 0
+
+        # for i in range(ShowTweetDataTable.columnCount()):
+        #     ShowTweetDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        if DataSourceShowTweetDataTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+            tabs.tabWidget = ShowTweetDataTab
+        else:
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
+            self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+
+    # Data Source View Images
+    def DataSourceViewImage(self, DataSourceWidgetItemName):
+        DataSourceShowImagesTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'View Image':
+                DataSourceShowImagesTabFlag = True
+                break
+
+        ViewImageTab = QWidget()
+        ViewImageTab.setGeometry(
+            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height()))
+        ViewImageTab.setSizePolicy(self.sizePolicy)
+
+        # LayoutWidget For left Button within View Image Tab
+        ViewImageTabverticalLayoutWidget1 = QWidget(ViewImageTab)
+        ViewImageTabverticalLayoutWidget1.setGeometry(0, 0, self.tabWidget.width() * 0.1, self.tabWidget.height())
+        ViewImageTabverticalLayoutWidget1.setSizePolicy(self.sizePolicy)
+
+        # Box Layout  For left Button within View Image Tab
+        ViewImageTabverticalLayout1 = QVBoxLayout(ViewImageTabverticalLayoutWidget1)
+        ViewImageTabverticalLayout1.setContentsMargins(0, 0, 0, 0)
+
+        LeftButton = PicButton(QPixmap('Images/Previous Image.png'))
+        ViewImageTabverticalLayout1.addWidget(LeftButton)
+        LeftButton.hide()
+
+        # LayoutWidget For within View Image Tab
+        ViewImageTabverticalLayoutWidget = QWidget(ViewImageTab)
+        ViewImageTabverticalLayoutWidget.setGeometry(self.tabWidget.width() * 0.1, 0, self.tabWidget.width() * 0.8,
+                                                     self.tabWidget.height())
+        ViewImageTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+        # LayoutWidget For Right Button within View Image Tab
+        ViewImageTabverticalLayoutWidget2 = QWidget(ViewImageTab)
+        ViewImageTabverticalLayoutWidget2.setGeometry(self.tabWidget.width() * 0.9, 0, self.tabWidget.width() * 0.1,
+                                                      self.tabWidget.height())
+        ViewImageTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
+
+        # Box Layout  For left Button within View Image Tab
+        ViewImageTabverticalLayout2 = QVBoxLayout(ViewImageTabverticalLayoutWidget2)
+        ViewImageTabverticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+        RightButton = PicButton(QPixmap('Images/Next Image.png'))
+        ViewImageTabverticalLayout2.addWidget(RightButton)
+
+        # Box Layout for Word Frequency Tab
+        ViewImageTabverticalLayout = QVBoxLayout(ViewImageTabverticalLayoutWidget)
+        ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                image_files = DS.DataSourceImage
+                break
+
+
+        qpixmap_file = []
+
+        for img in image_files:
+            if isinstance(img, np.ndarray):
+                dummyimage = QtGui.QImage(img, img.shape[1], \
+                                          img.shape[0], img.shape[1] * 3,
+                                          QtGui.QImage.Format_RGB888)
+
+                qpixmap_file.append(QtGui.QPixmap(dummyimage))
+
+
+        if len(qpixmap_file) == 1:
+            RightButton.hide()
+
+        # Image Preview Label
+        ImagePreviewLabel = QLabel(ViewImageTabverticalLayoutWidget)
+
+        # Resizing label to Layout
+        ImagePreviewLabel.resize(ViewImageTabverticalLayoutWidget.width(), ViewImageTabverticalLayoutWidget.height())
+
+        self.ImagePreviewPixmap = qpixmap_file[0]
+        #            ImagePreviewPixmap.scaledToWidth()
+
+        # Scaling Pixmap image
+        dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
+                                                ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+        ImagePreviewLabel.setPixmap(dummypixmap)
+        ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                      (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                      dummypixmap.width(), dummypixmap.height())
+
+        LeftButton.clicked.connect(lambda: self.PreviousImage(qpixmap_file, ImagePreviewLabel,
+                                                              ViewImageTabverticalLayoutWidget, RightButton))
+        RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel,
+                                                           ViewImageTabverticalLayoutWidget, LeftButton))
+
+        if DataSourceShowImagesTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(ViewImageTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(ViewImageTab)
+            tabs.tabWidget = ViewImageTab
+        else:
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(ViewImageTab, "View Image")
+            self.tabWidget.setCurrentWidget(ViewImageTab)
+
+    # Previous Image Button
+    def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
+        LeftButton = self.sender()
+
+        for qpix in qpixmap_file:
+            if qpix == self.ImagePreviewPixmap:
+                if qpixmap_file.index(qpix) == len(qpixmap_file) - 1:
+                    RightButton.show()
+                elif qpixmap_file.index(qpix) == 1:
+                    LeftButton.hide()
+
+                currentIndex = qpixmap_file.index(qpix)
+                self.ImagePreviewPixmap = qpixmap_file[currentIndex - 1]
+
+                dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
+                                                             ViewImageTabverticalLayoutWidget.height(),
+                                                             Qt.KeepAspectRatio)
+                ImagePreviewLabel.setPixmap(dummypixmap)
+                ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                              (
+                                                      ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                              dummypixmap.width(), dummypixmap.height())
+                break
+
+    # Next Image Button
+    def NextImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, LeftButton):
         try:
-            DataSourceShowTweetDataTabFlag = False
+            RightButton = self.sender()
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data':
-                    DataSourceShowTweetDataTabFlag = True
+            for qpix in qpixmap_file:
+                if qpix == self.ImagePreviewPixmap:
+                    if qpixmap_file.index(qpix) == len(qpixmap_file) - 2:
+                        RightButton.hide()
+                    elif qpixmap_file.index(qpix) == 0:
+                        LeftButton.show()
+
+                    currentIndex = qpixmap_file.index(qpix)
+                    self.ImagePreviewPixmap = qpixmap_file[currentIndex + 1]
+
+                    dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
+                                                            ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+                    ImagePreviewLabel.setPixmap(dummypixmap)
+                    ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                                  (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                                  dummypixmap.width(), dummypixmap.height())
+
                     break
-
-            ShowTweetDataTab = QWidget()
-            ShowTweetDataTab.setGeometry(
-                QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height()))
-            ShowTweetDataTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Word Frequency Tab
-            ShowTweetDataTabverticalLayoutWidget = QWidget(ShowTweetDataTab)
-            ShowTweetDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            ShowTweetDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Word Frequency Tab
-            ShowTweetDataTabverticalLayout = QVBoxLayout(ShowTweetDataTabverticalLayoutWidget)
-            ShowTweetDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            # Table for Word Frequency
-            ShowTweetDataTable = QTableWidget(ShowTweetDataTabverticalLayoutWidget)
-            ShowTweetDataTable.setColumnCount(12)
-            ShowTweetDataTable.setGeometry(0, 0, ShowTweetDataTabverticalLayoutWidget.width(),
-                                           ShowTweetDataTabverticalLayoutWidget.height())
-            ShowTweetDataTable.setSizePolicy(self.sizePolicy)
-
-            ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-
-            ShowTweetDataTable.setHorizontalHeaderLabels(["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates", "Retweet Count", "Retweeted", "Phone Type", "Favorite Count", "Favorited", "Replied"])
-            ShowTweetDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-            for i in range(ShowTweetDataTable.columnCount()):
-                ShowTweetDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                ShowTweetDataTable.horizontalHeaderItem(i).setFont(
-                    QFont(ShowTweetDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    rowList = DS.TweetData
-                    break
-
-            for row in rowList:
-                ShowTweetDataTable.insertRow(rowList.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
-                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-            ShowTweetDataTable.resizeColumnsToContents()
-            ShowTweetDataTable.resizeRowsToContents()
-
-            ShowTweetDataTable.setSortingEnabled(True)
-            #ShowTweetDataTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
-
-            # for i in range(ShowTweetDataTable.columnCount()):
-            #     ShowTweetDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-            if DataSourceShowTweetDataTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
-                tabs.tabWidget = ShowTweetDataTab
-            else:
-                # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
-
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(ShowTweetDataTab, "Word Frequency")
-                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
 
         except Exception as e:
             print(str(e))
@@ -1164,6 +1349,43 @@ class Window(QMainWindow):
                 DataSourceWidgetItemName.text(0)))
         self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
         self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+
+    # Data Source Add Image
+    def DataSourceAddImage(self, DataSourceWidgetItemName):
+        dummyWindow = OpenWindow("Open Image File",
+                                 "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)",
+                                 2)
+        path = dummyWindow.filepath
+        dummyWindow.__del__()
+
+        if all(path):
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    DS.AddImage(path[0])
+                    break
+
+            if len(DS.AddImagePathDoublingError) == 0:
+                DataSourceAddImageSuccessBox = QMessageBox()
+                DataSourceAddImageSuccessBox.setIcon(QMessageBox.Information)
+                DataSourceAddImageSuccessBox.setWindowTitle("Add Image")
+                DataSourceAddImageSuccessBox.setText("Image Text Added Successfully.")
+                DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceAddImageSuccessBox.exec_()
+
+            else:
+                DataSourceAddImageSuccessBox = QMessageBox()
+                DataSourceAddImageSuccessBox.setIcon(QMessageBox.Critical)
+                DataSourceAddImageSuccessBox.setWindowTitle("Add Image")
+
+                ImagePathErrorText = ""
+
+                for ImagePath in DS.AddImagePathDouble:
+                    ImagePathErrorText += ImagePath + '\n'
+                ImagePathErrorText += "Already Added"
+
+                DataSourceAddImageSuccessBox.setText(ImagePathErrorText)
+                DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceAddImageSuccessBox.exec_()
 
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
@@ -3477,9 +3699,9 @@ class Window(QMainWindow):
                                  TweetDialog.width() / 3, TweetDialog.height() / 15)
         DateCalendar.setCalendarPopup(True)
         DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        DateCalendar.setMaximumDate(QDate(datetime.today()))
-        DateCalendar.setMinimumDate(datetime.strptime("2006-03-21", '%Y-%m-%d'))
-        DateCalendar.setDate(datetime.today())
+        DateCalendar.setMaximumDate(QDate(datetime.datetime.today()))
+        DateCalendar.setMinimumDate(datetime.datetime.strptime("2006-03-21", '%Y-%m-%d'))
+        DateCalendar.setDate(datetime.datetime.today())
         self.LineEditSizeAdjustment(DateCalendar)
 
         # Tweet Language ComboBox
@@ -3554,7 +3776,7 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox()
                     DataSourceImportNameErrorBox.setIcon(QMessageBox.Information)
                     DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("Unable to Retrieve Tweet with Hashtag : " + Hashtag)
+                    DataSourceImportNameErrorBox.setText("No Tweet Found with Hashtag : " + Hashtag)
                     DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
                     DataSourceImportNameErrorBox.exec_()
             else:
@@ -3733,32 +3955,32 @@ if __name__ == "__main__":
     WindowTitleLogo = "Images/TextASLogo.png"
     isSaveAs = True
     myFile = File()
-    myFile.setCreatedDate(datetime.now())
-    myFile.setCreatedDate(datetime.now())
+    myFile.setCreatedDate(datetime.datetime.now())
+    myFile.setCreatedDate(datetime.datetime.now())
     myFile.setCreatedDate(getpass.getuser())
 
     App = QApplication(sys.argv)
 
-    # TextASSplash = QSplashScreen()
-    # TextASSplash.resize(200, 100)
-    # TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
-    # TextASSplash.setPixmap(TextASSplashPixmap)
-    #
-    # SplahScreenProgressBar = QProgressBar(TextASSplash)
-    # SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
-    #                         TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
-    # SplahScreenProgressBar.setTextVisible(False)
-    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-    #
-    # TextASSplash.show()
-    #
-    # for i in range(0, 100):
-    #     SplahScreenProgressBar.setValue(i)
-    #     t = time.time()
-    #     while time.time() < t + 0.1:
-    #         App.processEvents()
-    #
-    # TextASSplash.close()
+    TextASSplash = QSplashScreen()
+    TextASSplash.resize(200, 100)
+    TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
+    TextASSplash.setPixmap(TextASSplashPixmap)
+
+    SplahScreenProgressBar = QProgressBar(TextASSplash)
+    SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
+                            TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
+    SplahScreenProgressBar.setTextVisible(False)
+    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+
+    TextASSplash.show()
+
+    for i in range(0, 100):
+        SplahScreenProgressBar.setValue(i)
+        t = time.time()
+        while time.time() < t + 0.1:
+            App.processEvents()
+
+    TextASSplash.close()
 
     TextASMainwindow = Window()
     TextASMainwindow.show()

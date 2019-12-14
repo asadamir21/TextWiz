@@ -35,6 +35,7 @@ import requests
 import cv2
 import pytesseract
 
+
 import en_core_web_sm
 import numpy as np
 import matplotlib
@@ -47,6 +48,8 @@ import spacy
 import tweepy
 import csv
 import pandas as pd
+
+nlp = spacy.load('en_core_web_sm')
 
 import pyautogui, qstylizer.style
 
@@ -779,8 +782,47 @@ class Query():
             total_count += frequency[words]
 
         for words in frequency_list:
-            weighted_percentage = round((frequency[words]/total_count)*100,2)
-            WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage])
+            try:
+                syns = wn.synsets(words)
+
+                synonyms = []
+                antonyms = []
+                i = 0
+
+
+                if len(syns) != 0:
+                    for syn in syns:
+                        if len(syn.lemmas()) != 0:
+                            for l in syn.lemmas():
+                                for w1 in frequency_list:
+                                    if w1 == l.name():
+                                        synonyms.append(l.name())
+                                        if (len(l.antonyms()) != 0):
+                                            if l.antonyms():
+                                                for w2 in frequency_list:
+                                                    if w2 == l.antonyms()[0].name():
+                                                        antonyms.append(l.antonyms()[0].name())
+                                                        break
+
+                if len(synonyms) == 0:
+                    synonyms.append('-')
+                else:
+                    synonyms = list(dict.fromkeys(synonyms))
+
+                if len(antonyms) == 0:
+                    antonyms.append('-')
+                else:
+                    antonyms = list(dict.fromkeys(antonyms))
+
+                weighted_percentage = round((frequency[words]/total_count)*100,2)
+
+                if len(syns) != 0:
+                    WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage, syns[0].definition(), ', '.join(set(synonyms)), ', '.join(set(antonyms))])
+                else:
+                    WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage, '-', ', '.join(set(synonyms)), ', '.join(set(antonyms))])
+
+            except Exception as e:
+                print(str(e))
 
         return WordFrequencyRow
 
@@ -886,7 +928,22 @@ class Query():
 
         Entity_Labels = [x.label_ for x in DataSourceTextER.ents]
 
-        return [Entity_List, Entity_Labels, displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='ent'), displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='dep')]
+        newlist = []
+
+        for row in Entity_List:
+            list(row)
+            Chkflag = False
+            for itm, freq, value in newlist:
+                if itm == row[0]:
+                    newlist[newlist.index([itm, freq, value])] = [itm, freq + 1, value]
+                    Chkflag = True
+                    break
+
+            if not Chkflag:
+                newlist.append([row[0].rstrip(), 1, row[1]])
+
+        return [newlist, displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='ent'),
+                displacy.render(nlp(str(DataSourceTextER)), jupyter=False, style='dep')]
 
     #  *********************************** Topic Modelling **********************************
 

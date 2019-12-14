@@ -1446,7 +1446,7 @@ class Window(QMainWindow):
 
         # Table for Word Frequency
         WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
-        WordFrequencyTable.setColumnCount(4)
+        WordFrequencyTable.setColumnCount(7)
         # WordFrequencyTable.setModel(WordFrequencyTableModel)
         WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(),
                                        WordFrequencyTabverticalLayoutWidget.height())
@@ -1455,7 +1455,7 @@ class Window(QMainWindow):
 
         WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-        WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage"])
+        WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage", "Definition", "Synonyms", "Antonyms"])
         WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
         for i in range(WordFrequencyTable.columnCount()):
@@ -1491,8 +1491,8 @@ class Window(QMainWindow):
             WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
             row_width = 0
 
-            for i in range(WordFrequencyTable.columnCount()):
-                WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+            # for i in range(WordFrequencyTable.columnCount()):
+            #     WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if DataSourceShowFrequencyTabFlag:
                 # change tab in query
@@ -2301,7 +2301,7 @@ class Window(QMainWindow):
         dummyQuery = Query()
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                Entity_List, Entity_Labels, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
+                Entity_List, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
                     DS.DataSourcetext)
                 break
 
@@ -2335,12 +2335,12 @@ class Window(QMainWindow):
         DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
 
         DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
-        DSERTable.setColumnCount(2)
+        DSERTable.setColumnCount(3)
         DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
 
         DSERTable.setSizePolicy(self.sizePolicy)
         DSERTable.setWindowFlags(DSERTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-        DSERTable.setHorizontalHeaderLabels(["Word", "Entity"])
+        DSERTable.setHorizontalHeaderLabels(["Word", "Frequency", "Entity"])
         DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
         for i in range(DSERTable.columnCount()):
@@ -3961,26 +3961,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    TextASSplash = QSplashScreen()
-    TextASSplash.resize(200, 100)
-    TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
-    TextASSplash.setPixmap(TextASSplashPixmap)
-
-    SplahScreenProgressBar = QProgressBar(TextASSplash)
-    SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
-                            TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
-    SplahScreenProgressBar.setTextVisible(False)
-    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-
-    TextASSplash.show()
-
-    for i in range(0, 100):
-        SplahScreenProgressBar.setValue(i)
-        t = time.time()
-        while time.time() < t + 0.1:
-            App.processEvents()
-
-    TextASSplash.close()
+    # TextASSplash = QSplashScreen()
+    # TextASSplash.resize(200, 100)
+    # TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
+    # TextASSplash.setPixmap(TextASSplashPixmap)
+    #
+    # SplahScreenProgressBar = QProgressBar(TextASSplash)
+    # SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
+    #                         TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
+    # SplahScreenProgressBar.setTextVisible(False)
+    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    #
+    # TextASSplash.show()
+    #
+    # for i in range(0, 100):
+    #     SplahScreenProgressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.1:
+    #         App.processEvents()
+    #
+    # TextASSplash.close()
 
     TextASMainwindow = Window()
     TextASMainwindow.show()

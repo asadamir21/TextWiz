@@ -72,15 +72,20 @@ class DataSource():
 
                 # Rename path with .docx
                 new_file_abs = os.path.abspath(self.DataSourcePath)
-                print(new_file_abs)
+
                 new_file_abs = re.sub(r'\.\w+$', '.docx', new_file_abs)
-                print(new_file_abs)
 
                 # Save and Close
                 word.ActiveDocument.SaveAs(
                     new_file_abs, FileFormat=constants.wdFormatXMLDocument
                 )
                 doc.Close(False)
+
+                self.DataSourcetext = docx2txt.process(new_file_abs)
+                self.DataSourceLoadError = False
+
+                os.remove(new_file_abs)
+
         except Exception as e:
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox()

@@ -19,6 +19,12 @@ import docx2txt, PyPDF2
 import os, time
 import tweepy
 
+import re
+import os
+import win32com.client as win32
+from win32com.client import constants
+
+
 class DataSource():
     def __init__(self, path, ext, MainWindow):
         super().__init__()
@@ -57,8 +63,24 @@ class DataSource():
     # Word File
     def WordDataSource(self):
         try:
-            self.DataSourcetext = docx2txt.process(self.DataSourcePath)
-            self.DataSourceLoadError = False
+            if self.DataSourcePath.endswith('.docx'):
+                self.DataSourcetext = docx2txt.process(self.DataSourcePath)
+                self.DataSourceLoadError = False
+            else:
+                word = win32.gencache.EnsureDispatch('Word.Application')
+                doc = word.Documents.Open(self.DataSourcePath)
+
+                # Rename path with .docx
+                new_file_abs = os.path.abspath(self.DataSourcePath)
+                print(new_file_abs)
+                new_file_abs = re.sub(r'\.\w+$', '.docx', new_file_abs)
+                print(new_file_abs)
+
+                # Save and Close
+                word.ActiveDocument.SaveAs(
+                    new_file_abs, FileFormat=constants.wdFormatXMLDocument
+                )
+                doc.Close(False)
         except Exception as e:
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox()

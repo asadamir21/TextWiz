@@ -1,3 +1,5 @@
+from distutils.errors import PreprocessError
+
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtPrintSupport
@@ -84,7 +86,8 @@ class Window(QMainWindow):
         self.setMinimumSize(self.width/2, self.height/2)
         self.showMaximized()
 
-        # ToolBar
+        # *****************************  ToolBar ******************************************
+
         WordAct = QAction(QtGui.QIcon('Images/Word.png'), 'Word', self)
         WordAct.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
 
@@ -109,10 +112,13 @@ class Window(QMainWindow):
         WebAct = QAction(QtGui.QIcon('Images/Web.png'), 'URL', self)
         WebAct.triggered.connect(lambda checked: self.ImportURLWindow())
 
-        YoutubeAct = QAction(QtGui.QIcon('Images/Youtube.png'), 'Youtube Comments', self)
+        YoutubeAct = QAction(QtGui.QIcon('Images/Youtube.png'), 'Youtube', self)
         #YoutubeAct.triggered.connect(lambda checked: self.ImportURLWindow())
 
         self.toolbar = self.addToolBar("Show Toolbar")
+        self.toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)  # <= Toolbuttonstyle
+        self.toolbar.setMovable(False)
+
         self.toolbar.addAction(WordAct)
         self.toolbar.addAction(PDFAct)
         self.toolbar.addAction(NotepadAct)
@@ -123,10 +129,12 @@ class Window(QMainWindow):
         self.toolbar.addAction(TwitterAct)
         self.toolbar.addAction(WebAct)
         self.toolbar.addAction(YoutubeAct)
-
         self.toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
 
-        #Menu Bar
+        # ***********************************************************************************
+        # *****************************  Menu Item ******************************************
+        # ***********************************************************************************
+
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
         editMenu = mainMenu.addMenu('Edit')
@@ -136,7 +144,8 @@ class Window(QMainWindow):
         VisualizationMenu = mainMenu.addMenu('Visualization')
         helpMenu = mainMenu.addMenu('Help')
 
-        #FileMenu Button
+        # *****************************  FileMenuItem ******************************************
+
         newFileButton = QAction('New File', self)
         newFileButton.setShortcut('Ctrl+N')
         newFileButton.setStatusTip('New File')
@@ -167,7 +176,8 @@ class Window(QMainWindow):
         fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
 
-        #ViewMenu Button
+        # *****************************  ViewMenuItem ******************************************
+
         toggleToolBarButton = QAction('Show Toolbar', self, checkable=True)
         toggleToolBarButton.setChecked(True)
         toggleToolBarButton.triggered.connect(self.toolbarHide)
@@ -175,15 +185,36 @@ class Window(QMainWindow):
 
         toggleDataSourceButton = QAction('Show Data Sources', self, checkable=True)
         toggleDataSourceButton.setChecked(True)
-        toggleDataSourceButton.triggered.connect(self.DataSoureHide)
+        toggleDataSourceButton.triggered.connect(lambda : self.LeftPaneHide(self.DataSourceLabel, self.DataSourceTreeWidget))
         viewMenu.addAction(toggleDataSourceButton)
 
         toggleQueryButton = QAction('Show Query', self, checkable=True)
         toggleQueryButton.setChecked(True)
-        toggleQueryButton.triggered.connect(self.QueryHide)
+        toggleQueryButton.triggered.connect(lambda : self.LeftPaneHide(self.QueryLabel, self.QueryTreeWidget))
         viewMenu.addAction(toggleQueryButton)
 
-        #ImportMenu Button
+        toggleCasesButton = QAction('Show Cases', self, checkable=True)
+        toggleCasesButton.setChecked(True)
+        toggleCasesButton.triggered.connect(lambda : self.LeftPaneHide(self.CasesLabel, self.CasesTreeWidget))
+        viewMenu.addAction(toggleCasesButton)
+
+        toggleSentimentsButton = QAction('Show Sentiments', self, checkable=True)
+        toggleSentimentsButton.setChecked(True)
+        toggleSentimentsButton.triggered.connect(lambda: self.LeftPaneHide(self.SentimentLabel, self.SentimentTreeWidget))
+        viewMenu.addAction(toggleSentimentsButton)
+
+        toggleVisualizationButton = QAction('Show Visualization', self, checkable=True)
+        toggleVisualizationButton.setChecked(True)
+        toggleVisualizationButton.triggered.connect(lambda: self.LeftPaneHide(self.VisualizationLabel, self.VisualizationTreeWidget))
+        viewMenu.addAction(toggleVisualizationButton)
+
+        toggleReportButton = QAction('Show Report', self, checkable=True)
+        toggleReportButton.setChecked(True)
+        toggleReportButton.triggered.connect(lambda: self.LeftPaneHide(self.ReportLabel, self.ReportTreeWidget))
+        viewMenu.addAction(toggleReportButton)
+
+        # *****************************  ImportMenuItem ******************************************
+
         WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
         WordFileButton.setStatusTip('Word File')
         WordFileButton.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
@@ -235,12 +266,18 @@ class Window(QMainWindow):
         # Create Word Cloud Tool
         CreateWordCloudTool = QAction('Create Word Cloud', self)
         CreateWordCloudTool.setStatusTip('Create Word Cloud')
-        CreateWordCloudTool.triggered.connect(lambda checked, index=None: self.DataSourceCreateCloud(index))
+        CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud(None))
+
+        # Show Word Frequency Tool
+        ShowWordFrequencyTool = QAction('Show Word Frequency Table', self)
+        ShowWordFrequencyTool.setToolTip('Show Word Frequency Table')
+        ShowWordFrequencyTool.setStatusTip('Show Word Frequency Table')
+        ShowWordFrequencyTool.triggered.connect(lambda: self.DataSourceShowFrequencyTableDialog())
 
         # Summarize Tool
         SummarizeTool = QAction('Summarize', self)
         SummarizeTool.setStatusTip('Summarize')
-        SummarizeTool.triggered.connect(lambda checked, index=None: self.DataSourceSummarize(index))
+        SummarizeTool.triggered.connect(lambda: self.DataSourceSummarize(None))
 
         # Find Similarity
         FindSimilarity = QAction('Find Similarity', self)
@@ -250,9 +287,10 @@ class Window(QMainWindow):
         # Stem Word Tool
         FindStemWordTool = QAction('Find Stem Word', self)
         FindStemWordTool.setStatusTip('Find Stem Words')
-        FindStemWordTool.triggered.connect(lambda checked, index=None: self.DataSourceFindStemWords(None))
+        FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords(None))
 
         ToolMenu.addAction(CreateWordCloudTool)
+        ToolMenu.addAction(ShowWordFrequencyTool)
         ToolMenu.addAction(SummarizeTool)
         ToolMenu.addAction(FindStemWordTool)
         ToolMenu.addAction(FindSimilarity)
@@ -434,7 +472,7 @@ class Window(QMainWindow):
         self.tabWidget.setUsesScrollButtons(True)
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
 
-        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.toolbar.height())
+        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.menuBar().height() - self.toolbar.height())
 
         self.horizontalLayout.addWidget(self.tabWidget)
 
@@ -681,16 +719,6 @@ class Window(QMainWindow):
                         if hasattr(DS, 'DataSourceImage'):
                             DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
-                # Data Source Frequency Table
-                DataSourceShowWordFrequency = QAction('Show Word Frequency Table', self.DataSourceTreeWidget)
-                DataSourceShowWordFrequency.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowFrequencyTable(index))
-                DataSourceRightClickMenu.addAction(DataSourceShowWordFrequency)
-
-                # Data Source Word Cloud
-                DataSourceCreateWordCloud = QAction('Create Word Cloud...', self.DataSourceTreeWidget)
-                DataSourceCreateWordCloud.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCloud(index))
-                DataSourceRightClickMenu.addAction(DataSourceCreateWordCloud)
-
                 # Data Source Stem Words
                 DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
                 DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
@@ -710,11 +738,6 @@ class Window(QMainWindow):
                 DataSourceTopicModelling = QAction('Topic Modelling', self.DataSourceTreeWidget)
                 DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
                 DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
-
-                # Data Source Create Node
-                DataSourceCreateNodes = QAction('Create Nodes...', self.DataSourceTreeWidget)
-                DataSourceCreateNodes.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateNodes(index))
-                DataSourceRightClickMenu.addAction(DataSourceCreateNodes)
 
                 # Data Source Create Cases
                 DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
@@ -869,6 +892,7 @@ class Window(QMainWindow):
         PreviewWebTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
         PreviewHTMLWebPage = QWebEngineView()
+        PreviewHTMLWebPage.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         PreviewWebTabVerticalLayout.addWidget(PreviewHTMLWebPage)
 
         for DS in myFile.DataSourceList:
@@ -1246,19 +1270,67 @@ class Window(QMainWindow):
                 DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
                 DataSourceAddImageSuccessBox.exec_()
 
+    # Data Source Show Frequency Table Dialog
+    def DataSourceShowFrequencyTableDialog(self):
+        DataSourceShowFrequencyTableDialog = QDialog()
+        DataSourceShowFrequencyTableDialog.setWindowTitle("Show Word Frequency Table")
+        DataSourceShowFrequencyTableDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4, self.height / 10)
+        DataSourceShowFrequencyTableDialog.setParent(self)
+        DataSourceShowFrequencyTableDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceShowFrequencyTableDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceShowFrequencyTableDialog)
+        DataSourcelabel.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.125, DataSourceShowFrequencyTableDialog.height() * 0.2,
+                                    DataSourceShowFrequencyTableDialog.width() / 4, DataSourceShowFrequencyTableDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceShowFrequencyTableDialog)
+        DSComboBox.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.4, DataSourceShowFrequencyTableDialog.height() * 0.2,
+                               DataSourceShowFrequencyTableDialog.width() / 2, DataSourceShowFrequencyTableDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourceShowFrequencybuttonBox = QDialogButtonBox(DataSourceShowFrequencyTableDialog)
+        DataSourceShowFrequencybuttonBox.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.125, DataSourceShowFrequencyTableDialog.height() * 0.7,
+                                      DataSourceShowFrequencyTableDialog.width() * 3 / 4, DataSourceShowFrequencyTableDialog.height() / 5)
+        DataSourceShowFrequencybuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceShowFrequencybuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if len(DSComboBox.currentText()) == 0:
+            DataSourceShowFrequencybuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(DataSourceShowFrequencybuttonBox)
+
+        DataSourceShowFrequencybuttonBox.accepted.connect(DataSourceShowFrequencyTableDialog.accept)
+        DataSourceShowFrequencybuttonBox.rejected.connect(DataSourceShowFrequencyTableDialog.reject)
+
+        DataSourceShowFrequencybuttonBox.accepted.connect(lambda: self.DataSourceShowFrequencyTable(DSComboBox.currentText()))
+
+        DataSourceShowFrequencyTableDialog.exec()
+
     # Data Source Show Frequency Table
-    def DataSourceShowFrequencyTable(self, DataSourceWidgetItemName):
+    def DataSourceShowFrequencyTable(self, DataSourceName):
         DataSourceShowFrequencyTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Word Frequency':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Frequency':
                 DataSourceShowFrequencyTabFlag = True
                 break
 
         WordFrequencyTab = QWidget()
         WordFrequencyTab.setGeometry(
             QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                         self.horizontalLayoutWidget.height()))
+                         self.horizontalLayoutWidget.height()-self.tabWidget.tabBar().geometry().height()))
         WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
         # LayoutWidget For within Stem Word Tab
@@ -1325,7 +1397,7 @@ class Window(QMainWindow):
         dummyQuery = Query()
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceName:
                 rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
                 break
 
@@ -1356,7 +1428,7 @@ class Window(QMainWindow):
             if DataSourceShowFrequencyTabFlag:
                 # change tab in query
                 for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    if DS.DataSourceName == DataSourceName:
                         for query in DS.QueryList:
                             if query[1] == tabs.tabWidget:
                                 query[1] = WordFrequencyTab
@@ -1369,15 +1441,16 @@ class Window(QMainWindow):
                 tabs.tabWidget = WordFrequencyTab
             else:
                 # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceName))
 
                 # Adding Word Frequency Query
                 WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceWidgetItemName.text(0) + ")")
+                WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceName + ")")
+                WordFreqencyQueryTreeWidget.setToolTip(0, WordFreqencyQueryTreeWidget.text(0))
 
                 # Adding Word Frequency Query to QueryList
                 for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    if DS.DataSourceName == DataSourceName:
                         DS.setQuery(WordFreqencyQueryTreeWidget, WordFrequencyTab)
 
                 # Adding Word Frequency Tab to QTabWidget
@@ -1389,7 +1462,7 @@ class Window(QMainWindow):
             WordFrequencyErrorBox = QMessageBox()
             WordFrequencyErrorBox.setIcon(QMessageBox.Critical)
             WordFrequencyErrorBox.setWindowTitle("Word Frequency Error")
-            WordFrequencyErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceWidgetItemName.text(0))
+            WordFrequencyErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
             WordFrequencyErrorBox.setStandardButtons(QMessageBox.Ok)
             WordFrequencyErrorBox.exec_()
 
@@ -1400,8 +1473,15 @@ class Window(QMainWindow):
                 self, 'Save File', '', 'CSV(*.csv)')
 
             if all(path):
-                with open(path[0], 'w') as stream:
+                with open(path[0], 'w', newline='') as stream:
                     writer = csv.writer(stream)
+
+                    HeaderList = []
+                    for i in range(Table.columnCount()):
+                        HeaderList.append(Table.horizontalHeaderItem(i).text())
+
+                    writer.writerow(HeaderList)
+
                     for row in range(Table.rowCount()):
                         rowdata = []
                         for column in range(Table.columnCount()):
@@ -1658,6 +1738,7 @@ class Window(QMainWindow):
                         if tab.DataSourceName == DS.DataSourceName:
                             tab.DataSourceName = name
 
+                    # ************** updating queries *****************
                     for query in DS.QueryList:
                         for letter in query[0].text(0):
                             if letter == '(':
@@ -1666,11 +1747,21 @@ class Window(QMainWindow):
 
                                 if DataSourceName == DS.DataSourceName:
                                     query[0].setText(0, QueryName + "(" + name + ")")
+                                    query[0].setToolTip(0, query[0].text(0))
+
+                    # ************** updating cases *****************
+
+                    # *********** updating sentiments ***************
+
+                    # ********* updating Visualizations *************
+
+                    # ************ updating Reports *****************
 
                     DS.DataSourceName = name
                     break
 
             DataSourceWidgetItemName.setText(0, name)
+            DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
 
             DataSourceRenameSuccessBox = QMessageBox()
             DataSourceRenameSuccessBox.setIcon(QMessageBox.Information)
@@ -2355,10 +2446,6 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
-    # Data Source Create Nodes
-    def DataSourceCreateNodes(self, DataSourceWidgetItemName):
-        print("Hello")
-
     # Data Source Create Cases
     def DataSourceCreateCases(self, DataSourceWidgetItemName):
         DataSourceCreateCasesTab = QWidget()
@@ -2388,6 +2475,7 @@ class Window(QMainWindow):
         self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
         self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
 
+    # Data Source Create Cases Context Menu
     def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
         TextEdit = self.sender()
         TextCursor = TextEdit.textCursor()
@@ -2479,6 +2567,7 @@ class Window(QMainWindow):
             for widgets in ItemsWidget:
                 DSNewCaseNode = QTreeWidgetItem(widgets)
                 DSNewCaseNode.setText(0, CaseTopic)
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
     # Add to Case onClick
     def AddtoCaseDialog(self, selectedText, DataSourceWidgetItemName):
@@ -3117,17 +3206,22 @@ class Window(QMainWindow):
         else:
             CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-            # Data Source Child Detail
+            # Case Show components
             CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
             CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
             CasesRightClickMenu.addAction(CasesShowTopicText)
 
-            # Data Source Child Detail
+            # Case Rename
+            CasesRemove = QAction('Rename', self.CasesTreeWidget)
+            CasesRemove.triggered.connect(lambda: self.CasesRename(CasesItemName))
+            CasesRightClickMenu.addAction(CasesRemove)
+
+            # Case Remove
             CasesRemove = QAction('Remove', self.CasesTreeWidget)
             CasesRemove.triggered.connect(lambda: self.CasesRemove(CasesItemName))
             CasesRightClickMenu.addAction(CasesRemove)
 
-            # Data Source Child Detail
+            # Case Child Detail
             CasesDetail = QAction('Details', self.CasesTreeWidget)
             CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
             CasesRightClickMenu.addAction(CasesDetail)
@@ -3205,6 +3299,12 @@ class Window(QMainWindow):
                     CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
                         Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+                    deleteButton = QPushButton("Remove")
+                    deleteButton.clicked.connect(lambda: self.deleteComponentRow(CasesItemName, CaseShowComponentTable))
+                    self.LabelSizeAdjustment(deleteButton)
+                    CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
+
+
             CaseShowComponentTable.resizeColumnsToContents()
             CaseShowComponentTable.resizeRowsToContents()
 
@@ -3230,16 +3330,122 @@ class Window(QMainWindow):
             self.tabWidget.addTab(CaseShowComponentTab, "Case Show Topic Component")
             self.tabWidget.setCurrentWidget(CaseShowComponentTab)
 
+    # Cases Remove Component Row
+    def deleteComponentRow(self, CasesItemName, Table):
+        try:
+            button = self.sender()
+            if button:
+                row = Table.indexAt(button.pos()).row()
+                temp = Table.item(row, 0)
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.parent().text(0):
+                        for case in DS.CasesList:
+                            if case.CaseTopic == CasesItemName.text(0):
+                                for topicComponents in case.TopicCases:
+                                    if temp.text() == topicComponents[0] and row == case.TopicCases.index(topicComponents):
+                                        case.TopicCases.remove(topicComponents)
+                                        break
+
+                Table.removeRow(row)
+
+        except Exception as e:
+            print(str(e))
+
+    # Cases Rename
+    def CasesRename(self, CasesItemName):
+        CaseRenameDialog = QDialog()
+        CaseRenameDialog.setWindowTitle("Rename")
+        CaseRenameDialog.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
+        CaseRenameDialog.setParent(self)
+        CaseRenameDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CaseRenameDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        RenameLabel = QLabel(CaseRenameDialog)
+        RenameLabel.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.3,
+                                CaseRenameDialog.width() / 4, CaseRenameDialog.height() * 0.15)
+        RenameLabel.setText("Rename")
+        RenameLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(RenameLabel)
+
+        RenameLineEdit = QLineEdit(CaseRenameDialog)
+        RenameLineEdit.setGeometry(CaseRenameDialog.width() * 0.4, CaseRenameDialog.height() * 0.3,
+                                   CaseRenameDialog.width() / 2, CaseRenameDialog.height() * 0.15)
+        RenameLineEdit.setText(CasesItemName.text(0))
+        self.LineEditSizeAdjustment(RenameLineEdit)
+
+        RenamebuttonBox = QDialogButtonBox(CaseRenameDialog)
+        RenamebuttonBox.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.7,
+                                    CaseRenameDialog.width() * 3 / 4, CaseRenameDialog.height() / 5)
+        RenamebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+
+        RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenamebuttonBox, True))
+
+        RenamebuttonBox.accepted.connect(CaseRenameDialog.accept)
+        RenamebuttonBox.rejected.connect(CaseRenameDialog.reject)
+
+        RenamebuttonBox.accepted.connect(lambda: self.CRename(CasesItemName, RenameLineEdit.text()))
+
+        CaseRenameDialog.exec()
+
+    # Rename Data Source and Widget
+    def CRename(self, CasesItemName, CaseName):
+        CaseRenameCheck = False
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.parent().text(0):
+                for case in DS.CasesList:
+                    if case.CaseTopic == CaseName:
+                        CaseRenameCheck = True
+                        break
+
+        if not CaseRenameCheck:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.parent().text(0):
+                    for case in DS.CasesList:
+                        if case.CaseTopic == CasesItemName.text(0):
+                            case.CaseTopic = CaseName
+                            break
+
+            CasesItemName.setText(0, CaseName)
+            CasesItemName.setToolTip(0, CasesItemName.text(0))
+
+            CasesRenameSuccessBox = QMessageBox()
+            CasesRenameSuccessBox.setIcon(QMessageBox.Information)
+            CasesRenameSuccessBox.setWindowTitle("Rename Success")
+            CasesRenameSuccessBox.setText("Case Rename Successfully!")
+            CasesRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
+            CasesRenameSuccessBox.exec_()
+
+        else:
+            CaseRenameErrorBox = QMessageBox()
+            CaseRenameErrorBox.setIcon(QMessageBox.Critical)
+            CaseRenameErrorBox.setWindowTitle("Rename Error")
+            CaseRenameErrorBox.setText("A Data Case with Similar Name Exist!")
+            CaseRenameErrorBox.setStandardButtons(QMessageBox.Ok)
+            CaseRenameErrorBox.exec_()
+
     # Cases Remove
     def CasesRemove(self, CasesItemName):
         CasesRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Case?",
                                                  QMessageBox.Yes | QMessageBox.No)
 
         if CasesRemoveChoice == QMessageBox.Yes:
-
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.parent().text(0):
-                    CasesItemName.parent().removeChild(CasesItemName)
+                    try:
+                        if CasesItemName.parent().childCount() == 1:
+                            tempParent = CasesItemName.parent()
+                            tempParent.removeChild(CasesItemName)
+                            self.CasesTreeWidget.invisibleRootItem().removeChild(tempParent)
+                        else:
+                            CasesItemName.parent().removeChild(CasesItemName)
+
+                    except Exception as e:
+                        print(str(e))
+
                     for cases in DS.CasesList:
                         if cases.CaseTopic == CasesItemName.text(0):
                             DS.CasesList.remove(cases)
@@ -3302,8 +3508,8 @@ class Window(QMainWindow):
                             self.wordTreeWidget.setHidden(False)
                             self.wordTreeWidget.setExpanded(True)
 
+                        newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
-
                         self.DataSourceSimilarityUpdate()
                     else:
                         dummyDataSource.__del__()
@@ -3343,6 +3549,7 @@ class Window(QMainWindow):
                                 self.pdfTreeWidget.setHidden(False)
                                 self.pdfTreeWidget.setExpanded(True)
 
+                            newNode.setToolTip(0, newNode.text(0))
                             dummyDataSource.setNode(newNode)
                             self.DataSourceSimilarityUpdate()
                         else:
@@ -3385,6 +3592,7 @@ class Window(QMainWindow):
                             self.txtTreeWidget.setHidden(False)
                             self.txtTreeWidget.setExpanded(True)
 
+                        newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
@@ -3423,6 +3631,7 @@ class Window(QMainWindow):
                         if self.rtfTreeWidget.isHidden():
                             self.rtfTreeWidget.setHidden(False)
 
+                        newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
@@ -3462,6 +3671,7 @@ class Window(QMainWindow):
                             self.audioSTreeWidget.setHidden(False)
                             self.audioSTreeWidget.setExpanded(True)
 
+                        newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
@@ -3503,6 +3713,7 @@ class Window(QMainWindow):
                             self.ImageSTreeWidget.setHidden(False)
                             self.ImageSTreeWidget.setExpanded(True)
 
+                        newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
@@ -3639,6 +3850,7 @@ class Window(QMainWindow):
                         self.TweetTreeWidget.setHidden(False)
                         self.TweetTreeWidget.setExpanded(True)
 
+                    newNode.setToolTip(0, newNode.text(0))
                     dummyDataSource.setNode(newNode)
                     self.DataSourceSimilarityUpdate()
                 else:
@@ -3737,6 +3949,7 @@ class Window(QMainWindow):
                     self.WebTreeWidget.setHidden(False)
                     self.WebTreeWidget.setExpanded(True)
 
+                newNode.setToolTip(0, newNode.text(0))
                 dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
             else:
@@ -3767,23 +3980,14 @@ class Window(QMainWindow):
         else:
             self.toolbar.hide()
 
-    #Hide Data Sources
-    def DataSoureHide(self):
-        if self.DataSourceLabel.isHidden() and self.DataSourceTreeWidget.isHidden():
-            self.DataSourceLabel.show()
-            self.DataSourceTreeWidget.show()
+    #Hide Left Sources
+    def LeftPaneHide(self, label, TreeWidget):
+        if label.isHidden() and TreeWidget.isHidden():
+            label.show()
+            TreeWidget.show()
         else:
-            self.DataSourceLabel.hide()
-            self.DataSourceTreeWidget.hide()
-
-    # Hide Query
-    def QueryHide(self):
-        if self.QueryLabel.isHidden() and self.QueryLabel.isHidden():
-            self.QueryLabel.show()
-            self.QueryTreeWidget.show()
-        else:
-            self.QueryLabel.hide()
-            self.QueryTreeWidget.hide()
+            label.hide()
+            TreeWidget.hide()
 
     # About Window Tab
     def AboutWindow(self):

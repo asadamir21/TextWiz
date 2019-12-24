@@ -1,4 +1,5 @@
 from distutils.errors import PreprocessError
+from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
@@ -279,20 +280,26 @@ class Window(QMainWindow):
         SummarizeTool.setStatusTip('Summarize')
         SummarizeTool.triggered.connect(lambda: self.DataSourceSummarize(None))
 
-        # Find Similarity
-        FindSimilarity = QAction('Find Similarity', self)
-        FindSimilarity.setStatusTip('Find Similarity Between Data Sources')
-        FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
-
         # Stem Word Tool
         FindStemWordTool = QAction('Find Stem Word', self)
         FindStemWordTool.setStatusTip('Find Stem Words')
         FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords(None))
 
+        # Generate Question
+        GenerateQuestion = QAction('Generate Questions', self)
+        GenerateQuestion.setToolTip('Generate Questions')
+        GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
+
+        # Find Similarity
+        FindSimilarity = QAction('Find Similarity', self)
+        FindSimilarity.setToolTip('Find Similarity Between Data Sources')
+        FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
+
         ToolMenu.addAction(CreateWordCloudTool)
         ToolMenu.addAction(ShowWordFrequencyTool)
         ToolMenu.addAction(SummarizeTool)
         ToolMenu.addAction(FindStemWordTool)
+        ToolMenu.addAction(GenerateQuestion)
         ToolMenu.addAction(FindSimilarity)
 
 
@@ -1499,6 +1506,203 @@ class Window(QMainWindow):
             SaveAsCSVErrorBox.setText("Permission Denied!")
             SaveAsCSVErrorBox.setStandardButtons(QMessageBox.Ok)
             SaveAsCSVErrorBox.exec_()
+
+        except Exception as e:
+            print(str(e))
+
+    # Data Source Generate Questions
+    def DataSourcesGenerateQuestions(self):
+        GenerateQuestionsDialog = QDialog()
+        GenerateQuestionsDialog.setWindowTitle("Generate Questions")
+        GenerateQuestionsDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                       self.height / 10)
+        GenerateQuestionsDialog.setParent(self)
+        GenerateQuestionsDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        GenerateQuestionsDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(GenerateQuestionsDialog)
+        DataSourcelabel.setGeometry(GenerateQuestionsDialog.width() * 0.125,
+                                    GenerateQuestionsDialog.height() * 0.2,
+                                    GenerateQuestionsDialog.width() / 4,
+                                    GenerateQuestionsDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(GenerateQuestionsDialog)
+        DSComboBox.setGeometry(GenerateQuestionsDialog.width() * 0.4,
+                               GenerateQuestionsDialog.height() * 0.2,
+                               GenerateQuestionsDialog.width() / 2,
+                               GenerateQuestionsDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        GenerateQuestionbuttonBox = QDialogButtonBox(GenerateQuestionsDialog)
+        GenerateQuestionbuttonBox.setGeometry(GenerateQuestionsDialog.width() * 0.125,
+                                                     GenerateQuestionsDialog.height() * 0.7,
+                                                     GenerateQuestionsDialog.width() * 3 / 4,
+                                                     GenerateQuestionsDialog.height() / 5)
+        GenerateQuestionbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        GenerateQuestionbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+
+        if len(DSComboBox.currentText()) == 0:
+            GenerateQuestionbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(GenerateQuestionbuttonBox)
+
+        GenerateQuestionbuttonBox.accepted.connect(GenerateQuestionsDialog.accept)
+        GenerateQuestionbuttonBox.rejected.connect(GenerateQuestionsDialog.reject)
+
+        GenerateQuestionbuttonBox.accepted.connect(
+            lambda: self.GenerateQuestionsTable(DSComboBox.currentText()))
+
+        GenerateQuestionsDialog.exec()
+
+    # Generate Questions Table
+    def GenerateQuestionsTable(self, DataSourceName):
+        try:
+            GenerateQuestionsTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+                    GenerateQuestionsTabFlag = True
+                    break
+
+            GenerateQuestionsTab = QWidget()
+            GenerateQuestionsTab.setGeometry(
+                QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                             self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+            GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
+
+            # LayoutWidget For within Stem Word Tab
+            GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
+            GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                              self.tabWidget.height() / 10)
+
+            # Box Layout for Stem Word Tab
+            GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
+            GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+
+            # Download Button For Frequency Table
+            DownloadAsCSVButton = QPushButton('Download')
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+
+            DownloadAsCSVButtonFont = QFont("sans-serif")
+            DownloadAsCSVButtonFont.setPixelSize(14)
+            DownloadAsCSVButtonFont.setBold(True)
+
+            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+
+            GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+
+            # LayoutWidget For within Word Frequency Tab
+            GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
+            GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
+            GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+            # Box Layout for Word Frequency Tab
+            GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
+            GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Table for Word Frequency
+            GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+            GenerateQuestionsTable.setColumnCount(1)
+            # WordFrequencyTable.setModel(WordFrequencyTableModel)
+            GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
+                                           GenerateQuestionsTabverticalLayoutWidget.height())
+
+            GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
+
+            GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            GenerateQuestionsTable.setHorizontalHeaderLabels(
+                ["Questions"])
+            GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(GenerateQuestionsTable.columnCount()):
+                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
+                    QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            dummyQuery = Query()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+                    break
+
+            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    GenerateQuestionsTable.insertRow(rowList.index(row))
+
+                    ptext = QPlainTextEdit()
+                    ptext.setReadOnly(True)
+                    ptext.setPlainText(row);
+
+                    GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
+
+
+                GenerateQuestionsTable.resizeColumnsToContents()
+                GenerateQuestionsTable.resizeRowsToContents()
+
+                GenerateQuestionsTable.setSortingEnabled(True)
+                GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(GenerateQuestionsTable.columnCount()):
+                    GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                if GenerateQuestionsTabFlag:
+                    # change tab in query
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == DataSourceName:
+                            for query in DS.QueryList:
+                                if query[1] == tabs.tabWidget:
+                                    query[1] = GenerateQuestionsTab
+                                    break
+
+                    # updating tab
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                    tabs.tabWidget = GenerateQuestionsTab
+                else:
+                    # Adding Word Frequency Tab to TabList
+                    myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+
+                    # Adding Word Frequency Query
+                    GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                    GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
+                    GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
+
+                    # Adding Word Frequency Query to QueryList
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == DataSourceName:
+                            DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
+
+                    # Adding Word Frequency Tab to QTabWidget
+                    self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
+                    self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+
+            else:
+                GenerateQuestionsErrorBox = QMessageBox()
+                GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
+                GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
+                GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
+                GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
+                GenerateQuestionsErrorBox.exec_()
 
         except Exception as e:
             print(str(e))
@@ -3458,6 +3662,7 @@ class Window(QMainWindow):
         print("Hello")
 
     # ************************************** Application Basic Features **************************
+
     #Close Application / Exit
     def close_application(self):
         choice = QMessageBox.question(self, 'Quit', "Are You Sure?", QMessageBox.Yes | QMessageBox.No)
@@ -3480,6 +3685,70 @@ class Window(QMainWindow):
     #Open File
     def OpenFileWindow(self):
         self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax", 0)
+
+    #Print Window
+    def printWindow(self):
+        printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+        self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
+        self.Printdialog.setWindowTitle('Print')
+        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
+
+        if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
+            self.textedit.print_(printer)
+
+    #Hide ToolBar
+    def toolbarHide(self):
+        if self.toolbar.isHidden():
+            self.toolbar.show()
+        else:
+            self.toolbar.hide()
+
+    #Hide Left Sources
+    def LeftPaneHide(self, label, TreeWidget):
+        if label.isHidden() and TreeWidget.isHidden():
+            label.show()
+            TreeWidget.show()
+        else:
+            label.hide()
+            TreeWidget.hide()
+
+    # About Window Tab
+    def AboutWindow(self):
+        self.AboutWindowDialog = QDialog()
+        self.AboutWindowDialog.setModal(True)
+        self.AboutWindowDialog.setWindowTitle("About Us")
+        self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
+        self.AboutWindowDialog.setParent(self)
+        self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+
+        groupBox1 = QGroupBox()
+        vBox1 = QVBoxLayout(self.AboutWindowDialog)
+
+        label = QLabel(self.AboutWindowDialog)
+        label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
+
+        vBox1.addWidget(label)
+        groupBox1.setLayout(vBox1)
+
+        groupBox2 = QGroupBox()
+        vBox2 = QVBoxLayout(self.AboutWindowDialog)
+        textpane = QTextEdit()
+        textpane.setText("TextAs\nAnalysis Like Never Before")
+        textpane.setStyleSheet("background:transparent;")
+        textpane.setReadOnly(True)
+
+        vBox2.addWidget(textpane)
+        groupBox2.setLayout(vBox2)
+
+        hbox1 = QHBoxLayout(self.AboutWindowDialog)
+        hbox1.addWidget(groupBox1)
+        hbox1.addWidget(groupBox2)
+        self.AboutWindowDialog.setLayout(hbox1)
+        self.AboutWindowDialog.show()
+
+    # ******************************************* Import Features ********************************
 
     #Import DataSource Window
     def ImportFileWindow(self, check):
@@ -3962,68 +4231,6 @@ class Window(QMainWindow):
             DataSourceImportNameErrorBox.setText("A Web Source with Similar URL Exist!")
             DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceImportNameErrorBox.exec_()
-
-    #Print Window
-    def printWindow(self):
-        printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
-        self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
-        self.Printdialog.setWindowTitle('Print')
-        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
-
-        if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
-            self.textedit.print_(printer)
-
-    #Hide ToolBar
-    def toolbarHide(self):
-        if self.toolbar.isHidden():
-            self.toolbar.show()
-        else:
-            self.toolbar.hide()
-
-    #Hide Left Sources
-    def LeftPaneHide(self, label, TreeWidget):
-        if label.isHidden() and TreeWidget.isHidden():
-            label.show()
-            TreeWidget.show()
-        else:
-            label.hide()
-            TreeWidget.hide()
-
-    # About Window Tab
-    def AboutWindow(self):
-        self.AboutWindowDialog = QDialog()
-        self.AboutWindowDialog.setModal(True)
-        self.AboutWindowDialog.setWindowTitle("About Us")
-        self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
-        self.AboutWindowDialog.setParent(self)
-        self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-
-
-        groupBox1 = QGroupBox()
-        vBox1 = QVBoxLayout(self.AboutWindowDialog)
-
-        label = QLabel(self.AboutWindowDialog)
-        label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
-
-        vBox1.addWidget(label)
-        groupBox1.setLayout(vBox1)
-
-        groupBox2 = QGroupBox()
-        vBox2 = QVBoxLayout(self.AboutWindowDialog)
-        textpane = QTextEdit()
-        textpane.setText("TextAs\nAnalysis Like Never Before")
-        textpane.setStyleSheet("background:transparent;")
-        textpane.setReadOnly(True)
-
-        vBox2.addWidget(textpane)
-        groupBox2.setLayout(vBox2)
-
-        hbox1 = QHBoxLayout(self.AboutWindowDialog)
-        hbox1.addWidget(groupBox1)
-        hbox1.addWidget(groupBox2)
-        self.AboutWindowDialog.setLayout(hbox1)
-        self.AboutWindowDialog.show()
 
 
 if __name__ == "__main__":

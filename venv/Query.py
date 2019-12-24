@@ -26,6 +26,15 @@ import en_core_web_sm
 import numpy as np
 import pandas as pd
 
+from QuestionGenerator.identification import *
+from QuestionGenerator.questionValidation import *
+from QuestionGenerator.nlpNER import *
+from QuestionGenerator.nonClause import *
+from QuestionGenerator.clause import *
+from QuestionGenerator.aqgFunction import *
+
+
+
 import matplotlib, re, nltk, os, spacy
 
 
@@ -330,3 +339,20 @@ class Query():
         lda_display = pyLDAvis.gensim.prepare(lda, corpus, dictionary, sort_topics=True)
 
         return pyLDAvis.prepared_data_to_html(lda_display)
+
+    #  *********************************** Question Generator **********************************
+
+    def GenerateQuestion(self, DataSourceText):
+        aqg = AutomaticQuestionGenerator()
+        questionList = aqg.aqgParse(DataSourceText)
+
+        returnList = []
+
+        for row in questionList:
+            if len(row) == 1:
+                pass
+            else:
+                returnList.append(row)
+
+        return returnList
+

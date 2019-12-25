@@ -420,6 +420,8 @@ class Window(QMainWindow):
         self.SentimentTreeWidget.setAlternatingRowColors(True)
         self.SentimentTreeWidget.header().setHidden(True)
         self.SentimentTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.SentimentTreeWidget.customContextMenuRequested.connect(
+            lambda checked, index=QtGui.QContextMenuEvent: self.FindSentimentsTreeWidgetContextMenu(index))
         self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
         # Visualiztion Widget
@@ -2880,9 +2882,133 @@ class Window(QMainWindow):
 
     # Data Source Create Sentiments
     def DataSourceCreateSentiments(self, DataSourceWidgetItemName):
-        print("Hello")
+        DataSourceCreateSentimentsTab = QWidget()
 
+        # LayoutWidget For within DataSource Preview Tab
+        CreateSentimentsPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateSentimentsTab)
+        CreateSentimentsPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        CreateSentimentsPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
+        # Box Layout for Data SourceTab
+        CreateSentimentsverticalLayout = QVBoxLayout(CreateSentimentsPreviewTabverticalLayoutWidget)
+        CreateSentimentsverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        CreateSentimentsPreview = QTextEdit(CreateSentimentsPreviewTabverticalLayoutWidget)
+        CreateSentimentsPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        CreateSentimentsPreview.setReadOnly(True)
+
+        CreateSentimentsPreview.setContextMenuPolicy(Qt.CustomContextMenu)
+        CreateSentimentsPreview.customContextMenuRequested.connect(
+            lambda checked, index=QtGui.QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                CreateSentimentsPreview.setText(DS.DataSourcetext)
+                break
+
+        self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
+        self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+
+    # Data Source Create Sentiments Context Menu
+    def CreateSentimentsContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
+        TextEdit = self.sender()
+        TextCursor = TextEdit.textCursor()
+
+        if TextCursor.selectionStart() == TextCursor.selectionEnd():
+            pass
+        else:
+            SentimentsSelectedTextClickMenu = QMenu(TextEdit)
+
+            # Add to Case / Append
+            AddToSentiment = QAction('Add Sentiment', TextEdit)
+            AddToSentiment.triggered.connect(
+                lambda: self.AddtoSentimentsDialog(TextCursor.selectedText(), DataSourceWidgetItemName))
+            SentimentsSelectedTextClickMenu.addAction(AddToSentiment)
+
+            SentimentsSelectedTextClickMenu.popup(TextEdit.cursor().pos())
+
+    # Add to Case onClick
+    def AddtoSentimentsDialog(self, selectedText, DataSourceWidgetItemName):
+        AddtoSentimentsDialogBox = QDialog()
+        AddtoSentimentsDialogBox.setModal(True)
+        AddtoSentimentsDialogBox.setWindowTitle("Add to Sentiments")
+        AddtoSentimentsDialogBox.setParent(self)
+        AddtoSentimentsDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        AddtoSentimentsDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
+                                       self.height / 10)
+        AddtoSentimentsDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        AddtoSentimentsLabel = QLabel(AddtoSentimentsDialogBox)
+        AddtoSentimentsLabel.setText("Sentiment")
+        AddtoSentimentsLabel.setGeometry(AddtoSentimentsDialogBox.width() * 0.1,
+                                         AddtoSentimentsDialogBox.height() * 0.15,
+                                         AddtoSentimentsDialogBox.width() / 4,
+                                         AddtoSentimentsDialogBox.height() / 5)
+        AddtoSentimentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(AddtoSentimentsLabel)
+
+        AddtoSentimentsComboBox = QComboBox(AddtoSentimentsDialogBox)
+        AddtoSentimentsComboBox.setGeometry(AddtoSentimentsDialogBox.width() * 0.4,
+                                            AddtoSentimentsDialogBox.height() * 0.15,
+                                            AddtoSentimentsDialogBox.width() / 2,
+                                            AddtoSentimentsDialogBox.height() / 5)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                for sentiments in DS.SentimentList:
+                    AddtoSentimentsComboBox.addItem(sentiments.SentimentType)
+                break
+
+        self.LineEditSizeAdjustment(AddtoSentimentsComboBox)
+
+        AddtoSentimentsButtonBox = QDialogButtonBox(AddtoSentimentsDialogBox)
+        AddtoSentimentsButtonBox.setGeometry(AddtoSentimentsDialogBox.width() * 0.4, AddtoSentimentsDialogBox.height() * 0.5,
+                                       AddtoSentimentsDialogBox.width() / 2, AddtoSentimentsDialogBox.height() / 2)
+        AddtoSentimentsButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        AddtoSentimentsButtonBox.button(QDialogButtonBox.Ok).setText('Add')
+        self.LineEditSizeAdjustment(AddtoSentimentsButtonBox)
+
+        AddtoSentimentsButtonBox.accepted.connect(AddtoSentimentsDialogBox.accept)
+        AddtoSentimentsButtonBox.rejected.connect(AddtoSentimentsDialogBox.reject)
+
+        AddtoSentimentsButtonBox.accepted.connect(
+            lambda: self.AddtoSentimentsClick(AddtoSentimentsComboBox.currentText(), selectedText, DataSourceWidgetItemName))
+
+        AddtoSentimentsDialogBox.exec_()
+
+    # Add to Sentiments Click
+    def AddtoSentimentsClick(self, SentimentType, selectedText, DataSourceWidgetItemName):
+        NewWidgetAddFlagList = []
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                for sentiments in DS.SentimentList:
+                    if len(sentiments.SentimentTextList) == 0:
+                        NewWidgetAddFlagList.append(True)
+                    else:
+                        NewWidgetAddFlagList.append(False)
+
+        if all([ v for v in NewWidgetAddFlagList]) :
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                    DSSentimentWidget.setText(0, DS.DataSourceName)
+                    DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
+                    DSSentimentWidget.setExpanded(True)
+
+                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly, 0)
+
+                    for widgets in ItemsWidget:
+                        for sentiments in DS.SentimentList:
+                            DSNewSentimentNode = QTreeWidgetItem(widgets)
+                            DSNewSentimentNode.setText(0, sentiments.SentimentType)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                for sentiments in DS.SentimentList:
+                    if sentiments.SentimentType == SentimentType:
+                        sentiments.addSentiment(selectedText)
+                        break
 
     # ****************************************************************************
     # *************************** Data Sources Sumary ****************************
@@ -3098,7 +3224,6 @@ class Window(QMainWindow):
             print(str(e))
 
 
-
     # ****************************************************************************
     # ************************ Data Sources Translation **************************
     # ****************************************************************************
@@ -3271,8 +3396,6 @@ class Window(QMainWindow):
         # self.LabelSizeAdjustment(DataSourceChildCountLabel)
 
         DataSourceWidgetDetailDialogBox.exec_()
-
-
 
     # ****************************************************************************
     # ****************************** Enable/Disable ******************************
@@ -3765,6 +3888,103 @@ class Window(QMainWindow):
         print("Hello")
 
     # ****************************************************************************
+    # ************************ Sentiments Context Menu ***************************
+    # ****************************************************************************
+
+    # Get Which Cases Widget Item and its Position
+    def FindSentimentsTreeWidgetContextMenu(self, SentimentsMouseRightClickEvent):
+        if SentimentsMouseRightClickEvent.reason == SentimentsMouseRightClickEvent.Mouse:
+            SentimentsMouseRightClickPos = SentimentsMouseRightClickEvent.globalPos()
+            SentimentsMouseRightClickItem = self.SentimentTreeWidget.itemAt(SentimentsMouseRightClickEvent.pos())
+        else:
+            SentimentsMouseRightClickPos = None
+            Sentimentsselection = self.SentimentTreeWidget.selectedItems()
+
+            if Sentimentsselection:
+                SentimentsMouseRightClickItem = Sentimentsselection[0]
+            else:
+                SentimentsMouseRightClickItem = self.SentimentTreeWidget.currentItem()
+                if SentimentsMouseRightClickItem is None:
+                    SentimentsMouseRightClickItem = self.SentimentTreeWidget.invisibleRootItem().child(0)
+            if SentimentsMouseRightClickItem is not None:
+                SentimentsParent = SentimentsMouseRightClickItem.parent()
+                while SentimentsParent is not None:
+                    SentimentsParent.setExpanded(True)
+                    SentimentsParent = SentimentsParent.parent()
+
+                Sentimentsitemrect = self.SentimentTreeWidget.visualItemRect(SentimentsMouseRightClickItem)
+                Sentimentsportrect = self.SentimentTreeWidget.viewport().rect()
+
+                if not Sentimentsportrect.contains(Sentimentsitemrect.topLeft()):
+                    self.SentimentTreeWidget.scrollToItem(SentimentsMouseRightClickItem, QTreeWidget.PositionAtCenter)
+                    Sentimentsitemrect = self.SentimentTreeWidget.visualItemRect(SentimentsMouseRightClickItem)
+
+                Sentimentsitemrect.setLeft(Sentimentsportrect.left())
+                Sentimentsitemrect.setWidth(Sentimentsportrect.width())
+                SentimentsMouseRightClickPos = self.SentimentTreeWidget.mapToGlobal(Sentimentsitemrect.center())
+
+        if SentimentsMouseRightClickPos is not None:
+            self.SentimentsTreeWidgetContextMenu(SentimentsMouseRightClickItem, SentimentsMouseRightClickPos)
+
+    # Setting ContextMenu on Clicked Query
+    def SentimentsTreeWidgetContextMenu(self, SentimentsItemName, SentimentsWidgetPos):
+        # Parent Data Source
+        if SentimentsItemName.parent() == None:
+            SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
+
+            # Cases Expand
+            SentimentsExpand = QAction('Expand', self.SentimentTreeWidget)
+            SentimentsExpand.triggered.connect(lambda checked, index=SentimentsItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            if (SentimentsItemName.childCount() == 0 or SentimentsItemName.isExpanded() == True):
+                SentimentsExpand.setDisabled(True)
+            else:
+                SentimentsExpand.setDisabled(False)
+            SentimentsRightClickMenu.addAction(SentimentsExpand)
+
+            # Cases Collapse
+            SentimentsCollapse = QAction('Collapse', self.SentimentTreeWidget)
+            SentimentsCollapse.triggered.connect(lambda checked, index=SentimentsItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            if (SentimentsItemName.childCount() == 0 or SentimentsItemName.isExpanded() == False):
+                SentimentsCollapse.setDisabled(True)
+            else:
+                SentimentsCollapse.setDisabled(False)
+            SentimentsRightClickMenu.addAction(SentimentsCollapse)
+
+            # Cases Detail
+            SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
+            SentimentsDetail.triggered.connect(lambda: self.SentimentParentDetail(SentimentsItemName))
+            SentimentsRightClickMenu.addAction(SentimentsDetail)
+            SentimentsRightClickMenu.popup(SentimentsWidgetPos)
+
+        # Child DataSource
+        else:
+            SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
+
+            # Case Show components
+            SentimentsShowTopicText = QAction('Show Topic Components', self.SentimentTreeWidget)
+            SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(CasesItemName))
+            SentimentsRightClickMenu.addAction(SentimentsShowTopicText)
+
+            # Case Child Detail
+            SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
+            SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(CasesItemName))
+            SentimentsRightClickMenu.addAction(SentimentsDetail)
+
+            SentimentsRightClickMenu.popup(SentimentsWidgetPos)
+
+    # Sentiment Parent Detail
+    def SentimentParentDetail(self, SentimentsItemName):
+        print('Hello')
+
+    # Sentiment Show Component
+    def SentimentsShowComponent(self, SentimentsItemName):
+        print('Hello')
+
+    # Sentiment Child Detail
+    def SentimentsChildDetail(self, SentimentsItemName):
+        print('Hello')
+
+    # ****************************************************************************
     # *********************** Application Basic Features *************************
     # ****************************************************************************
 
@@ -4156,7 +4376,7 @@ class Window(QMainWindow):
         DateCalendar.setCalendarPopup(True)
         DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         DateCalendar.setMaximumDate(QDate(datetime.datetime.today()))
-        DateCalendar.setMinimumDate(datetime.datetime.strptime("2006-03-21", '%Y-%m-%d'))
+        DateCalendar.setMinimumDate(datetime.datetime.now() - datetime.timedelta(days=365))
         DateCalendar.setDate(datetime.datetime.today())
         self.LineEditSizeAdjustment(DateCalendar)
 

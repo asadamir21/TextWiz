@@ -60,6 +60,8 @@ class DataSource():
         elif(ext == 'URL'):
             self.WebDataSource()
 
+        self.CreatSentiments()
+
     # Word File
     def WordDataSource(self):
         try:
@@ -556,6 +558,12 @@ class DataSource():
             if cases.CaseTopic == CaseTopic:
                 cases.addtoCase(SelectedText)
                 break
+
+    # Create Sentiments
+    def CreatSentiments(self):
+        self.SentimentList.append(Sentiments("Good"))
+        self.SentimentList.append(Sentiments("Neutral"))
+        self.SentimentList.append(Sentiments("Bad"))
 
     # Set Animation
     def Animation(self, name):

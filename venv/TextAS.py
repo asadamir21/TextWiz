@@ -876,7 +876,17 @@ class Window(QMainWindow):
 
         DataSourceWidgetDetailDialogBox.exec_()
 
-    # ***************************** Child Context Method ************************************
+    # *************************************************************************************************
+    # *************************************************************************************************
+    # *********************************** Child Context Method ****************************************
+    # *************************************************************************************************
+    # *************************************************************************************************
+
+
+
+    # ****************************************************************************
+    # ************************** Data Sources Preview ****************************
+    # ****************************************************************************
 
     # Data Source Web Preview
     def DataSourcePreviewWeb(self, DataSourceWidgetItemName):
@@ -1277,6 +1287,12 @@ class Window(QMainWindow):
                 DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
                 DataSourceAddImageSuccessBox.exec_()
 
+
+
+    # ****************************************************************************
+    # ********************** Data Sources Show Frequency *************************
+    # ****************************************************************************
+
     # Data Source Show Frequency Table Dialog
     def DataSourceShowFrequencyTableDialog(self):
         DataSourceShowFrequencyTableDialog = QDialog()
@@ -1414,13 +1430,20 @@ class Window(QMainWindow):
             for row in rowList:
                 WordFrequencyTable.insertRow(rowList.index(row))
                 for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
-                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    if row.index(item) == 4:
+                        ptext = QPlainTextEdit()
+                        ptext.setReadOnly(True)
+                        ptext.setPlainText(item);
+                        WordFrequencyTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                    else:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
+                        WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             WordFrequencyTable.resizeColumnsToContents()
             WordFrequencyTable.resizeRowsToContents()
@@ -1429,8 +1452,8 @@ class Window(QMainWindow):
             WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
             row_width = 0
 
-            # for i in range(WordFrequencyTable.columnCount()):
-            #     WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+            for i in range(WordFrequencyTable.columnCount()):
+                WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if DataSourceShowFrequencyTabFlag:
                 # change tab in query
@@ -1707,6 +1730,12 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+
+
+    # ****************************************************************************
+    # ************************ Data Sources Word CLoud ***************************
+    # ****************************************************************************
+
     # Data Source Create World Cloud
     def DataSourceCreateCloud(self, DataSourceWidgetItemName):
         CreateWordCloudDialog = QDialog()
@@ -1891,6 +1920,12 @@ class Window(QMainWindow):
         if all(path):
             dummypixmap.save(path[0] + ".png", "PNG")
 
+
+
+    # ****************************************************************************
+    # ************************** Data Sources Rename *****************************
+    # ****************************************************************************
+
     # Data Source Rename
     def DataSourceRename(self, DataSourceWidgetItemName):
         DataSourceRename = QDialog()
@@ -1981,6 +2016,12 @@ class Window(QMainWindow):
             DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
             DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceRenameErrorBox.exec_()
+
+
+
+    # ****************************************************************************
+    # ************************ Data Sources StemWords ****************************
+    # ****************************************************************************
 
     # Data Source Create Query
     def DataSourceFindStemWords(self, DataSourceWidgetItemName):
@@ -2207,30 +2248,6 @@ class Window(QMainWindow):
                 matching = [s for s in WordList if CurrentText in s]
                 StemWordModel.setStringList(matching)
 
-    # Enable Ok Button (Line Edit)
-    def OkButtonEnable(self, ButtonBox, check):
-        LineEdit = self.sender()
-        try:
-            if check:
-                if len(LineEdit.text()) > 0:
-                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-                else:
-                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-            else:
-                if len(LineEdit.text()) > 0:
-                    ButtonBox.setEnabled(True)
-                else:
-                    ButtonBox.setEnabled(False)
-        except Exception as e:
-            print(str(e))
-
-    # Enable Ok Button (Combo Box)
-    def OkButtonEnableCombo(self, ComboBox, ButtonBox):
-        if len(ComboBox.currentText()) == 0:
-            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
-            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-
     #Get Stem Word From Column
     def StemWordWithinTab(self, word, DataSourceItemWidget, StemWordTable):
         while StemWordTable.rowCount() > 0:
@@ -2270,6 +2287,12 @@ class Window(QMainWindow):
             StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
             StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
             StemWordErrorBox.exec_()
+
+
+
+    # ****************************************************************************
+    # ***************************** Data Sources POS ****************************
+    # ****************************************************************************
 
     # Data Source Part of Speech
     def DataSourcePOS(self, DataSourceWidgetItemName):
@@ -2443,6 +2466,12 @@ class Window(QMainWindow):
             Table.hide()
             Label.show()
 
+
+
+    # ****************************************************************************
+    # ********************* Data Sources Entity Relationship *********************
+    # ****************************************************************************
+
     # Data Source Entity Relationship
     def DataSourceEntityRelationShip(self, DataSourceWidgetItemName):
         DataSourceERTabFlag = False
@@ -2582,6 +2611,12 @@ class Window(QMainWindow):
             Table.hide()
             HTMLViewer2.hide()
 
+
+
+    # ****************************************************************************
+    # *********************** Data Sources Topic Modelling ***********************
+    # ****************************************************************************
+
     # Data Source Topic Modelling
     def DataSourceTopicModelling(self, DataSourceWidgetItemName):
         try:
@@ -2649,6 +2684,12 @@ class Window(QMainWindow):
 
         except Exception as e:
             print(str(e))
+
+
+
+    # ****************************************************************************
+    # ************************ Data Sources Create Cases *************************
+    # ****************************************************************************
 
     # Data Source Create Cases
     def DataSourceCreateCases(self, DataSourceWidgetItemName):
@@ -2831,9 +2872,21 @@ class Window(QMainWindow):
                         cases.addtoCase(selectedText)
                         break
 
+
+
+    # ****************************************************************************
+    # ********************* Data Sources Create Sentiments ***********************
+    # ****************************************************************************
+
     # Data Source Create Sentiments
     def DataSourceCreateSentiments(self, DataSourceWidgetItemName):
         print("Hello")
+
+
+
+    # ****************************************************************************
+    # *************************** Data Sources Sumary ****************************
+    # ****************************************************************************
 
     # Data Source Summary
     def DataSourceSummarize(self, DataSourceWidgetItemName):
@@ -3044,6 +3097,12 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+
+
+    # ****************************************************************************
+    # ************************ Data Sources Translation **************************
+    # ****************************************************************************
+
     # Data Source Translate
     def DataSourceTranslate(self, DataSourceWidgetItemName):
         for DS in myFile.DataSourceList:
@@ -3083,37 +3142,10 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
-    # Radio Button Toggle
-    def RadioButtonTrigger(self, Widget):
-        RadioButton = self.sender()
 
-        if RadioButton.isChecked():
-            Widget.setEnabled(True)
-        else:
-            Widget.setEnabled(False)
-
-    # Combo Box Text Change
-    def ComboBoxTextChange(self, SummarizeWord, SummarizeMaxWord):
-        ComboBox = self.sender()
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == ComboBox.currentText():
-                SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
-                SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
-                SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
-                SummarizeWord.setValue(SummarizeWord.minimum())
-                self.LabelSizeAdjustment(SummarizeMaxWord)
-
-    # Ok Button Enable on Radio Button Toggling
-    def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
-        if len(ComboBox.currentText()) != 0:
-            Button = self.sender()
-            if(not Button.isChecked() and not SecondButton.isChecked() and not ThirdButton.isChecked()):
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-            else:
-                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-        else:
-            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+    # ****************************************************************************
+    # *************************** Data Source Remove *****************************
+    # ****************************************************************************
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
@@ -3141,6 +3173,11 @@ class Window(QMainWindow):
 
         else:
             pass
+
+
+    # ****************************************************************************
+    # ************************* Data Source Child Detail *************************
+    # ****************************************************************************
 
     # Data Source Child Detail
     def DataSourceChildDetail(self, DataSourceWidgetItemName):
@@ -3235,7 +3272,71 @@ class Window(QMainWindow):
 
         DataSourceWidgetDetailDialogBox.exec_()
 
-    # ******************************************* Query Context Menu *****************************
+
+
+    # ****************************************************************************
+    # ****************************** Enable/Disable ******************************
+    # ****************************************************************************
+
+    # Enable Ok Button (Line Edit)
+    def OkButtonEnable(self, ButtonBox, check):
+        LineEdit = self.sender()
+        try:
+            if check:
+                if len(LineEdit.text()) > 0:
+                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+                else:
+                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            else:
+                if len(LineEdit.text()) > 0:
+                    ButtonBox.setEnabled(True)
+                else:
+                    ButtonBox.setEnabled(False)
+        except Exception as e:
+            print(str(e))
+
+    # Enable Ok Button (Combo Box)
+    def OkButtonEnableCombo(self, ComboBox, ButtonBox):
+        if len(ComboBox.currentText()) == 0:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+    # Radio Button Toggle
+    def RadioButtonTrigger(self, Widget):
+        RadioButton = self.sender()
+
+        if RadioButton.isChecked():
+            Widget.setEnabled(True)
+        else:
+            Widget.setEnabled(False)
+
+    # Combo Box Text Change
+    def ComboBoxTextChange(self, SummarizeWord, SummarizeMaxWord):
+        ComboBox = self.sender()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == ComboBox.currentText():
+                SummarizeWord.setMaximum(len(DS.DataSourcetext.split()))
+                SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
+                SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
+                SummarizeWord.setValue(SummarizeWord.minimum())
+                self.LabelSizeAdjustment(SummarizeMaxWord)
+
+    # Ok Button Enable on Radio Button Toggling
+    def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
+        if len(ComboBox.currentText()) != 0:
+            Button = self.sender()
+            if(not Button.isChecked() and not SecondButton.isChecked() and not ThirdButton.isChecked()):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    # ****************************************************************************
+    # *************************** Query Context Menu *****************************
+    # ****************************************************************************
 
     # Get Which Query Widget Item and its Position
     def FindQueryTreeWidgetContextMenu(self, QueryMouseRightClickEvent):
@@ -3335,7 +3436,9 @@ class Window(QMainWindow):
                                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
                                     break
 
-    # ******************************************* Cases Context Menu *****************************
+    # ****************************************************************************
+    # *************************** Cases Context Menu *****************************
+    # ****************************************************************************
 
     # Get Which Cases Widget Item and its Position
     def FindCasesTreeWidgetContextMenu(self, CasesMouseRightClickEvent):
@@ -3661,7 +3764,9 @@ class Window(QMainWindow):
     def CasesChildDetail(self, CasesItemName):
         print("Hello")
 
-    # ************************************** Application Basic Features **************************
+    # ****************************************************************************
+    # *********************** Application Basic Features *************************
+    # ****************************************************************************
 
     #Close Application / Exit
     def close_application(self):
@@ -3748,7 +3853,9 @@ class Window(QMainWindow):
         self.AboutWindowDialog.setLayout(hbox1)
         self.AboutWindowDialog.show()
 
-    # ******************************************* Import Features ********************************
+    # ****************************************************************************
+    # *************************** Import Features ********************************
+    # ****************************************************************************
 
     #Import DataSource Window
     def ImportFileWindow(self, check):

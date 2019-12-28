@@ -1,5 +1,4 @@
 
-
 class Tab():
     def __init__(self, tabName, tabWidget, DataSourceName):
         self.TabName = tabName

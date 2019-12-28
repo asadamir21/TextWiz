@@ -7,6 +7,7 @@ from Cases import *
 from Sentiments import *
 from stat import *
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urlencode, parse_qs
 
 import urllib
 import requests
@@ -15,14 +16,19 @@ import pytesseract
 
 import re
 import ntpath, pyglet
-import docx2txt, PyPDF2
 import os, time
-import tweepy
+
+#PDF, Word, Twitter
+import docx2txt, PyPDF2, tweepy
+#Youtube
+from Youtube.KeyWord import *
+from Youtube.URL import *
 
 import re
 import os
 import win32com.client as win32
 from win32com.client import constants
+
 
 
 class DataSource():
@@ -32,7 +38,7 @@ class DataSource():
 
         if ext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             self.DataSourceName = ntpath.basename(path[0])
-        elif ext == "URL" or ext ==  'Tweet':
+        elif ext == "URL" or ext ==  'Tweet' or ext ==  'Youtube':
             self.DataSourceName = path
         else:
             self.DataSourceName = ntpath.basename(path)
@@ -413,28 +419,25 @@ class DataSource():
             URLErrorBox.exec_()
 
         if not self.DataSourceLoadError:
-            try:
-                self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
+            self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
 
-                soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
+            soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
 
-                # kill all script and style elements
-                for script in soup(["script", "style"]):
-                    script.extract()  # rip it out
+            # kill all script and style elements
+            for script in soup(["script", "style"]):
+                script.extract()  # rip it out
 
-                # get text
-                text = soup.get_text()
+            # get text
+            text = soup.get_text()
 
-                # break into lines and remove leading and trailing space on each
-                lines = (line.strip() for line in text.splitlines())
-                # break multi-headlines into a line each
-                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-                # drop blank lines
-                text = '\n'.join(chunk for chunk in chunks if chunk)
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
 
-                self.DataSourcetext = text
-            except Exception as e:
-                print(str(e))
+            self.DataSourcetext = text
 
     # Twitter Tweet
     def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
@@ -475,6 +478,53 @@ class DataSource():
 
         except Exception as e:
             self.DataSourceLoadError = True
+
+    #Yotube Comments From URL
+    def YoutubeURL(self):
+        self.YoutubeURLFlag = True
+        try:
+            YURL = self.DataSourcePath.replace('https://youtu.be/', 'https://www.youtube.com/watch?v=')
+            video_id = urlparse(YURL)
+            q = parse_qs(video_id.query)
+            vid = q["v"][0]
+
+            VC = VideoComment(100, vid, 'AIzaSyClLW3rJUSeU5kLrf7njWItFdKdgtoX1pA')
+            self.YoutubeData = VC.comments
+
+            self.DataSourcetext = ""
+            for row in range(len(self.YoutubeData)):
+                self.DataSourcetext = self.DataSourcetext + self.YoutubeData[row][0]
+
+            self.DataSourceLoadError = False
+        except Exception as e:
+            self.DataSourceLoadError = True
+            YoutubeErrorBox = QMessageBox()
+            YoutubeErrorBox.setIcon(QMessageBox.Critical)
+            YoutubeErrorBox.setWindowTitle("Youtube Error")
+            YoutubeErrorBox.setText("Unable to Retrieve Comments of Key Word: " + self.DataSourcePath)
+            YoutubeErrorBox.setStandardButtons(QMessageBox.Ok)
+            YoutubeErrorBox.exec_()
+
+    # Yotube Comments From KeyWord
+    def YoutubeKeyWord(self):
+        self.YoutubeKeyWordFlag = True
+        try:
+            self.YoutubeData = retreiveComments(self.DataSourcePath)
+
+            self.DataSourcetext = ""
+            for row in range(len(self.YoutubeData)):
+                self.DataSourcetext = self.DataSourcetext + self.YoutubeData[row][4]
+
+            self.DataSourceLoadError = False
+
+        except Exception as e:
+            self.DataSourceLoadError = True
+            YoutubeErrorBox = QMessageBox()
+            YoutubeErrorBox.setIcon(QMessageBox.Critical)
+            YoutubeErrorBox.setWindowTitle("Youtube Error")
+            YoutubeErrorBox.setText("Unable to Retrieve Comments of Key Word: " + self.DataSourcePath)
+            YoutubeErrorBox.setStandardButtons(QMessageBox.Ok)
+            YoutubeErrorBox.exec_()
 
     # Set Node
     def setNode(self, WidgetItemNode):
@@ -565,6 +615,14 @@ class DataSource():
         self.SentimentList.append(Sentiments("Neutral"))
         self.SentimentList.append(Sentiments("Bad"))
 
+    # Create Dashboard
+    def CreateDashboard(self):
+        print("Hello")
+
+    # Set Query
+    def setQuery(self, QueryTreeWidgetItem, TabItem):
+        self.QueryList.append([QueryTreeWidgetItem, TabItem])
+
     # Set Animation
     def Animation(self, name):
         try:
@@ -611,10 +669,7 @@ class DataSource():
         except Exception as e:
             print(str(e))
 
-    # Set Query
-    def setQuery(self, QueryTreeWidgetItem, TabItem):
-        self.QueryList.append([QueryTreeWidgetItem, TabItem])
-
+    # Delete Object
     def __del__(self):
         self.DataSourceDelete = True
 

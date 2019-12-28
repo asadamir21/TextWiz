@@ -114,7 +114,7 @@ class Window(QMainWindow):
         WebAct.triggered.connect(lambda checked: self.ImportURLWindow())
 
         YoutubeAct = QAction(QtGui.QIcon('Images/Youtube.png'), 'Youtube', self)
-        #YoutubeAct.triggered.connect(lambda checked: self.ImportURLWindow())
+        YoutubeAct.triggered.connect(lambda checked: self.ImportYoutubeWindow())
 
         self.toolbar = self.addToolBar("Show Toolbar")
         self.toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)  # <= Toolbuttonstyle
@@ -145,7 +145,7 @@ class Window(QMainWindow):
         VisualizationMenu = mainMenu.addMenu('Visualization')
         helpMenu = mainMenu.addMenu('Help')
 
-        # *****************************  FileMenuItem ******************************************
+        # *****************************  FileMenuItem ***************************************
 
         newFileButton = QAction('New File', self)
         newFileButton.setShortcut('Ctrl+N')
@@ -177,7 +177,7 @@ class Window(QMainWindow):
         fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
 
-        # *****************************  ViewMenuItem ******************************************
+        # *****************************  ViewMenuItem ***************************************
 
         toggleToolBarButton = QAction('Show Toolbar', self, checkable=True)
         toggleToolBarButton.setChecked(True)
@@ -214,7 +214,7 @@ class Window(QMainWindow):
         toggleReportButton.triggered.connect(lambda: self.LeftPaneHide(self.ReportLabel, self.ReportTreeWidget))
         viewMenu.addAction(toggleReportButton)
 
-        # *****************************  ImportMenuItem ******************************************
+        # *****************************  ImportMenuItem *************************************
 
         WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
         WordFileButton.setStatusTip('Word File')
@@ -250,7 +250,7 @@ class Window(QMainWindow):
 
         YoutubeButton = QAction(QtGui.QIcon("Images\Youtube.png"), 'Youtube', self)
         YoutubeButton.setStatusTip('Youtube Comments')
-        #YoutubeButton.triggered.connect(lambda checked: self.ImportURLWindow())
+        YoutubeButton.triggered.connect(lambda checked: self.ImportYoutubeWindow())
 
         importMenu.addAction(WordFileButton)
         importMenu.addAction(PDFFileButton)
@@ -262,12 +262,8 @@ class Window(QMainWindow):
         importMenu.addAction(URLButton)
         importMenu.addAction(YoutubeButton)
 
-        # *****************************  ToolsMenuItem ******************************************
+        # *****************************  ToolsMenuItem **************************************
 
-        # Create Word Cloud Tool
-        CreateWordCloudTool = QAction('Create Word Cloud', self)
-        CreateWordCloudTool.setStatusTip('Create Word Cloud')
-        CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud(None))
 
         # Show Word Frequency Tool
         ShowWordFrequencyTool = QAction('Show Word Frequency Table', self)
@@ -295,15 +291,29 @@ class Window(QMainWindow):
         FindSimilarity.setToolTip('Find Similarity Between Data Sources')
         FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
 
-        ToolMenu.addAction(CreateWordCloudTool)
         ToolMenu.addAction(ShowWordFrequencyTool)
         ToolMenu.addAction(SummarizeTool)
         ToolMenu.addAction(FindStemWordTool)
         ToolMenu.addAction(GenerateQuestion)
         ToolMenu.addAction(FindSimilarity)
 
+        # *************************  VisualizationMenuItem **********************************
 
-        #HelpMenu Button
+        # Create Dashboard
+        CreateDasboard = QAction('Create Dashboard', self)
+        CreateDasboard.setToolTip('Find Similarity Between Data Sources')
+        CreateDasboard.triggered.connect(lambda: self.DataSourcesCreateDashboardDialog())
+
+        # Create Word Cloud Tool
+        CreateWordCloudTool = QAction('Create Word Cloud', self)
+        CreateWordCloudTool.setStatusTip('Create Word Cloud')
+        CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud(None))
+
+        VisualizationMenu.addAction(CreateDasboard)
+        VisualizationMenu.addAction(CreateWordCloudTool)
+
+        # *****************************  HelpMenuItem ***************************************
+
         AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
         AboutButton.setStatusTip('About Us')
         AboutButton.triggered.connect(self.AboutWindow)
@@ -362,21 +372,22 @@ class Window(QMainWindow):
         self.audioSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
         self.audioSTreeWidget.setHidden(True)
-        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         self.ImageSTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
         self.ImageSTreeWidget.setHidden(True)
-        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         self.WebTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
         self.WebTreeWidget.setHidden(True)
-        self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         self.TweetTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
         self.TweetTreeWidget.setHidden(True)
+
+        self.YoutubeTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
+        self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
+        self.YoutubeTreeWidget.setHidden(True)
         self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
         # Query Widget
@@ -1592,147 +1603,141 @@ class Window(QMainWindow):
 
     # Generate Questions Table
     def GenerateQuestionsTable(self, DataSourceName):
-        try:
-            GenerateQuestionsTabFlag = False
+        GenerateQuestionsTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
-                    GenerateQuestionsTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+                GenerateQuestionsTabFlag = True
+                break
 
-            GenerateQuestionsTab = QWidget()
-            GenerateQuestionsTab.setGeometry(
-                QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-            GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
+        GenerateQuestionsTab = QWidget()
+        GenerateQuestionsTab.setGeometry(
+            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+        GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Stem Word Tab
-            GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
-            GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                              self.tabWidget.height() / 10)
+        # LayoutWidget For within Stem Word Tab
+        GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
+        GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                          self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
-            GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
-            GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Stem Word Tab
+        GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
+        GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
 
-            # Download Button For Frequency Table
-            DownloadAsCSVButton = QPushButton('Download')
-            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+        # Download Button For Frequency Table
+        DownloadAsCSVButton = QPushButton('Download')
+        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-            DownloadAsCSVButtonFont = QFont("sans-serif")
-            DownloadAsCSVButtonFont.setPixelSize(14)
-            DownloadAsCSVButtonFont.setBold(True)
+        DownloadAsCSVButtonFont = QFont("sans-serif")
+        DownloadAsCSVButtonFont.setPixelSize(14)
+        DownloadAsCSVButtonFont.setBold(True)
 
-            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-            GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+        GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-            # LayoutWidget For within Word Frequency Tab
-            GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
-            GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
-            GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+        # LayoutWidget For within Word Frequency Tab
+        GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
+        GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+        GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
-            GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
-            GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Word Frequency Tab
+        GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
+        GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
-            GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
-            GenerateQuestionsTable.setColumnCount(1)
-            # WordFrequencyTable.setModel(WordFrequencyTableModel)
-            GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
-                                           GenerateQuestionsTabverticalLayoutWidget.height())
+        # Table for Word Frequency
+        GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+        GenerateQuestionsTable.setColumnCount(1)
+        # WordFrequencyTable.setModel(WordFrequencyTableModel)
+        GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
+                                       GenerateQuestionsTabverticalLayoutWidget.height())
 
-            GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
+        GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
 
-            GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-            GenerateQuestionsTable.setHorizontalHeaderLabels(
-                ["Questions"])
-            GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        GenerateQuestionsTable.setHorizontalHeaderLabels(
+            ["Questions"])
+        GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(GenerateQuestionsTable.columnCount()):
+            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
+                QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        dummyQuery = Query()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+                break
+
+        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
+
+        if len(rowList) != 0:
+            for row in rowList:
+                GenerateQuestionsTable.insertRow(rowList.index(row))
+
+                ptext = QPlainTextEdit()
+                ptext.setReadOnly(True)
+                ptext.setPlainText(row);
+
+                GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
+
+
+            GenerateQuestionsTable.resizeColumnsToContents()
+            GenerateQuestionsTable.resizeRowsToContents()
+
+            GenerateQuestionsTable.setSortingEnabled(True)
+            GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
 
             for i in range(GenerateQuestionsTable.columnCount()):
-                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
-                    QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            dummyQuery = Query()
+            if GenerateQuestionsTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = GenerateQuestionsTab
+                                break
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
-                    break
-
-            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
-
-            if len(rowList) != 0:
-                for row in rowList:
-                    GenerateQuestionsTable.insertRow(rowList.index(row))
-
-                    ptext = QPlainTextEdit()
-                    ptext.setReadOnly(True)
-                    ptext.setPlainText(row);
-
-                    GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
-
-
-                GenerateQuestionsTable.resizeColumnsToContents()
-                GenerateQuestionsTable.resizeRowsToContents()
-
-                GenerateQuestionsTable.setSortingEnabled(True)
-                GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
-
-                for i in range(GenerateQuestionsTable.columnCount()):
-                    GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-                if GenerateQuestionsTabFlag:
-                    # change tab in query
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == DataSourceName:
-                            for query in DS.QueryList:
-                                if query[1] == tabs.tabWidget:
-                                    query[1] = GenerateQuestionsTab
-                                    break
-
-                    # updating tab
-                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-                    tabs.tabWidget = GenerateQuestionsTab
-                else:
-                    # Adding Word Frequency Tab to TabList
-                    myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
-
-                    # Adding Word Frequency Query
-                    GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                    GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
-                    GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
-
-                    # Adding Word Frequency Query to QueryList
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == DataSourceName:
-                            DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
-
-                    # Adding Word Frequency Tab to QTabWidget
-                    self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
-                    self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                tabs.tabWidget = GenerateQuestionsTab
             else:
-                GenerateQuestionsErrorBox = QMessageBox()
-                GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
-                GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
-                GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
-                GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
-                GenerateQuestionsErrorBox.exec_()
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
 
-        except Exception as e:
-            print(str(e))
+                # Adding Word Frequency Query
+                GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
+                GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
 
+                # Adding Word Frequency Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
 
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
+                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+
+        else:
+            GenerateQuestionsErrorBox = QMessageBox()
+            GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
+            GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
+            GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
+            GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
+            GenerateQuestionsErrorBox.exec_()
 
     # ****************************************************************************
     # ************************ Data Sources Word CLoud ***************************
@@ -1921,7 +1926,6 @@ class Window(QMainWindow):
 
         if all(path):
             dummypixmap.save(path[0] + ".png", "PNG")
-
 
 
     # ****************************************************************************
@@ -2469,7 +2473,6 @@ class Window(QMainWindow):
             Label.show()
 
 
-
     # ****************************************************************************
     # ********************* Data Sources Entity Relationship *********************
     # ****************************************************************************
@@ -2688,7 +2691,6 @@ class Window(QMainWindow):
             print(str(e))
 
 
-
     # ****************************************************************************
     # ************************ Data Sources Create Cases *************************
     # ****************************************************************************
@@ -2873,7 +2875,6 @@ class Window(QMainWindow):
                     if cases.CaseTopic == CaseTopic:
                         cases.addtoCase(selectedText)
                         break
-
 
 
     # ****************************************************************************
@@ -3397,6 +3398,70 @@ class Window(QMainWindow):
 
         DataSourceWidgetDetailDialogBox.exec_()
 
+
+    # ****************************************************************************
+    # ********************* Data Source Create Dashboard *************************
+    # ****************************************************************************
+
+    def DataSourcesCreateDashboardDialog(self):
+        DataSourcesCreateDashboardDialog = QDialog()
+        DataSourcesCreateDashboardDialog.setWindowTitle("Create Dashboard")
+        DataSourcesCreateDashboardDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                       self.height / 10)
+        DataSourcesCreateDashboardDialog.setParent(self)
+        DataSourcesCreateDashboardDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourcesCreateDashboardDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourcesCreateDashboardDialog)
+        DataSourcelabel.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.125,
+                                    DataSourcesCreateDashboardDialog.height() * 0.2,
+                                    DataSourcesCreateDashboardDialog.width() / 4,
+                                    DataSourcesCreateDashboardDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourcesCreateDashboardDialog)
+        DSComboBox.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.4,
+                               DataSourcesCreateDashboardDialog.height() * 0.2,
+                               DataSourcesCreateDashboardDialog.width() / 2,
+                               DataSourcesCreateDashboardDialog.height() / 10)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourcesCreateDashboardbuttonBox = QDialogButtonBox(DataSourcesCreateDashboardDialog)
+        DataSourcesCreateDashboardbuttonBox.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.125,
+                                                     DataSourcesCreateDashboardDialog.height() * 0.7,
+                                                     DataSourcesCreateDashboardDialog.width() * 3 / 4,
+                                                     DataSourcesCreateDashboardDialog.height() / 5)
+        DataSourcesCreateDashboardbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourcesCreateDashboardbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if len(myFile.DataSourceList) == 0:
+            DataSourcesCreateDashboardbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            if len(myFile.DataSourceList) > 1:
+                DSComboBox.addItem("All")
+            for DS in myFile.DataSourceList:
+                DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DataSourcesCreateDashboardbuttonBox)
+
+        DataSourcesCreateDashboardbuttonBox.accepted.connect(DataSourcesCreateDashboardDialog.accept)
+        DataSourcesCreateDashboardbuttonBox.rejected.connect(DataSourcesCreateDashboardDialog.reject)
+
+        DataSourcesCreateDashboardbuttonBox.accepted.connect(
+            lambda: self.DataSourcesCreateDashboard(DSComboBox.currentText()))
+
+        DataSourcesCreateDashboardDialog.exec()
+
+    def DataSourcesCreateDashboard(self, DataSourceName):
+        print("Hello")
+
     # ****************************************************************************
     # ****************************** Enable/Disable ******************************
     # ****************************************************************************
@@ -3404,19 +3469,16 @@ class Window(QMainWindow):
     # Enable Ok Button (Line Edit)
     def OkButtonEnable(self, ButtonBox, check):
         LineEdit = self.sender()
-        try:
-            if check:
-                if len(LineEdit.text()) > 0:
-                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-                else:
-                    ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        if check:
+            if len(LineEdit.text()) > 0 and LineEdit.isEnabled():
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
             else:
-                if len(LineEdit.text()) > 0:
-                    ButtonBox.setEnabled(True)
-                else:
-                    ButtonBox.setEnabled(False)
-        except Exception as e:
-            print(str(e))
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            if len(LineEdit.text()) > 0 and LineEdit.isEnabled():
+                ButtonBox.setEnabled(True)
+            else:
+                ButtonBox.setEnabled(False)
 
     # Enable Ok Button (Combo Box)
     def OkButtonEnableCombo(self, ComboBox, ButtonBox):
@@ -3457,6 +3519,24 @@ class Window(QMainWindow):
         else:
             ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
+    # Ok Button Enable on Youtube Radio Button Toggling
+    def EnableOkonYoutubeRadioButtonToggle(self, RadioButton, FirstLineEdit, SecondLineEdit, ButtonBox):
+        Button = self.sender()
+        if Button.isChecked():
+            FirstLineEdit.setEnabled(True)
+            SecondLineEdit.setEnabled(False)
+
+            if(len(FirstLineEdit.text()) > 0):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+        elif RadioButton.isChecked():
+            FirstLineEdit.setEnabled(False)
+            SecondLineEdit.setEnabled(True)
+
+            if (len(SecondLineEdit.text()) > 0):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+    
     # ****************************************************************************
     # *************************** Query Context Menu *****************************
     # ****************************************************************************
@@ -4559,6 +4639,117 @@ class Window(QMainWindow):
             DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceImportNameErrorBox.exec_()
 
+    def ImportYoutubeWindow(self):
+        YoutubeDialog = QDialog()
+        YoutubeDialog.setWindowTitle("Import Youtube Comments")
+        YoutubeDialog.setGeometry(self.width * 0.3, self.height * 0.4, self.width * 2 / 5, self.height * 0.20)
+        YoutubeDialog.setParent(self)
+        YoutubeDialog.setAttribute(Qt.WA_DeleteOnClose)
+        YoutubeDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        YoutubeDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Summarization Default Radio Button
+        VideoURLRadioButton = QRadioButton(YoutubeDialog)
+        VideoURLRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.2,
+                                       YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
+        VideoURLRadioButton.setText("Video URL")
+
+        # Twitter HashTag LineEdit
+        URLLineEdit = QLineEdit(YoutubeDialog)
+        URLLineEdit.setGeometry(YoutubeDialog.width() * 0.3, YoutubeDialog.height() * 0.2,
+                                YoutubeDialog.width() * 0.6, YoutubeDialog.height() / 10)
+        URLLineEdit.setAlignment(Qt.AlignVCenter)
+        URLLineEdit.setEnabled(False)
+        self.LineEditSizeAdjustment(URLLineEdit)
+
+        # Summarization Total Word Count Radio Button
+        KeyWordRadioButton = QRadioButton(YoutubeDialog)
+        KeyWordRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.4,
+                                       YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
+        KeyWordRadioButton.setText("Key Word")
+        KeyWordRadioButton.adjustSize()
+
+        # Twitter HashTag LineEdit
+        KeyWordLineEdit = QLineEdit(YoutubeDialog)
+        KeyWordLineEdit.setGeometry(YoutubeDialog.width() * 0.6, YoutubeDialog.height() * 0.4,
+                                    YoutubeDialog.width() * 0.3, YoutubeDialog.height() / 10)
+        KeyWordLineEdit.setAlignment(Qt.AlignVCenter)
+        KeyWordLineEdit.setEnabled(False)
+        self.LineEditSizeAdjustment(KeyWordLineEdit)
+
+        # TweetDialog ButtonBox
+        YoutubebuttonBox = QDialogButtonBox(YoutubeDialog)
+        YoutubebuttonBox.setGeometry(YoutubeDialog.width() * 0.5, YoutubeDialog.height() * 0.8,
+                                     YoutubeDialog.width() / 3, YoutubeDialog.height() / 10)
+        YoutubebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+
+        YoutubebuttonBox.button(QDialogButtonBox.Ok).setText('Get Comments')
+        YoutubebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.LineEditSizeAdjustment(YoutubebuttonBox)
+
+        URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(YoutubebuttonBox, True))
+        KeyWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(YoutubebuttonBox, True))
+
+        VideoURLRadioButton.toggled.connect(lambda: self.EnableOkonYoutubeRadioButtonToggle(KeyWordRadioButton, URLLineEdit, KeyWordLineEdit, YoutubebuttonBox))
+        KeyWordRadioButton.toggled.connect(lambda: self.EnableOkonYoutubeRadioButtonToggle(VideoURLRadioButton, KeyWordLineEdit, URLLineEdit, YoutubebuttonBox))
+
+        YoutubebuttonBox.accepted.connect(YoutubeDialog.accept)
+        YoutubebuttonBox.rejected.connect(YoutubeDialog.reject)
+
+        YoutubebuttonBox.accepted.connect(lambda: self.ImportFromYoutube(VideoURLRadioButton.isChecked(), KeyWordRadioButton.isChecked(), URLLineEdit.text(), KeyWordLineEdit.text()))
+        YoutubeDialog.exec_()
+
+    def ImportFromYoutube(self, VideoURLCheck, KeyWordCheck, URL, KeyWord):
+        if VideoURLCheck:
+            dummyDataSource = DataSource(URL, "Youtube", self)
+            dummyDataSource.YoutubeURL()
+            DataSourceNameCheck = False
+        elif KeyWordCheck:
+            dummyDataSource = DataSource(KeyWord, "Youtube", self)
+            dummyDataSource.YoutubeKeyWord()
+            DataSourceNameCheck = False
+
+
+        for DS in myFile.DataSourceList:
+            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                DataSourceNameCheck = True
+
+        if not DataSourceNameCheck:
+            if not dummyDataSource.DataSourceLoadError:
+                myFile.setDataSources(dummyDataSource)
+                newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
+
+                if VideoURLCheck:
+                    newNode.setText(0, URL)
+                else:
+                    newNode.setText(0, KeyWord)
+
+                self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
+
+                if self.YoutubeTreeWidget.isHidden():
+                    self.YoutubeTreeWidget.setHidden(False)
+                    self.YoutubeTreeWidget.setExpanded(True)
+
+                newNode.setToolTip(0, newNode.text(0))
+                dummyDataSource.setNode(newNode)
+                self.DataSourceSimilarityUpdate()
+            else:
+                dummyDataSource.__del__()
+        else:
+            dummyDataSource.__del__()
+            DataSourceImportNameErrorBox = QMessageBox()
+            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
+            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
+
+            if VideoURLCheck:
+                DataSourceImportNameErrorBox.setText("A Youtube Source with Similar URL Exist!")
+            else:
+                DataSourceImportNameErrorBox.setText("A Youtube Source with Similar KeyWord Exist!")
+
+            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
+            DataSourceImportNameErrorBox.exec_()
+
+    
 
 if __name__ == "__main__":
     WindowTitleLogo = "Images/TextASLogo.png"

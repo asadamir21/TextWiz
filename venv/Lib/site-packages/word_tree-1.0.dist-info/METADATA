@@ -1,0 +1,31 @@
+Metadata-Version: 2.0
+Name: word-tree
+Version: 1.0
+Summary: Dictionary optimised for progressive lookup
+Home-page: http://github.com/OldIronHorse/word_tree
+Author: Simon Redding
+Author-email: s1m0n.r3dd1ng@gmail.com
+License: GPL3
+Download-URL: https://github.com/oldironhorse/word_tree/archive/1.0.tar.gz
+Description-Content-Type: UNKNOWN
+Keywords: dictionary word incremental lookup
+Platform: UNKNOWN
+
+word_tree
+---------
+
+Efficient lookup of next possible character(s) given a starting word fragment.
+This is intended for use in word game strategies (Boggle, Scrabble, Anagram).
+
+To use:
+
+  >>> import word_tree
+  >>> with open('words.lst') as wl:
+  ...   wt = word_tree.make_word_tree([w.strip() for w in wl])
+  ...
+  >>> word_tree.next_char(wt, 'do')
+  ['c', 'e', 'd', 'g', 'i', 'm', 'l', 'o', 'n', 'p', 's', 'r', 'u', 't', 'w',
+   'v', 'z', None]
+
+
+

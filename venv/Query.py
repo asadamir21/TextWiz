@@ -25,6 +25,7 @@ import pyLDAvis.gensim
 import en_core_web_sm
 import numpy as np
 import pandas as pd
+import pickle
 
 from QuestionGenerator.identification import *
 from QuestionGenerator.questionValidation import *
@@ -34,9 +35,7 @@ from QuestionGenerator.clause import *
 from QuestionGenerator.aqgFunction import *
 
 
-
 import matplotlib, re, nltk, os, spacy
-
 
 nlp = spacy.load('en_core_web_sm')
 

@@ -483,8 +483,7 @@ class DataSource():
     def YoutubeURL(self):
         self.YoutubeURLFlag = True
         try:
-            YURL = self.DataSourcePath.replace('https://youtu.be/', 'https://www.youtube.com/watch?v=')
-            video_id = urlparse(YURL)
+            video_id = urlparse(self.DataSourcePath)
             q = parse_qs(video_id.query)
             vid = q["v"][0]
 

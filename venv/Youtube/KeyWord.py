@@ -121,12 +121,11 @@ def retreiveComments(query):
 
     output_dict = {
             #'Query': query_pop,
-            'Video ID': "https://www.youtube.com/watch?v=" + video_id_pop,
+            'Comment': comments_pop,
+            'Video Link': video_id_pop,
             'Video Title': video_title_pop,
             'Video Description': video_desc_pop,
             'Channel': channel_pop,
-            'Comment': comments_pop,
-            'Comment ID': comment_id_pop,
             'Replies': reply_count_pop,
             'Likes': like_count_pop,
             }

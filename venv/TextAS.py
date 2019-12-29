@@ -3,7 +3,7 @@ from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
-from PyQt5 import QtGui, QtCore, QtPrintSupport
+from PyQt5 import QtGui, QtCore, QtPrintSupport, QAxContainer
 from PyQt5.QtWebEngineWidgets import *
 from matplotlib.container import StemContainer
 from tweepy import TweepError
@@ -77,6 +77,9 @@ class Window(QMainWindow):
 
         for fileRow in self.languages:
             self.languages[self.languages.index(fileRow)] = fileRow.split(',')
+
+        #self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+
 
         self.initWindows()
 
@@ -699,7 +702,7 @@ class Window(QMainWindow):
                         if hasattr(DS, 'DataSourceHTML'):
                             DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
-                # Data Source Preview Web Page
+                # Data Source Show Tweet Data
                 DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
                 DataSourceShowTweetData.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTweetData(index))
 
@@ -707,6 +710,24 @@ class Window(QMainWindow):
                     if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                         if hasattr(DS, 'TweetData'):
                             DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
+
+                try:
+                    # Data Source Show Youtube Comments
+                    DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
+
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                            if hasattr(DS, 'YoutubeURLFlag'):
+                                DataSourceShowYoutubeComments.triggered.connect(
+                                    lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsURL(index))
+                                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+                            if hasattr(DS, 'YoutubeKeyWordFlag'):
+                                DataSourceShowYoutubeComments.triggered.connect(
+                                    lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsKeyWord(index))
+                                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+
+                except Exception as e:
+                    print(str(e))
 
                 # Data Source View Images
                 DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
@@ -726,9 +747,14 @@ class Window(QMainWindow):
                         if DS.DataSourceext == "Pdf files (*.pdf)":
                             DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePDFPreview(index))
                             DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+                        elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                            DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWordPreview(index))
+                            DataSourceRightClickMenu.addAction(DataSourcePreviewText)
                         else:
                             DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
                             DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+
+
 
                 # Data Source Add Image
                 DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
@@ -1042,6 +1068,184 @@ class Window(QMainWindow):
             self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
             self.tabWidget.setCurrentWidget(ShowTweetDataTab)
 
+    # Data Source Show Youtube Comments URL
+    def DataSourceShowYoutubeCommentsURL(self, DataSourceWidgetItemName):
+        DataSourceShowYoutubeCommentsTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+                DataSourceShowYoutubeCommentsTabFlag = True
+                break
+
+        ShowYoutubeCommentsTab = QWidget()
+        ShowYoutubeCommentsTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height()))
+        ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
+
+        # LayoutWidget For within Word Frequency Tab
+        ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
+        ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+        # Box Layout for Word Frequency Tab
+        ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
+        ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Table for Word Frequency
+        ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
+        ShowYoutubeCommentsTable.setColumnCount(4)
+        ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
+                                                   ShowYoutubeCommentsTabverticalLayoutWidget.height())
+        ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
+
+        ShowYoutubeCommentsTable.setWindowFlags(ShowYoutubeCommentsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Author Name", "Like Count", "Publish At"])
+        ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(ShowYoutubeCommentsTable.columnCount()):
+            ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(
+                QFont(ShowYoutubeCommentsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                rowList = DS.YoutubeData
+                break
+
+        for row in rowList:
+            ShowYoutubeCommentsTable.insertRow(rowList.index(row))
+            for item in row:
+                if row.index(item) == 0:
+                    ptext = QPlainTextEdit()
+                    ptext.setReadOnly(True)
+                    ptext.setPlainText(item);
+                    ShowYoutubeCommentsTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                else:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    ShowYoutubeCommentsTable.setItem(rowList.index(row), row.index(item), intItem)
+                    ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+        ShowYoutubeCommentsTable.resizeColumnsToContents()
+        ShowYoutubeCommentsTable.resizeRowsToContents()
+
+        ShowYoutubeCommentsTable.setSortingEnabled(True)
+        row_width = 0
+
+        for i in range(ShowYoutubeCommentsTable.columnCount()):
+             ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        if DataSourceShowYoutubeCommentsTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            tabs.tabWidget = ShowYoutubeCommentsTab
+        else:
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+
+    # Data Source Show Youtube Comments URL
+    def DataSourceShowYoutubeCommentsKeyWord(self, DataSourceWidgetItemName):
+        DataSourceShowYoutubeCommentsTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+                DataSourceShowYoutubeCommentsTabFlag = True
+                break
+
+        ShowYoutubeCommentsTab = QWidget()
+        ShowYoutubeCommentsTab.setGeometry(
+            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height()))
+        ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
+
+        # LayoutWidget For within Word Frequency Tab
+        ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
+        ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+        # Box Layout for Word Frequency Tab
+        ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
+        ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Table for Word Frequency
+        ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
+        ShowYoutubeCommentsTable.setColumnCount(7)
+        ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
+                                             ShowYoutubeCommentsTabverticalLayoutWidget.height())
+        ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
+
+        ShowYoutubeCommentsTable.setWindowFlags(
+            ShowYoutubeCommentsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Video ID", "Video Title", "Video Description", "Channel", "Replies", "Like"])
+        ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet(
+            "::section {""background-color: grey;  color: white;}")
+
+        for i in range(ShowYoutubeCommentsTable.columnCount()):
+            ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(
+                QFont(ShowYoutubeCommentsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                rowList = DS.YoutubeData
+                break
+
+        for row in rowList:
+            ShowYoutubeCommentsTable.insertRow(rowList.index(row))
+            for item in row:
+                if row.index(item) == 0:
+                    ptext = QPlainTextEdit()
+                    ptext.setReadOnly(True)
+                    ptext.setPlainText(item);
+                    ShowYoutubeCommentsTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+                else:
+                    intItem = QTableWidgetItem()
+                    if row.index(item) == 1:
+                        intItem.setData(Qt.EditRole, QVariant("https://www.youtube.com/watch?v=" + item))
+                    else:
+                        intItem.setData(Qt.EditRole, QVariant(item))
+
+                    ShowYoutubeCommentsTable.setItem(rowList.index(row), row.index(item), intItem)
+                    ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+        ShowYoutubeCommentsTable.resizeColumnsToContents()
+        ShowYoutubeCommentsTable.resizeRowsToContents()
+
+        ShowYoutubeCommentsTable.setSortingEnabled(True)
+        row_width = 0
+
+        for i in range(ShowYoutubeCommentsTable.columnCount()):
+            ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+        if DataSourceShowYoutubeCommentsTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            tabs.tabWidget = ShowYoutubeCommentsTab
+        else:
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+
     # Data Source View Images
     def DataSourceViewImage(self, DataSourceWidgetItemName):
         DataSourceShowImagesTabFlag = False
@@ -1233,6 +1437,35 @@ class Window(QMainWindow):
 
         except Exception as e:
             print(str(e))
+
+    # Data Source Word Preview
+    def DataSourceWordPreview(self, DataSourceWidgetItemName):
+        DataSourcePreviewTab = QWidget()
+
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Data SourceTab
+        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                WordActivex = QAxContainer.QAxWidget()
+                WordActivex.setFocusPolicy(QtCore.Qt.StrongFocus)
+                contr = WordActivex.setControl("{00460182-9E5E-11d5-B7C8-B8269041DD57}")
+
+                WordActivex.setProperty("DisplayScrollBars", True);
+                WordActivex.setControl("C:/Users/Asad/Desktop/TEXTAS-FEATURES.docx")
+                DataSourceverticalLayout.addWidget(WordActivex)
+
+        myFile.TabList.append(
+            Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
+                DataSourceWidgetItemName.text(0)))
+        self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
@@ -1542,9 +1775,6 @@ class Window(QMainWindow):
             SaveAsCSVErrorBox.setText("Permission Denied!")
             SaveAsCSVErrorBox.setStandardButtons(QMessageBox.Ok)
             SaveAsCSVErrorBox.exec_()
-
-        except Exception as e:
-            print(str(e))
 
     # Data Source Generate Questions
     def DataSourcesGenerateQuestions(self):
@@ -4701,6 +4931,7 @@ class Window(QMainWindow):
 
     def ImportFromYoutube(self, VideoURLCheck, KeyWordCheck, URL, KeyWord):
         if VideoURLCheck:
+            URL = URL.replace('https://youtu.be/', 'https://www.youtube.com/watch?v=')
             dummyDataSource = DataSource(URL, "Youtube", self)
             dummyDataSource.YoutubeURL()
             DataSourceNameCheck = False
@@ -4777,7 +5008,7 @@ if __name__ == "__main__":
     # for i in range(0, 100):
     #     SplahScreenProgressBar.setValue(i)
     #     t = time.time()
-    #     while time.time() < t + 0.1:
+    #     while time.time() < t + 0.05:
     #         App.processEvents()
     #
     # TextASSplash.close()

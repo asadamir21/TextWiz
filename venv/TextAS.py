@@ -923,8 +923,6 @@ class Window(QMainWindow):
     # *************************************************************************************************
     # *************************************************************************************************
 
-
-
     # ****************************************************************************
     # ************************** Data Sources Preview ****************************
     # ****************************************************************************
@@ -1436,7 +1434,7 @@ class Window(QMainWindow):
 
     # Data Source Word Preview
     def DataSourceWordPreview(self, DataSourceWidgetItemName):
-
+        DataSourcePreviewTab = QWidget()
         # LayoutWidget For within DataSource Preview Tab
         DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
         DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
@@ -1448,13 +1446,14 @@ class Window(QMainWindow):
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                WordActivex = QAxContainer.QAxWidget(DataSourceverticalLayout)
-                WordActivex.setGeometry()
+                WordActivex = QAxContainer.QAxWidget()
                 WordActivex.setFocusPolicy(QtCore.Qt.StrongFocus)
                 #contr = WordActivex.setControl("{00460182-9E5E-11d5-B7C8-B8269041DD57}")
 
                 WordActivex.setProperty("DisplayScrollBars", True);
-                WordActivex.setControl("C:/Users/Asad/Desktop/TEXTAS-FEATURES.docx")
+                WordActivex.setControl(DS.DataSourcePath)
+
+                DataSourceverticalLayout.addWidget(WordActivex)
 
         myFile.TabList.append(
             Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
@@ -1768,6 +1767,10 @@ class Window(QMainWindow):
             SaveAsCSVErrorBox.setText("Permission Denied!")
             SaveAsCSVErrorBox.setStandardButtons(QMessageBox.Ok)
             SaveAsCSVErrorBox.exec_()
+
+    # ****************************************************************************
+    # *************************** Question Generator *****************************
+    # ****************************************************************************
 
     # Data Source Generate Questions
     def DataSourcesGenerateQuestions(self):
@@ -2517,8 +2520,6 @@ class Window(QMainWindow):
             StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
             StemWordErrorBox.exec_()
 
-
-
     # ****************************************************************************
     # ***************************** Data Sources POS ****************************
     # ****************************************************************************
@@ -2695,7 +2696,6 @@ class Window(QMainWindow):
             Table.hide()
             Label.show()
 
-
     # ****************************************************************************
     # ********************* Data Sources Entity Relationship *********************
     # ****************************************************************************
@@ -2839,8 +2839,6 @@ class Window(QMainWindow):
             Table.hide()
             HTMLViewer2.hide()
 
-
-
     # ****************************************************************************
     # *********************** Data Sources Topic Modelling ***********************
     # ****************************************************************************
@@ -2912,7 +2910,6 @@ class Window(QMainWindow):
 
         except Exception as e:
             print(str(e))
-
 
     # ****************************************************************************
     # ************************ Data Sources Create Cases *************************
@@ -3098,7 +3095,6 @@ class Window(QMainWindow):
                     if cases.CaseTopic == CaseTopic:
                         cases.addtoCase(selectedText)
                         break
-
 
     # ****************************************************************************
     # ********************* Data Sources Create Sentiments ***********************
@@ -3523,7 +3519,6 @@ class Window(QMainWindow):
         else:
             pass
 
-
     # ****************************************************************************
     # ************************* Data Source Child Detail *************************
     # ****************************************************************************
@@ -3547,7 +3542,6 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
     
                 #************************************** Labels *************************************
-    
     
                 # Data Source Name Label
                 DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -3639,7 +3633,7 @@ class Window(QMainWindow):
                 DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.1,
                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+                                                   DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceNameLineEdit)
     
@@ -3720,8 +3714,157 @@ class Window(QMainWindow):
                 self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
     
                 DataSourceWidgetDetailDialogBox.exec_()
-        
-            else:
+
+            elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+                print("Hello")
+            elif DS.DataSourceext == "URL":
+                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                            self.height / 5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(
+                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+                # Data Source  Label
+                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceLabel.setText("Type:")
+                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                            DataSourceWidgetDetailDialogBox.width() / 4,
+                                            DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceLabel)
+
+                # Data Source Hashtag Label
+                DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameHashtagLabel.setText("Hashtag:")
+                DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                       DataSourceWidgetDetailDialogBox.width() / 4,
+                                                       DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
+
+                # Data Source No of Tweet Label
+                DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofTweetLabel.setText("No of Tweets:")
+                DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.width() / 4,
+                                                     DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
+
+                # ************************************** LineEdit *************************************
+
+                # Data Source Name LineEdit
+                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceLineEdit.setText("Twitter")
+                DataSourceLineEdit.setReadOnly(True)
+                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+                # Data Source Path LineEdit
+                DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
+                DataSourceHashTagLineEdit.setReadOnly(True)
+                DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                      DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                      DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                      DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
+
+                # Data Source Ext LineEdit
+                DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
+                DataSourceNoofTweetsLineEdit.setReadOnly(True)
+                DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+
+                DataSourceWidgetDetailDialogBox.exec_()
+            elif DS.DataSourceext == "Tweet":
+                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                            self.height / 5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(
+                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+                # Data Source  Label
+                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceLabel.setText("Type:")
+                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                            DataSourceWidgetDetailDialogBox.width() / 4,
+                                            DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceLabel)
+
+                # Data Source Hashtag Label
+                DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameHashtagLabel.setText("Hashtag:")
+                DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                       DataSourceWidgetDetailDialogBox.width() / 4,
+                                                       DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
+
+                # Data Source No of Tweet Label
+                DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofTweetLabel.setText("No of Tweets:")
+                DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.width() / 4,
+                                                     DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
+
+
+                # ************************************** LineEdit *************************************
+
+                # Data Source Name LineEdit
+                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceLineEdit.setText("Twitter")
+                DataSourceLineEdit.setReadOnly(True)
+                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+                # Data Source Path LineEdit
+                DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
+                DataSourceHashTagLineEdit.setReadOnly(True)
+                DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                      DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                      DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                      DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
+
+                # Data Source Ext LineEdit
+                DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
+                DataSourceNoofTweetsLineEdit.setReadOnly(True)
+                DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+
+                DataSourceWidgetDetailDialogBox.exec_()
+            elif DS.DataSourceext == "Youtube":
                 print("Hello")
 
         except Exception as e:

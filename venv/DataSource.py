@@ -442,6 +442,8 @@ class DataSource():
     # Twitter Tweet
     def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
         try:
+            self.DataSourceHashtag = Hashtag
+
             consumer_key = 's3MT03IsWkMrTj41HxH6InNzr'
             consumer_secret = 'jaqHc7GLjmxaM8xITLHWdcHC10nhzPXfG6RTwtUOmAJo673nRg'
             access_token = '1115595365380550659-1q2eKGnzYESKSujOTKQ16fhWbHRWAk'

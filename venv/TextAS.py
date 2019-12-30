@@ -2193,59 +2193,72 @@ class Window(QMainWindow):
 
     # Rename Data Source and Widget
     def DSRename(self, DataSourceWidgetItemName, name):
-        DataSourceRenameCheck = False
+        try:
+            DataSourceRenameCheck = False
 
-        for DSN in myFile.DataSourceList:
-            if DSN.DataSourceName == name:
-                DataSourceRenameCheck = True
-                break
-
-        if not DataSourceRenameCheck:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    for tab in myFile.TabList:
-                        if tab.DataSourceName == DS.DataSourceName:
-                            tab.DataSourceName = name
-
-                    # ************** updating queries *****************
-                    for query in DS.QueryList:
-                        for letter in query[0].text(0):
-                            if letter == '(':
-                                QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
-                                DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
-
-                                if DataSourceName == DS.DataSourceName:
-                                    query[0].setText(0, QueryName + "(" + name + ")")
-                                    query[0].setToolTip(0, query[0].text(0))
-
-                    # ************** updating cases *****************
-
-                    # *********** updating sentiments ***************
-
-                    # ********* updating Visualizations *************
-
-                    # ************ updating Reports *****************
-
-                    DS.DataSourceName = name
+            for DSN in myFile.DataSourceList:
+                if DSN.DataSourceName == name:
+                    DataSourceRenameCheck = True
                     break
 
-            DataSourceWidgetItemName.setText(0, name)
-            DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
+            if not DataSourceRenameCheck:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                        for tab in myFile.TabList:
+                            if tab.DataSourceName == DS.DataSourceName:
+                                tab.DataSourceName = name
 
-            DataSourceRenameSuccessBox = QMessageBox()
-            DataSourceRenameSuccessBox.setIcon(QMessageBox.Information)
-            DataSourceRenameSuccessBox.setWindowTitle("Rename Success")
-            DataSourceRenameSuccessBox.setText("Data Source Rename Successfully!")
-            DataSourceRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceRenameSuccessBox.exec_()
+                        # ************** updating queries *****************
+                        for query in DS.QueryList:
+                            for letter in query[0].text(0):
+                                if letter == '(':
+                                    QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
+                                    DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
 
-        else:
-            DataSourceRenameErrorBox = QMessageBox()
-            DataSourceRenameErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceRenameErrorBox.setWindowTitle("Rename Error")
-            DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
-            DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceRenameErrorBox.exec_()
+                                    if DataSourceName == DS.DataSourceName:
+                                        query[0].setText(0, QueryName + "(" + name + ")")
+                                        query[0].setToolTip(0, query[0].text(0))
+
+                        # ************** updating cases *****************
+                        ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
+                        for widgets in ItemsWidget:
+                            widgets.setText(0, name)
+                            widgets.setToolTip(0, widgets.text(0))
+
+                        # *********** updating sentiments ***************
+                        ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
+                        for widgets in ItemsWidget:
+                            widgets.setText(0, name)
+                            widgets.setToolTip(0, widgets.text(0))
+
+                        # ********* updating Visualizations *************
+
+                        # ************ updating Reports *****************
+
+                        DS.DataSourceName = name
+                        break
+
+
+
+                DataSourceWidgetItemName.setText(0, name)
+                DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
+
+                DataSourceRenameSuccessBox = QMessageBox()
+                DataSourceRenameSuccessBox.setIcon(QMessageBox.Information)
+                DataSourceRenameSuccessBox.setWindowTitle("Rename Success")
+                DataSourceRenameSuccessBox.setText("Data Source Rename Successfully!")
+                DataSourceRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceRenameSuccessBox.exec_()
+
+            else:
+                DataSourceRenameErrorBox = QMessageBox()
+                DataSourceRenameErrorBox.setIcon(QMessageBox.Critical)
+                DataSourceRenameErrorBox.setWindowTitle("Rename Error")
+                DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
+                DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
+                DataSourceRenameErrorBox.exec_()
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # ************************ Data Sources StemWords ****************************
@@ -4717,10 +4730,6 @@ class Window(QMainWindow):
                 SentimentsCollapse.setDisabled(False)
             SentimentsRightClickMenu.addAction(SentimentsCollapse)
 
-            # Cases Detail
-            SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
-            SentimentsDetail.triggered.connect(lambda: self.SentimentParentDetail(SentimentsItemName))
-            SentimentsRightClickMenu.addAction(SentimentsDetail)
             SentimentsRightClickMenu.popup(SentimentsWidgetPos)
 
         # Child DataSource
@@ -4729,19 +4738,15 @@ class Window(QMainWindow):
 
             # Case Show components
             SentimentsShowTopicText = QAction('Show Topic Components', self.SentimentTreeWidget)
-            SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(CasesItemName))
+            SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(SentimentsItemName))
             SentimentsRightClickMenu.addAction(SentimentsShowTopicText)
 
             # Case Child Detail
             SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
-            SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(CasesItemName))
+            SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(SentimentsItemName))
             SentimentsRightClickMenu.addAction(SentimentsDetail)
 
             SentimentsRightClickMenu.popup(SentimentsWidgetPos)
-
-    # Sentiment Parent Detail
-    def SentimentParentDetail(self, SentimentsItemName):
-        print('Hello')
 
     # Sentiment Show Component
     def SentimentsShowComponent(self, SentimentsItemName):
@@ -4749,7 +4754,89 @@ class Window(QMainWindow):
 
     # Sentiment Child Detail
     def SentimentsChildDetail(self, SentimentsItemName):
-        print('Hello')
+        SentimentsChildDetailDialogBox = QDialog()
+        SentimentsChildDetailDialogBox.setModal(True)
+        SentimentsChildDetailDialogBox.setWindowTitle("Details")
+        SentimentsChildDetailDialogBox.setParent(self)
+        SentimentsChildDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        SentimentsChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                              self.height / 5)
+        SentimentsChildDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                for sentiment in DS.SentimentList:
+                    if sentiment.SentimentType == SentimentsItemName.text(0):
+                        break
+
+        # ************************************** Labels *************************************
+
+        # Data Source Name Label
+        DataSourceNameLabel = QLabel(SentimentsChildDetailDialogBox)
+        DataSourceNameLabel.setText("Data Source Name:")
+        DataSourceNameLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
+                                        SentimentsChildDetailDialogBox.height() * 0.2,
+                                        SentimentsChildDetailDialogBox.width() / 4,
+                                        SentimentsChildDetailDialogBox.height() / 10)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        # Sentiment Name Label
+        SentimentNameLabel = QLabel(SentimentsChildDetailDialogBox)
+        SentimentNameLabel.setText("Case Name:")
+        SentimentNameLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
+                                       SentimentsChildDetailDialogBox.height() * 0.4,
+                                       SentimentsChildDetailDialogBox.width() / 4,
+                                       SentimentsChildDetailDialogBox.height() / 10)
+        SentimentNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(SentimentNameLabel)
+
+        # No of Case Component Label
+        DataSourceNoofComponentLabel = QLabel(SentimentsChildDetailDialogBox)
+        DataSourceNoofComponentLabel.setText("No of Components")
+        DataSourceNoofComponentLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
+                                                 SentimentsChildDetailDialogBox.height() * 0.6,
+                                                 SentimentsChildDetailDialogBox.width() / 4,
+                                                 SentimentsChildDetailDialogBox.height() / 10)
+        DataSourceNoofComponentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNoofComponentLabel)
+
+        # ************************************** LineEdit *************************************
+
+        # Data Source Name LineEdit
+        DataSourceNameLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
+        DataSourceNameLineEdit.setText(DS.DataSourceName)
+        DataSourceNameLineEdit.setReadOnly(True)
+        DataSourceNameLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
+                                           SentimentsChildDetailDialogBox.height() * 0.2,
+                                           SentimentsChildDetailDialogBox.width() * 0.6,
+                                           SentimentsChildDetailDialogBox.height() / 10)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+        # Sentiment Name LineEdit
+        DataSourceCaseNameLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
+        DataSourceCaseNameLineEdit.setText(SentimentsItemName.text(0))
+        DataSourceCaseNameLineEdit.setReadOnly(True)
+        DataSourceCaseNameLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
+                                               SentimentsChildDetailDialogBox.height() * 0.4,
+                                               SentimentsChildDetailDialogBox.width() * 0.6,
+                                               SentimentsChildDetailDialogBox.height() / 10)
+        DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
+
+        # Data Source Path LineEdit
+        NoofSentimentTextLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
+        NoofSentimentTextLineEdit.setText(str(len(sentiment.SentimentTextList)))
+        NoofSentimentTextLineEdit.setReadOnly(True)
+        NoofSentimentTextLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
+                                              SentimentsChildDetailDialogBox.height() * 0.6,
+                                              SentimentsChildDetailDialogBox.width() * 0.6,
+                                              SentimentsChildDetailDialogBox.height() / 10)
+        NoofSentimentTextLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(NoofSentimentTextLineEdit)
+
+        SentimentsChildDetailDialogBox.exec_()
 
     # ****************************************************************************
     # *********************** Application Basic Features *************************

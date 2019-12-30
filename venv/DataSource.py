@@ -96,6 +96,7 @@ class DataSource():
 
         except Exception as e:
             self.DataSourceLoadError = True
+
             DataSourceLoadErrorBox = QMessageBox()
             DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
             DataSourceLoadErrorBox.setWindowTitle("Load Error")
@@ -442,6 +443,11 @@ class DataSource():
     # Twitter Tweet
     def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
         try:
+            print(Hashtag)
+            print(Since)
+            print(Language)
+            print(NoOfTweet)
+
             self.DataSourceHashtag = Hashtag
 
             consumer_key = 's3MT03IsWkMrTj41HxH6InNzr'

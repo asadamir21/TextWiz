@@ -7,11 +7,13 @@ QToolTip
      opacity: 100;
 }
 
-QWidget
+
+QWidget, QMessageBox
 {
     color: #b1b1b1;
     background-color: #323232;
 }
+
 
 QTreeView, QListView
 {
@@ -19,13 +21,13 @@ QTreeView, QListView
     margin-left: 5px;
 }
 
-QWidget:item:hover
+QWidget:item:hover, QMessageBox:item:hover
 {
     background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #ca0619);
     color: #000000;
 }
 
-QWidget:item:selected
+QWidget:item:selected, QMessageBox:item:selected
 {
     background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);
 }
@@ -72,7 +74,7 @@ QMenu::item:selected
     color: #000000;
 }
 
-QWidget:disabled
+QWidget:disabled, QMessageBox:disabled
 {
     color: #808080;
     background-color: #323232;
@@ -83,9 +85,9 @@ QAbstractItemView
     background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #4d4d4d, stop: 0.1 #646464, stop: 1 #5d5d5d);
 }
 
-QWidget:focus
+QWidget:focus, QMessageBox:focus
 {
-    /*border: 1px solid darkgray;*/
+    border: 1px solid darkgray;
 }
 
 QLineEdit

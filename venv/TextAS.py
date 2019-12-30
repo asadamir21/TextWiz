@@ -1911,9 +1911,7 @@ class Window(QMainWindow):
                 ptext = QPlainTextEdit()
                 ptext.setReadOnly(True)
                 ptext.setPlainText(row);
-
-                GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
-
+                ptext.adjustSize()
 
             GenerateQuestionsTable.resizeColumnsToContents()
             GenerateQuestionsTable.resizeRowsToContents()
@@ -2248,8 +2246,6 @@ class Window(QMainWindow):
             DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
             DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceRenameErrorBox.exec_()
-
-
 
     # ****************************************************************************
     # ************************ Data Sources StemWords ****************************
@@ -3540,9 +3536,9 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
                                                             self.height*2/5)
                 DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-    
+
                 #************************************** Labels *************************************
-    
+
                 # Data Source Name Label
                 DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceNameLabel.setText("Name:")
@@ -3552,7 +3548,7 @@ class Window(QMainWindow):
                                                 DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceNameLabel)
-    
+
                 # Data Source Path Label
                 DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourcePathLabel.setText("Path:")
@@ -3562,7 +3558,7 @@ class Window(QMainWindow):
                                                 DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourcePathLabel)
-    
+
                 # Data Source Ext Label
                 DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceExtLabel.setText("Extension:")
@@ -3572,7 +3568,7 @@ class Window(QMainWindow):
                                                DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceExtLabel)
-    
+
                 # Data Source Size Label
                 DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceSize.setText("Size:")
@@ -3582,8 +3578,8 @@ class Window(QMainWindow):
                                            DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceSize)
-    
-    
+
+
                 # Data Source Access Time Label
                 DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceAccessTime.setText("Last Access Time:")
@@ -3593,7 +3589,7 @@ class Window(QMainWindow):
                                                  DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceAccessTime)
-    
+
                 # Data Source Modified Time Label
                 DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceModifiedTime.setText("Last Modified Time:")
@@ -3603,7 +3599,7 @@ class Window(QMainWindow):
                                                    DataSourceWidgetDetailDialogBox.height()/20)
                 DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceModifiedTime)
-    
+
                 # Data Source Change Time Label
                 DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceChangeTime.setText("Created Time:")
@@ -3724,7 +3720,7 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.setWindowFlags(
                     self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-                # Data Source  Label
+                # Data Source Label
                 DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceLabel.setText("Type:")
                 DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
@@ -3734,31 +3730,31 @@ class Window(QMainWindow):
                 DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceLabel)
 
-                # Data Source Hashtag Label
-                DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNameHashtagLabel.setText("Hashtag:")
-                DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                       DataSourceWidgetDetailDialogBox.width() / 4,
-                                                       DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
+                # Data Source URL Label
+                DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameURLLabel.setText("URL:")
+                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                   DataSourceWidgetDetailDialogBox.width() / 4,
+                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameURLLabel)
 
-                # Data Source No of Tweet Label
-                DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofTweetLabel.setText("No of Tweets:")
-                DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                # Data Source Word Count Label
+                DataSourceWordCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceWordCountLabel.setText("Word Count:")
+                DataSourceWordCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                      DataSourceWidgetDetailDialogBox.height() * 0.6,
                                                      DataSourceWidgetDetailDialogBox.width() / 4,
                                                      DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
+                DataSourceWordCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceWordCountLabel)
 
                 # ************************************** LineEdit *************************************
 
                 # Data Source Name LineEdit
                 DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceLineEdit.setText("Twitter")
+                DataSourceLineEdit.setText("Web URL")
                 DataSourceLineEdit.setReadOnly(True)
                 DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
@@ -3767,29 +3763,30 @@ class Window(QMainWindow):
                 DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceLineEdit)
 
-                # Data Source Path LineEdit
-                DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
-                DataSourceHashTagLineEdit.setReadOnly(True)
-                DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                      DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                      DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                      DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
+                # Data Source URL LineEdit
+                DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceURLLineEdit.setText(DS.DataSourcePath)
+                DataSourceURLLineEdit.setReadOnly(True)
+                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                  DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
 
-                # Data Source Ext LineEdit
-                DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
-                DataSourceNoofTweetsLineEdit.setReadOnly(True)
-                DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+                # Data Source Word Count LineEdit
+                DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+                DataSourceWordCountLineEdit.setReadOnly(True)
+                DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                        DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                        DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                        DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
 
                 DataSourceWidgetDetailDialogBox.exec_()
+
             elif DS.DataSourceext == "Tweet":
                 DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
@@ -3864,8 +3861,86 @@ class Window(QMainWindow):
                 self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
 
                 DataSourceWidgetDetailDialogBox.exec_()
+
             elif DS.DataSourceext == "Youtube":
-                print("Hello")
+                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                            self.height / 5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(
+                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+                # Data Source Label
+                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceLabel.setText("Type:")
+                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                            DataSourceWidgetDetailDialogBox.width() / 4,
+                                            DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceLabel)
+
+                # Data Source URL Label
+                DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
+
+                if hasattr(DS, 'YoutubeURLFlag'):
+                    DataSourceNameURLLabel.setText("URL:")
+                else:
+                    DataSourceNameURLLabel.setText("Key Word:")
+
+                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                   DataSourceWidgetDetailDialogBox.width() / 4,
+                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameURLLabel)
+
+                # Data Source No of Comments Label
+                DataSourceNoofCommentsLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofCommentsLabel.setText("No of Comments:")
+                DataSourceNoofCommentsLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                        DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                        DataSourceWidgetDetailDialogBox.width() / 4,
+                                                        DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofCommentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNoofCommentsLabel)
+
+                # ************************************** LineEdit *************************************
+
+                # Data Source Name LineEdit
+                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceLineEdit.setText("Youtube Comments")
+                DataSourceLineEdit.setReadOnly(True)
+                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+                # Data Source URL LineEdit
+                DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceURLLineEdit.setText(DS.DataSourcePath)
+                DataSourceURLLineEdit.setReadOnly(True)
+                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                  DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+
+                # Data Source Word Count LineEdit
+                DataSourceNoofCommentsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofCommentsLineEdit.setText(str(len(DS.YoutubeData)))
+                DataSourceNoofCommentsLineEdit.setReadOnly(True)
+                DataSourceNoofCommentsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                           DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                           DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofCommentsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNoofCommentsLineEdit)
+
+                DataSourceWidgetDetailDialogBox.exec_()
+
 
         except Exception as e:
             print(str(e))
@@ -4211,7 +4286,66 @@ class Window(QMainWindow):
 
     # Cases Parent Detail
     def CasesParentDetail(self, CasesItemName):
-        print("Hello")
+        CasesParentDetailDialogBox = QDialog()
+        CasesParentDetailDialogBox.setModal(True)
+        CasesParentDetailDialogBox.setWindowTitle("Details")
+        CasesParentDetailDialogBox.setParent(self)
+        CasesParentDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CasesParentDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
+                                                    self.height / 10)
+        CasesParentDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.text(0):
+                break
+
+        # ************************************** Labels *************************************
+
+        # Data Source Name Label
+        DataSourceNameLabel = QLabel(CasesParentDetailDialogBox)
+        DataSourceNameLabel.setText("Name:")
+        DataSourceNameLabel.setGeometry(CasesParentDetailDialogBox.width() * 0.1,
+                                        CasesParentDetailDialogBox.height() * 0.2,
+                                        CasesParentDetailDialogBox.width() / 4,
+                                        CasesParentDetailDialogBox.height() / 5)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        # Data Source Path Label
+        DataSourceNoofCasesLabel = QLabel(CasesParentDetailDialogBox)
+        DataSourceNoofCasesLabel.setText("No of Cases")
+        DataSourceNoofCasesLabel.setGeometry(CasesParentDetailDialogBox.width() * 0.1,
+                                             CasesParentDetailDialogBox.height() * 0.6,
+                                             CasesParentDetailDialogBox.width() / 4,
+                                             CasesParentDetailDialogBox.height() / 5)
+        DataSourceNoofCasesLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNoofCasesLabel)
+
+        # ************************************** LineEdit *************************************
+
+        # Data Source Name LineEdit
+        DataSourceNameLineEdit = QLineEdit(CasesParentDetailDialogBox)
+        DataSourceNameLineEdit.setText(CasesItemName.text(0))
+        DataSourceNameLineEdit.setReadOnly(True)
+        DataSourceNameLineEdit.setGeometry(CasesParentDetailDialogBox.width() * 0.35,
+                                           CasesParentDetailDialogBox.height() * 0.2,
+                                           CasesParentDetailDialogBox.width() * 0.6,
+                                           CasesParentDetailDialogBox.height() / 5)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+        # Data Source Path LineEdit
+        DataSourceNoofCasesLineEdit = QLineEdit(CasesParentDetailDialogBox)
+        DataSourceNoofCasesLineEdit.setText(str(len(DS.CasesList)))
+        DataSourceNoofCasesLineEdit.setReadOnly(True)
+        DataSourceNoofCasesLineEdit.setGeometry(CasesParentDetailDialogBox.width() * 0.35,
+                                                CasesParentDetailDialogBox.height() * 0.6,
+                                                CasesParentDetailDialogBox.width() * 0.6,
+                                                CasesParentDetailDialogBox.height() / 5)
+        DataSourceNoofCasesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNoofCasesLineEdit)
+
+        CasesParentDetailDialogBox.exec_()
 
     # Cases Show Topic
     def CasesShowTopicComponent(self, CasesItemName):
@@ -4436,7 +4570,89 @@ class Window(QMainWindow):
 
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
-        print("Hello")
+        CasesChildDetailDialogBox = QDialog()
+        CasesChildDetailDialogBox.setModal(True)
+        CasesChildDetailDialogBox.setWindowTitle("Details")
+        CasesChildDetailDialogBox.setParent(self)
+        CasesChildDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CasesChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                               self.height / 5)
+        CasesChildDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.parent().text(0):
+                for case in DS.CasesList:
+                    if case.CaseTopic == CasesItemName.text(0):
+                        break
+
+        # ************************************** Labels *************************************
+
+        # Data Source Name Label
+        DataSourceNameLabel = QLabel(CasesChildDetailDialogBox)
+        DataSourceNameLabel.setText("Data Source Name:")
+        DataSourceNameLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
+                                        CasesChildDetailDialogBox.height() * 0.2,
+                                        CasesChildDetailDialogBox.width() / 4,
+                                        CasesChildDetailDialogBox.height() / 10)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        # Case Name Label
+        CaseNameLabel = QLabel(CasesChildDetailDialogBox)
+        CaseNameLabel.setText("Case Name:")
+        CaseNameLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
+                                  CasesChildDetailDialogBox.height() * 0.4,
+                                  CasesChildDetailDialogBox.width() / 4,
+                                  CasesChildDetailDialogBox.height() / 10)
+        CaseNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(CaseNameLabel)
+
+        # No of Case Component Label
+        DataSourceNoofComponentLabel = QLabel(CasesChildDetailDialogBox)
+        DataSourceNoofComponentLabel.setText("No of Components")
+        DataSourceNoofComponentLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
+                                                 CasesChildDetailDialogBox.height() * 0.6,
+                                                 CasesChildDetailDialogBox.width() / 4,
+                                                 CasesChildDetailDialogBox.height() / 10)
+        DataSourceNoofComponentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNoofComponentLabel)
+
+        # ************************************** LineEdit *************************************
+
+        # Data Source Name LineEdit
+        DataSourceNameLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        DataSourceNameLineEdit.setText(DS.DataSourceName)
+        DataSourceNameLineEdit.setReadOnly(True)
+        DataSourceNameLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
+                                           CasesChildDetailDialogBox.height() * 0.2,
+                                           CasesChildDetailDialogBox.width() * 0.6,
+                                           CasesChildDetailDialogBox.height() / 10)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+        # Case Name LineEdit
+        DataSourceCaseNameLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        DataSourceCaseNameLineEdit.setText(CasesItemName.text(0))
+        DataSourceCaseNameLineEdit.setReadOnly(True)
+        DataSourceCaseNameLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
+                                               CasesChildDetailDialogBox.height() * 0.4,
+                                               CasesChildDetailDialogBox.width() * 0.6,
+                                               CasesChildDetailDialogBox.height() / 10)
+        DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
+
+        # Data Source Path LineEdit
+        NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        NoofCasesLineEdit.setText(str(len(case.TopicCases)))
+        NoofCasesLineEdit.setReadOnly(True)
+        NoofCasesLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
+                                      CasesChildDetailDialogBox.height() * 0.6,
+                                      CasesChildDetailDialogBox.width() * 0.6,
+                                      CasesChildDetailDialogBox.height() / 10)
+        NoofCasesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(NoofCasesLineEdit)
+
+        CasesChildDetailDialogBox.exec_()
 
     # ****************************************************************************
     # ************************ Sentiments Context Menu ***************************
@@ -5110,6 +5326,7 @@ class Window(QMainWindow):
             DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
             DataSourceImportNameErrorBox.exec_()
 
+    # Import From Youtube Window
     def ImportYoutubeWindow(self):
         YoutubeDialog = QDialog()
         YoutubeDialog.setWindowTitle("Import Youtube Comments")
@@ -5170,6 +5387,7 @@ class Window(QMainWindow):
         YoutubebuttonBox.accepted.connect(lambda: self.ImportFromYoutube(VideoURLRadioButton.isChecked(), KeyWordRadioButton.isChecked(), URLLineEdit.text(), KeyWordLineEdit.text()))
         YoutubeDialog.exec_()
 
+    # Import From Youtube
     def ImportFromYoutube(self, VideoURLCheck, KeyWordCheck, URL, KeyWord):
         if VideoURLCheck:
             URL = URL.replace('https://youtu.be/', 'https://www.youtube.com/watch?v=')

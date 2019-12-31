@@ -80,7 +80,7 @@ class Window(QMainWindow):
         for fileRow in self.languages:
             self.languages[self.languages.index(fileRow)] = fileRow.split(',')
 
-        self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+        #self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
 
 
         self.initWindows()
@@ -605,13 +605,9 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
 
             else:
-                DataSourcesSimilarityErrorBox = QMessageBox()
-                DataSourcesSimilarityErrorBox.setIcon(QMessageBox.Critical)
-                DataSourcesSimilarityErrorBox.setWindowTitle("Data Sources Similarity Error")
-                DataSourcesSimilarityErrorBox.setText(
-                    "An Error Occured! Similarity can only be found if Data Sources are more than one")
-                DataSourcesSimilarityErrorBox.setStandardButtons(QMessageBox.Ok)
-                DataSourcesSimilarityErrorBox.exec_()
+                DataSourceLoadErrorBox = QMessageBox.critical(self, "Data Sources Similarity Error",
+                                                              "An Error Occured! Similarity can only be found if Data Sources are more than one",
+                                                              QMessageBox.Ok)
 
     # Update Similarity Between Data Sources
     def DataSourceSimilarityUpdate(self):
@@ -3452,7 +3448,6 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
-
     # ****************************************************************************
     # ************************ Data Sources Translation **************************
     # ****************************************************************************
@@ -3503,7 +3498,7 @@ class Window(QMainWindow):
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
-        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all Queries of " + DataSourceWidgetItemName.text(0),
+        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
                                                       QMessageBox.Yes | QMessageBox.No)
 
         if DataSourceRemoveChoice == QMessageBox.Yes:
@@ -4265,6 +4260,11 @@ class Window(QMainWindow):
                 CasesCollapse.setDisabled(False)
             CasesRightClickMenu.addAction(CasesCollapse)
 
+            # Case Remove
+            CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
+            CasesParentRemove.triggered.connect(lambda: self.CasesParentRemove(CasesItemName))
+            CasesRightClickMenu.addAction(CasesParentRemove)
+
             # Cases Detail
             CasesDetail = QAction('Details', self.CasesTreeWidget)
             CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
@@ -4281,14 +4281,14 @@ class Window(QMainWindow):
             CasesRightClickMenu.addAction(CasesShowTopicText)
 
             # Case Rename
-            CasesRemove = QAction('Rename', self.CasesTreeWidget)
-            CasesRemove.triggered.connect(lambda: self.CasesRename(CasesItemName))
-            CasesRightClickMenu.addAction(CasesRemove)
+            CasesRename = QAction('Rename', self.CasesTreeWidget)
+            CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
+            CasesRightClickMenu.addAction(CasesRename)
 
             # Case Remove
-            CasesRemove = QAction('Remove', self.CasesTreeWidget)
-            CasesRemove.triggered.connect(lambda: self.CasesRemove(CasesItemName))
-            CasesRightClickMenu.addAction(CasesRemove)
+            CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
+            CasesChildRemove.triggered.connect(lambda: self.CasesChildRemove(CasesItemName))
+            CasesRightClickMenu.addAction(CasesChildRemove)
 
             # Case Child Detail
             CasesDetail = QAction('Details', self.CasesTreeWidget)
@@ -4296,6 +4296,21 @@ class Window(QMainWindow):
             CasesRightClickMenu.addAction(CasesDetail)
 
             CasesRightClickMenu.popup(CasesWidgetPos)
+
+    # Cases Parent Remove
+    def CasesParentRemove(self, CasesItemName):
+        CasesRemoveChoice = QMessageBox.critical(self, 'Remove',
+                                                      "Are you sure you want to remove this Data Source's Cases?",
+                                                      QMessageBox.Yes | QMessageBox.No)
+
+        if CasesRemoveChoice == QMessageBox.Yes:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    self.CasesTreeWidget.invisibleRootItem().removeChild(CasesItemName)
+                    DS.CasesList.clear()
+                    break
+        else:
+            pass
 
     # Cases Parent Detail
     def CasesParentDetail(self, CasesItemName):
@@ -4540,23 +4555,12 @@ class Window(QMainWindow):
             CasesItemName.setText(0, CaseName)
             CasesItemName.setToolTip(0, CasesItemName.text(0))
 
-            CasesRenameSuccessBox = QMessageBox()
-            CasesRenameSuccessBox.setIcon(QMessageBox.Information)
-            CasesRenameSuccessBox.setWindowTitle("Rename Success")
-            CasesRenameSuccessBox.setText("Case Rename Successfully!")
-            CasesRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
-            CasesRenameSuccessBox.exec_()
-
+            CasesRenameSuccessBox = QMessageBox.Information(self, "Rename Success", "Case Rename Successfully!", QMessageBox.Ok)
         else:
-            CaseRenameErrorBox = QMessageBox()
-            CaseRenameErrorBox.setIcon(QMessageBox.Critical)
-            CaseRenameErrorBox.setWindowTitle("Rename Error")
-            CaseRenameErrorBox.setText("A Data Case with Similar Name Exist!")
-            CaseRenameErrorBox.setStandardButtons(QMessageBox.Ok)
-            CaseRenameErrorBox.exec_()
+            CasesRenameSuccessBox = QMessageBox.Critical(self, "Rename Error", "A Case with Similar Name Exist!",QMessageBox.Ok)
 
     # Cases Remove
-    def CasesRemove(self, CasesItemName):
+    def CasesChildRemove(self, CasesItemName):
         CasesRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Case?",
                                                  QMessageBox.Yes | QMessageBox.No)
 
@@ -4654,7 +4658,7 @@ class Window(QMainWindow):
         DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
 
-        # Data Source Path LineEdit
+        # No of Cases LineEdit
         NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
         NoofCasesLineEdit.setText(str(len(case.TopicCases)))
         NoofCasesLineEdit.setReadOnly(True)
@@ -4671,7 +4675,7 @@ class Window(QMainWindow):
     # ************************ Sentiments Context Menu ***************************
     # ****************************************************************************
 
-    # Get Which Cases Widget Item and its Position
+    # Get Which Sentiments Widget Item and its Position
     def FindSentimentsTreeWidgetContextMenu(self, SentimentsMouseRightClickEvent):
         if SentimentsMouseRightClickEvent.reason == SentimentsMouseRightClickEvent.Mouse:
             SentimentsMouseRightClickPos = SentimentsMouseRightClickEvent.globalPos()
@@ -4706,13 +4710,14 @@ class Window(QMainWindow):
         if SentimentsMouseRightClickPos is not None:
             self.SentimentsTreeWidgetContextMenu(SentimentsMouseRightClickItem, SentimentsMouseRightClickPos)
 
-    # Setting ContextMenu on Clicked Query
+    # Setting ContextMenu on Clicked Sentiments
     def SentimentsTreeWidgetContextMenu(self, SentimentsItemName, SentimentsWidgetPos):
-        # Parent Data Source
+
+        # Parent Sentiments
         if SentimentsItemName.parent() == None:
             SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
 
-            # Cases Expand
+            # Sentiments Expand
             SentimentsExpand = QAction('Expand', self.SentimentTreeWidget)
             SentimentsExpand.triggered.connect(lambda checked, index=SentimentsItemName: self.DataSourceWidgetItemExpandCollapse(index))
             if (SentimentsItemName.childCount() == 0 or SentimentsItemName.isExpanded() == True):
@@ -4721,7 +4726,7 @@ class Window(QMainWindow):
                 SentimentsExpand.setDisabled(False)
             SentimentsRightClickMenu.addAction(SentimentsExpand)
 
-            # Cases Collapse
+            # Sentiments Collapse
             SentimentsCollapse = QAction('Collapse', self.SentimentTreeWidget)
             SentimentsCollapse.triggered.connect(lambda checked, index=SentimentsItemName: self.DataSourceWidgetItemExpandCollapse(index))
             if (SentimentsItemName.childCount() == 0 or SentimentsItemName.isExpanded() == False):
@@ -4730,18 +4735,24 @@ class Window(QMainWindow):
                 SentimentsCollapse.setDisabled(False)
             SentimentsRightClickMenu.addAction(SentimentsCollapse)
 
+            # Sentiments Remove
+            SentimentsRemove = QAction('Remove', self.SentimentTreeWidget)
+            SentimentsRemove.triggered.connect(lambda checked, index=SentimentsItemName: self.SentimentsRemove(index))
+
+            SentimentsRightClickMenu.addAction(SentimentsRemove)
+
             SentimentsRightClickMenu.popup(SentimentsWidgetPos)
 
-        # Child DataSource
+        # Child Sentiments
         else:
             SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
 
-            # Case Show components
+            # Sentiments Show components
             SentimentsShowTopicText = QAction('Show Topic Components', self.SentimentTreeWidget)
             SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(SentimentsItemName))
             SentimentsRightClickMenu.addAction(SentimentsShowTopicText)
 
-            # Case Child Detail
+            # Sentiments Child Detail
             SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
             SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(SentimentsItemName))
             SentimentsRightClickMenu.addAction(SentimentsDetail)
@@ -4751,6 +4762,23 @@ class Window(QMainWindow):
     # Sentiment Show Component
     def SentimentsShowComponent(self, SentimentsItemName):
         print('Hello')
+
+    # Sentiments Remove
+    def SentimentsRemove(self, SentimentsItemName):
+        SentimentsRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Data Source's Sentiments?",
+                                                     QMessageBox.Yes | QMessageBox.No)
+
+        if SentimentsRemoveChoice == QMessageBox.Yes:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == SentimentsItemName.text(0):
+                    self.SentimentTreeWidget.invisibleRootItem().removeChild(SentimentsItemName)
+
+                    for sentiments in DS.SentimentList:
+                        sentiments.SentimentTextList.clear()
+
+                    break
+        else:
+            pass
 
     # Sentiment Child Detail
     def SentimentsChildDetail(self, SentimentsItemName):
@@ -4791,7 +4819,7 @@ class Window(QMainWindow):
         SentimentNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.LabelSizeAdjustment(SentimentNameLabel)
 
-        # No of Case Component Label
+        # No of Sentiments Component Label
         DataSourceNoofComponentLabel = QLabel(SentimentsChildDetailDialogBox)
         DataSourceNoofComponentLabel.setText("No of Components")
         DataSourceNoofComponentLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
@@ -4825,7 +4853,7 @@ class Window(QMainWindow):
         DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
 
-        # Data Source Path LineEdit
+        # No of Sentiments LineEdit
         NoofSentimentTextLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
         NoofSentimentTextLineEdit.setText(str(len(sentiment.SentimentTextList)))
         NoofSentimentTextLineEdit.setReadOnly(True)

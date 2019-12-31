@@ -8,6 +8,7 @@ from Sentiments import *
 from stat import *
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlencode, parse_qs
+from textblob import TextBlob
 
 import urllib
 import requests
@@ -95,15 +96,11 @@ class DataSource():
                 os.remove(new_file_abs)
 
         except Exception as e:
-            self.DataSourceLoadError = True
-
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            try:
+                self.DataSourceLoadError = True
+                DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load", QMessageBox.Ok)
+            except Exception as e2:
+                print(str(e2))
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -123,13 +120,9 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("An Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
+                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
+                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -146,13 +139,10 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            self.DataSourceLoadError = True
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
+                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
+                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -169,13 +159,7 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load", QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -313,13 +297,9 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
+                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
+                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -343,13 +323,9 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox()
-            DataSourceLoadErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceLoadErrorBox.setWindowTitle("Load Error")
-            DataSourceLoadErrorBox.setText("Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load")
-            DataSourceLoadErrorBox.setDetailedText(str(e))
-            DataSourceLoadErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceLoadErrorBox.exec_()
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
+                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
+                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             self.DataSourceSize = []
@@ -396,28 +372,19 @@ class DataSource():
                 response.raise_for_status()
             except requests.exceptions.HTTPError as e:
                 self.DataSourceLoadError = True
-                URLErrorBox = QMessageBox()
-                URLErrorBox.setIcon(QMessageBox.Critical)
-                URLErrorBox.setWindowTitle("URL Error")
-                URLErrorBox.setText(str(e))
-                URLErrorBox.setStandardButtons(QMessageBox.Ok)
-                URLErrorBox.exec_()
+                URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
+                                                              str(e),
+                                                              QMessageBox.Ok)
         except requests.exceptions.ConnectionError as e:
             self.DataSourceLoadError = True
-            URLErrorBox = QMessageBox()
-            URLErrorBox.setIcon(QMessageBox.Critical)
-            URLErrorBox.setWindowTitle("URL Error")
-            URLErrorBox.setText("Unable to Connect to url: " + self.DataSourcePath)
-            URLErrorBox.setStandardButtons(QMessageBox.Ok)
-            URLErrorBox.exec_()
+            URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
+                                               "Unable to Connect to url: " + self.DataSourcePath,
+                                               QMessageBox.Ok)
         except requests.exceptions.MissingSchema as e:
             self.DataSourceLoadError = True
-            URLErrorBox = QMessageBox()
-            URLErrorBox.setIcon(QMessageBox.Critical)
-            URLErrorBox.setWindowTitle("URL Error")
-            URLErrorBox.setText(str(e))
-            URLErrorBox.setStandardButtons(QMessageBox.Ok)
-            URLErrorBox.exec_()
+            URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
+                                               str(e),
+                                               QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
@@ -500,12 +467,9 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            YoutubeErrorBox = QMessageBox()
-            YoutubeErrorBox.setIcon(QMessageBox.Critical)
-            YoutubeErrorBox.setWindowTitle("Youtube Error")
-            YoutubeErrorBox.setText("Unable to Retrieve Comments of Key Word: " + self.DataSourcePath)
-            YoutubeErrorBox.setStandardButtons(QMessageBox.Ok)
-            YoutubeErrorBox.exec_()
+            YoutubeErrorBox = QMessageBox.critical(self.MainWindow, "Youtube Error",
+                                                   "Unable to Retrieve Comments from URL: " + self.DataSourcePath,
+                                                   QMessageBox.Ok)
 
     # Yotube Comments From KeyWord
     def YoutubeKeyWord(self):
@@ -521,12 +485,10 @@ class DataSource():
 
         except Exception as e:
             self.DataSourceLoadError = True
-            YoutubeErrorBox = QMessageBox()
-            YoutubeErrorBox.setIcon(QMessageBox.Critical)
-            YoutubeErrorBox.setWindowTitle("Youtube Error")
-            YoutubeErrorBox.setText("Unable to Retrieve Comments of Key Word: " + self.DataSourcePath)
-            YoutubeErrorBox.setStandardButtons(QMessageBox.Ok)
-            YoutubeErrorBox.exec_()
+            self.DataSourceLoadError = True
+            YoutubeErrorBox = QMessageBox.critical(self.MainWindow, "Youtube Error",
+                                               "Unable to Retrieve Comments of Key Word: " + self.DataSourcePath,
+                                               QMessageBox.Ok)
 
     # Set Node
     def setNode(self, WidgetItemNode):

@@ -2064,140 +2064,143 @@ class Window(QMainWindow):
 
     # Sentiment Analysis Tabel
     def SentimentAnalysisTable(self, DataSourceName):
-        print('Hello')
-        GenerateQuestionsTabFlag = False
-
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
-                GenerateQuestionsTabFlag = True
-                break
-
-        GenerateQuestionsTab = QWidget()
-        GenerateQuestionsTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                         self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-        GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
-
-        # LayoutWidget For within Stem Word Tab
-        GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
-        GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                              self.tabWidget.height() / 10)
-
-        # Box Layout for Stem Word Tab
-        GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
-        GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-        # Download Button For Frequency Table
-        DownloadAsCSVButton = QPushButton('Download')
-        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
-
-        DownloadAsCSVButtonFont = QFont("sans-serif")
-        DownloadAsCSVButtonFont.setPixelSize(14)
-        DownloadAsCSVButtonFont.setBold(True)
-
-        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
-
-        GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
-
-        # LayoutWidget For within Word Frequency Tab
-        GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
-        GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
-        GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-        # Box Layout for Word Frequency Tab
-        GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
-        GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        # Table for Word Frequency
-        GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
-        GenerateQuestionsTable.setColumnCount(1)
-        # WordFrequencyTable.setModel(WordFrequencyTableModel)
-        GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
-                                           GenerateQuestionsTabverticalLayoutWidget.height())
-
-        GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
-
-        GenerateQuestionsTable.setWindowFlags(
-            GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-
-        GenerateQuestionsTable.setHorizontalHeaderLabels(
-            ["Questions"])
-        GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-        for i in range(GenerateQuestionsTable.columnCount()):
-            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
-                QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-        dummyQuery = Query()
-
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceName:
-                rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
-                break
+                DS.SentimentAnalysis()
 
-        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
-
-        if len(rowList) != 0:
-            for row in rowList:
-                GenerateQuestionsTable.insertRow(rowList.index(row))
-
-                ptext = QPlainTextEdit()
-                ptext.setReadOnly(True)
-                ptext.setPlainText(row);
-                ptext.adjustSize()
-
-            GenerateQuestionsTable.resizeColumnsToContents()
-            GenerateQuestionsTable.resizeRowsToContents()
-
-            GenerateQuestionsTable.setSortingEnabled(True)
-            GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
-
-            for i in range(GenerateQuestionsTable.columnCount()):
-                GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-            if GenerateQuestionsTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = GenerateQuestionsTab
-                                break
-
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-                tabs.tabWidget = GenerateQuestionsTab
-            else:
-                # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
-
-                # Adding Word Frequency Query
-                GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
-                GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
-
-                # Adding Word Frequency Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
-
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
-                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-
-        else:
-            GenerateQuestionsErrorBox = QMessageBox()
-            GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
-            GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
-            GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
-            GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
-            GenerateQuestionsErrorBox.exec_()
+        # GenerateQuestionsTabFlag = False
+        #
+        # for tabs in myFile.TabList:
+        #     if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+        #         GenerateQuestionsTabFlag = True
+        #         break
+        #
+        # GenerateQuestionsTab = QWidget()
+        # GenerateQuestionsTab.setGeometry(
+        #     QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+        #                  self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+        # GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
+        #
+        # # LayoutWidget For within Stem Word Tab
+        # GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
+        # GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+        #                                                       self.tabWidget.height() / 10)
+        #
+        # # Box Layout for Stem Word Tab
+        # GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
+        # GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        #
+        # # Download Button For Frequency Table
+        # DownloadAsCSVButton = QPushButton('Download')
+        # DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+        # DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+        #
+        # DownloadAsCSVButtonFont = QFont("sans-serif")
+        # DownloadAsCSVButtonFont.setPixelSize(14)
+        # DownloadAsCSVButtonFont.setBold(True)
+        #
+        # DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+        #
+        # GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+        #
+        # # LayoutWidget For within Word Frequency Tab
+        # GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
+        # GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+        #                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
+        # GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+        #
+        # # Box Layout for Word Frequency Tab
+        # GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
+        # GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+        #
+        # # Table for Word Frequency
+        # GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+        # GenerateQuestionsTable.setColumnCount(1)
+        # # WordFrequencyTable.setModel(WordFrequencyTableModel)
+        # GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
+        #                                    GenerateQuestionsTabverticalLayoutWidget.height())
+        #
+        # GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
+        #
+        # GenerateQuestionsTable.setWindowFlags(
+        #     GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        #
+        # GenerateQuestionsTable.setHorizontalHeaderLabels(
+        #     ["Questions"])
+        # GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        #
+        # for i in range(GenerateQuestionsTable.columnCount()):
+        #     GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+        #     GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
+        #         QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+        #
+        # dummyQuery = Query()
+        #
+        # for DS in myFile.DataSourceList:
+        #     if DS.DataSourceName == DataSourceName:
+        #         rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+        #         break
+        #
+        # DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
+        #
+        # if len(rowList) != 0:
+        #     for row in rowList:
+        #         GenerateQuestionsTable.insertRow(rowList.index(row))
+        #
+        #         ptext = QPlainTextEdit()
+        #         ptext.setReadOnly(True)
+        #         ptext.setPlainText(row);
+        #         ptext.adjustSize()
+        #
+        #     GenerateQuestionsTable.resizeColumnsToContents()
+        #     GenerateQuestionsTable.resizeRowsToContents()
+        #
+        #     GenerateQuestionsTable.setSortingEnabled(True)
+        #     GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        #     row_width = 0
+        #
+        #     for i in range(GenerateQuestionsTable.columnCount()):
+        #         GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+        #
+        #     if GenerateQuestionsTabFlag:
+        #         # change tab in query
+        #         for DS in myFile.DataSourceList:
+        #             if DS.DataSourceName == DataSourceName:
+        #                 for query in DS.QueryList:
+        #                     if query[1] == tabs.tabWidget:
+        #                         query[1] = GenerateQuestionsTab
+        #                         break
+        #
+        #         # updating tab
+        #         self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+        #         self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+        #         self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+        #         tabs.tabWidget = GenerateQuestionsTab
+        #     else:
+        #         # Adding Word Frequency Tab to TabList
+        #         myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+        #
+        #         # Adding Word Frequency Query
+        #         GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+        #         GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
+        #         GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
+        #
+        #         # Adding Word Frequency Query to QueryList
+        #         for DS in myFile.DataSourceList:
+        #             if DS.DataSourceName == DataSourceName:
+        #                 DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
+        #
+        #         # Adding Word Frequency Tab to QTabWidget
+        #         self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
+        #         self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+        #
+        # else:
+        #     GenerateQuestionsErrorBox = QMessageBox()
+        #     GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
+        #     GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
+        #     GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
+        #     GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
+        #     GenerateQuestionsErrorBox.exec_()
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -4306,7 +4309,7 @@ class Window(QMainWindow):
         DataSourcesCoordinateMapbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
 
-        if len(myFile.DataSourceList) == 0:
+        if DSComboBox.count() == 0:
             DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         else:
             # if len(myFile.DataSourceList) > 1:

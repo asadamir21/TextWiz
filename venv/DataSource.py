@@ -9,6 +9,8 @@ from stat import *
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlencode, parse_qs
 from textblob import TextBlob
+from nltk import tokenize
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 import urllib
 import requests
@@ -582,7 +584,37 @@ class DataSource():
 
     # Automatic Sentiment Analysis
     def SentimentAnalysis(self):
-        print("Hello")
+        DataSourceTextTokenize = tokenize.sent_tokenize(self.DataSourcetext)
+
+        analyzer = SentimentIntensityAnalyzer()
+
+        self.PositiveSentimentCount = 0
+        self.NegativeSentimentCount = 0
+        self.NeutralSentimentCount = 0
+
+        for line in DataSourceTextTokenize:
+            vs = analyzer.polarity_scores(line)
+
+            vs = analyzer.polarity_scores(line)
+            if not vs['neg'] > 0.1:
+                if vs['pos'] - vs['neg'] > 0:
+                    self.AutomaticSentimentList.append([line, 'Positive'])
+                    self.PositiveSentimentCount += 1
+                else:
+                    self.AutomaticSentimentList.append([line, 'Neutral'])
+                    self.NeutralSentimentCount += 1
+
+            elif not vs['pos'] > 0.1:
+                if vs['pos'] - vs['neg'] <= 0:
+                    self.AutomaticSentimentList.append([line, 'Negative'])
+                    self.NegativeSentimentCount += 1
+                else:
+                    self.AutomaticSentimentList.append([line, 'Neutral'])
+                    self.NeutralSentimentCount += 1
+
+            else:
+                self.AutomaticSentimentList.append([line, 'Neutral'])
+                self.NeutralSentimentCount += 1
 
     # Create Dashboard
     def CreateDashboard(self):

@@ -3,7 +3,7 @@ from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QAxContainer
+from PyQt5 import QtGui, QtCore, QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
 from matplotlib.container import StemContainer
 from tweepy import TweepError
@@ -14,6 +14,32 @@ from spacy import displacy
 from hurry.filesize import size
 
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
+
+class MarkerModel(QtCore.QAbstractListModel):
+    PositionRole, SourceRole = range(QtCore.Qt.UserRole, QtCore.Qt.UserRole + 2)
+
+    def __init__(self, parent=None):
+        super(MarkerModel, self).__init__(parent)
+        self._markers = []
+
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        return len(self._markers)
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if 0 <= index.row() < self.rowCount():
+            if role == MarkerModel.PositionRole:
+                return self._markers[index.row()]["position"]
+            elif role == MarkerModel.SourceRole:
+                return self._markers[index.row()]["source"]
+        return QtCore.QVariant()
+
+    def roleNames(self):
+        return {MarkerModel.PositionRole: b"position_marker", MarkerModel.SourceRole: b"source_marker"}
+
+    def appendMarker(self, marker):
+        self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
+        self._markers.append(marker)
+        self.endInsertRows()
 
 class PicButton(QAbstractButton):
     def __init__(self, pixmap, parent=None):
@@ -80,8 +106,14 @@ class Window(QMainWindow):
         for fileRow in self.languages:
             self.languages[self.languages.index(fileRow)] = fileRow.split(',')
 
-        #self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+        coordinatecsvreader = csv.reader(open('Coordinates.csv'))
 
+        self.Coordinates = []
+
+        for row in coordinatecsvreader:
+            self.Coordinates.append([row[0], row[1], row[2]])
+
+        self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
 
         self.initWindows()
 
@@ -275,31 +307,36 @@ class Window(QMainWindow):
         ShowWordFrequencyTool.setToolTip('Show Word Frequency Table')
         ShowWordFrequencyTool.setStatusTip('Show Word Frequency Table')
         ShowWordFrequencyTool.triggered.connect(lambda: self.DataSourceShowFrequencyTableDialog())
+        ToolMenu.addAction(ShowWordFrequencyTool)
 
         # Summarize Tool
         SummarizeTool = QAction('Summarize', self)
         SummarizeTool.setStatusTip('Summarize')
         SummarizeTool.triggered.connect(lambda: self.DataSourceSummarize(None))
+        ToolMenu.addAction(SummarizeTool)
 
         # Stem Word Tool
         FindStemWordTool = QAction('Find Stem Word', self)
         FindStemWordTool.setStatusTip('Find Stem Words')
         FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords(None))
+        ToolMenu.addAction(FindStemWordTool)
 
         # Generate Question
         GenerateQuestion = QAction('Generate Questions', self)
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
+        ToolMenu.addAction(GenerateQuestion)
+
+        # Generate Question
+        SentimentAnalysis = QAction('Sentiments Analysis', self)
+        SentimentAnalysis.setToolTip('Sentiments Analysis')
+        SentimentAnalysis.triggered.connect(lambda: self.DataSourcesSentimentAnalysis())
+        ToolMenu.addAction(SentimentAnalysis)
 
         # Find Similarity
         FindSimilarity = QAction('Find Similarity', self)
         FindSimilarity.setToolTip('Find Similarity Between Data Sources')
         FindSimilarity.triggered.connect(lambda: self.DataSourcesSimilarity())
-
-        ToolMenu.addAction(ShowWordFrequencyTool)
-        ToolMenu.addAction(SummarizeTool)
-        ToolMenu.addAction(FindStemWordTool)
-        ToolMenu.addAction(GenerateQuestion)
         ToolMenu.addAction(FindSimilarity)
 
         # *************************  VisualizationMenuItem **********************************
@@ -312,10 +349,16 @@ class Window(QMainWindow):
         # Create Word Cloud Tool
         CreateWordCloudTool = QAction('Create Word Cloud', self)
         CreateWordCloudTool.setStatusTip('Create Word Cloud')
-        CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud(None))
+        CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud())
+
+        # Create Coordinate Map Tool
+        CreateCoordinateMapTool = QAction('Coordinate Map', self)
+        CreateCoordinateMapTool.setStatusTip('Coordinate Map')
+        CreateCoordinateMapTool.triggered.connect(lambda: self.DataSourceCoordinateMapDialog())
 
         VisualizationMenu.addAction(CreateDasboard)
         VisualizationMenu.addAction(CreateWordCloudTool)
+        VisualizationMenu.addAction(CreateCoordinateMapTool)
 
         # *****************************  HelpMenuItem ***************************************
 
@@ -347,6 +390,7 @@ class Window(QMainWindow):
         #DataSource Widget
         self.DataSourceLabel = QLabel()
         self.DataSourceLabel.setText("Data Sources")
+        QtCore.Qt.AlignCenter
         self.DataSourceLabel.setAlignment(Qt.AlignCenter)
         self.verticalLayout.addWidget(self.DataSourceLabel)
 
@@ -1960,193 +2004,200 @@ class Window(QMainWindow):
             GenerateQuestionsErrorBox.exec_()
 
     # ****************************************************************************
-    # ************************ Data Sources Word CLoud ***************************
+    # ********************* Data Sources Sentiment Analysis **********************
     # ****************************************************************************
 
-    # Data Source Create World Cloud
-    def DataSourceCreateCloud(self, DataSourceWidgetItemName):
-        CreateWordCloudDialog = QDialog()
-        CreateWordCloudDialog.setWindowTitle("Create Word Cloud")
-        CreateWordCloudDialog.setGeometry(self.width * 0.35, self.height*0.35, self.width/3, self.height/3)
-        CreateWordCloudDialog.setParent(self)
-        CreateWordCloudDialog.setAttribute(Qt.WA_DeleteOnClose)
-        CreateWordCloudDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        CreateWordCloudDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+    # Data Source Sentiment Analysis
+    def DataSourcesSentimentAnalysis(self):
+        SentimentAnalysisDialog = QDialog()
+        SentimentAnalysisDialog.setWindowTitle("Sentiment Analysis")
+        SentimentAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                            self.height / 10)
+        SentimentAnalysisDialog.setParent(self)
+        SentimentAnalysisDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        SentimentAnalysisDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-        WordCloudDSLabel = QLabel(CreateWordCloudDialog)
-        WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudDSLabel.setText("Data Source")
-        self.LabelSizeAdjustment(WordCloudDSLabel)
+        # Data Source Label
+        DataSourcelabel = QLabel(SentimentAnalysisDialog)
+        DataSourcelabel.setGeometry(SentimentAnalysisDialog.width() * 0.125,
+                                    SentimentAnalysisDialog.height() * 0.2,
+                                    SentimentAnalysisDialog.width() / 4,
+                                    SentimentAnalysisDialog.height() * 0.1)
 
-        WordCloudBackgroundLabel = QLabel(CreateWordCloudDialog)
-        WordCloudBackgroundLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudBackgroundLabel.setText("Background Color")
-        self.LabelSizeAdjustment(WordCloudBackgroundLabel)
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
 
-        WordCloudMaxWordLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaxWordLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudMaxWordLabel.setText("Max Words")
-        self.LabelSizeAdjustment(WordCloudMaxWordLabel)
-
-        WordCloudMaskLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaskLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudMaskLabel.setText("Mask")
-        self.LabelSizeAdjustment(WordCloudMaskLabel)
-
-        WordCloudDSComboBox = QComboBox(CreateWordCloudDialog)
-        WordCloudDSComboBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-
-        if DataSourceWidgetItemName is None:
-            for DS in myFile.DataSourceList:
-                WordCloudDSComboBox.addItem(DS.DataSourceName)
-        else:
-            WordCloudDSComboBox.addItem(DataSourceWidgetItemName.text(0))
-            WordCloudDSComboBox.setDisabled(True)
-
-        self.LineEditSizeAdjustment(WordCloudDSComboBox)
-
-        WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
-        WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-        WordCloudBackgroundColor.setLayoutDirection(QtCore.Qt.LeftToRight)
-
-        for colorname, colorhex in matplotlib.colors.cnames.items():
-            WordCloudBackgroundColor.addItem(colorname)
-
-        self.LineEditSizeAdjustment(WordCloudBackgroundColor)
-
-        WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
-        WordCloudMaxWords.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-        WordCloudMaxWords.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
-        WordCloudMaxWords.setDecimals(0)
-        WordCloudMaxWords.setMinimum(10.0)
-        WordCloudMaxWords.setMaximum(200.0)
-
-        self.LineEditSizeAdjustment(WordCloudMaxWords)
-
-        WordCloudMask = QComboBox(CreateWordCloudDialog)
-        WordCloudMask.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-
-        for Imagefilename in glob.glob('Word Cloud Maskes/*.png'):  # assuming gif
-            WordCloudMask.addItem(os.path.splitext(ntpath.basename(Imagefilename))[0])
-
-        self.LineEditSizeAdjustment(WordCloudMask)
-
-        CreateWorldCloudbuttonBox = QDialogButtonBox(CreateWordCloudDialog)
-        CreateWorldCloudbuttonBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.8, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-        CreateWorldCloudbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setText('Create')
-        self.LineEditSizeAdjustment(CreateWorldCloudbuttonBox)
-
-        if len(WordCloudDSComboBox.currentText()) == 0:
-            CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
-            CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
-
-        WordCloudDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(WordCloudDSComboBox, CreateWorldCloudbuttonBox))
-
-        CreateWorldCloudbuttonBox.accepted.connect(CreateWordCloudDialog.accept)
-        CreateWorldCloudbuttonBox.rejected.connect(CreateWordCloudDialog.reject)
-
-        CreateWorldCloudbuttonBox.accepted.connect(lambda : self.mapWordCloudonTab(str(WordCloudDSComboBox.currentText()), str(WordCloudBackgroundColor.currentText()), WordCloudMaxWords.value() ,str(WordCloudMask.currentText())))
-
-        CreateWordCloudDialog.exec_()
-
-    #map WordCloud on Tab
-    def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
-        DataSourceWordCloudTabFlag = False
-
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud':
-                DataSourceWordCloudTabFlag = True
-                break
+        # Data Source ComboBox
+        DSComboBox = QComboBox(SentimentAnalysisDialog)
+        DSComboBox.setGeometry(SentimentAnalysisDialog.width() * 0.4,
+                               SentimentAnalysisDialog.height() * 0.2,
+                               SentimentAnalysisDialog.width() / 2,
+                               SentimentAnalysisDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceName == WCDSName:
-                dummyQuery = Query()
-                WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        SentimentAnalysisbuttonBox = QDialogButtonBox(SentimentAnalysisDialog)
+        SentimentAnalysisbuttonBox.setGeometry(SentimentAnalysisDialog.width() * 0.125,
+                                               SentimentAnalysisDialog.height() * 0.7,
+                                               SentimentAnalysisDialog.width() * 3 / 4,
+                                               SentimentAnalysisDialog.height() / 5)
+        SentimentAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        SentimentAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+
+        if len(DSComboBox.currentText()) == 0:
+            SentimentAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(SentimentAnalysisbuttonBox)
+
+        SentimentAnalysisbuttonBox.accepted.connect(SentimentAnalysisDialog.accept)
+        SentimentAnalysisbuttonBox.rejected.connect(SentimentAnalysisDialog.reject)
+
+        SentimentAnalysisbuttonBox.accepted.connect(
+            lambda: self.SentimentAnalysisTable(DSComboBox.currentText()))
+
+        SentimentAnalysisDialog.exec()
+
+    # Sentiment Analysis Tabel
+    def SentimentAnalysisTable(self, DataSourceName):
+        print('Hello')
+        GenerateQuestionsTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+                GenerateQuestionsTabFlag = True
                 break
 
-        # Creating New Tab for WordCloud
-        WordCloudTab = QWidget()
+        GenerateQuestionsTab = QWidget()
+        GenerateQuestionsTab.setGeometry(
+            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                         self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+        GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Word Cloud Tab
-        WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
-        WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        # LayoutWidget For within Stem Word Tab
+        GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
+        GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                              self.tabWidget.height() / 10)
 
-        # Box Layout for Word Cloud Tab
-        WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
-        WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Stem Word Tab
+        GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
+        GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        # Label for Word Cloud Image
-        WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
+        # Download Button For Frequency Table
+        DownloadAsCSVButton = QPushButton('Download')
+        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-        # Resizing label to Layout
-        WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
+        DownloadAsCSVButtonFont = QFont("sans-serif")
+        DownloadAsCSVButtonFont.setPixelSize(14)
+        DownloadAsCSVButtonFont.setBold(True)
 
-        # Converting WordCloud Image to Pixmap
-        WordCloudPixmap = WordCloudImage.toqpixmap()
+        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-        # Scaling Pixmap image
-        dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(),
-                                             WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-        WordCloudLabel.setPixmap(dummypixmap)
-        WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                   (WordCloudTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                   dummypixmap.width(), dummypixmap.height())
+        GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-        # Setting ContextMenu Policies on Label
-        WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        WordCloudLabel.customContextMenuRequested.connect(
-            lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
-                                                                                                                 index2,
-                                                                                                                 index3))
-        if DataSourceWordCloudTabFlag:
-            # change tab in query
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == WCDSName:
-                    for query in DS.QueryList:
-                        if query[1] == tabs.tabWidget:
-                            query[1] = WordCloudTab
-                            break
+        # LayoutWidget For within Word Frequency Tab
+        GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
+        GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
+        GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(WordCloudTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(WordCloudTab)
-            tabs.tabWidget = WordCloudTab
+        # Box Layout for Word Frequency Tab
+        GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
+        GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Table for Word Frequency
+        GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+        GenerateQuestionsTable.setColumnCount(1)
+        # WordFrequencyTable.setModel(WordFrequencyTableModel)
+        GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
+                                           GenerateQuestionsTabverticalLayoutWidget.height())
+
+        GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
+
+        GenerateQuestionsTable.setWindowFlags(
+            GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        GenerateQuestionsTable.setHorizontalHeaderLabels(
+            ["Questions"])
+        GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(GenerateQuestionsTable.columnCount()):
+            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
+                QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        dummyQuery = Query()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+                break
+
+        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
+
+        if len(rowList) != 0:
+            for row in rowList:
+                GenerateQuestionsTable.insertRow(rowList.index(row))
+
+                ptext = QPlainTextEdit()
+                ptext.setReadOnly(True)
+                ptext.setPlainText(row);
+                ptext.adjustSize()
+
+            GenerateQuestionsTable.resizeColumnsToContents()
+            GenerateQuestionsTable.resizeRowsToContents()
+
+            GenerateQuestionsTable.setSortingEnabled(True)
+            GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
+
+            for i in range(GenerateQuestionsTable.columnCount()):
+                GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            if GenerateQuestionsTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = GenerateQuestionsTab
+                                break
+
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                tabs.tabWidget = GenerateQuestionsTab
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+
+                # Adding Word Frequency Query
+                GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
+                GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
+
+                # Adding Word Frequency Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
+
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
+                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
 
         else:
-            # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Word Cloud", WordCloudTab, WCDSName))
-
-            WordCloudQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            WordCloudQueryTreeWidget.setText(0, "Word Cloud (" + WCDSName + ")")
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == WCDSName:
-                    DS.setQuery(WordCloudQueryTreeWidget, WordCloudTab)
-
-            self.tabWidget.addTab(WordCloudTab, "Word Cloud")
-            self.tabWidget.setCurrentWidget(WordCloudTab)
-
-    #Word Cloud ContextMenu
-    def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
-        WordCloudClickMenu = QMenu()
-
-        WordCloudImageDownload = QAction('Download Image')
-        WordCloudImageDownload.triggered.connect(lambda: self.WordCloudDownload(dummypixmap))
-        WordCloudClickMenu.addAction(WordCloudImageDownload)
-
-        WordCloudClickMenu.exec(WordCloudClickEvent)
-
-    #WordCloud Download
-    def WordCloudDownload(self, dummypixmap):
-        dummyWindow = OpenWindow("Save Word Cloud", ".png", 1)
-        path = dummyWindow.filepath
-
-        if all(path):
-            dummypixmap.save(path[0] + ".png", "PNG")
-
+            GenerateQuestionsErrorBox = QMessageBox()
+            GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
+            GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
+            GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
+            GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
+            GenerateQuestionsErrorBox.exec_()
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -3957,6 +4008,7 @@ class Window(QMainWindow):
     # ********************* Data Source Create Dashboard *************************
     # ****************************************************************************
 
+    # Create Dashboard Dialog
     def DataSourcesCreateDashboardDialog(self):
         DataSourcesCreateDashboardDialog = QDialog()
         DataSourcesCreateDashboardDialog.setWindowTitle("Create Dashboard")
@@ -4013,8 +4065,351 @@ class Window(QMainWindow):
 
         DataSourcesCreateDashboardDialog.exec()
 
+    # Create Dashboard
     def DataSourcesCreateDashboard(self, DataSourceName):
         print("Hello")
+
+    # ****************************************************************************
+    # ************************ Data Sources Word CLoud ***************************
+    # ****************************************************************************
+
+    # Data Source Create World Cloud
+    def DataSourceCreateCloud(self):
+        CreateWordCloudDialog = QDialog()
+        CreateWordCloudDialog.setWindowTitle("Create Word Cloud")
+        CreateWordCloudDialog.setGeometry(self.width * 0.35, self.height*0.35, self.width/3, self.height/3)
+        CreateWordCloudDialog.setParent(self)
+        CreateWordCloudDialog.setAttribute(Qt.WA_DeleteOnClose)
+        CreateWordCloudDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CreateWordCloudDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        WordCloudDSLabel = QLabel(CreateWordCloudDialog)
+        WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        WordCloudDSLabel.setText("Data Source")
+        self.LabelSizeAdjustment(WordCloudDSLabel)
+
+        WordCloudBackgroundLabel = QLabel(CreateWordCloudDialog)
+        WordCloudBackgroundLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        WordCloudBackgroundLabel.setText("Background Color")
+        self.LabelSizeAdjustment(WordCloudBackgroundLabel)
+
+        WordCloudMaxWordLabel = QLabel(CreateWordCloudDialog)
+        WordCloudMaxWordLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        WordCloudMaxWordLabel.setText("Max Words")
+        self.LabelSizeAdjustment(WordCloudMaxWordLabel)
+
+        WordCloudMaskLabel = QLabel(CreateWordCloudDialog)
+        WordCloudMaskLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        WordCloudMaskLabel.setText("Mask")
+        self.LabelSizeAdjustment(WordCloudMaskLabel)
+
+        WordCloudDSComboBox = QComboBox(CreateWordCloudDialog)
+        WordCloudDSComboBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+
+        for DS in myFile.DataSourceList:
+            WordCloudDSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(WordCloudDSComboBox)
+
+        WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
+        WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        WordCloudBackgroundColor.setLayoutDirection(QtCore.Qt.LeftToRight)
+
+        for colorname, colorhex in matplotlib.colors.cnames.items():
+            WordCloudBackgroundColor.addItem(colorname)
+
+        self.LineEditSizeAdjustment(WordCloudBackgroundColor)
+
+        WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
+        WordCloudMaxWords.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        WordCloudMaxWords.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        WordCloudMaxWords.setDecimals(0)
+        WordCloudMaxWords.setMinimum(10.0)
+        WordCloudMaxWords.setMaximum(200.0)
+
+        self.LineEditSizeAdjustment(WordCloudMaxWords)
+
+        WordCloudMask = QComboBox(CreateWordCloudDialog)
+        WordCloudMask.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+
+        for Imagefilename in glob.glob('Word Cloud Maskes/*.png'):  # assuming gif
+            WordCloudMask.addItem(os.path.splitext(ntpath.basename(Imagefilename))[0])
+
+        self.LineEditSizeAdjustment(WordCloudMask)
+
+        CreateWorldCloudbuttonBox = QDialogButtonBox(CreateWordCloudDialog)
+        CreateWorldCloudbuttonBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.8, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        CreateWorldCloudbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setText('Create')
+        self.LineEditSizeAdjustment(CreateWorldCloudbuttonBox)
+
+        if len(WordCloudDSComboBox.currentText()) == 0:
+            CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+        WordCloudDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(WordCloudDSComboBox, CreateWorldCloudbuttonBox))
+
+        CreateWorldCloudbuttonBox.accepted.connect(CreateWordCloudDialog.accept)
+        CreateWorldCloudbuttonBox.rejected.connect(CreateWordCloudDialog.reject)
+
+        CreateWorldCloudbuttonBox.accepted.connect(lambda : self.mapWordCloudonTab(str(WordCloudDSComboBox.currentText()), str(WordCloudBackgroundColor.currentText()), WordCloudMaxWords.value() ,str(WordCloudMask.currentText())))
+
+        CreateWordCloudDialog.exec_()
+
+    #map WordCloud on Tab
+    def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
+        DataSourceWordCloudTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud':
+                DataSourceWordCloudTabFlag = True
+                break
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == WCDSName:
+                dummyQuery = Query()
+                WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+                break
+
+        # Creating New Tab for WordCloud
+        WordCloudTab = QWidget()
+
+        # LayoutWidget For within Word Cloud Tab
+        WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
+        WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Cloud Tab
+        WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
+        WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Label for Word Cloud Image
+        WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
+
+        # Resizing label to Layout
+        WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
+
+        # Converting WordCloud Image to Pixmap
+        WordCloudPixmap = WordCloudImage.toqpixmap()
+
+        # Scaling Pixmap image
+        dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(),
+                                             WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+        WordCloudLabel.setPixmap(dummypixmap)
+        WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                   (WordCloudTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                   dummypixmap.width(), dummypixmap.height())
+
+        # Setting ContextMenu Policies on Label
+        WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
+        WordCloudLabel.customContextMenuRequested.connect(
+            lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
+                                                                                                                 index2,
+                                                                                                                 index3))
+        if DataSourceWordCloudTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(WordCloudTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(WordCloudTab)
+            tabs.tabWidget = WordCloudTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Word Cloud", WordCloudTab, WCDSName))
+
+            ItemsWidget = self.VisualizationTreeWidget.findItems(WCDSName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSVisualWidget.setText(0, WCDSName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
+
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Word Cloud')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Word Cloud')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            #WordCloudQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            #WordCloudQueryTreeWidget.setText(0, "Word Cloud (" + WCDSName + ")")
+
+            # for DS in myFile.DataSourceList:
+            #     if DS.DataSourceName == WCDSName:
+            #         DS.setQuery(WordCloudQueryTreeWidget, WordCloudTab)
+
+            self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+            self.tabWidget.setCurrentWidget(WordCloudTab)
+
+    #Word Cloud ContextMenu
+    def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
+        WordCloudClickMenu = QMenu()
+
+        WordCloudImageDownload = QAction('Download Image')
+        WordCloudImageDownload.triggered.connect(lambda: self.WordCloudDownload(dummypixmap))
+        WordCloudClickMenu.addAction(WordCloudImageDownload)
+
+        WordCloudClickMenu.exec(WordCloudClickEvent)
+
+    #WordCloud Download
+    def WordCloudDownload(self, dummypixmap):
+        dummyWindow = OpenWindow("Save Word Cloud", ".png", 1)
+        path = dummyWindow.filepath
+
+        if all(path):
+            dummypixmap.save(path[0] + ".png", "PNG")
+
+    # ****************************************************************************
+    # ********************** Data Source Coordinate Map **************************
+    # ****************************************************************************
+
+    # Create Coordinate Map Dialog
+    def DataSourceCoordinateMapDialog(self):
+        DataSourceCoordinateMapDialog = QDialog()
+        DataSourceCoordinateMapDialog.setWindowTitle("Coordinate Map")
+        DataSourceCoordinateMapDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                     self.height / 10)
+        DataSourceCoordinateMapDialog.setParent(self)
+        DataSourceCoordinateMapDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceCoordinateMapDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceCoordinateMapDialog)
+        DataSourcelabel.setGeometry(DataSourceCoordinateMapDialog.width() * 0.125,
+                                    DataSourceCoordinateMapDialog.height() * 0.2,
+                                    DataSourceCoordinateMapDialog.width() / 4,
+                                    DataSourceCoordinateMapDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceCoordinateMapDialog)
+        DSComboBox.setGeometry(DataSourceCoordinateMapDialog.width() * 0.4,
+                               DataSourceCoordinateMapDialog.height() * 0.2,
+                               DataSourceCoordinateMapDialog.width() / 2,
+                               DataSourceCoordinateMapDialog.height() / 10)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourcesCoordinateMapbuttonBox = QDialogButtonBox(DataSourceCoordinateMapDialog)
+        DataSourcesCoordinateMapbuttonBox.setGeometry(DataSourceCoordinateMapDialog.width() * 0.125,
+                                                        DataSourceCoordinateMapDialog.height() * 0.7,
+                                                        DataSourceCoordinateMapDialog.width() * 3 / 4,
+                                                        DataSourceCoordinateMapDialog.height() / 5)
+        DataSourcesCoordinateMapbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if len(myFile.DataSourceList) == 0:
+            DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            # if len(myFile.DataSourceList) > 1:
+            #     DSComboBox.addItem("All")
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceext == 'Tweet':
+                    DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DataSourcesCoordinateMapbuttonBox)
+
+        DataSourcesCoordinateMapbuttonBox.accepted.connect(DataSourceCoordinateMapDialog.accept)
+        DataSourcesCoordinateMapbuttonBox.rejected.connect(DataSourceCoordinateMapDialog.reject)
+
+        DataSourcesCoordinateMapbuttonBox.accepted.connect(
+            lambda: self.DataSourceCoordinateMap(DSComboBox.currentText()))
+
+        DataSourceCoordinateMapDialog.exec()
+
+    # Create Coordinate Map
+    def DataSourceCoordinateMap(self, DataSourceName):
+        try:
+            DataSourceCoordinateMapTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map':
+                    DataSourceCoordinateMapTabFlag = True
+                    break
+
+
+            DataSourceCoordinateMapTab = QWidget()
+
+            # LayoutWidget For within DataSource Preview Tab
+            DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
+            DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+
+            if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
+                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
+            else:
+                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
+
+            DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
+            model = MarkerModel(DataSourceCoordinateMap)
+            DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
+
+            qml_path = os.path.join(os.path.dirname(__file__), "map.qml")
+            DataSourceCoordinateMap.setSource(QtCore.QUrl.fromLocalFile(qml_path))
+
+            positions = []
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    break
+
+            for data in DS.TweetData:
+                for coordinates in self.Coordinates:
+                    if data[4].split(',')[0].strip() == coordinates[0]:
+                        positions.append((float(coordinates[1]), float(coordinates[2])))
+
+            urls = []
+
+            for items in positions:
+                urls.append("Images/Marker.png")
+
+
+            for c, u in zip(positions, urls):
+                coord = QtPositioning.QGeoCoordinate(*c)
+                source = QtCore.QUrl(u)
+                model.appendMarker({"position": coord, "source": source})
+
+            if DataSourceCoordinateMapTabFlag:
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+                tabs.tabWidget = DataSourceCoordinateMapTab
+
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
+
+                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
+
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Coordinate Map')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Coordinate Map')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
+                self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # ****************************** Enable/Disable ******************************

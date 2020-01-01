@@ -50,6 +50,7 @@ class DataSource():
         self.QueryList = []
         self.CasesList = []
         self.SentimentList = []
+        self.AutomaticSentimentList = []
         self.MainWindow = MainWindow
 
         if(ext == "Doc files (*.doc *.docx)"):
@@ -578,6 +579,10 @@ class DataSource():
         self.SentimentList.append(Sentiments("Good"))
         self.SentimentList.append(Sentiments("Neutral"))
         self.SentimentList.append(Sentiments("Bad"))
+
+    # Automatic Sentiment Analysis
+    def SentimentAnalysis(self):
+        print("Hello")
 
     # Create Dashboard
     def CreateDashboard(self):

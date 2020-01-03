@@ -366,6 +366,14 @@ class DataSource():
                 self.DataSourceImage.append(dummyImage)
                 self.DataSourcetext += pytesseract.image_to_string(dummyImage)
 
+                self.DataSourcePath.append(imgPth)
+
+                st = os.stat(imgPth)
+                self.DataSourceSize.append(st[ST_SIZE])
+                self.DataSourceAccessTime.append(time.asctime(time.localtime(st[ST_ATIME])))
+                self.DataSourceModifiedTime.append(time.asctime(time.localtime(st[ST_MTIME])))
+                self.DataSourceChangeTime.append(time.asctime(time.localtime(st[ST_CTIME])))
+
     # Web URL
     def WebDataSource(self):
         try:

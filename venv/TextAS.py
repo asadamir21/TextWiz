@@ -1545,27 +1545,24 @@ class Window(QMainWindow):
                     break
 
             if len(DS.AddImagePathDoublingError) == 0:
-                DataSourceAddImageSuccessBox = QMessageBox()
-                DataSourceAddImageSuccessBox.setIcon(QMessageBox.Information)
-                DataSourceAddImageSuccessBox.setWindowTitle("Add Image")
-                DataSourceAddImageSuccessBox.setText("Image Text Added Successfully.")
-                DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceAddImageSuccessBox.exec_()
-
+                DataSourceAddImageSuccessBox = QMessageBox.information(self, "Add Image",  "Images Added Successfully", QMessageBox.Ok)
             else:
-                DataSourceAddImageSuccessBox = QMessageBox()
-                DataSourceAddImageSuccessBox.setIcon(QMessageBox.Critical)
-                DataSourceAddImageSuccessBox.setWindowTitle("Add Image")
-
                 ImagePathErrorText = ""
 
                 for ImagePath in DS.AddImagePathDouble:
-                    ImagePathErrorText += ImagePath + '\n'
-                ImagePathErrorText += "Already Added"
+                    if DS.AddImagePathDouble.index(ImagePath) == len(DS.AddImagePathDouble) - 1:
+                        ImagePathErrorText += ImagePath
+                    else:
+                        ImagePathErrorText += ImagePath + ', '
 
-                DataSourceAddImageSuccessBox.setText(ImagePathErrorText)
-                DataSourceAddImageSuccessBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceAddImageSuccessBox.exec_()
+                if len(DS.AddImagePathDouble) > 1:
+                    ImagePathErrorText += " are Already Added"
+                else:
+                    ImagePathErrorText += " is Already Added"
+
+                DataSourceAddImageErrorBox = QMessageBox.critical(self, "Add Image",
+                                                                       "Image Files : " + ImagePathErrorText,
+                                                                       QMessageBox.Ok)
 
     # ****************************************************************************
     # ********************** Data Sources Show Frequency *************************
@@ -3583,31 +3580,212 @@ class Window(QMainWindow):
 
     # Data Source Child Detail
     def DataSourceChildDetail(self, DataSourceWidgetItemName):
-        try:
-            DataSourceWidgetDetailDialogBox = QDialog()
-            DataSourceWidgetDetailDialogBox.setModal(True)
-            DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
-            DataSourceWidgetDetailDialogBox.setParent(self)
+        DataSourceWidgetDetailDialogBox = QDialog()
+        DataSourceWidgetDetailDialogBox.setModal(True)
+        DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
+        DataSourceWidgetDetailDialogBox.setParent(self)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    break
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                break
 
-            if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
+        if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
+            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
+                                                        self.height*2/5)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            #************************************** Labels *************************************
+
+            # Data Source Name Label
+            DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNameLabel.setText("Name:")
+            DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.width()/4,
+                                            DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNameLabel)
+
+            # Data Source Path Label
+            DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourcePathLabel.setText("Path:")
+            DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                            DataSourceWidgetDetailDialogBox.width()/4,
+                                            DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourcePathLabel)
+
+            # Data Source Ext Label
+            DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceExtLabel.setText("Extension:")
+            DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                           DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                           DataSourceWidgetDetailDialogBox.width()/4,
+                                           DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceExtLabel)
+
+            # Data Source Size Label
+            DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceSize.setText("Size:")
+            DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                       DataSourceWidgetDetailDialogBox.width()/4,
+                                       DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceSize)
+
+
+            # Data Source Access Time Label
+            DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceAccessTime.setText("Last Access Time:")
+            DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                             DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                             DataSourceWidgetDetailDialogBox.width()/4,
+                                             DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceAccessTime)
+
+            # Data Source Modified Time Label
+            DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceModifiedTime.setText("Last Modified Time:")
+            DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.width()/4,
+                                               DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceModifiedTime)
+
+            # Data Source Change Time Label
+            DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceChangeTime.setText("Created Time:")
+            DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                             DataSourceWidgetDetailDialogBox.height() * 0.7,
+                                             DataSourceWidgetDetailDialogBox.width()/4,
+                                             DataSourceWidgetDetailDialogBox.height()/20)
+            DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceChangeTime)
+
+            # Data Source Word Count Label
+            DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceWordCount.setText("Total Words:")
+            DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.8,
+                                            DataSourceWidgetDetailDialogBox.width() / 4,
+                                            DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceWordCount)
+
+            # ************************************** LineEdit *************************************
+
+            # Data Source Name LineEdit
+            DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNameLineEdit.setText(DS.DataSourceName)
+            DataSourceNameLineEdit.setReadOnly(True)
+            DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.1,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+            # Data Source Path LineEdit
+            DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourcePathLineEdit.setText(DS.DataSourcePath)
+            DataSourcePathLineEdit.setReadOnly(True)
+            DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+
+            # Data Source Ext LineEdit
+            DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
+            DataSourceExtLineEdit.setReadOnly(True)
+            DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                              DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                              DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+
+            # Data Source Size LineEdit
+            DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceSizeLineEdit.setText(size(DS.DataSourceSize))
+            DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
+
+            # Data Source Access Time LineEdit
+            DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
+            DataSourceAccessTimeLineEdit.setReadOnly(True)
+            DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                     DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
+
+            # Data Source Modified Time LineEdit
+            DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
+            DataSourceModifiedTimeLineEdit.setReadOnly(True)
+            DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
+
+            # Data Source Change Time LineEdit
+            DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
+            DataSourceChangeTimeLineEdit.setReadOnly(True)
+            DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                     DataSourceWidgetDetailDialogBox.height() * 0.7,
+                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
+
+            # Data Source Word Count LineEdit
+            DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+            DataSourceWordCountLineEdit.setReadOnly(True)
+            DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                    DataSourceWidgetDetailDialogBox.height() * 0.8,
+                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                    DataSourceWidgetDetailDialogBox.height() / 20)
+            DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
+
+            DataSourceWidgetDetailDialogBox.exec_()
+
+        elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+            if len(DS.DataSourceImage) == 1:
                 DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
-                                                            self.height*2/5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
+                                                            self.height * 2 / 5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(
+                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-                #************************************** Labels *************************************
+                # ************************************** Labels *************************************
 
                 # Data Source Name Label
                 DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceNameLabel.setText("Name:")
                 DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                 DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.width()/4,
-                                                DataSourceWidgetDetailDialogBox.height()/20)
+                                                DataSourceWidgetDetailDialogBox.width() / 4,
+                                                DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceNameLabel)
 
@@ -3616,8 +3794,8 @@ class Window(QMainWindow):
                 DataSourcePathLabel.setText("Path:")
                 DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                 DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                                DataSourceWidgetDetailDialogBox.width()/4,
-                                                DataSourceWidgetDetailDialogBox.height()/20)
+                                                DataSourceWidgetDetailDialogBox.width() / 4,
+                                                DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourcePathLabel)
 
@@ -3626,8 +3804,8 @@ class Window(QMainWindow):
                 DataSourceExtLabel.setText("Extension:")
                 DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                               DataSourceWidgetDetailDialogBox.width()/4,
-                                               DataSourceWidgetDetailDialogBox.height()/20)
+                                               DataSourceWidgetDetailDialogBox.width() / 4,
+                                               DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceExtLabel)
 
@@ -3636,19 +3814,18 @@ class Window(QMainWindow):
                 DataSourceSize.setText("Size:")
                 DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                            DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                           DataSourceWidgetDetailDialogBox.width()/4,
-                                           DataSourceWidgetDetailDialogBox.height()/20)
+                                           DataSourceWidgetDetailDialogBox.width() / 4,
+                                           DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceSize)
-
 
                 # Data Source Access Time Label
                 DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceAccessTime.setText("Last Access Time:")
                 DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                  DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                 DataSourceWidgetDetailDialogBox.width()/4,
-                                                 DataSourceWidgetDetailDialogBox.height()/20)
+                                                 DataSourceWidgetDetailDialogBox.width() / 4,
+                                                 DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceAccessTime)
 
@@ -3657,8 +3834,8 @@ class Window(QMainWindow):
                 DataSourceModifiedTime.setText("Last Modified Time:")
                 DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.width()/4,
-                                                   DataSourceWidgetDetailDialogBox.height()/20)
+                                                   DataSourceWidgetDetailDialogBox.width() / 4,
+                                                   DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceModifiedTime)
 
@@ -3667,11 +3844,11 @@ class Window(QMainWindow):
                 DataSourceChangeTime.setText("Created Time:")
                 DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
                                                  DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                 DataSourceWidgetDetailDialogBox.width()/4,
-                                                 DataSourceWidgetDetailDialogBox.height()/20)
+                                                 DataSourceWidgetDetailDialogBox.width() / 4,
+                                                 DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceChangeTime)
-    
+
                 # Data Source Word Count Label
                 DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceWordCount.setText("Total Words:")
@@ -3681,12 +3858,12 @@ class Window(QMainWindow):
                                                 DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceWordCount)
-    
+
                 # ************************************** LineEdit *************************************
-    
+
                 # Data Source Name LineEdit
                 DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNameLineEdit.setText(DS.DataSourceName)
+                DataSourceNameLineEdit.setText(ntpath.basename(DS.DataSourcePath[0]))
                 DataSourceNameLineEdit.setReadOnly(True)
                 DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.1,
@@ -3694,10 +3871,10 @@ class Window(QMainWindow):
                                                    DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceNameLineEdit)
-    
+
                 # Data Source Path LineEdit
                 DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourcePathLineEdit.setText(DS.DataSourcePath)
+                DataSourcePathLineEdit.setText(DS.DataSourcePath[0])
                 DataSourcePathLineEdit.setReadOnly(True)
                 DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.2,
@@ -3705,10 +3882,10 @@ class Window(QMainWindow):
                                                    DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourcePathLineEdit)
-    
+
                 # Data Source Ext LineEdit
                 DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
+                DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath[0])[1])
                 DataSourceExtLineEdit.setReadOnly(True)
                 DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                   DataSourceWidgetDetailDialogBox.height() * 0.3,
@@ -3716,20 +3893,20 @@ class Window(QMainWindow):
                                                   DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceExtLineEdit)
-    
+
                 # Data Source Size LineEdit
                 DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceSizeLineEdit.setText(size(DS.DataSourceSize))
+                DataSourceSizeLineEdit.setText(size(DS.DataSourceSize[0]))
                 DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.4,
                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
                                                    DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
-    
+
                 # Data Source Access Time LineEdit
                 DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
+                DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime[0])
                 DataSourceAccessTimeLineEdit.setReadOnly(True)
                 DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                          DataSourceWidgetDetailDialogBox.height() * 0.5,
@@ -3737,10 +3914,10 @@ class Window(QMainWindow):
                                                          DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
-    
+
                 # Data Source Modified Time LineEdit
                 DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
+                DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime[0])
                 DataSourceModifiedTimeLineEdit.setReadOnly(True)
                 DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                            DataSourceWidgetDetailDialogBox.height() * 0.6,
@@ -3748,10 +3925,10 @@ class Window(QMainWindow):
                                                            DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
-    
+
                 # Data Source Change Time LineEdit
                 DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
+                DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime[0])
                 DataSourceChangeTimeLineEdit.setReadOnly(True)
                 DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                          DataSourceWidgetDetailDialogBox.height() * 0.7,
@@ -3759,7 +3936,7 @@ class Window(QMainWindow):
                                                          DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
-    
+
                 # Data Source Word Count LineEdit
                 DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
                 DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
@@ -3770,161 +3947,225 @@ class Window(QMainWindow):
                                                         DataSourceWidgetDetailDialogBox.height() / 20)
                 DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
-    
+
                 DataSourceWidgetDetailDialogBox.exec_()
 
-            elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
-                print("Hello")
-            elif DS.DataSourceext == "URL":
+            else:
                 DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
                 DataSourceWidgetDetailDialogBox.setWindowFlags(
                     self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
 
-                # Data Source Label
-                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceLabel.setText("Type:")
-                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                            DataSourceWidgetDetailDialogBox.width() / 4,
-                                            DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceLabel)
+                # ************************************** Labels *************************************
 
-                # Data Source URL Label
-                DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNameURLLabel.setText("URL:")
-                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() / 4,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameURLLabel)
+                # Data Source Name Label
+                DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLabel.setText("Name:")
+                DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                DataSourceWidgetDetailDialogBox.width() / 4,
+                                                DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameLabel)
+
 
                 # Data Source Word Count Label
-                DataSourceWordCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceWordCountLabel.setText("Word Count:")
-                DataSourceWordCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.width() / 4,
-                                                     DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceWordCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceWordCountLabel)
+                DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceWordCount.setText("Total Words:")
+                DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                DataSourceWidgetDetailDialogBox.width() / 4,
+                                                DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceWordCount)
 
                 # ************************************** LineEdit *************************************
 
                 # Data Source Name LineEdit
-                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceLineEdit.setText("Web URL")
-                DataSourceLineEdit.setReadOnly(True)
-                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceLineEdit)
-
-                # Data Source URL LineEdit
-                DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceURLLineEdit.setText(DS.DataSourcePath)
-                DataSourceURLLineEdit.setReadOnly(True)
-                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+                DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLineEdit.setText(ntpath.basename(DS.DataSourcePath[0]))
+                DataSourceNameLineEdit.setReadOnly(True)
+                DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNameLineEdit)
 
                 # Data Source Word Count LineEdit
                 DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
                 DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
                 DataSourceWordCountLineEdit.setReadOnly(True)
                 DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                        DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                        DataSourceWidgetDetailDialogBox.height() * 0.5,
                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
                                                         DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
 
-                DataSourceWidgetDetailDialogBox.exec_()
-
-            elif DS.DataSourceext == "Tweet":
-                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                            self.height / 5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-
-                # Data Source  Label
-                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceLabel.setText("Type:")
-                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                            DataSourceWidgetDetailDialogBox.width() / 4,
-                                            DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceLabel)
-
-                # Data Source Hashtag Label
-                DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNameHashtagLabel.setText("Hashtag:")
-                DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
+                # Data Source Show Image Details
+                DataSourceShowImageDetails = QPushButton(DataSourceWidgetDetailDialogBox)
+                DataSourceShowImageDetails.setText('Show Images Detail')
+                DataSourceShowImageDetails.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.8,
                                                        DataSourceWidgetDetailDialogBox.width() / 4,
                                                        DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
-
-                # Data Source No of Tweet Label
-                DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofTweetLabel.setText("No of Tweets:")
-                DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.width() / 4,
-                                                     DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
-
-
-                # ************************************** LineEdit *************************************
-
-                # Data Source Name LineEdit
-                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceLineEdit.setText("Twitter")
-                DataSourceLineEdit.setReadOnly(True)
-                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceLineEdit)
-
-                # Data Source Path LineEdit
-                DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
-                DataSourceHashTagLineEdit.setReadOnly(True)
-                DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                      DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                      DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                      DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
-
-                # Data Source Ext LineEdit
-                DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
-                DataSourceNoofTweetsLineEdit.setReadOnly(True)
-                DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+                DataSourceShowImageDetails.clicked.connect(lambda : self.DataSourceShowImagesDetails(DS, DataSourceWidgetDetailDialogBox))
+                self.LabelSizeAdjustment(DataSourceShowImageDetails)
 
                 DataSourceWidgetDetailDialogBox.exec_()
 
-            elif DS.DataSourceext == "Youtube":
+        elif DS.DataSourceext == "URL":
+            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(
+                self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            # Data Source Label
+            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceLabel.setText("Type:")
+            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                        DataSourceWidgetDetailDialogBox.width() / 4,
+                                        DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceLabel)
+
+            # Data Source URL Label
+            DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNameURLLabel.setText("URL:")
+            DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                               DataSourceWidgetDetailDialogBox.width() / 4,
+                                               DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNameURLLabel)
+
+            # Data Source Word Count Label
+            DataSourceWordCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceWordCountLabel.setText("Word Count:")
+            DataSourceWordCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                 DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                 DataSourceWidgetDetailDialogBox.width() / 4,
+                                                 DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceWordCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceWordCountLabel)
+
+            # ************************************** LineEdit *************************************
+
+            # Data Source Name LineEdit
+            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceLineEdit.setText("Web URL")
+            DataSourceLineEdit.setReadOnly(True)
+            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                           DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+            # Data Source URL LineEdit
+            DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceURLLineEdit.setText(DS.DataSourcePath)
+            DataSourceURLLineEdit.setReadOnly(True)
+            DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                              DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                              DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+
+            # Data Source Word Count LineEdit
+            DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+            DataSourceWordCountLineEdit.setReadOnly(True)
+            DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                    DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
+
+            DataSourceWidgetDetailDialogBox.exec_()
+
+        elif DS.DataSourceext == "Tweet":
+            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(
+                self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+            # Data Source  Label
+            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceLabel.setText("Type:")
+            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                        DataSourceWidgetDetailDialogBox.width() / 4,
+                                        DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceLabel)
+
+            # Data Source Hashtag Label
+            DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNameHashtagLabel.setText("Hashtag:")
+            DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                   DataSourceWidgetDetailDialogBox.width() / 4,
+                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
+
+            # Data Source No of Tweet Label
+            DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofTweetLabel.setText("No of Tweets:")
+            DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                 DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                 DataSourceWidgetDetailDialogBox.width() / 4,
+                                                 DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
+
+
+            # ************************************** LineEdit *************************************
+
+            # Data Source Name LineEdit
+            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceLineEdit.setText("Twitter")
+            DataSourceLineEdit.setReadOnly(True)
+            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                           DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+            # Data Source Path LineEdit
+            DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
+            DataSourceHashTagLineEdit.setReadOnly(True)
+            DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                  DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
+
+            # Data Source Ext LineEdit
+            DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
+            DataSourceNoofTweetsLineEdit.setReadOnly(True)
+            DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                     DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+
+            DataSourceWidgetDetailDialogBox.exec_()
+
+        elif DS.DataSourceext == "Youtube":
                 DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
@@ -4003,9 +4244,186 @@ class Window(QMainWindow):
 
                 DataSourceWidgetDetailDialogBox.exec_()
 
+    def DataSourceShowImagesDetails(self, DataSource, ParentWindow):
+        DataSourceShowImagesDetailsBox = QDialog()
+        DataSourceShowImagesDetailsBox.setModal(True)
+        DataSourceShowImagesDetailsBox.setWindowTitle("Images Details")
+        DataSourceShowImagesDetailsBox.setParent(ParentWindow)
 
-        except Exception as e:
-            print(str(e))
+        DataSourceShowImagesDetailsBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceShowImagesDetailsBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
+                                                    self.height * 2 / 5)
+        DataSourceShowImagesDetailsBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # ************************************** Labels *************************************
+
+        # Data Source Name Label
+        DataSourceNameLabel = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceNameLabel.setText("Name:")
+        DataSourceNameLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                        DataSourceShowImagesDetailsBox.height() * 0.1,
+                                        DataSourceShowImagesDetailsBox.width() / 4,
+                                        DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        # Data Source Path Label
+        DataSourcePathLabel = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourcePathLabel.setText("Path:")
+        DataSourcePathLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                        DataSourceShowImagesDetailsBox.height() * 0.2,
+                                        DataSourceShowImagesDetailsBox.width() / 4,
+                                        DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourcePathLabel)
+
+        # Data Source Ext Label
+        DataSourceExtLabel = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceExtLabel.setText("Extension:")
+        DataSourceExtLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                       DataSourceShowImagesDetailsBox.height() * 0.3,
+                                       DataSourceShowImagesDetailsBox.width() / 4,
+                                       DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceExtLabel)
+
+        # Data Source Size Label
+        DataSourceSize = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceSize.setText("Size:")
+        DataSourceSize.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                   DataSourceShowImagesDetailsBox.height() * 0.4,
+                                   DataSourceShowImagesDetailsBox.width() / 4,
+                                   DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceSize)
+
+        # Data Source Access Time Label
+        DataSourceAccessTime = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceAccessTime.setText("Last Access Time:")
+        DataSourceAccessTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                         DataSourceShowImagesDetailsBox.height() * 0.5,
+                                         DataSourceShowImagesDetailsBox.width() / 4,
+                                         DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceAccessTime)
+
+        # Data Source Modified Time Label
+        DataSourceModifiedTime = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceModifiedTime.setText("Last Modified Time:")
+        DataSourceModifiedTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                           DataSourceShowImagesDetailsBox.height() * 0.6,
+                                           DataSourceShowImagesDetailsBox.width() / 4,
+                                           DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceModifiedTime)
+
+        # Data Source Change Time Label
+        DataSourceChangeTime = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceChangeTime.setText("Created Time:")
+        DataSourceChangeTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
+                                         DataSourceShowImagesDetailsBox.height() * 0.7,
+                                         DataSourceShowImagesDetailsBox.width() / 4,
+                                         DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceChangeTime)
+
+        # ************************************** LineEdit *************************************
+
+        # Data Source Name LineEdit
+        DataSourceNameComboBox = QComboBox(DataSourceShowImagesDetailsBox)
+        for DSImage in DataSource.DataSourcePath:
+            DataSourceNameComboBox.addItem(ntpath.basename(DSImage))
+        DataSourceNameComboBox.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                           DataSourceShowImagesDetailsBox.height() * 0.1,
+                                           DataSourceShowImagesDetailsBox.width() * 0.6,
+                                           DataSourceShowImagesDetailsBox.height() / 20)
+
+        self.LineEditSizeAdjustment(DataSourceNameComboBox)
+
+        # Data Source Path LineEdit
+        DataSourcePathLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourcePathLineEdit.setText(DataSource.DataSourcePath[0])
+        DataSourcePathLineEdit.setReadOnly(True)
+        DataSourcePathLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                           DataSourceShowImagesDetailsBox.height() * 0.2,
+                                           DataSourceShowImagesDetailsBox.width() * 0.6,
+                                           DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+
+        # Data Source Ext LineEdit
+        DataSourceExtLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceExtLineEdit.setText(os.path.splitext(DataSource.DataSourcePath[0])[1])
+        DataSourceExtLineEdit.setReadOnly(True)
+        DataSourceExtLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                          DataSourceShowImagesDetailsBox.height() * 0.3,
+                                          DataSourceShowImagesDetailsBox.width() * 0.6,
+                                          DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+
+        # Data Source Size LineEdit
+        DataSourceSizeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceSizeLineEdit.setText(size(DataSource.DataSourceSize[0]))
+        DataSourceSizeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                           DataSourceShowImagesDetailsBox.height() * 0.4,
+                                           DataSourceShowImagesDetailsBox.width() * 0.6,
+                                           DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
+
+        # Data Source Access Time LineEdit
+        DataSourceAccessTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceAccessTimeLineEdit.setText(DataSource.DataSourceAccessTime[0])
+        DataSourceAccessTimeLineEdit.setReadOnly(True)
+        DataSourceAccessTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                                 DataSourceShowImagesDetailsBox.height() * 0.5,
+                                                 DataSourceShowImagesDetailsBox.width() * 0.6,
+                                                 DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
+
+        # Data Source Modified Time LineEdit
+        DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceModifiedTimeLineEdit.setText(DataSource.DataSourceModifiedTime[0])
+        DataSourceModifiedTimeLineEdit.setReadOnly(True)
+        DataSourceModifiedTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                                   DataSourceShowImagesDetailsBox.height() * 0.6,
+                                                   DataSourceShowImagesDetailsBox.width() * 0.6,
+                                                   DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
+
+        # Data Source Change Time LineEdit
+        DataSourceChangeTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceChangeTimeLineEdit.setText(DataSource.DataSourceChangeTime[0])
+        DataSourceChangeTimeLineEdit.setReadOnly(True)
+        DataSourceChangeTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
+                                                 DataSourceShowImagesDetailsBox.height() * 0.7,
+                                                 DataSourceShowImagesDetailsBox.width() * 0.6,
+                                                 DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
+        DataSourceNameComboBox.currentText()
+        DataSourceNameComboBox.currentTextChanged.connect(lambda: self.DataSourceImageDetailComboBoxtoggle(DataSource, DataSourcePathLineEdit, DataSourceExtLineEdit, DataSourceSizeLineEdit, DataSourceAccessTimeLineEdit, DataSourceModifiedTimeLineEdit, DataSourceChangeTimeLineEdit))
+        DataSourceShowImagesDetailsBox.exec_()
+
+    def DataSourceImageDetailComboBoxtoggle(self, DS, Path, Ext, Size, AccessTime, ModifiedTime, ChangedTime):
+        ComboBox = self.sender()
+        currentText = ComboBox.currentText()
+
+
+        for DSImageName in DS.DataSourcePath:
+            if ntpath.basename(DSImageName) == currentText:
+                currentIndex = DS.DataSourcePath.index(DSImageName)
+                break
+
+        Path.setText(DS.DataSourcePath[currentIndex])
+        Ext.setText(os.path.splitext(DS.DataSourcePath[currentIndex])[1])
+        Size.setText(size(DS.DataSourceSize[currentIndex]))
+        AccessTime.setText(DS.DataSourceAccessTime[currentIndex])
+        ModifiedTime.setText(DS.DataSourceModifiedTime[currentIndex])
+        ChangedTime.setText(DS.DataSourceChangeTime[currentIndex])
 
     # ****************************************************************************
     # ********************* Data Source Create Dashboard *************************
@@ -5391,13 +5809,9 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
 
         elif check == "PDF":
             dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
@@ -5434,15 +5848,9 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
-
-
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
         elif check == "Txt":
             dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)", 0)
             path = dummyWindow.filepath
@@ -5475,13 +5883,9 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
 
         elif check == "RTF":
             dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
@@ -5514,13 +5918,9 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
 
         elif check == "Sound":
             dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
@@ -5554,13 +5954,9 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
 
         elif check == "Image":
             dummyWindow = OpenWindow("Open Image File",
@@ -5596,15 +5992,12 @@ class Window(QMainWindow):
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText(
-                        "A Data Source with Similar Name Exist! Please Rename the File then try Again")
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                        QMessageBox.Ok)
 
-    # Import Tweet Window
+                    # Import Tweet Window
+
     def ImportTweetWindow(self):
         TweetDialog = QDialog()
         TweetDialog.setWindowTitle("Import From Twitter")
@@ -5731,28 +6124,19 @@ class Window(QMainWindow):
                     self.DataSourceSimilarityUpdate()
                 else:
                     dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox()
-                    DataSourceImportNameErrorBox.setIcon(QMessageBox.Information)
-                    DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                    DataSourceImportNameErrorBox.setText("No Tweet Found with Hashtag : " + Hashtag)
-                    DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                    DataSourceImportNameErrorBox.exec_()
+                    DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
+                                                                        "No Tweet Found with Hashtag : " + Hashtag,
+                                                                        QMessageBox.Ok)
             else:
                 dummyDataSource.__del__()
-                DataSourceImportNameErrorBox = QMessageBox()
-                DataSourceImportNameErrorBox.setIcon(QMessageBox.Information)
-                DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-                DataSourceImportNameErrorBox.setText("TextAS is unable to retrive any tweet")
-                DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceImportNameErrorBox.exec_()
+                DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
+                                                                       "TextAS is unable to retrive any tweet",
+                                                                       QMessageBox.Ok)
         else:
             dummyDataSource.__del__()
-            DataSourceImportNameErrorBox = QMessageBox()
-            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-            DataSourceImportNameErrorBox.setText("A Tweet with Similar Hashtag Exist!")
-            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceImportNameErrorBox.exec_()
+            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                   "A Tweet with Similar Hashtag Exist!",
+                                                                   QMessageBox.Ok)
 
     # Enable Get on perfect Hashtag
     def GetButtonEnableTweet(self, buttonbox):
@@ -5832,12 +6216,9 @@ class Window(QMainWindow):
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()
-            DataSourceImportNameErrorBox = QMessageBox()
-            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
-            DataSourceImportNameErrorBox.setText("A Web Source with Similar URL Exist!")
-            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceImportNameErrorBox.exec_()
+            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                   "A Web Source with Similar URL Exist!",
+                                                                   QMessageBox.Ok)
 
     # Import From Youtube Window
     def ImportYoutubeWindow(self):
@@ -5940,19 +6321,15 @@ class Window(QMainWindow):
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()
-            DataSourceImportNameErrorBox = QMessageBox()
-            DataSourceImportNameErrorBox.setIcon(QMessageBox.Critical)
-            DataSourceImportNameErrorBox.setWindowTitle("Import Error")
 
             if VideoURLCheck:
-                DataSourceImportNameErrorBox.setText("A Youtube Source with Similar URL Exist!")
+                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                    "A Youtube Source with Similar URL Exist!",
+                                                                    QMessageBox.Ok)
             else:
-                DataSourceImportNameErrorBox.setText("A Youtube Source with Similar KeyWord Exist!")
-
-            DataSourceImportNameErrorBox.setStandardButtons(QMessageBox.Ok)
-            DataSourceImportNameErrorBox.exec_()
-
-    
+                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                    "A Youtube Source with Similar KeyWord Exist!",
+                                                                    QMessageBox.Ok)
 
 if __name__ == "__main__":
     WindowTitleLogo = "Images/TextASLogo.png"

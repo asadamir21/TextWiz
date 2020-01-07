@@ -321,13 +321,31 @@ class Window(QMainWindow):
         FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords(None))
         ToolMenu.addAction(FindStemWordTool)
 
+        # Part of Speech
+        PartOfSpeech = QAction('Part of Speech', self)
+        PartOfSpeech.setToolTip('Part of Speech')
+        PartOfSpeech.triggered.connect(lambda: self.DataSourcePOSDialog())
+        ToolMenu.addAction(PartOfSpeech)
+
+        # Entity Relationship
+        EntityRelationship = QAction('Entity Relationship', self)
+        EntityRelationship.setToolTip('Entity Relationship')
+        EntityRelationship.triggered.connect(lambda: self.DataSourceEntityRelationShipDialog())
+        ToolMenu.addAction(EntityRelationship)
+
+        # Topic Modelling
+        TopicModelling = QAction('Topic Modelling', self)
+        TopicModelling.setToolTip('Topic Modelling')
+        TopicModelling.triggered.connect(lambda: self.DataSourceTopicModellingDialog())
+        ToolMenu.addAction(TopicModelling)
+
         # Generate Question
         GenerateQuestion = QAction('Generate Questions', self)
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
         ToolMenu.addAction(GenerateQuestion)
 
-        # Generate Question
+        # Sentiment Analysis
         SentimentAnalysis = QAction('Sentiments Analysis', self)
         SentimentAnalysis.setToolTip('Sentiments Analysis')
         SentimentAnalysis.triggered.connect(lambda: self.DataSourcesSentimentAnalysis())
@@ -399,7 +417,7 @@ class Window(QMainWindow):
         self.DataSourceTreeWidget.setAlternatingRowColors(True)
         self.DataSourceTreeWidget.header().setHidden(True)
         self.DataSourceTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindDataSourceTreeWidgetContextMenu(index))
+        self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda: self.FindDataSourceTreeWidgetContextMenu(QtGui.QContextMenuEvent))
 
         #DataSource Widget Item
         self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
@@ -451,7 +469,7 @@ class Window(QMainWindow):
         self.QueryTreeWidget.header().setHidden(True)
         self.QueryTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
         self.QueryTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.QueryTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindQueryTreeWidgetContextMenu(index))
+        self.QueryTreeWidget.customContextMenuRequested.connect(lambda: self.FindQueryTreeWidgetContextMenu(QtGui.QContextMenuEvent))
 
         self.verticalLayout.addWidget(self.QueryTreeWidget)
 
@@ -466,7 +484,7 @@ class Window(QMainWindow):
         self.CasesTreeWidget.setAlternatingRowColors(True)
         self.CasesTreeWidget.header().setHidden(True)
         self.CasesTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.CasesTreeWidget.customContextMenuRequested.connect(lambda checked, index=QtGui.QContextMenuEvent: self.FindCasesTreeWidgetContextMenu(index))
+        self.CasesTreeWidget.customContextMenuRequested.connect(lambda: self.FindCasesTreeWidgetContextMenu(QtGui.QContextMenuEvent))
         self.verticalLayout.addWidget(self.CasesTreeWidget)
 
         # Sentiment Widget
@@ -480,8 +498,7 @@ class Window(QMainWindow):
         self.SentimentTreeWidget.setAlternatingRowColors(True)
         self.SentimentTreeWidget.header().setHidden(True)
         self.SentimentTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.SentimentTreeWidget.customContextMenuRequested.connect(
-            lambda checked, index=QtGui.QContextMenuEvent: self.FindSentimentsTreeWidgetContextMenu(index))
+        self.SentimentTreeWidget.customContextMenuRequested.connect(lambda: self.FindSentimentsTreeWidgetContextMenu(QtGui.QContextMenuEvent))
         self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
         # Visualiztion Widget
@@ -494,8 +511,9 @@ class Window(QMainWindow):
         self.VisualizationTreeWidget.setHeaderLabel('Visualization')
         self.VisualizationTreeWidget.setAlternatingRowColors(True)
         self.VisualizationTreeWidget.header().setHidden(True)
-        #self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
         self.VisualizationTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.VisualizationTreeWidget.customContextMenuRequested.connect(lambda: self.FindVisualizationTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        #self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
 
 
         self.verticalLayout.addWidget(self.VisualizationTreeWidget)
@@ -703,7 +721,7 @@ class Window(QMainWindow):
     # Setting ContextMenu on Clicked Data Source
     def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
         try:
-            #Parent Data Source
+            #Parent Data Source7
             if DataSourceWidgetItemName.parent() == None:
                 DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
@@ -797,7 +815,6 @@ class Window(QMainWindow):
                             DataSourceRightClickMenu.addAction(DataSourcePreviewText)
 
 
-
                 # Data Source Add Image
                 DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
                 DataSourceAddImage.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceAddImage(index))
@@ -806,26 +823,6 @@ class Window(QMainWindow):
                     if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                         if hasattr(DS, 'DataSourceImage'):
                             DataSourceRightClickMenu.addAction(DataSourceAddImage)
-
-                # Data Source Stem Words
-                DataSourceStemWords = QAction('Find Stem Word', self.DataSourceTreeWidget)
-                DataSourceStemWords.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceFindStemWords(index))
-                DataSourceRightClickMenu.addAction(DataSourceStemWords)
-
-                # Data Source Part of Speech
-                DataSourcePOS = QAction('Part of Speech', self.DataSourceTreeWidget)
-                DataSourcePOS.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePOS(index))
-                DataSourceRightClickMenu.addAction(DataSourcePOS)
-
-                # Data Source Part of Speech
-                DataSourceEntityRelationShip = QAction('Entity Relationship', self.DataSourceTreeWidget)
-                DataSourceEntityRelationShip.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceEntityRelationShip(index))
-                DataSourceRightClickMenu.addAction(DataSourceEntityRelationShip)
-
-                # Data Source Topic Modelling
-                DataSourceTopicModelling = QAction('Topic Modelling', self.DataSourceTreeWidget)
-                DataSourceTopicModelling.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTopicModelling(index))
-                DataSourceRightClickMenu.addAction(DataSourceTopicModelling)
 
                 # Data Source Create Cases
                 DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
@@ -2580,18 +2577,73 @@ class Window(QMainWindow):
     # ***************************** Data Sources POS ****************************
     # ****************************************************************************
 
+    # Data Source Part of Speech Dialog
+    def DataSourcePOSDialog(self):
+        PartOfSpeechDialog = QDialog()
+        PartOfSpeechDialog.setWindowTitle("Part of Speech")
+        PartOfSpeechDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                            self.height / 10)
+        PartOfSpeechDialog.setParent(self)
+        PartOfSpeechDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        PartOfSpeechDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(PartOfSpeechDialog)
+        DataSourcelabel.setGeometry(PartOfSpeechDialog.width() * 0.125,
+                                    PartOfSpeechDialog.height() * 0.2,
+                                    PartOfSpeechDialog.width() / 4,
+                                    PartOfSpeechDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(PartOfSpeechDialog)
+        DSComboBox.setGeometry(PartOfSpeechDialog.width() * 0.4,
+                               PartOfSpeechDialog.height() * 0.2,
+                               PartOfSpeechDialog.width() / 2,
+                               PartOfSpeechDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        PartOfSpeechbuttonBox = QDialogButtonBox(PartOfSpeechDialog)
+        PartOfSpeechbuttonBox.setGeometry(PartOfSpeechDialog.width() * 0.125,
+                                              PartOfSpeechDialog.height() * 0.7,
+                                              PartOfSpeechDialog.width() * 3 / 4,
+                                              PartOfSpeechDialog.height() / 5)
+        PartOfSpeechbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        PartOfSpeechbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+
+        if len(DSComboBox.currentText()) == 0:
+            PartOfSpeechbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(PartOfSpeechbuttonBox)
+
+        PartOfSpeechbuttonBox.accepted.connect(PartOfSpeechDialog.accept)
+        PartOfSpeechbuttonBox.rejected.connect(PartOfSpeechDialog.reject)
+
+        PartOfSpeechbuttonBox.accepted.connect(
+            lambda: self.DataSourcePOS(DSComboBox.currentText()))
+
+        PartOfSpeechDialog.exec()
+
     # Data Source Part of Speech
-    def DataSourcePOS(self, DataSourceWidgetItemName):
+    def DataSourcePOS(self, DataSourceName):
         DataSourcePOSTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Part of Speech':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Part of Speech':
                 DataSourcePOSTabFlag = True
                 break
 
         dummyQuery = Query()
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceName:
                 POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName,
                                                                                                DS.DataSourcetext, 3)
                 break
@@ -2715,7 +2767,7 @@ class Window(QMainWindow):
         if DataSourcePOSTabFlag:
             # change tab in query
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceName:
                     for query in DS.QueryList:
                         if query[1] == tabs.tabWidget:
                             query[1] = POSTab
@@ -2729,13 +2781,13 @@ class Window(QMainWindow):
 
         else:
             # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Part of Speech", POSTab, DataSourceWidgetItemName.text(0)))
+            myFile.TabList.append(Tab("Part of Speech", POSTab, DataSourceName))
 
             POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            POSQueryTreeWidget.setText(0, "Parts of Speech (" + DataSourceWidgetItemName.text(0) + ")")
+            POSQueryTreeWidget.setText(0, "Parts of Speech (" + DataSourceName + ")")
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceName:
                     DS.setQuery(POSQueryTreeWidget, POSTab)
 
             self.tabWidget.addTab(POSTab, "Parts of Speech")
@@ -2756,18 +2808,73 @@ class Window(QMainWindow):
     # ********************* Data Sources Entity Relationship *********************
     # ****************************************************************************
 
+    # Data Source Entity Relationship Dialog
+    def DataSourceEntityRelationShipDialog(self):
+        EntityRelationShipDialog = QDialog()
+        EntityRelationShipDialog.setWindowTitle("Entity RelationShip")
+        EntityRelationShipDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                       self.height / 10)
+        EntityRelationShipDialog.setParent(self)
+        EntityRelationShipDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        EntityRelationShipDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(EntityRelationShipDialog)
+        DataSourcelabel.setGeometry(EntityRelationShipDialog.width() * 0.125,
+                                    EntityRelationShipDialog.height() * 0.2,
+                                    EntityRelationShipDialog.width() / 4,
+                                    EntityRelationShipDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(EntityRelationShipDialog)
+        DSComboBox.setGeometry(EntityRelationShipDialog.width() * 0.4,
+                               EntityRelationShipDialog.height() * 0.2,
+                               EntityRelationShipDialog.width() / 2,
+                               EntityRelationShipDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        EntityRelationShipbuttonBox = QDialogButtonBox(EntityRelationShipDialog)
+        EntityRelationShipbuttonBox.setGeometry(EntityRelationShipDialog.width() * 0.125,
+                                                EntityRelationShipDialog.height() * 0.7,
+                                                EntityRelationShipDialog.width() * 3 / 4,
+                                                EntityRelationShipDialog.height() / 5)
+        EntityRelationShipbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        EntityRelationShipbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+
+        if len(DSComboBox.currentText()) == 0:
+            EntityRelationShipbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(EntityRelationShipbuttonBox)
+
+        EntityRelationShipbuttonBox.accepted.connect(EntityRelationShipDialog.accept)
+        EntityRelationShipbuttonBox.rejected.connect(EntityRelationShipDialog.reject)
+
+        EntityRelationShipbuttonBox.accepted.connect(
+            lambda: self.DataSourceEntityRelationShip(DSComboBox.currentText()))
+
+        EntityRelationShipDialog.exec()
+
     # Data Source Entity Relationship
-    def DataSourceEntityRelationShip(self, DataSourceWidgetItemName):
+    def DataSourceEntityRelationShip(self, DataSourceName):
         DataSourceERTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Entity Relationship':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Entity Relationship':
                 DataSourceERTabFlag = True
                 break
 
         dummyQuery = Query()
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceName:
                 Entity_List, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
                     DS.DataSourcetext)
                 break
@@ -2852,7 +2959,7 @@ class Window(QMainWindow):
         if DataSourceERTabFlag:
             # change tab in query
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceName:
                     for query in DS.QueryList:
                         if query[1] == tabs.tabWidget:
                             query[1] = DSERTab
@@ -2866,13 +2973,13 @@ class Window(QMainWindow):
 
         else:
             # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceWidgetItemName.text(0)))
+            myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceName))
 
             POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            POSQueryTreeWidget.setText(0, "Entity Relationship (" + DataSourceWidgetItemName.text(0) + ")")
+            POSQueryTreeWidget.setText(0, "Entity Relationship (" + DataSourceName + ")")
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceName:
                     DS.setQuery(POSQueryTreeWidget, DSERTab)
 
             self.tabWidget.addTab(DSERTab, "Entity Relationship")
@@ -2899,73 +3006,124 @@ class Window(QMainWindow):
     # *********************** Data Sources Topic Modelling ***********************
     # ****************************************************************************
 
+    # Data Source Topic Modelling Dialog
+    def DataSourceTopicModellingDialog(self):
+        TopicModellingDialog = QDialog()
+        TopicModellingDialog.setWindowTitle("Entity RelationShip")
+        TopicModellingDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                             self.height / 10)
+        TopicModellingDialog.setParent(self)
+        TopicModellingDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        TopicModellingDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(TopicModellingDialog)
+        DataSourcelabel.setGeometry(TopicModellingDialog.width() * 0.125,
+                                    TopicModellingDialog.height() * 0.2,
+                                    TopicModellingDialog.width() / 4,
+                                    TopicModellingDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(TopicModellingDialog)
+        DSComboBox.setGeometry(TopicModellingDialog.width() * 0.4,
+                               TopicModellingDialog.height() * 0.2,
+                               TopicModellingDialog.width() / 2,
+                               TopicModellingDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        TopicModellingbuttonBox = QDialogButtonBox(TopicModellingDialog)
+        TopicModellingbuttonBox.setGeometry(TopicModellingDialog.width() * 0.125,
+                                            TopicModellingDialog.height() * 0.7,
+                                            TopicModellingDialog.width() * 3 / 4,
+                                            TopicModellingDialog.height() / 5)
+        TopicModellingbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        TopicModellingbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+
+        if len(DSComboBox.currentText()) == 0:
+            TopicModellingbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(TopicModellingbuttonBox)
+
+        TopicModellingbuttonBox.accepted.connect(TopicModellingDialog.accept)
+        TopicModellingbuttonBox.rejected.connect(TopicModellingDialog.reject)
+
+        TopicModellingbuttonBox.accepted.connect(
+            lambda: self.DataSourceTopicModelling(DSComboBox.currentText()))
+
+        TopicModellingDialog.exec()
+
     # Data Source Topic Modelling
-    def DataSourceTopicModelling(self, DataSourceWidgetItemName):
-        try:
-            DataSourceTotalModellingTabFlag = False
+    def DataSourceTopicModelling(self, DataSourceName):
+        DataSourceTotalModellingTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Topic Modelling':
-                    DataSourceTotalModellingTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Topic Modelling':
+                DataSourceTotalModellingTabFlag = True
+                break
 
-            TopicModellingTab = QWidget()
-            TopicModellingTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
-            TopicModellingTab.setSizePolicy(self.sizePolicy)
+        TopicModellingTab = QWidget()
+        TopicModellingTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+        TopicModellingTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Topic Modelling Tab
-            TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
-            TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        # LayoutWidget For within Topic Modelling Tab
+        TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
+        TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Topic Modelling Tab
-            TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
-            TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Topic Modelling Tab
+        TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
+        TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Data Source Topic Modelling HTML
+        # Data Source Topic Modelling HTML
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                dummyQuery = Query()
+                TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
+                break
+
+        # Topic Modelling HTML Viewer
+        TopicModellingHTMLWeb = QWebEngineView()
+        TopicModellingTabVerticalLayout.addWidget(TopicModellingHTMLWeb)
+        TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
+
+        if DataSourceTotalModellingTabFlag:
+            # change tab in query
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    dummyQuery = Query()
-                    TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
-                    break
+                if DS.DataSourceName == DataSourceName:
+                    for query in DS.QueryList:
+                        if query[1] == tabs.tabWidget:
+                            query[1] = TopicModellingTab
+                            break
 
-            # Topic Modelling HTML Viewer
-            TopicModellingHTMLWeb = QWebEngineView()
-            TopicModellingTabVerticalLayout.addWidget(TopicModellingHTMLWeb)
-            TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(TopicModellingTab)
+            tabs.tabWidget = TopicModellingTab
+        else:
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
 
-            if DataSourceTotalModellingTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = TopicModellingTab
-                                break
+            # Adding Word Frequency Query
+            WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
+            WordFreqencyQueryTreeWidget.setText(0, "Topic Modelling (" + DataSourceName + ")")
 
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(TopicModellingTab)
-                tabs.tabWidget = TopicModellingTab
-            else:
-                # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceWidgetItemName.text(0)))
+            # Adding Word Frequency Query to QueryList
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.setQuery(WordFreqencyQueryTreeWidget, TopicModellingTab)
 
-                # Adding Word Frequency Query
-                WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                WordFreqencyQueryTreeWidget.setText(0, "Topic Modelling (" + DataSourceWidgetItemName.text(0) + ")")
-
-                # Adding Word Frequency Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        DS.setQuery(WordFreqencyQueryTreeWidget, TopicModellingTab)
-
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
-                self.tabWidget.setCurrentWidget(TopicModellingTab)
-
-        except Exception as e:
-            print(str(e))
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
+            self.tabWidget.setCurrentWidget(TopicModellingTab)
 
     # ****************************************************************************
     # ************************ Data Sources Create Cases *************************
@@ -3264,7 +3422,9 @@ class Window(QMainWindow):
                     else:
                         NewWidgetAddFlagList.append(False)
 
-        if all([ v for v in NewWidgetAddFlagList]) :
+        ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly, 0)
+
+        if all([ v for v in NewWidgetAddFlagList]) and len(ItemsWidget) == 0:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                     DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
@@ -3963,18 +4123,28 @@ class Window(QMainWindow):
                 DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceNameLabel.setText("Name:")
                 DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.15,
                                                 DataSourceWidgetDetailDialogBox.width() / 4,
                                                 DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LabelSizeAdjustment(DataSourceNameLabel)
+
+                # Data Source No of Images Label
+                DataSourceNoofImagesLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofImagesLabel.setText("No of Images:")
+                DataSourceNoofImagesLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                      DataSourceWidgetDetailDialogBox.height() * 0.35,
+                                                      DataSourceWidgetDetailDialogBox.width() / 4,
+                                                      DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofImagesLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNoofImagesLabel)
 
 
                 # Data Source Word Count Label
                 DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceWordCount.setText("Total Words:")
                 DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.55,
                                                 DataSourceWidgetDetailDialogBox.width() / 4,
                                                 DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -3987,18 +4157,29 @@ class Window(QMainWindow):
                 DataSourceNameLineEdit.setText(ntpath.basename(DS.DataSourcePath[0]))
                 DataSourceNameLineEdit.setReadOnly(True)
                 DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.15,
                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
                                                    DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+                # Data Source No of Images LineEdit
+                DataSourceNoofImagesLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofImagesLineEdit.setText(str(len(DS.DataSourceImage)))
+                DataSourceNoofImagesLineEdit.setReadOnly(True)
+                DataSourceNoofImagesLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.height() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNoofImagesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNoofImagesLineEdit)
 
                 # Data Source Word Count LineEdit
                 DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
                 DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
                 DataSourceWordCountLineEdit.setReadOnly(True)
                 DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                        DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                        DataSourceWidgetDetailDialogBox.height() * 0.55,
                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
                                                         DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -4244,6 +4425,7 @@ class Window(QMainWindow):
 
                 DataSourceWidgetDetailDialogBox.exec_()
 
+    # Data Source Show Image Detail
     def DataSourceShowImagesDetails(self, DataSource, ParentWindow):
         DataSourceShowImagesDetailsBox = QDialog()
         DataSourceShowImagesDetailsBox.setModal(True)
@@ -4408,6 +4590,7 @@ class Window(QMainWindow):
         DataSourceNameComboBox.currentTextChanged.connect(lambda: self.DataSourceImageDetailComboBoxtoggle(DataSource, DataSourcePathLineEdit, DataSourceExtLineEdit, DataSourceSizeLineEdit, DataSourceAccessTimeLineEdit, DataSourceModifiedTimeLineEdit, DataSourceChangeTimeLineEdit))
         DataSourceShowImagesDetailsBox.exec_()
 
+    # Data Source Show Image Detail Toogle
     def DataSourceImageDetailComboBoxtoggle(self, DS, Path, Ext, Size, AccessTime, ModifiedTime, ChangedTime):
         ComboBox = self.sender()
         currentText = ComboBox.currentText()
@@ -5259,7 +5442,7 @@ class Window(QMainWindow):
                         Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                     deleteButton = QPushButton("Remove")
-                    deleteButton.clicked.connect(lambda: self.deleteComponentRow(CasesItemName, CaseShowComponentTable))
+                    deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
                     self.LabelSizeAdjustment(deleteButton)
                     CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
 
@@ -5290,7 +5473,7 @@ class Window(QMainWindow):
             self.tabWidget.setCurrentWidget(CaseShowComponentTab)
 
     # Cases Remove Component Row
-    def deleteComponentRow(self, CasesItemName, Table):
+    def deleteCaseComponentRow(self, CasesItemName, Table):
         try:
             button = self.sender()
             if button:
@@ -5577,7 +5760,201 @@ class Window(QMainWindow):
 
     # Sentiment Show Component
     def SentimentsShowComponent(self, SentimentsItemName):
-        print('Hello')
+        SentimentTextEmptyFlagList = []
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                for sentiments in DS.SentimentList:
+                    if len(sentiments.SentimentTextList) == 0:
+                        SentimentTextEmptyFlagList.append(True)
+                    else:
+                        SentimentTextEmptyFlagList.append(False)
+                break
+
+        if all([v for v in SentimentTextEmptyFlagList]):
+            SentimenShowComponentErrorBox = QMessageBox.critical(self, "No Sentiment Error",
+                                                                "No Sentiment Component to Show of Data source: " + DS.DataSourceName,
+                                                                QMessageBox.Ok)
+        else:
+            SentimentsShowComponentTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Show Topic Component':
+                    SentimentsShowComponentTabFlag = True
+                    break
+
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                    for sentiments in DS.SentimentList:
+                        if sentiments.SentimentType == SentimentsItemName.text(0):
+                            Sentiments_List = sentiments.SentimentTextList
+                            break
+
+            # Creating New Tab for Sentiment Show Component
+            SentimentsShowComponentTab = QWidget()
+
+            # LayoutWidget For within Stem Word Tab
+            SentimentsShowComponentTabVerticalLayoutWidget = QWidget(SentimentsShowComponentTab)
+            SentimentsShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+
+            # Box Layout for Stem Word Tab
+            SentimentsShowComponentTabVerticalLayout = QHBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget)
+            SentimentsShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Sentiments ComboBox
+
+            SentimentsComboBox = QComboBox(SentimentsShowComponentTabVerticalLayoutWidget)
+            SentimentsComboBox.setGeometry(SentimentsShowComponentTabVerticalLayoutWidget.width() * 0.8,
+                                           SentimentsShowComponentTabVerticalLayoutWidget.height() * 0.4,
+                                           SentimentsShowComponentTabVerticalLayoutWidget.width() / 10,
+                                           SentimentsShowComponentTabVerticalLayoutWidget.height() / 5)
+            SentimentsComboBox.addItem(SentimentsItemName.text(0))
+            SentimentsComboBox.setCurrentText(SentimentsItemName.text(0))
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                    for sentiments in DS.SentimentList:
+                        if not sentiments.SentimentType == SentimentsItemName.text(0):
+                            SentimentsComboBox.addItem(sentiments.SentimentType)
+
+            self.LineEditSizeAdjustment(SentimentsComboBox)
+
+            # 2nd LayoutWidget For within Stem Word Tab
+            SentimentsShowComponentTabVerticalLayoutWidget2 = QWidget(SentimentsShowComponentTab)
+            SentimentsShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
+
+            # 2nd Box Layout for Stem Word Tab
+            SentimentsShowComponentTabVerticalLayout2 = QVBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget2)
+
+            SentimentsShowComponentTable = QTableWidget(SentimentsShowComponentTabVerticalLayoutWidget2)
+            SentimentsShowComponentTable.setColumnCount(5)
+            SentimentsShowComponentTable.setGeometry(0, 0, SentimentsShowComponentTabVerticalLayoutWidget2.width(),
+                                                           SentimentsShowComponentTabVerticalLayoutWidget2.height())
+            SentimentsShowComponentTable.setUpdatesEnabled(True)
+            SentimentsShowComponentTable.setDragEnabled(True)
+            SentimentsShowComponentTable.setMouseTracking(True)
+
+            SentimentsShowComponentTable.setSizePolicy(self.sizePolicy)
+            SentimentsShowComponentTable.setWindowFlags(
+                SentimentsShowComponentTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+            SentimentsShowComponentTable.setHorizontalHeaderLabels(
+                ["Sentiment", "Word Count", "Character Count", "Weighted Average", "Action"])
+            SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(SentimentsShowComponentTable.columnCount()):
+                SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(
+                    QFont(SentimentsShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+
+            if len(Sentiments_List) != 0:
+                for row in Sentiments_List:
+                    SentimentsShowComponentTable.insertRow(Sentiments_List.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        SentimentsShowComponentTable.setItem(Sentiments_List.index(row), row.index(item), intItem)
+                        SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                        deleteButton = QPushButton("Remove")
+                        deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, SentimentsShowComponentTable, None))
+                        self.LabelSizeAdjustment(deleteButton)
+                        SentimentsShowComponentTable.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
+
+                SentimentsShowComponentTable.resizeColumnsToContents()
+                SentimentsShowComponentTable.resizeRowsToContents()
+
+                SentimentsShowComponentTable.setSortingEnabled(True)
+                SentimentsShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(SentimentsShowComponentTable.columnCount()):
+                    SentimentsShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            SentimentsComboBox.currentTextChanged.connect(lambda: self.ToggleSentimentsComponent(SentimentsShowComponentTable, SentimentsItemName))
+
+            if SentimentsShowComponentTabFlag:
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(SentimentsShowComponentTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+                tabs.tabWidget = SentimentsShowComponentTab
+
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(
+                    Tab("Sentiments Show Topic Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0)))
+
+                self.tabWidget.addTab(SentimentsShowComponentTab, "Sentiments Show Topic Component")
+                self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+
+    #Toggle Sentiments Components
+    def ToggleSentimentsComponent(self, Table, SentimentsItemName):
+        ComboBox = self.sender()
+
+        while Table.rowCount() > 0:
+            Table.removeRow(0)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                for sentiments in DS.SentimentList:
+                    if sentiments.SentimentType == ComboBox.currentText():
+                        Sentiments_List = sentiments.SentimentTextList
+                        break
+
+        for row in Sentiments_List:
+            Table.insertRow(Sentiments_List.index(row))
+            for item in row:
+                intItem = QTableWidgetItem()
+                intItem.setData(Qt.EditRole, QVariant(item))
+                Table.setItem(Sentiments_List.index(row), row.index(item), intItem)
+                Table.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                Table.item(Sentiments_List.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                deleteButton = QPushButton("Remove")
+                deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, Table, ComboBox.currentText()))
+                self.LabelSizeAdjustment(deleteButton)
+                Table.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
+
+        Table.resizeColumnsToContents()
+        Table.resizeRowsToContents()
+
+        Table.setSortingEnabled(True)
+        Table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        row_width = 0
+
+        for i in range(Table.columnCount()):
+            Table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+    # Sentiments Remove Component Row
+    def deleteSentimentsComponentRow(self, SentimentsItemName, Table, ComboBoxText):
+        button = self.sender()
+        if button:
+            row = Table.indexAt(button.pos()).row()
+            temp = Table.item(row, 0)
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                    for sentiments in DS.SentimentList:
+                        if ComboBoxText is None:
+                            if sentiments.SentimentType == SentimentsItemName.text(0):
+                                for SentimentsText in sentiments.SentimentTextList:
+                                    if temp.text() == SentimentsText[0] and row == sentiments.SentimentTextList.index(SentimentsText):
+                                        sentiments.SentimentTextList.remove(SentimentsText)
+                                        break
+                        else:
+                            if sentiments.SentimentType == ComboBoxText:
+                                for SentimentsText in sentiments.SentimentTextList:
+                                    if temp.text() == SentimentsText[0] and row == sentiments.SentimentTextList.index(SentimentsText):
+                                        sentiments.SentimentTextList.remove(SentimentsText)
+                                        break
+
+            Table.removeRow(row)
 
     # Sentiments Remove
     def SentimentsRemove(self, SentimentsItemName):
@@ -5683,6 +6060,98 @@ class Window(QMainWindow):
         SentimentsChildDetailDialogBox.exec_()
 
     # ****************************************************************************
+    # *********************** Visualization Context Menu *************************
+    # ****************************************************************************
+
+    # Get Which Visualization Widget Item and its Position
+    def FindVisualizationTreeWidgetContextMenu(self, VisualizationMouseRightClickEvent):
+        try:
+            if VisualizationMouseRightClickEvent.reason == VisualizationMouseRightClickEvent.Mouse:
+                VisualizationMouseRightClickPos = VisualizationMouseRightClickEvent.globalPos()
+                VisualizationMouseRightClickItem = self.VisualizationTreeWidget.itemAt(VisualizationMouseRightClickEvent.pos())
+            else:
+                VisualizationMouseRightClickPos = None
+                Visualizationselection = self.VisualizationTreeWidget.selectedItems()
+
+                if Visualizationselection:
+                    VisualizationMouseRightClickItem = Visualizationselection[0]
+                else:
+                    VisualizationMouseRightClickItem = self.VisualizationTreeWidget.currentItem()
+                    if VisualizationMouseRightClickItem is None:
+                        VisualizationMouseRightClickItem = self.VisualizationTreeWidget.invisibleRootItem().child(0)
+                if VisualizationMouseRightClickItem is not None:
+                    VisualizationParent = VisualizationMouseRightClickItem.parent()
+                    while VisualizationParent is not None:
+                        VisualizationParent.setExpanded(True)
+                        VisualizationParent = VisualizationParent.parent()
+
+                    Visualizationitemrect = self.VisualizationTreeWidget.visualItemRect(VisualizationMouseRightClickItem)
+                    Visualizationportrect = self.VisualizationTreeWidget.viewport().rect()
+
+                    if not Visualizationportrect.contains(Visualizationitemrect.topLeft()):
+                        self.VisualizationTreeWidget.scrollToItem(VisualizationMouseRightClickItem, QTreeWidget.PositionAtCenter)
+                        Visualizationitemrect = self.VisualizationTreeWidget.visualItemRect(VisualizationMouseRightClickItem)
+
+                    Visualizationitemrect.setLeft(Visualizationportrect.left())
+                    Visualizationitemrect.setWidth(Visualizationportrect.width())
+                    VisualizationMouseRightClickPos = self.VisualizationTreeWidget.mapToGlobal(Visualizationitemrect.center())
+
+            if VisualizationMouseRightClickPos is not None:
+                self.VisualizationTreeWidgetContextMenu(VisualizationMouseRightClickItem, VisualizationMouseRightClickPos)
+
+        except Exception as e:
+            print(str(e))
+
+    # Setting ContextMenu on Clicked Sentiments
+    def VisualizationTreeWidgetContextMenu(self, VisualizationItemName, VisualizationWidgetPos):
+
+        # Parent Sentiments
+        if VisualizationItemName.parent() == None:
+            VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
+
+            # Visualization Expand
+            VisualizationExpand = QAction('Expand', self.VisualizationTreeWidget)
+            VisualizationExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
+            if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == True):
+                VisualizationExpand.setDisabled(True)
+            else:
+                VisualizationExpand.setDisabled(False)
+            VisualizationRightClickMenu.addAction(VisualizationExpand)
+
+            # Visualization Collapse
+            VisualizationCollapse = QAction('Collapse', self.VisualizationTreeWidget)
+            VisualizationCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
+            if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == False):
+                VisualizationCollapse.setDisabled(True)
+            else:
+                VisualizationCollapse.setDisabled(False)
+            VisualizationRightClickMenu.addAction(VisualizationCollapse)
+
+            # Visualization Remove
+            VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
+            #VisualizationRemove.triggered.connect(lambda checked, index=SentimentsItemName: self.SentimentsRemove(index))
+
+            VisualizationRightClickMenu.addAction(VisualizationRemove)
+
+            VisualizationRightClickMenu.popup(VisualizationWidgetPos)
+
+        # Child Sentiments
+        # else:
+        #     SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
+        #
+        #     # Sentiments Show components
+        #     SentimentsShowTopicText = QAction('Show Topic Components', self.SentimentTreeWidget)
+        #     SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(SentimentsItemName))
+        #     SentimentsRightClickMenu.addAction(SentimentsShowTopicText)
+        #
+        #     # Sentiments Child Detail
+        #     SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
+        #     SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(SentimentsItemName))
+        #     SentimentsRightClickMenu.addAction(SentimentsDetail)
+        #
+        #     SentimentsRightClickMenu.popup(SentimentsWidgetPos)
+
+    # ****************************************************************************
     # *********************** Application Basic Features *************************
     # ****************************************************************************
 
@@ -5737,45 +6206,48 @@ class Window(QMainWindow):
 
     # About Window Tab
     def AboutWindow(self):
-        self.AboutWindowDialog = QDialog()
-        self.AboutWindowDialog.setModal(True)
-        self.AboutWindowDialog.setWindowTitle("About Us")
-        self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
-        self.AboutWindowDialog.setParent(self)
-        self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-
-
-        groupBox1 = QGroupBox()
-        vBox1 = QVBoxLayout(self.AboutWindowDialog)
-
-        label = QLabel(self.AboutWindowDialog)
-        label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
-
-        vBox1.addWidget(label)
-        groupBox1.setLayout(vBox1)
-
-        groupBox2 = QGroupBox()
-        vBox2 = QVBoxLayout(self.AboutWindowDialog)
-        textpane = QTextEdit()
-        textpane.setText("TextAs\nAnalysis Like Never Before")
-        textpane.setStyleSheet("background:transparent;")
-        textpane.setReadOnly(True)
-
-        vBox2.addWidget(textpane)
-        groupBox2.setLayout(vBox2)
-
-        hbox1 = QHBoxLayout(self.AboutWindowDialog)
-        hbox1.addWidget(groupBox1)
-        hbox1.addWidget(groupBox2)
-        self.AboutWindowDialog.setLayout(hbox1)
-        self.AboutWindowDialog.show()
+        # self.AboutWindowDialog = QDialog()
+        # self.AboutWindowDialog.setModal(True)
+        # self.AboutWindowDialog.setWindowTitle("About Us")
+        # self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
+        # self.AboutWindowDialog.setParent(self)
+        # self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        #
+        #
+        # groupBox1 = QGroupBox()
+        # vBox1 = QVBoxLayout(self.AboutWindowDialog)
+        #
+        # label = QLabel(self.AboutWindowDialog)
+        # label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
+        #
+        # vBox1.addWidget(label)
+        # groupBox1.setLayout(vBox1)
+        #
+        # groupBox2 = QGroupBox()
+        # vBox2 = QVBoxLayout(self.AboutWindowDialog)
+        # textpane = QTextEdit()
+        # textpane.setText("TextAs\nAnalysis Like Never Before")
+        # textpane.setStyleSheet("background:transparent;")
+        # textpane.setReadOnly(True)
+        #
+        # vBox2.addWidget(textpane)
+        # groupBox2.setLayout(vBox2)
+        #
+        # hbox1 = QHBoxLayout(self.AboutWindowDialog)
+        # hbox1.addWidget(groupBox1)
+        # hbox1.addWidget(groupBox2)
+        # self.AboutWindowDialog.setLayout(hbox1)
+        # self.AboutWindowDialog.show()
+        file = open('LICENSE', 'r')
+        lic = file.read()
+        QMessageBox().about(self, "About QupyRibbon", lic)
 
     # ****************************************************************************
     # *************************** Import Features ********************************
     # ****************************************************************************
 
-    #Import DataSource Window
+    # Import DataSource Window
     def ImportFileWindow(self, check):
         if check == "Word":
             dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)", 0)
@@ -5792,7 +6264,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         newNode = QTreeWidgetItem(self.wordTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
@@ -5806,6 +6278,10 @@ class Window(QMainWindow):
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5828,7 +6304,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         if not dummyDataSource.DataSourceLoadError:
                             newNode = QTreeWidgetItem(self.pdfTreeWidget)
@@ -5845,6 +6321,10 @@ class Window(QMainWindow):
                         else:
                             dummyDataSource.__del__()
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5866,7 +6346,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         newNode = QTreeWidgetItem(self.txtTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
@@ -5879,7 +6359,12 @@ class Window(QMainWindow):
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
+
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5902,7 +6387,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         newNode = QTreeWidgetItem(self.rtfTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
@@ -5915,6 +6400,10 @@ class Window(QMainWindow):
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5937,7 +6426,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         newNode = QTreeWidgetItem(self.audioSTreeWidget)
                         newNode.setText(0, ntpath.basename(path[0]))
@@ -5951,6 +6440,10 @@ class Window(QMainWindow):
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5975,7 +6468,7 @@ class Window(QMainWindow):
                         DataSourceNameCheck = True
 
                 if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                         myFile.setDataSources(dummyDataSource)
                         newNode = QTreeWidgetItem(self.ImageSTreeWidget)
                         newNode.setText(0, ntpath.basename(dummyDataSource.DataSourceName))
@@ -5989,6 +6482,10 @@ class Window(QMainWindow):
                         dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                     else:
+                        if len(dummyDataSource.DataSourcetext) == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -5998,6 +6495,7 @@ class Window(QMainWindow):
 
                     # Import Tweet Window
 
+    # Import Tweet Window
     def ImportTweetWindow(self):
         TweetDialog = QDialog()
         TweetDialog.setWindowTitle("Import From Twitter")
@@ -6199,7 +6697,7 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            if not dummyDataSource.DataSourceLoadError:
+            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                 myFile.setDataSources(dummyDataSource)
                 newNode = QTreeWidgetItem(self.WebTreeWidget)
                 newNode.setText(0, URL)
@@ -6213,6 +6711,10 @@ class Window(QMainWindow):
                 dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
             else:
+                if len(dummyDataSource.DataSourcetext) == 0:
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                        QMessageBox.Ok)
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()
@@ -6299,7 +6801,7 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            if not dummyDataSource.DataSourceLoadError:
+            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.YoutubeData) == 0:
                 myFile.setDataSources(dummyDataSource)
                 newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
 
@@ -6318,6 +6820,15 @@ class Window(QMainWindow):
                 dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
             else:
+                if len(dummyDataSource.YoutubeData) == 0:
+                    if VideoURLCheck:
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "No Youtube comment Retreive From the URL: " + URL,
+                                                                            QMessageBox.Ok)
+                    else:
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "No comment Retreive of Key Word: " + KeyWord,
+                                                                            QMessageBox.Ok)
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()

@@ -99,11 +99,9 @@ class DataSource():
                 os.remove(new_file_abs)
 
         except Exception as e:
-            try:
-                self.DataSourceLoadError = True
-                DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load", QMessageBox.Ok)
-            except Exception as e2:
-                print(str(e2))
+            self.DataSourceLoadError = True
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load", QMessageBox.Ok)
+
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)

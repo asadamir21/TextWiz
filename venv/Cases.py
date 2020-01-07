@@ -6,6 +6,7 @@ class Cases:
         self.ParentTextlen = ParentTextlen
 
     def addtoCase(self, TopicText):
+        self.ParentTextlen += len(TopicText)
         self.TopicCases.append([TopicText, len(TopicText.split()), len(TopicText), len(TopicText)/self.ParentTextlen])
 
     def removefromCase(self, TopicText):

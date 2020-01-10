@@ -11,7 +11,8 @@ from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
 from File import *
 from spacy import displacy
-from hurry.filesize import size
+import humanfriendly
+
 
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
 
@@ -499,6 +500,7 @@ class Window(QMainWindow):
         self.SentimentTreeWidget.header().setHidden(True)
         self.SentimentTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.SentimentTreeWidget.customContextMenuRequested.connect(lambda: self.FindSentimentsTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+
         self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
         # Visualiztion Widget
@@ -511,10 +513,9 @@ class Window(QMainWindow):
         self.VisualizationTreeWidget.setHeaderLabel('Visualization')
         self.VisualizationTreeWidget.setAlternatingRowColors(True)
         self.VisualizationTreeWidget.header().setHidden(True)
+        self.VisualizationTreeWidget.itemDoubleClicked.connect(self.VisualizationDoubleClickHandler)
         self.VisualizationTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.VisualizationTreeWidget.customContextMenuRequested.connect(lambda: self.FindVisualizationTreeWidgetContextMenu(QtGui.QContextMenuEvent))
-        #self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
-
 
         self.verticalLayout.addWidget(self.VisualizationTreeWidget)
 
@@ -3875,7 +3876,8 @@ class Window(QMainWindow):
 
             # Data Source Size LineEdit
             DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceSizeLineEdit.setText(size(DS.DataSourceSize))
+            DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize, binary=True))
+            DataSourceSizeLineEdit.setReadOnly(True)
             DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                DataSourceWidgetDetailDialogBox.height() * 0.4,
                                                DataSourceWidgetDetailDialogBox.width() * 0.6,
@@ -4056,7 +4058,8 @@ class Window(QMainWindow):
 
                 # Data Source Size LineEdit
                 DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceSizeLineEdit.setText(size(DS.DataSourceSize[0]))
+                DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize[0], binary=True))
+                DataSourceSizeLineEdit.setReadOnly(True)
                 DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                    DataSourceWidgetDetailDialogBox.height() * 0.4,
                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
@@ -4546,7 +4549,8 @@ class Window(QMainWindow):
 
         # Data Source Size LineEdit
         DataSourceSizeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
-        DataSourceSizeLineEdit.setText(size(DataSource.DataSourceSize[0]))
+        DataSourceSizeLineEdit.setText(humanfriendly.format_size(DataSource.DataSourceSize[0], binary=True))
+        DataSourceSizeLineEdit.setReadOnly(True)
         DataSourceSizeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
                                            DataSourceShowImagesDetailsBox.height() * 0.4,
                                            DataSourceShowImagesDetailsBox.width() * 0.6,
@@ -4603,7 +4607,7 @@ class Window(QMainWindow):
 
         Path.setText(DS.DataSourcePath[currentIndex])
         Ext.setText(os.path.splitext(DS.DataSourcePath[currentIndex])[1])
-        Size.setText(size(DS.DataSourceSize[currentIndex]))
+        Size.setText(humanfriendly.format_size(DS.DataSourceSize[currentIndex], binary=True))
         AccessTime.setText(DS.DataSourceAccessTime[currentIndex])
         ModifiedTime.setText(DS.DataSourceModifiedTime[currentIndex])
         ChangedTime.setText(DS.DataSourceChangeTime[currentIndex])
@@ -4839,12 +4843,10 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Word Cloud')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            #WordCloudQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            #WordCloudQueryTreeWidget.setText(0, "Word Cloud (" + WCDSName + ")")
 
-            # for DS in myFile.DataSourceList:
-            #     if DS.DataSourceName == WCDSName:
-            #         DS.setQuery(WordCloudQueryTreeWidget, WordCloudTab)
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == WCDSName:
+                     DS.setVisual(DSNewCaseNode, WordCloudTab)
 
             self.tabWidget.addTab(WordCloudTab, "Word Cloud")
             self.tabWidget.setCurrentWidget(WordCloudTab)
@@ -6104,7 +6106,6 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Sentiments
     def VisualizationTreeWidgetContextMenu(self, VisualizationItemName, VisualizationWidgetPos):
-
         # Parent Sentiments
         if VisualizationItemName.parent() == None:
             VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
@@ -6129,27 +6130,91 @@ class Window(QMainWindow):
 
             # Visualization Remove
             VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
-            #VisualizationRemove.triggered.connect(lambda checked, index=SentimentsItemName: self.SentimentsRemove(index))
-
+            VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemove(VisualizationItemName))
             VisualizationRightClickMenu.addAction(VisualizationRemove)
 
             VisualizationRightClickMenu.popup(VisualizationWidgetPos)
 
         # Child Sentiments
-        # else:
-        #     SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
-        #
-        #     # Sentiments Show components
-        #     SentimentsShowTopicText = QAction('Show Topic Components', self.SentimentTreeWidget)
-        #     SentimentsShowTopicText.triggered.connect(lambda: self.SentimentsShowComponent(SentimentsItemName))
-        #     SentimentsRightClickMenu.addAction(SentimentsShowTopicText)
-        #
-        #     # Sentiments Child Detail
-        #     SentimentsDetail = QAction('Details', self.SentimentTreeWidget)
-        #     SentimentsDetail.triggered.connect(lambda: self.SentimentsChildDetail(SentimentsItemName))
-        #     SentimentsRightClickMenu.addAction(SentimentsDetail)
-        #
-        #     SentimentsRightClickMenu.popup(SentimentsWidgetPos)
+        else:
+            VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
+
+            # Show Tab
+            VisualizationShow = QAction('Show', self.VisualizationTreeWidget)
+            VisualizationShow.triggered.connect(lambda: self.VisualizationDoubleClickHandler(VisualizationItemName))
+            VisualizationRightClickMenu.addAction(VisualizationShow)
+
+            # Visualization Remove
+            VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
+            VisualizationRemove.triggered.connect(lambda: self.VisualizationChildRemove(VisualizationItemName))
+            VisualizationRightClickMenu.addAction(VisualizationRemove)
+
+            VisualizationRightClickMenu.popup(VisualizationWidgetPos)
+
+    # Visualization Parent Remove
+    def VisualizationParentRemove(self, VisualizationItemName):
+        VisualizationRemoveChoice = QMessageBox.critical(self, 'Remove',
+                                                        "Are you sure you want to remove this Data Source's all Visualization?",
+                                                        QMessageBox.Yes | QMessageBox.No)
+
+        if VisualizationRemoveChoice == QMessageBox.Yes:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == VisualizationItemName.text(0):
+                    for tabs in myFile.TabList:
+                        if tabs.DataSourceName == DS.DataSourceName:
+                            myFile.TabList.remove(tabs)
+                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                            tabs.__del__()
+
+                    self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
+                    DS.VisualizationList.clear()
+                    break
+        else:
+            pass
+
+    # Visualization Child Remove
+    def VisualizationChildRemove(self, VisualizationItemName):
+        VisualizationRemoveChoice = QMessageBox.critical(self, 'Remove',
+                                                        "Are you sure you want to remove this Data Source's Visualization?",
+                                                        QMessageBox.Yes | QMessageBox.No)
+
+        if VisualizationRemoveChoice == QMessageBox.Yes:
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == VisualizationItemName.parent().text(0):
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            for visual in DS.VisualizationList:
+                                if visual[0] == VisualizationItemName and visual[1] == tabs.tabWidget:
+                                    myFile.TabList.remove(tabs)
+                                    DS.VisualizationList.remove(visual)
+                                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                    tabs.__del__()
+                                    break
+
+
+            if VisualizationItemName.parent().childCount() == 1:
+                tempParent = VisualizationItemName.parent()
+                tempParent.removeChild(VisualizationItemName)
+                self.VisualizationTreeWidget.invisibleRootItem().removeChild(tempParent)
+            else:
+                VisualizationItemName.parent().removeChild(VisualizationItemName)
+
+        else:
+            pass
+
+    # Preview Visual/Tab on double click
+    def VisualizationDoubleClickHandler(self, VisualizationItemName):
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == VisualizationItemName.parent().text(0):
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        for visuals in DS.VisualizationList:
+                            if visuals[0] == VisualizationItemName and visuals[1] == tabs.tabWidget:
+                                if self.tabWidget.currentWidget() != tabs.tabWidget:
+                                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                                    self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                                break
 
     # ****************************************************************************
     # *********************** Application Basic Features *************************
@@ -6241,7 +6306,7 @@ class Window(QMainWindow):
         # self.AboutWindowDialog.show()
         file = open('LICENSE', 'r')
         lic = file.read()
-        QMessageBox().about(self, "About QupyRibbon", lic)
+        QMessageBox().about(self, "About TextAS", lic)
 
     # ****************************************************************************
     # *************************** Import Features ********************************

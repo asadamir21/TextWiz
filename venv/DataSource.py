@@ -52,6 +52,7 @@ class DataSource():
         self.QueryList = []
         self.CasesList = []
         self.SentimentList = []
+        self.VisualizationList = []
         self.AutomaticSentimentList = []
         self.MainWindow = MainWindow
 
@@ -629,6 +630,10 @@ class DataSource():
     # Set Query
     def setQuery(self, QueryTreeWidgetItem, TabItem):
         self.QueryList.append([QueryTreeWidgetItem, TabItem])
+
+    # Set Visual
+    def setVisual(self, VisualizationTreeWidgetItem, TabItem):
+        self.VisualizationList.append([VisualizationTreeWidgetItem, TabItem])
 
     # Set Animation
     def Animation(self, name):

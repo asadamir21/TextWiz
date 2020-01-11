@@ -1,8 +1,3 @@
-
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from DataSource import *

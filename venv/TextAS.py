@@ -3,7 +3,9 @@ from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
-from PyQt5 import QtGui, QtCore, QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5 import QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
 from matplotlib.container import StemContainer
 from tweepy import TweepError
@@ -16,29 +18,29 @@ import humanfriendly
 
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
 
-class MarkerModel(QtCore.QAbstractListModel):
-    PositionRole, SourceRole = range(QtCore.Qt.UserRole, QtCore.Qt.UserRole + 2)
+class MarkerModel(QAbstractListModel):
+    PositionRole, SourceRole = range(Qt.UserRole, Qt.UserRole + 2)
 
     def __init__(self, parent=None):
         super(MarkerModel, self).__init__(parent)
         self._markers = []
 
-    def rowCount(self, parent=QtCore.QModelIndex()):
+    def rowCount(self, parent=QModelIndex()):
         return len(self._markers)
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=Qt.DisplayRole):
         if 0 <= index.row() < self.rowCount():
             if role == MarkerModel.PositionRole:
                 return self._markers[index.row()]["position"]
             elif role == MarkerModel.SourceRole:
                 return self._markers[index.row()]["source"]
-        return QtCore.QVariant()
+        return QVariant()
 
     def roleNames(self):
         return {MarkerModel.PositionRole: b"position_marker", MarkerModel.SourceRole: b"source_marker"}
 
     def appendMarker(self, marker):
-        self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
+        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
         self._markers.append(marker)
         self.endInsertRows()
 
@@ -65,8 +67,8 @@ class OpenWindow(QFileDialog):
 
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         if flag == 0:
             home = os.path.join(os.path.expanduser('~'), 'Documents')
@@ -114,12 +116,12 @@ class Window(QMainWindow):
         for row in coordinatecsvreader:
             self.Coordinates.append([row[0], row[1], row[2]])
 
-        self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+        self.setStyleSheet(open('Styles/Light.css', 'r').read())
 
         self.initWindows()
 
     def initWindows(self):
-        self.setWindowIcon(QtGui.QIcon(WindowTitleLogo))
+        self.setWindowIcon(QIcon(WindowTitleLogo))
         self.setWindowTitle(self.title)
         self.setGeometry(self.left,self.top, self.width, self.height)
         self.setMinimumSize(self.width/2, self.height/2)
@@ -127,35 +129,35 @@ class Window(QMainWindow):
 
         # *****************************  ToolBar ******************************************
 
-        WordAct = QAction(QtGui.QIcon('Images/Word.png'), 'Word', self)
+        WordAct = QAction(QIcon('Images/Word.png'), 'Word', self)
         WordAct.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
 
-        PDFAct = QAction(QtGui.QIcon('Images/PDF.png'), 'PDF', self)
+        PDFAct = QAction(QIcon('Images/PDF.png'), 'PDF', self)
         PDFAct.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
 
-        NotepadAct = QAction(QtGui.QIcon('Images/Notepad.png'), 'txt', self)
+        NotepadAct = QAction(QIcon('Images/Notepad.png'), 'txt', self)
         NotepadAct.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
 
-        RTFAct = QAction(QtGui.QIcon('Images/rtf.png'), 'RTF', self)
+        RTFAct = QAction(QIcon('Images/rtf.png'), 'RTF', self)
         RTFAct.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
 
-        SoundAct = QAction(QtGui.QIcon('Images/Sound.png'), 'Audio', self)
+        SoundAct = QAction(QIcon('Images/Sound.png'), 'Audio', self)
         SoundAct.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
 
-        ImageAct = QAction(QtGui.QIcon('Images/ImageDataSource.png'), 'Image', self)
+        ImageAct = QAction(QIcon('Images/ImageDataSource.png'), 'Image', self)
         ImageAct.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
 
-        TwitterAct = QAction(QtGui.QIcon('Images/Twitter.png'), 'Twitter', self)
+        TwitterAct = QAction(QIcon('Images/Twitter.png'), 'Twitter', self)
         TwitterAct.triggered.connect(lambda checked: self.ImportTweetWindow())
 
-        WebAct = QAction(QtGui.QIcon('Images/Web.png'), 'URL', self)
+        WebAct = QAction(QIcon('Images/Web.png'), 'URL', self)
         WebAct.triggered.connect(lambda checked: self.ImportURLWindow())
 
-        YoutubeAct = QAction(QtGui.QIcon('Images/Youtube.png'), 'Youtube', self)
+        YoutubeAct = QAction(QIcon('Images/Youtube.png'), 'Youtube', self)
         YoutubeAct.triggered.connect(lambda checked: self.ImportYoutubeWindow())
 
         self.toolbar = self.addToolBar("Show Toolbar")
-        self.toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)  # <= Toolbuttonstyle
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon | Qt.AlignLeading)  # <= Toolbuttonstyle
         self.toolbar.setMovable(False)
 
         self.toolbar.addAction(WordAct)
@@ -168,7 +170,7 @@ class Window(QMainWindow):
         self.toolbar.addAction(TwitterAct)
         self.toolbar.addAction(WebAct)
         self.toolbar.addAction(YoutubeAct)
-        self.toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
 
         # ***********************************************************************************
         # *****************************  Menu Item ******************************************
@@ -195,11 +197,11 @@ class Window(QMainWindow):
         OpenFileButton.setStatusTip('Open File')
         OpenFileButton.triggered.connect(self.OpenFileWindow)
 
-        SaveButton = QAction(QtGui.QIcon("Images/Save.png"), 'Save', self)
+        SaveButton = QAction(QIcon("Images/Save.png"), 'Save', self)
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
 
-        printButton = QAction(QtGui.QIcon("Images/Printer.png"), 'Print', self)
+        printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
         printButton.triggered.connect(self.printWindow)
@@ -254,39 +256,39 @@ class Window(QMainWindow):
 
         # *****************************  ImportMenuItem *************************************
 
-        WordFileButton = QAction(QtGui.QIcon("Images/Word.png"),'Word File', self)
+        WordFileButton = QAction(QIcon("Images/Word.png"),'Word File', self)
         WordFileButton.setStatusTip('Word File')
         WordFileButton.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
 
-        PDFFileButton = QAction(QtGui.QIcon("Images/PDF.png"), 'PDF File', self)
+        PDFFileButton = QAction(QIcon("Images/PDF.png"), 'PDF File', self)
         PDFFileButton.setStatusTip('PDF File')
         PDFFileButton.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
 
-        TXTFileButton = QAction(QtGui.QIcon("Images/Notepad.png"), 'Notepad File', self)
+        TXTFileButton = QAction(QIcon("Images/Notepad.png"), 'Notepad File', self)
         TXTFileButton.setStatusTip('Notepad File')
         TXTFileButton.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
 
-        RTFFileButton = QAction(QtGui.QIcon("Images/rtf.png"), 'RTF File', self)
+        RTFFileButton = QAction(QIcon("Images/rtf.png"), 'RTF File', self)
         RTFFileButton.setStatusTip('RTF File')
         RTFFileButton.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
 
-        SoundFileButton = QAction(QtGui.QIcon("Images/Sound.png"), 'Audio File', self)
+        SoundFileButton = QAction(QIcon("Images/Sound.png"), 'Audio File', self)
         SoundFileButton.setStatusTip('Word File')
         SoundFileButton.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
 
-        ImageFileButton = QAction(QtGui.QIcon("Images\ImageDataSource.png"), 'Image File', self)
+        ImageFileButton = QAction(QIcon("Images\ImageDataSource.png"), 'Image File', self)
         ImageFileButton.setStatusTip('Image File')
         ImageFileButton.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
 
-        TwitterButton = QAction(QtGui.QIcon("Images\Twitter.png"), 'Twitter', self)
+        TwitterButton = QAction(QIcon("Images\Twitter.png"), 'Twitter', self)
         TwitterButton.setStatusTip('Tweets')
         TwitterButton.triggered.connect(lambda checked: self.ImportTweetWindow())
 
-        URLButton = QAction(QtGui.QIcon("Images\Web.png"), 'Web', self)
+        URLButton = QAction(QIcon("Images\Web.png"), 'Web', self)
         URLButton.setStatusTip('Get Data From URL')
         URLButton.triggered.connect(lambda checked: self.ImportURLWindow())
 
-        YoutubeButton = QAction(QtGui.QIcon("Images\Youtube.png"), 'Youtube', self)
+        YoutubeButton = QAction(QIcon("Images\Youtube.png"), 'Youtube', self)
         YoutubeButton.setStatusTip('Youtube Comments')
         YoutubeButton.triggered.connect(lambda checked: self.ImportYoutubeWindow())
 
@@ -381,7 +383,7 @@ class Window(QMainWindow):
 
         # *****************************  HelpMenuItem ***************************************
 
-        AboutButton = QAction(QtGui.QIcon('exit24.png'), 'About Us', self)
+        AboutButton = QAction(QIcon('exit24.png'), 'About Us', self)
         AboutButton.setStatusTip('About Us')
         AboutButton.triggered.connect(self.AboutWindow)
         helpMenu.addAction(AboutButton)
@@ -409,7 +411,6 @@ class Window(QMainWindow):
         #DataSource Widget
         self.DataSourceLabel = QLabel()
         self.DataSourceLabel.setText("Data Sources")
-        QtCore.Qt.AlignCenter
         self.DataSourceLabel.setAlignment(Qt.AlignCenter)
         self.verticalLayout.addWidget(self.DataSourceLabel)
 
@@ -418,7 +419,7 @@ class Window(QMainWindow):
         self.DataSourceTreeWidget.setAlternatingRowColors(True)
         self.DataSourceTreeWidget.header().setHidden(True)
         self.DataSourceTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda: self.FindDataSourceTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda: self.FindDataSourceTreeWidgetContextMenu(QContextMenuEvent))
 
         #DataSource Widget Item
         self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
@@ -470,7 +471,7 @@ class Window(QMainWindow):
         self.QueryTreeWidget.header().setHidden(True)
         self.QueryTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
         self.QueryTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.QueryTreeWidget.customContextMenuRequested.connect(lambda: self.FindQueryTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        self.QueryTreeWidget.customContextMenuRequested.connect(lambda: self.FindQueryTreeWidgetContextMenu(QContextMenuEvent))
 
         self.verticalLayout.addWidget(self.QueryTreeWidget)
 
@@ -485,7 +486,7 @@ class Window(QMainWindow):
         self.CasesTreeWidget.setAlternatingRowColors(True)
         self.CasesTreeWidget.header().setHidden(True)
         self.CasesTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.CasesTreeWidget.customContextMenuRequested.connect(lambda: self.FindCasesTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        self.CasesTreeWidget.customContextMenuRequested.connect(lambda: self.FindCasesTreeWidgetContextMenu(QContextMenuEvent))
         self.verticalLayout.addWidget(self.CasesTreeWidget)
 
         # Sentiment Widget
@@ -499,7 +500,7 @@ class Window(QMainWindow):
         self.SentimentTreeWidget.setAlternatingRowColors(True)
         self.SentimentTreeWidget.header().setHidden(True)
         self.SentimentTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.SentimentTreeWidget.customContextMenuRequested.connect(lambda: self.FindSentimentsTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        self.SentimentTreeWidget.customContextMenuRequested.connect(lambda: self.FindSentimentsTreeWidgetContextMenu(QContextMenuEvent))
 
         self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
@@ -515,7 +516,7 @@ class Window(QMainWindow):
         self.VisualizationTreeWidget.header().setHidden(True)
         self.VisualizationTreeWidget.itemDoubleClicked.connect(self.VisualizationDoubleClickHandler)
         self.VisualizationTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.VisualizationTreeWidget.customContextMenuRequested.connect(lambda: self.FindVisualizationTreeWidgetContextMenu(QtGui.QContextMenuEvent))
+        self.VisualizationTreeWidget.customContextMenuRequested.connect(lambda: self.FindVisualizationTreeWidgetContextMenu(QContextMenuEvent))
 
         self.verticalLayout.addWidget(self.VisualizationTreeWidget)
 
@@ -607,7 +608,7 @@ class Window(QMainWindow):
 
             DataSourcesSimilarityTable.setSizePolicy(self.sizePolicy)
             DataSourcesSimilarityTable.setWindowFlags(
-                DataSourcesSimilarityTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                DataSourcesSimilarityTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             DataSourcesSimilarityTable.setHorizontalHeaderLabels(
                 ["First Data Source", "Second Data Source", "Similarity Percentage (%)"])
             DataSourcesSimilarityTable.horizontalHeader().setStyleSheet(
@@ -661,8 +662,13 @@ class Window(QMainWindow):
                     myFile.TabList.append(
                         Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
 
-                    DataSourcesSimilarityQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                    DataSourcesSimilarityQueryTreeWidget.setText(0, "Data Sources Similarity")
+                    # Adding Word Frequency Query
+                    ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
+
+                    if len(ItemsWidget) == 0:
+                        DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                        DSVisualWidget.setText(0, "Data Sources Similarity")
+                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
 
                     self.tabWidget.addTab(DataSourcesSimilarityTab, "Data Sources Similarity")
                     self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
@@ -674,16 +680,30 @@ class Window(QMainWindow):
 
     # Update Similarity Between Data Sources
     def DataSourceSimilarityUpdate(self):
-        for tabindex in range(self.tabWidget.count()):
-            for tabs in myFile.TabList:
-                if tabs.tabWidget == self.tabWidget.widget(tabindex) and tabs.TabName == "Data Sources Similarity":
+        for tabs in myFile.TabList:
+            if tabs.TabName == "Data Sources Similarity":
+                if self.tabWidget.indexOf(tabs.tabWidget) >= 0:
                     currentTab = self.tabWidget.currentWidget()
                     if len(myFile.DataSourceList) > 1:
                         self.DataSourcesSimilarity()
                         self.tabWidget.setCurrentWidget(currentTab)
-
                     else:
-                        self.tabWidget.removeTab(tabindex)
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                        ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
+                        for widget in ItemsWidget:
+                            self.QueryTreeWidget.invisibleRootItem().removeChild(widget)
+                    break
+                else:
+                    if len(myFile.DataSourceList) > 1:
+                        self.DataSourcesSimilarity()
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                        ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
+                        for widget in ItemsWidget:
+                            self.QueryTreeWidget.invisibleRootItem().removeChild(widget)
                     break
 
     #Get Which Data Source Widget Item and its Position
@@ -921,9 +941,9 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setModal(True)
         DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
         DataSourceWidgetDetailDialogBox.setParent(self)
-        DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.4, self.height * 0.45, self.width/5, self.height/10)
-        DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         for letter in DataSourceWidgetItemName.text(0):
             if letter == '(':
@@ -986,7 +1006,7 @@ class Window(QMainWindow):
         PreviewWebTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
         PreviewHTMLWebPage = QWebEngineView()
-        PreviewHTMLWebPage.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        PreviewHTMLWebPage.setContextMenuPolicy(Qt.PreventContextMenu)
         PreviewWebTabVerticalLayout.addWidget(PreviewHTMLWebPage)
 
         for DS in myFile.DataSourceList:
@@ -1034,7 +1054,7 @@ class Window(QMainWindow):
 
         ShowTweetDataTab = QWidget()
         ShowTweetDataTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height()))
         ShowTweetDataTab.setSizePolicy(self.sizePolicy)
 
@@ -1054,7 +1074,7 @@ class Window(QMainWindow):
                                        ShowTweetDataTabverticalLayoutWidget.height())
         ShowTweetDataTable.setSizePolicy(self.sizePolicy)
 
-        ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         ShowTweetDataTable.setHorizontalHeaderLabels(
             ["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates",
@@ -1116,7 +1136,7 @@ class Window(QMainWindow):
                 break
 
         ShowYoutubeCommentsTab = QWidget()
-        ShowYoutubeCommentsTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+        ShowYoutubeCommentsTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height()))
         ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
@@ -1136,7 +1156,7 @@ class Window(QMainWindow):
                                                    ShowYoutubeCommentsTabverticalLayoutWidget.height())
         ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
 
-        ShowYoutubeCommentsTable.setWindowFlags(ShowYoutubeCommentsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        ShowYoutubeCommentsTable.setWindowFlags(ShowYoutubeCommentsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Author Name", "Like Count", "Publish At"])
         ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
@@ -1203,7 +1223,7 @@ class Window(QMainWindow):
 
         ShowYoutubeCommentsTab = QWidget()
         ShowYoutubeCommentsTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height()))
         ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
@@ -1224,7 +1244,7 @@ class Window(QMainWindow):
         ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
 
         ShowYoutubeCommentsTable.setWindowFlags(
-            ShowYoutubeCommentsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+            ShowYoutubeCommentsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Video ID", "Video Title", "Video Description", "Channel", "Replies", "Like"])
         ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet(
@@ -1295,7 +1315,7 @@ class Window(QMainWindow):
 
         ViewImageTab = QWidget()
         ViewImageTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height()))
         ViewImageTab.setSizePolicy(self.sizePolicy)
 
@@ -1345,11 +1365,11 @@ class Window(QMainWindow):
 
         for img in image_files:
             if isinstance(img, np.ndarray):
-                dummyimage = QtGui.QImage(img, img.shape[1], \
+                dummyimage = QImage(img, img.shape[1], \
                                           img.shape[0], img.shape[1] * 3,
-                                          QtGui.QImage.Format_RGB888)
+                                          QImage.Format_RGB888)
 
-                qpixmap_file.append(QtGui.QPixmap(dummyimage))
+                qpixmap_file.append(QPixmap(dummyimage))
 
 
         if len(qpixmap_file) == 1:
@@ -1461,7 +1481,7 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                 PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-                PDFPreviewWeb.setUrl(QtCore.QUrl(DS.DataSourcePath))
+                PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
                 break
 
         myFile.TabList.append(
@@ -1485,7 +1505,7 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                 WordActivex = QAxContainer.QAxWidget()
-                WordActivex.setFocusPolicy(QtCore.Qt.StrongFocus)
+                WordActivex.setFocusPolicy(Qt.StrongFocus)
                 #contr = WordActivex.setControl("{00460182-9E5E-11d5-B7C8-B8269041DD57}")
 
                 WordActivex.setProperty("DisplayScrollBars", True);
@@ -1572,8 +1592,8 @@ class Window(QMainWindow):
         DataSourceShowFrequencyTableDialog.setWindowTitle("Show Word Frequency Table")
         DataSourceShowFrequencyTableDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4, self.height / 10)
         DataSourceShowFrequencyTableDialog.setParent(self)
-        DataSourceShowFrequencyTableDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        DataSourceShowFrequencyTableDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceShowFrequencyTableDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceShowFrequencyTableDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
 
         # Data Source Label
@@ -1625,7 +1645,7 @@ class Window(QMainWindow):
 
         WordFrequencyTab = QWidget()
         WordFrequencyTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height()-self.tabWidget.tabBar().geometry().height()))
         WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
@@ -1680,7 +1700,7 @@ class Window(QMainWindow):
 
         WordFrequencyTable.setSizePolicy(self.sizePolicy)
 
-        WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage", "Definition", "Synonyms", "Antonyms"])
         WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
@@ -1747,21 +1767,34 @@ class Window(QMainWindow):
                 myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceName))
 
                 # Adding Word Frequency Query
-                WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                WordFreqencyQueryTreeWidget.setText(0, "Word Frequency (" + DataSourceName + ")")
-                WordFreqencyQueryTreeWidget.setToolTip(0, WordFreqencyQueryTreeWidget.text(0))
+                ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
+
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Word Frequency')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Word Frequency')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
                 # Adding Word Frequency Query to QueryList
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(WordFreqencyQueryTreeWidget, WordFrequencyTab)
+                        DS.setQuery(DSNewCaseNode, WordFrequencyTab)
 
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
                 self.tabWidget.setCurrentWidget(WordFrequencyTab)
 
         else:
-
             WordFrequencyErrorBox = QMessageBox()
             WordFrequencyErrorBox.setIcon(QMessageBox.Critical)
             WordFrequencyErrorBox.setWindowTitle("Word Frequency Error")
@@ -1796,12 +1829,7 @@ class Window(QMainWindow):
                         writer.writerow(rowdata)
 
         except PermissionError:
-            SaveAsCSVErrorBox = QMessageBox()
-            SaveAsCSVErrorBox.setIcon(QMessageBox.Critical)
-            SaveAsCSVErrorBox.setWindowTitle("Saving Error")
-            SaveAsCSVErrorBox.setText("Permission Denied!")
-            SaveAsCSVErrorBox.setStandardButtons(QMessageBox.Ok)
-            SaveAsCSVErrorBox.exec_()
+            QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
 
     # ****************************************************************************
     # *************************** Question Generator *****************************
@@ -1814,8 +1842,8 @@ class Window(QMainWindow):
         GenerateQuestionsDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                        self.height / 10)
         GenerateQuestionsDialog.setParent(self)
-        GenerateQuestionsDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        GenerateQuestionsDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        GenerateQuestionsDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        GenerateQuestionsDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(GenerateQuestionsDialog)
@@ -1871,23 +1899,24 @@ class Window(QMainWindow):
                 GenerateQuestionsTabFlag = True
                 break
 
+        #Generate Question Tab
         GenerateQuestionsTab = QWidget()
         GenerateQuestionsTab.setGeometry(
-            QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
         GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Stem Word Tab
+        # LayoutWidget For within Generate Question Tab
         GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
         GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
                                                           self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
+        # Box Layout for Generate Question Tab
         GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
         GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
 
-        # Download Button For Frequency Table
+        # Download Button For Generate Question Table
         DownloadAsCSVButton = QPushButton('Download')
         DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
         DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
@@ -1900,17 +1929,17 @@ class Window(QMainWindow):
 
         GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-        # LayoutWidget For within Word Frequency Tab
+        # LayoutWidget For within Generate Question Tab
         GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
         GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                          self.tabWidget.height() - self.tabWidget.height() / 10)
         GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-        # Box Layout for Word Frequency Tab
+        # Box Layout for Generate Question Tab
         GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
         GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Table for Word Frequency
+        # Table for Generate Question
         GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
         GenerateQuestionsTable.setColumnCount(1)
         # WordFrequencyTable.setModel(WordFrequencyTableModel)
@@ -1919,7 +1948,7 @@ class Window(QMainWindow):
 
         GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
 
-        GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         GenerateQuestionsTable.setHorizontalHeaderLabels(
             ["Questions"])
@@ -1945,8 +1974,10 @@ class Window(QMainWindow):
 
                 ptext = QPlainTextEdit()
                 ptext.setReadOnly(True)
-                ptext.setPlainText(row);
+                ptext.setPlainText(row)
                 ptext.adjustSize()
+
+                GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
 
             GenerateQuestionsTable.resizeColumnsToContents()
             GenerateQuestionsTable.resizeRowsToContents()
@@ -1973,30 +2004,42 @@ class Window(QMainWindow):
                 self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
                 tabs.tabWidget = GenerateQuestionsTab
             else:
-                # Adding Word Frequency Tab to TabList
+                # Adding Generate Question Tab to TabList
                 myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
 
-                # Adding Word Frequency Query
-                GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
-                GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
+                ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-                # Adding Word Frequency Query to QueryList
+                if len(ItemsWidget) == 0:                                   # if no Parent Widget
+                    # Adding Parent Query
+                    DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                    DSQueryWidget.setText(0, DataSourceName)
+                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                    DSQueryWidget.setExpanded(True)
+
+                    # Adding Generate Questions Query
+                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                    DSNewCaseNode.setText(0, 'Generate Questions')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        # Adding Generate Questions Query
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Generate Questions')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                # Adding Generate Questions Query to QueryList
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
+                        DS.setQuery(DSNewCaseNode, GenerateQuestionsTab)
 
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding Generate Questions Tab to QTabWidget
                 self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
                 self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
 
         else:
-            GenerateQuestionsErrorBox = QMessageBox()
-            GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
-            GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
-            GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
-            GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
-            GenerateQuestionsErrorBox.exec_()
+            QMessageBox.information(self, "Questions Generation Error",
+                                    "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
 
     # ****************************************************************************
     # ********************* Data Sources Sentiment Analysis **********************
@@ -2009,8 +2052,8 @@ class Window(QMainWindow):
         SentimentAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                             self.height / 10)
         SentimentAnalysisDialog.setParent(self)
-        SentimentAnalysisDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        SentimentAnalysisDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        SentimentAnalysisDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        SentimentAnalysisDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(SentimentAnalysisDialog)
@@ -2059,143 +2102,174 @@ class Window(QMainWindow):
 
     # Sentiment Analysis Tabel
     def SentimentAnalysisTable(self, DataSourceName):
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                DS.SentimentAnalysis()
+        try:
+            DataSourceSentimentAnalysisFlag = False
 
-        # GenerateQuestionsTabFlag = False
-        #
-        # for tabs in myFile.TabList:
-        #     if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
-        #         GenerateQuestionsTabFlag = True
-        #         break
-        #
-        # GenerateQuestionsTab = QWidget()
-        # GenerateQuestionsTab.setGeometry(
-        #     QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-        #                  self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-        # GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
-        #
-        # # LayoutWidget For within Stem Word Tab
-        # GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
-        # GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-        #                                                       self.tabWidget.height() / 10)
-        #
-        # # Box Layout for Stem Word Tab
-        # GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
-        # GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-        #
-        # # Download Button For Frequency Table
-        # DownloadAsCSVButton = QPushButton('Download')
-        # DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-        # DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
-        #
-        # DownloadAsCSVButtonFont = QFont("sans-serif")
-        # DownloadAsCSVButtonFont.setPixelSize(14)
-        # DownloadAsCSVButtonFont.setBold(True)
-        #
-        # DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
-        #
-        # GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
-        #
-        # # LayoutWidget For within Word Frequency Tab
-        # GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
-        # GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-        #                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
-        # GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-        #
-        # # Box Layout for Word Frequency Tab
-        # GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
-        # GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
-        #
-        # # Table for Word Frequency
-        # GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
-        # GenerateQuestionsTable.setColumnCount(1)
-        # # WordFrequencyTable.setModel(WordFrequencyTableModel)
-        # GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
-        #                                    GenerateQuestionsTabverticalLayoutWidget.height())
-        #
-        # GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
-        #
-        # GenerateQuestionsTable.setWindowFlags(
-        #     GenerateQuestionsTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-        #
-        # GenerateQuestionsTable.setHorizontalHeaderLabels(
-        #     ["Questions"])
-        # GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-        #
-        # for i in range(GenerateQuestionsTable.columnCount()):
-        #     GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-        #     GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
-        #         QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-        #
-        # dummyQuery = Query()
-        #
-        # for DS in myFile.DataSourceList:
-        #     if DS.DataSourceName == DataSourceName:
-        #         rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
-        #         break
-        #
-        # DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
-        #
-        # if len(rowList) != 0:
-        #     for row in rowList:
-        #         GenerateQuestionsTable.insertRow(rowList.index(row))
-        #
-        #         ptext = QPlainTextEdit()
-        #         ptext.setReadOnly(True)
-        #         ptext.setPlainText(row);
-        #         ptext.adjustSize()
-        #
-        #     GenerateQuestionsTable.resizeColumnsToContents()
-        #     GenerateQuestionsTable.resizeRowsToContents()
-        #
-        #     GenerateQuestionsTable.setSortingEnabled(True)
-        #     GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        #     row_width = 0
-        #
-        #     for i in range(GenerateQuestionsTable.columnCount()):
-        #         GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-        #
-        #     if GenerateQuestionsTabFlag:
-        #         # change tab in query
-        #         for DS in myFile.DataSourceList:
-        #             if DS.DataSourceName == DataSourceName:
-        #                 for query in DS.QueryList:
-        #                     if query[1] == tabs.tabWidget:
-        #                         query[1] = GenerateQuestionsTab
-        #                         break
-        #
-        #         # updating tab
-        #         self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-        #         self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-        #         self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-        #         tabs.tabWidget = GenerateQuestionsTab
-        #     else:
-        #         # Adding Word Frequency Tab to TabList
-        #         myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
-        #
-        #         # Adding Word Frequency Query
-        #         GenerateQuestionsQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-        #         GenerateQuestionsQueryTreeWidget.setText(0, "Generate Questions (" + DataSourceName + ")")
-        #         GenerateQuestionsQueryTreeWidget.setToolTip(0, GenerateQuestionsQueryTreeWidget.text(0))
-        #
-        #         # Adding Word Frequency Query to QueryList
-        #         for DS in myFile.DataSourceList:
-        #             if DS.DataSourceName == DataSourceName:
-        #                 DS.setQuery(GenerateQuestionsQueryTreeWidget, GenerateQuestionsTab)
-        #
-        #         # Adding Word Frequency Tab to QTabWidget
-        #         self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
-        #         self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-        #
-        # else:
-        #     GenerateQuestionsErrorBox = QMessageBox()
-        #     GenerateQuestionsErrorBox.setIcon(QMessageBox.Critical)
-        #     GenerateQuestionsErrorBox.setWindowTitle("Questions Generation Error")
-        #     GenerateQuestionsErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
-        #     GenerateQuestionsErrorBox.setStandardButtons(QMessageBox.Ok)
-        #     GenerateQuestionsErrorBox.exec_()
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
+                    DataSourceSentimentAnalysisFlag = True
+                    break
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.SentimentAnalysis()
+                    rowList = DS.AutomaticSentimentList
+                    break
+
+            SentimentAnalysisTab = QWidget()
+            SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                                                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+            SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
+
+            # LayoutWidget For within Stem Word Tab
+            SentimentAnalysisTabVerticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                                  self.tabWidget.height() / 10)
+
+            # Box Layout for Stem Word Tab
+            SentimentAnalysisTabVerticalLayout2 = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget2)
+            SentimentAnalysisTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+            # Positive_Count Label
+            PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+            PositiveCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                           POSTabVerticalLayoutWidget.height() * 0.142,
+                                           POSTabVerticalLayoutWidget.width() / 20,
+                                           POSTabVerticalLayoutWidget.height() / 7)
+            PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
+            PositiveCountLabel.setAlignment(Qt.AlignVCenter)
+            PositiveCountLabel.adjustSize()
+
+            # Neutral_Count Label
+            NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+            NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
+                                          SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.428,
+                                          SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
+                                          SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+            NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
+            NeutralCountLabel.setAlignment(Qt.AlignVCenter)
+            NeutralCountLabel.adjustSize()
+
+            # Negative_Count Label
+            NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+            NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
+                                           SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.714,
+                                           SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
+                                           SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+            NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
+            NegativeCountLabel.setAlignment(Qt.AlignVCenter)
+            NegativeCountLabel.adjustSize()
+
+            # Download Button For Frequency Table
+            DownloadAsCSVButton = QPushButton('Download')
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+
+            DownloadAsCSVButtonFont = QFont("sans-serif")
+            DownloadAsCSVButtonFont.setPixelSize(14)
+            DownloadAsCSVButtonFont.setBold(True)
+
+            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+
+            SentimentAnalysisTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+
+            # LayoutWidget For within Word Frequency Tab
+            SentimentAnalysisTabverticalLayoutWidget = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
+            SentimentAnalysisTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+
+            # Box Layout for Word Frequency Tab
+            SentimentAnalysisverticalLayout = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget)
+            SentimentAnalysisverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Table for Word Frequency
+            SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget)
+            SentimentAnalysisTable.setColumnCount(2)
+            SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget.width(),
+                                                     SentimentAnalysisTabverticalLayoutWidget.height())
+
+            SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
+
+            SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+            SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
+            SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(SentimentAnalysisTable.columnCount()):
+                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    SentimentAnalysisTable.insertRow(rowList.index(row))
+                    for item in row:
+                        if row.index(item) == 0:
+                            ptext = QPlainTextEdit()
+                            ptext.setReadOnly(True)
+                            ptext.setPlainText(item);
+                            SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                        else:
+                            intItem = QTableWidgetItem()
+                            intItem.setData(Qt.EditRole, QVariant(item))
+                            SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
+                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                                Qt.AlignHCenter | Qt.AlignVCenter)
+                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
+                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                SentimentAnalysisTable.resizeColumnsToContents()
+                SentimentAnalysisTable.resizeRowsToContents()
+
+                SentimentAnalysisTable.setSortingEnabled(True)
+                SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+
+                for i in range(SentimentAnalysisTable.columnCount()):
+                    SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                if DataSourceSentimentAnalysisFlag:
+                    # updating tab
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                    tabs.tabWidget = SentimentAnalysisTab
+
+                else:
+                    # Adding Word Frequency Tab to TabList
+                    myFile.TabList.append(Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName))
+
+                    # Adding Word Frequency Query
+                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                    if len(ItemsWidget) == 0:
+                        DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                        DSVisualWidget.setText(0, DataSourceName)
+                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                        DSVisualWidget.setExpanded(True)
+
+                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                        DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                    else:
+                        for widgets in ItemsWidget:
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                    # Adding Word Frequency Tab to QTabWidget
+                    self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
+                    self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+
+            else:
+                QMessageBox.information(self, "Word Frequency Error",
+                                        "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
+
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -2207,8 +2281,8 @@ class Window(QMainWindow):
         DataSourceRename.setWindowTitle("Rename")
         DataSourceRename.setGeometry(self.width * 0.375, self.height * 0.425, self.width/4, self.height*0.15)
         DataSourceRename.setParent(self)
-        DataSourceRename.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        DataSourceRename.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceRename.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceRename.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         RenameLabel = QLabel(DataSourceRename)
         RenameLabel.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.3, DataSourceRename.width()/4, DataSourceRename.height()*0.15)
@@ -2315,8 +2389,8 @@ class Window(QMainWindow):
         DataSourceStemWord.setWindowTitle("Find Stem Words")
         DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.4, self.width / 4, self.height / 5)
         DataSourceStemWord.setParent(self)
-        DataSourceStemWord.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        DataSourceStemWord.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceStemWord.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceStemWord.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         WordStemDSlabel = QLabel(DataSourceStemWord)
@@ -2382,148 +2456,164 @@ class Window(QMainWindow):
         DataSourceStemWord.exec()
 
     # Show StemWords on Tab
-    def mapStemWordonTab(self, word, DataSourceItemWidget):
-        DataSourceStemWordTabFlag = False
+    def mapStemWordonTab(self, word, DataSourceName):
+        try:
+            DataSourceStemWordTabFlag = False
 
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceItemWidget and tabs.TabName == 'Stem Word':
-                DataSourceStemWordTabFlag = True
-                break
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word':
+                    DataSourceStemWordTabFlag = True
+                    break
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceItemWidget:
-                dummyText = DS.DataSourcetext
-                break
+            # Creating New Tab for Stem Word
+            StemWordTab = QWidget()
 
-        # Creating New Tab for Stem Word
-        StemWordTab = QWidget()
+            # LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                        self.tabWidget.height() / 10)
 
-        # LayoutWidget For within Stem Word Tab
-        StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
-        StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                    self.tabWidget.height() / 10)
+            # Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
+            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Box Layout for Stem Word Tab
-        StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
-        StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        # StemWord Text Edit
-        StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
-        StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
-                                     StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                     StemWordTabVerticalLayoutWidget.width() / 4,
-                                     StemWordTabVerticalLayoutWidget.height() / 4)
-        StemWordCompleter = QCompleter()
-        StemWordLineEdit.setCompleter(StemWordCompleter)
-        StemWordModel = QStringListModel()
-        StemWordCompleter.setModel(StemWordModel)
-
-        StemWordLineEdit.textChanged.connect(
-            lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceItemWidget))
-
-        # StemWord Submit Button
-        StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
-        StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
+            # StemWord Text Edit
+            StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
+            StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
                                          StemWordTabVerticalLayoutWidget.height() * 0.375,
                                          StemWordTabVerticalLayoutWidget.width() / 4,
                                          StemWordTabVerticalLayoutWidget.height() / 4)
-        StemWordSubmitButton.setText("Find Stem Words")
-        StemWordSubmitButton.setEnabled(False)
+            StemWordCompleter = QCompleter()
+            StemWordLineEdit.setCompleter(StemWordCompleter)
+            StemWordModel = QStringListModel()
+            StemWordCompleter.setModel(StemWordModel)
 
-        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
+            StemWordLineEdit.textChanged.connect(
+                lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
 
-        # 2nd LayoutWidget For within Stem Word Tab
-        StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
-        StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
+            # StemWord Submit Button
+            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
+            StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
+                                             StemWordTabVerticalLayoutWidget.height() * 0.375,
+                                             StemWordTabVerticalLayoutWidget.width() / 4,
+                                             StemWordTabVerticalLayoutWidget.height() / 4)
+            StemWordSubmitButton.setText("Find Stem Words")
+            StemWordSubmitButton.setEnabled(False)
 
-        # 2nd Box Layout for Stem Word Tab
-        StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
-        StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
 
-        StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
-        StemWordTable.setColumnCount(2)
-        StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
-                                  StemWordTabVerticalLayoutWidget2.height())
+            # 2nd LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        StemWordTable.setSizePolicy(self.sizePolicy)
-        StemWordTable.setWindowFlags(StemWordTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-        StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
-        StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            # 2nd Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
+            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        for i in range(StemWordTable.columnCount()):
-            StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            StemWordTable.horizontalHeaderItem(i).setFont(
-                QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+            StemWordTable.setColumnCount(2)
+            StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
+                                      StemWordTabVerticalLayoutWidget2.height())
 
-        StemWordSubmitButton.clicked.connect(
-            lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceItemWidget, StemWordTable))
-
-        dummyQuery = Query()
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceItemWidget:
-                rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
-                break
-
-        if len(rowList) != 0:
-            for row in rowList:
-                StemWordTable.insertRow(rowList.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
-                    StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-            StemWordTable.resizeColumnsToContents()
-            StemWordTable.resizeRowsToContents()
-
-            StemWordTable.setSortingEnabled(True)
-            StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            StemWordTable.setSizePolicy(self.sizePolicy)
+            StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
+            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(StemWordTable.columnCount()):
-                StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                StemWordTable.horizontalHeaderItem(i).setFont(
+                    QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            if DataSourceStemWordTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceItemWidget:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = StemWordTab
-                                break
+            StemWordSubmitButton.clicked.connect(
+                lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceName, StemWordTable))
 
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(StemWordTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(StemWordTab)
-                tabs.tabWidget = StemWordTab
+            dummyQuery = Query()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
+                    break
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    StemWordTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
+                        StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                StemWordTable.resizeColumnsToContents()
+                StemWordTable.resizeRowsToContents()
+
+                StemWordTable.setSortingEnabled(True)
+                StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(StemWordTable.columnCount()):
+                    StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                if DataSourceStemWordTabFlag:
+                    # change tab in query
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == DataSourceName:
+                            for query in DS.QueryList:
+                                if query[1] == tabs.tabWidget:
+                                    query[1] = StemWordTab
+                                    break
+
+                    # updating tab
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(StemWordTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(StemWordTab)
+                    tabs.tabWidget = StemWordTab
+
+                else:
+                    # Adding Stem Word Tab to QTabWidget
+                    myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceName))
+
+                    ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                    if len(ItemsWidget) == 0:  # if no Parent Widget
+                        # Adding Parent Query
+                        DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                        DSQueryWidget.setText(0, DataSourceName)
+                        DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                        DSQueryWidget.setExpanded(True)
+
+                        # Adding Stem Word Query
+                        DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                        DSNewCaseNode.setText(0, 'Stem Word')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                    else:
+                        for widgets in ItemsWidget:
+                            # Adding Stem Word Query
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Stem Word')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                    # Adding Stem Word Query to QueryList
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == DataSourceName:
+                            DS.setQuery(DSNewCaseNode, StemWordTab)
+
+                    # Adding Stem Word Tab to QTabWidget
+                    self.tabWidget.addTab(StemWordTab, "Stem Word")
+                    self.tabWidget.setCurrentWidget(StemWordTab)
 
             else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceItemWidget))
+                QMessageBox(self, "Stem Word Error",
+                            "An Error Occurred! No Stem Word Found of the Word \"" + word + "\"",
+                            QMessageBox.Ok)
 
-                StemWordQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                StemWordQueryTreeWidget.setText(0, "Stem Word (" + DataSourceItemWidget + ")")
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceItemWidget:
-                        DS.setQuery(StemWordQueryTreeWidget, StemWordTab)
-
-                self.tabWidget.addTab(StemWordTab, "Stem Word")
-                self.tabWidget.setCurrentWidget(StemWordTab)
-
-        else:
-            StemWordErrorBox = QMessageBox()
-            StemWordErrorBox.setIcon(QMessageBox.Critical)
-            StemWordErrorBox.setWindowTitle("Stem Word Error")
-            StemWordErrorBox.setText("An Error Occurred! No Stem Word Found of the Word \"" + word + "\"")
-            StemWordErrorBox.setStandardButtons(QMessageBox.Ok)
-            StemWordErrorBox.exec_()
+        except Exception as e:
+            print(str(e))
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):
@@ -2535,14 +2625,14 @@ class Window(QMainWindow):
                 StemWordModel.setStringList(matching)
 
     #Get Stem Word From Column
-    def StemWordWithinTab(self, word, DataSourceItemWidget, StemWordTable):
+    def StemWordWithinTab(self, word, DataSourceName, StemWordTable):
         while StemWordTable.rowCount() > 0:
             StemWordTable.removeRow(0)
 
         dummyQuery = Query()
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceItemWidget:
+            if DS.DataSourceName == DataSourceName:
                 rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
                 break
 
@@ -2585,8 +2675,8 @@ class Window(QMainWindow):
         PartOfSpeechDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                             self.height / 10)
         PartOfSpeechDialog.setParent(self)
-        PartOfSpeechDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        PartOfSpeechDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        PartOfSpeechDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        PartOfSpeechDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(PartOfSpeechDialog)
@@ -2649,14 +2739,14 @@ class Window(QMainWindow):
                                                                                                DS.DataSourcetext, 3)
                 break
 
-        # Creating New Tab for Stem Word
+        # Creating New Tab for Part of Speech
         POSTab = QWidget()
 
-        # LayoutWidget For within Stem Word Tab
+        # LayoutWidget For within Part of Speech Tab
         POSTabVerticalLayoutWidget = QWidget(POSTab)
         POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
+        # Box Layout for Part of Speech Tab
         POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
         POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -2710,7 +2800,7 @@ class Window(QMainWindow):
                              POSTabVerticalLayoutWidget2.height())
 
         POSTable.setSizePolicy(self.sizePolicy)
-        POSTable.setWindowFlags(POSTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        POSTable.setWindowFlags(POSTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
         POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
         POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
@@ -2781,16 +2871,36 @@ class Window(QMainWindow):
             tabs.tabWidget = POSTab
 
         else:
-            # Adding Word Cloud Tab to QTabWidget
+            # Adding Part of Speech Tab to QTabWidget
             myFile.TabList.append(Tab("Part of Speech", POSTab, DataSourceName))
 
-            POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            POSQueryTreeWidget.setText(0, "Parts of Speech (" + DataSourceName + ")")
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
+            if len(ItemsWidget) == 0:  # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Part of Speech Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Parts of Speech')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Part of Speech Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Parts of Speech')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Part of Speech Query to QueryList
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(POSQueryTreeWidget, POSTab)
+                    DS.setQuery(DSNewCaseNode, POSTab)
 
+            # Adding Part of Speech Tab to QTabWidget
             self.tabWidget.addTab(POSTab, "Parts of Speech")
             self.tabWidget.setCurrentWidget(POSTab)
 
@@ -2816,8 +2926,8 @@ class Window(QMainWindow):
         EntityRelationShipDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                        self.height / 10)
         EntityRelationShipDialog.setParent(self)
-        EntityRelationShipDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        EntityRelationShipDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        EntityRelationShipDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        EntityRelationShipDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(EntityRelationShipDialog)
@@ -2880,10 +2990,10 @@ class Window(QMainWindow):
                     DS.DataSourcetext)
                 break
 
-        # Creating New Tab for Stem Word
+        # Creating New Tab for Entity Relationship
         DSERTab = QWidget()
 
-        # LayoutWidget For within Stem Word Tab
+        # LayoutWidget For within Entity Relationship Tab
         DSERTabVerticalLayoutWidget = QWidget(DSERTab)
         DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
@@ -2901,7 +3011,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSERComboBox)
 
-        # 2nd LayoutWidget For within Stem Word Tab
+        # 2nd LayoutWidget For within Entity Relationship Tab
         DSERTabVerticalLayoutWidget2 = QWidget(DSERTab)
         DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
@@ -2914,7 +3024,7 @@ class Window(QMainWindow):
         DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
 
         DSERTable.setSizePolicy(self.sizePolicy)
-        DSERTable.setWindowFlags(DSERTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DSERTable.setWindowFlags(DSERTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
         DSERTable.setHorizontalHeaderLabels(["Word", "Frequency", "Entity"])
         DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
@@ -2946,6 +3056,7 @@ class Window(QMainWindow):
                 DSERTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
         EntityHTMLWeb = QWebEngineView()
+        EntityHTMLWeb.setContextMenuPolicy(Qt.PreventContextMenu)
         DSERTabVerticalLayout2.addWidget(EntityHTMLWeb)
         EntityHTMLWeb.setHtml(EntityHTML)
         EntityHTMLWeb.hide()
@@ -2973,16 +3084,36 @@ class Window(QMainWindow):
             tabs.tabWidget = DSERTab
 
         else:
-            # Adding Word Cloud Tab to QTabWidget
+            # Adding Entity Relationship Tab to QTabWidget
             myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceName))
 
-            POSQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            POSQueryTreeWidget.setText(0, "Entity Relationship (" + DataSourceName + ")")
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
+            if len(ItemsWidget) == 0:  # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Entity Relationship Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Entity Relationship')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Entity Relationship Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Entity Relationship')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Entity Relationship Query to QueryList
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(POSQueryTreeWidget, DSERTab)
+                    DS.setQuery(DSNewCaseNode, DSERTab)
 
+            # Adding Entity Relationship Tab to QTabWidget
             self.tabWidget.addTab(DSERTab, "Entity Relationship")
             self.tabWidget.setCurrentWidget(DSERTab)
 
@@ -3014,8 +3145,8 @@ class Window(QMainWindow):
         TopicModellingDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                              self.height / 10)
         TopicModellingDialog.setParent(self)
-        TopicModellingDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        TopicModellingDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        TopicModellingDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        TopicModellingDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(TopicModellingDialog)
@@ -3072,7 +3203,7 @@ class Window(QMainWindow):
                 break
 
         TopicModellingTab = QWidget()
-        TopicModellingTab.setGeometry(QtCore.QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+        TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
         TopicModellingTab.setSizePolicy(self.sizePolicy)
 
         # LayoutWidget For within Topic Modelling Tab
@@ -3110,19 +3241,37 @@ class Window(QMainWindow):
             self.tabWidget.setCurrentWidget(TopicModellingTab)
             tabs.tabWidget = TopicModellingTab
         else:
-            # Adding Word Frequency Tab to TabList
+            # Adding Topic Modelling Tab to TabList
             myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
 
-            # Adding Word Frequency Query
-            WordFreqencyQueryTreeWidget = QTreeWidgetItem(self.QueryTreeWidget)
-            WordFreqencyQueryTreeWidget.setText(0, "Topic Modelling (" + DataSourceName + ")")
 
-            # Adding Word Frequency Query to QueryList
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:                                   # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Topic Modelling Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Topic Modelling')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Topic Modelling Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Topic Modelling')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Topic Modelling Query to QueryList
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(WordFreqencyQueryTreeWidget, TopicModellingTab)
+                    DS.setQuery(DSNewCaseNode, TopicModellingTab)
 
-            # Adding Word Frequency Tab to QTabWidget
+            # Adding Topic Modelling Tab to QTabWidget
             self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
             self.tabWidget.setCurrentWidget(TopicModellingTab)
 
@@ -3149,7 +3298,7 @@ class Window(QMainWindow):
 
         CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
         CreateCasesPreview.customContextMenuRequested.connect(
-            lambda checked, index=QtGui.QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+            lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
@@ -3194,10 +3343,10 @@ class Window(QMainWindow):
         CreateCaseDialogBox.setModal(True)
         CreateCaseDialogBox.setWindowTitle("Create New Case")
         CreateCaseDialogBox.setParent(self)
-        CreateCaseDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CreateCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CreateCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3,
                                                     self.height / 10)
-        CreateCaseDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CreateCaseDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         CaseNameLabel = QLabel(CreateCaseDialogBox)
         CaseNameLabel.setText("Case Name")
@@ -3259,10 +3408,10 @@ class Window(QMainWindow):
         AddtoCaseDialogBox.setModal(True)
         AddtoCaseDialogBox.setWindowTitle("Add to Case")
         AddtoCaseDialogBox.setParent(self)
-        AddtoCaseDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        AddtoCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         AddtoCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
                                        self.height / 10)
-        AddtoCaseDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        AddtoCaseDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         AddtoCaseLabel = QLabel(AddtoCaseDialogBox)
         AddtoCaseLabel.setText("Case Name")
@@ -3334,7 +3483,7 @@ class Window(QMainWindow):
 
         CreateSentimentsPreview.setContextMenuPolicy(Qt.CustomContextMenu)
         CreateSentimentsPreview.customContextMenuRequested.connect(
-            lambda checked, index=QtGui.QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
+            lambda checked, index=QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
@@ -3368,10 +3517,10 @@ class Window(QMainWindow):
         AddtoSentimentsDialogBox.setModal(True)
         AddtoSentimentsDialogBox.setWindowTitle("Add to Sentiments")
         AddtoSentimentsDialogBox.setParent(self)
-        AddtoSentimentsDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        AddtoSentimentsDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         AddtoSentimentsDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
                                        self.height / 10)
-        AddtoSentimentsDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        AddtoSentimentsDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         AddtoSentimentsLabel = QLabel(AddtoSentimentsDialogBox)
         AddtoSentimentsLabel.setText("Sentiment")
@@ -3459,8 +3608,8 @@ class Window(QMainWindow):
         SummarizeDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
         SummarizeDialog.setParent(self)
         SummarizeDialog.setAttribute(Qt.WA_DeleteOnClose)
-        SummarizeDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        SummarizeDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        SummarizeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        SummarizeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Summarization Data Source Label
         SummarizeDSLabel = QLabel(SummarizeDialog)
@@ -3507,7 +3656,7 @@ class Window(QMainWindow):
         SummarizeWord = QDoubleSpinBox(SummarizeDialog)
         SummarizeWord.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.4,
                                   SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
-        SummarizeWord.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        SummarizeWord.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
         SummarizeWord.setDecimals(0)
         SummarizeWord.setEnabled(False)
         self.LineEditSizeAdjustment(SummarizeWord)
@@ -3538,7 +3687,7 @@ class Window(QMainWindow):
         SummarizeRatio = QDoubleSpinBox(SummarizeDialog)
         SummarizeRatio.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.65,
                                    SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
-        SummarizeRatio.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        SummarizeRatio.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
         SummarizeRatio.setEnabled(False)
         SummarizeRatio.setDecimals(2)
         SummarizeRatio.setSingleStep(0.01)
@@ -3751,10 +3900,10 @@ class Window(QMainWindow):
                 break
 
         if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
                                                         self.height*2/5)
-            DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             #************************************** Labels *************************************
 
@@ -3933,11 +4082,11 @@ class Window(QMainWindow):
 
         elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             if len(DS.DataSourceImage) == 1:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
                                                             self.height * 2 / 5)
                 DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # ************************************** Labels *************************************
 
@@ -4114,11 +4263,11 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.exec_()
 
             else:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
                 DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # ************************************** Labels *************************************
 
@@ -4201,11 +4350,11 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "URL":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                         self.height / 5)
             DataSourceWidgetDetailDialogBox.setWindowFlags(
-                self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             # Data Source Label
             DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -4275,11 +4424,11 @@ class Window(QMainWindow):
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Tweet":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                         self.height / 5)
             DataSourceWidgetDetailDialogBox.setWindowFlags(
-                self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             # Data Source  Label
             DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -4350,11 +4499,11 @@ class Window(QMainWindow):
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Youtube":
-                DataSourceWidgetDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
                 DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # Data Source Label
                 DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -4435,10 +4584,10 @@ class Window(QMainWindow):
         DataSourceShowImagesDetailsBox.setWindowTitle("Images Details")
         DataSourceShowImagesDetailsBox.setParent(ParentWindow)
 
-        DataSourceShowImagesDetailsBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        DataSourceShowImagesDetailsBox.setWindowFlags(Qt.WindowCloseButtonHint)
         DataSourceShowImagesDetailsBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
                                                     self.height * 2 / 5)
-        DataSourceShowImagesDetailsBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceShowImagesDetailsBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # ************************************** Labels *************************************
 
@@ -4623,8 +4772,8 @@ class Window(QMainWindow):
         DataSourcesCreateDashboardDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                        self.height / 10)
         DataSourcesCreateDashboardDialog.setParent(self)
-        DataSourcesCreateDashboardDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        DataSourcesCreateDashboardDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourcesCreateDashboardDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourcesCreateDashboardDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourcesCreateDashboardDialog)
@@ -4688,8 +4837,8 @@ class Window(QMainWindow):
         CreateWordCloudDialog.setGeometry(self.width * 0.35, self.height*0.35, self.width/3, self.height/3)
         CreateWordCloudDialog.setParent(self)
         CreateWordCloudDialog.setAttribute(Qt.WA_DeleteOnClose)
-        CreateWordCloudDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        CreateWordCloudDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CreateWordCloudDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        CreateWordCloudDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         WordCloudDSLabel = QLabel(CreateWordCloudDialog)
         WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
@@ -4721,7 +4870,7 @@ class Window(QMainWindow):
 
         WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
         WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-        WordCloudBackgroundColor.setLayoutDirection(QtCore.Qt.LeftToRight)
+        WordCloudBackgroundColor.setLayoutDirection(Qt.LeftToRight)
 
         for colorname, colorhex in matplotlib.colors.cnames.items():
             WordCloudBackgroundColor.addItem(colorname)
@@ -4730,7 +4879,7 @@ class Window(QMainWindow):
 
         WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
         WordCloudMaxWords.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-        WordCloudMaxWords.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        WordCloudMaxWords.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
         WordCloudMaxWords.setDecimals(0)
         WordCloudMaxWords.setMinimum(10.0)
         WordCloudMaxWords.setMaximum(200.0)
@@ -4880,8 +5029,8 @@ class Window(QMainWindow):
         DataSourceCoordinateMapDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                      self.height / 10)
         DataSourceCoordinateMapDialog.setParent(self)
-        DataSourceCoordinateMapDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        DataSourceCoordinateMapDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        DataSourceCoordinateMapDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceCoordinateMapDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourceCoordinateMapDialog)
@@ -4900,6 +5049,11 @@ class Window(QMainWindow):
                                DataSourceCoordinateMapDialog.height() * 0.2,
                                DataSourceCoordinateMapDialog.width() / 2,
                                DataSourceCoordinateMapDialog.height() / 10)
+        # if len(myFile.DataSourceList) > 1:
+        #     DSComboBox.addItem("All")
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceext == 'Tweet':
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -4914,12 +5068,6 @@ class Window(QMainWindow):
 
         if DSComboBox.count() == 0:
             DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
-            # if len(myFile.DataSourceList) > 1:
-            #     DSComboBox.addItem("All")
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceext == 'Tweet':
-                    DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DataSourcesCoordinateMapbuttonBox)
 
@@ -4933,89 +5081,88 @@ class Window(QMainWindow):
 
     # Create Coordinate Map
     def DataSourceCoordinateMap(self, DataSourceName):
-        try:
-            DataSourceCoordinateMapTabFlag = False
+        DataSourceCoordinateMapTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map':
-                    DataSourceCoordinateMapTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map':
+                DataSourceCoordinateMapTabFlag = True
+                break
 
 
-            DataSourceCoordinateMapTab = QWidget()
+        DataSourceCoordinateMapTab = QWidget()
 
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
-            DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        # LayoutWidget For within DataSource Preview Tab
+        DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
+        DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
 
-            if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
-                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
+        if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
+            DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
+        else:
+            DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
+
+        DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
+        model = MarkerModel(DataSourceCoordinateMap)
+        DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
+
+        qml_path = os.path.join(os.path.dirname(__file__), "map.qml")
+        DataSourceCoordinateMap.setSource(QUrl.fromLocalFile(qml_path))
+
+        positions = []
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                break
+
+        for data in DS.TweetData:
+            for coordinates in self.Coordinates:
+                if data[4].split(',')[0].strip() == coordinates[0]:
+                    positions.append((float(coordinates[1]), float(coordinates[2])))
+
+        urls = []
+
+        for items in positions:
+            urls.append("Images/Marker.png")
+
+        for c, u in zip(positions, urls):
+            coord = QtPositioning.QGeoCoordinate(*c)
+            source = QUrl(u)
+            model.appendMarker({"position": coord, "source": source})
+
+        if DataSourceCoordinateMapTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+            tabs.tabWidget = DataSourceCoordinateMapTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
+
+            ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSVisualWidget.setText(0, DataSourceName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
+
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Coordinate Map')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
             else:
-                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
-
-            DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
-            model = MarkerModel(DataSourceCoordinateMap)
-            DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
-
-            qml_path = os.path.join(os.path.dirname(__file__), "map.qml")
-            DataSourceCoordinateMap.setSource(QtCore.QUrl.fromLocalFile(qml_path))
-
-            positions = []
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    break
-
-            for data in DS.TweetData:
-                for coordinates in self.Coordinates:
-                    if data[4].split(',')[0].strip() == coordinates[0]:
-                        positions.append((float(coordinates[1]), float(coordinates[2])))
-
-            urls = []
-
-            for items in positions:
-                urls.append("Images/Marker.png")
-
-
-            for c, u in zip(positions, urls):
-                coord = QtPositioning.QGeoCoordinate(*c)
-                source = QtCore.QUrl(u)
-                model.appendMarker({"position": coord, "source": source})
-
-            if DataSourceCoordinateMapTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
-                tabs.tabWidget = DataSourceCoordinateMapTab
-
-            else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
-
-                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                if len(ItemsWidget) == 0:
-                    DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
-                    DSVisualWidget.setText(0, DataSourceName)
-                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                    DSVisualWidget.setExpanded(True)
-
-                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Coordinate Map')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                else:
-                    for widgets in ItemsWidget:
-                        DSNewCaseNode = QTreeWidgetItem(widgets)
-                        DSNewCaseNode.setText(0, 'Coordinate Map')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.setVisual(DSNewCaseNode, DataSourceCoordinateMapTab)
 
-                self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
-                self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
-
-        except Exception as e:
-            print(str(e))
+            self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
+            self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
 
     # ****************************************************************************
     # ****************************** Enable/Disable ******************************
@@ -5131,31 +5278,102 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Query
     def QueryTreeWidgetContextMenu(self, QueryItemName, QueryWidgetPos):
-        QueryRightClickMenu = QMenu(self.QueryTreeWidget)
+        if QueryItemName.parent() == None:
+            if QueryItemName.text(0) == "Data Sources Similarity":
+                QueryRightClickMenu = QMenu(self.QueryTreeWidget)
 
-        QueryRemove = QAction('Remove', self.QueryTreeWidget)
-        QueryRemove.triggered.connect(lambda checked, index=QueryItemName: self.QueryRemove(index))
+                QueryShow = QAction('Show', self.QueryTreeWidget)
+                QueryShow.triggered.connect(lambda: self.QueryDoubleClickHandler(QueryItemName))
+                QueryRightClickMenu.addAction(QueryShow)
 
-        QueryRightClickMenu.addAction(QueryRemove)
-        QueryRightClickMenu.popup(QueryWidgetPos)
+                QueryRemove = QAction('Remove', self.QueryTreeWidget)
+                QueryRemove.triggered.connect(lambda: self.QueryParentRemove(QueryItemName))
+                QueryRightClickMenu.addAction(QueryRemove)
 
-    # Remove Query (Tab)
-    def QueryRemove(self, QueryItemName):
-        if QueryItemName.text(0) == 'Data Sources Similarity':
-            for tabs in myFile.TabList:
-                if tabs.TabName == 'Data Sources Similarity':
-                    myFile.TabList.remove(tabs)
-                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    tabs.__del__()
+                QueryRightClickMenu.popup(QueryWidgetPos)
 
+            else:
+                QueryRightClickMenu = QMenu(self.QueryTreeWidget)
+
+                # Query Expand
+                QueryExpand = QAction('Expand', self.QueryTreeWidget)
+                QueryExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(QueryItemName))
+                if (QueryItemName.childCount() == 0 or QueryItemName.isExpanded() == True):
+                    QueryExpand.setDisabled(True)
+                else:
+                    QueryExpand.setDisabled(False)
+                QueryRightClickMenu.addAction(QueryExpand)
+
+                # Query Collapse
+                QueryCollapse = QAction('Collapse', self.QueryTreeWidget)
+                QueryCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(QueryItemName))
+
+                if (QueryItemName.childCount() == 0 or QueryItemName.isExpanded() == False):
+                    QueryCollapse.setDisabled(True)
+                else:
+                    QueryCollapse.setDisabled(False)
+                QueryRightClickMenu.addAction(QueryCollapse)
+
+                # Query Remove
+                QueryRemove = QAction('Remove', self.QueryTreeWidget)
+                QueryRemove.triggered.connect(lambda: self.QueryParentRemove(QueryItemName))
+
+                QueryRightClickMenu.addAction(QueryRemove)
+
+                QueryRightClickMenu.popup(QueryWidgetPos)
         else:
-            for letter in QueryItemName.text(0):
-                if letter == '(':
-                    QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
-                    DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
+            QueryRightClickMenu = QMenu(self.QueryTreeWidget)
 
+            QueryShow = QAction('Show', self.QueryTreeWidget)
+            QueryShow.triggered.connect(lambda: self.QueryDoubleClickHandler(QueryItemName))
+            QueryRightClickMenu.addAction(QueryShow)
+
+            QueryRemove = QAction('Remove', self.QueryTreeWidget)
+            QueryRemove.triggered.connect(lambda: self.QueryChildRemove(QueryItemName))
+            QueryRightClickMenu.addAction(QueryRemove)
+
+            QueryRightClickMenu.popup(QueryWidgetPos)
+
+    # Remove Parent Query (Tab)
+    def QueryParentRemove(self, QueryItemName):
+        QueryRemoveChoice = QMessageBox.critical(self, 'Remove',
+                                                        "Are you sure you want to remove this Data Source's all Queries?",
+                                                         QMessageBox.Yes | QMessageBox.No)
+
+        if QueryRemoveChoice == QMessageBox.Yes:
+            if QueryItemName.text(0) == 'Data Sources Similarity':
+                for tabs in myFile.TabList:
+                    if tabs.TabName == 'Data Sources Similarity':
+                        myFile.TabList.remove(tabs)
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        tabs.__del__()
+
+                self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
+
+            else:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == QueryItemName.text(0):
+                        for tabs in myFile.TabList:
+                            if tabs.DataSourceName == DS.DataSourceName:
+                                myFile.TabList.remove(tabs)
+                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                tabs.__del__()
+
+                        self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
+                        DS.QueryList.clear()
+                        break
+        else:
+            pass
+
+    # Remove Child Query (Tab)
+    def QueryChildRemove(self, QueryItemName):
+        QueryRemoveChoice = QMessageBox.critical(self, 'Remove',
+                                                        "Are you sure you want to remove this Data Source's Query?",
+                                                        QMessageBox.Yes | QMessageBox.No)
+
+        if QueryRemoveChoice == QMessageBox.Yes:
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName:
+                if tabs.DataSourceName == QueryItemName.parent().text(0):
                     for DS in myFile.DataSourceList:
                         if DS.DataSourceName == tabs.DataSourceName:
                             for query in DS.QueryList:
@@ -5166,7 +5384,15 @@ class Window(QMainWindow):
                                     tabs.__del__()
                                     break
 
-        self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
+            if QueryItemName.parent().childCount() == 1:
+                tempParent = QueryItemName.parent()
+                tempParent.removeChild(QueryItemName)
+                self.QueryTreeWidget.invisibleRootItem().removeChild(tempParent)
+            else:
+                QueryItemName.parent().removeChild(QueryItemName)
+
+        else:
+            pass
 
     # Preview Query/Tab on double click
     def QueryDoubleClickHandler(self, QueryItemName):
@@ -5178,13 +5404,8 @@ class Window(QMainWindow):
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
                     break
         else:
-            for letter in QueryItemName.text(0):
-                if letter == '(':
-                    QueryName = QueryItemName.text(0)[0: int(QueryItemName.text(0).index(letter)) - 1]
-                    DataSourceName = QueryItemName.text(0)[int(QueryItemName.text(0).index(letter)) + 1: -1]
-
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName:
+                if tabs.DataSourceName == QueryItemName.parent().text(0):
                     for DS in myFile.DataSourceList:
                         if DS.DataSourceName == tabs.DataSourceName:
                             for query in DS.QueryList:
@@ -5319,10 +5540,10 @@ class Window(QMainWindow):
         CasesParentDetailDialogBox.setModal(True)
         CasesParentDetailDialogBox.setWindowTitle("Details")
         CasesParentDetailDialogBox.setParent(self)
-        CasesParentDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CasesParentDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CasesParentDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
                                                     self.height / 10)
-        CasesParentDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CasesParentDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.text(0):
@@ -5414,7 +5635,7 @@ class Window(QMainWindow):
 
         CaseShowComponentTable.setSizePolicy(self.sizePolicy)
         CaseShowComponentTable.setWindowFlags(
-            CaseShowComponentTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+            CaseShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
         CaseShowComponentTable.setHorizontalHeaderLabels(
             ["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
         CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
@@ -5502,8 +5723,8 @@ class Window(QMainWindow):
         CaseRenameDialog.setWindowTitle("Rename")
         CaseRenameDialog.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
         CaseRenameDialog.setParent(self)
-        CaseRenameDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        CaseRenameDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CaseRenameDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        CaseRenameDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         RenameLabel = QLabel(CaseRenameDialog)
         RenameLabel.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.3,
@@ -5592,10 +5813,10 @@ class Window(QMainWindow):
         CasesChildDetailDialogBox.setModal(True)
         CasesChildDetailDialogBox.setWindowTitle("Details")
         CasesChildDetailDialogBox.setParent(self)
-        CasesChildDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        CasesChildDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CasesChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                self.height / 5)
-        CasesChildDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        CasesChildDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.parent().text(0):
@@ -5840,7 +6061,7 @@ class Window(QMainWindow):
 
             SentimentsShowComponentTable.setSizePolicy(self.sizePolicy)
             SentimentsShowComponentTable.setWindowFlags(
-                SentimentsShowComponentTable.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+                SentimentsShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             SentimentsShowComponentTable.setHorizontalHeaderLabels(
                 ["Sentiment", "Word Count", "Character Count", "Weighted Average", "Action"])
             SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
@@ -5981,10 +6202,10 @@ class Window(QMainWindow):
         SentimentsChildDetailDialogBox.setModal(True)
         SentimentsChildDetailDialogBox.setWindowTitle("Details")
         SentimentsChildDetailDialogBox.setParent(self)
-        SentimentsChildDetailDialogBox.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        SentimentsChildDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         SentimentsChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                               self.height / 5)
-        SentimentsChildDetailDialogBox.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        SentimentsChildDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == SentimentsItemName.parent().text(0):
@@ -6234,8 +6455,8 @@ class Window(QMainWindow):
         myDialog.setModal(True)
         myDialog.setWindowTitle("New File")
         myDialog.setParent(self)
-        myDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        myDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        myDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        myDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         myDialog.show()
 
@@ -6271,39 +6492,6 @@ class Window(QMainWindow):
 
     # About Window Tab
     def AboutWindow(self):
-        # self.AboutWindowDialog = QDialog()
-        # self.AboutWindowDialog.setModal(True)
-        # self.AboutWindowDialog.setWindowTitle("About Us")
-        # self.AboutWindowDialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width / 2, self.height / 2)
-        # self.AboutWindowDialog.setParent(self)
-        # self.AboutWindowDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        # self.AboutWindowDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
-        #
-        #
-        # groupBox1 = QGroupBox()
-        # vBox1 = QVBoxLayout(self.AboutWindowDialog)
-        #
-        # label = QLabel(self.AboutWindowDialog)
-        # label.setPixmap(QtGui.QPixmap(WindowTitleLogo).scaledToWidth(self.AboutWindowDialog.width()/2))
-        #
-        # vBox1.addWidget(label)
-        # groupBox1.setLayout(vBox1)
-        #
-        # groupBox2 = QGroupBox()
-        # vBox2 = QVBoxLayout(self.AboutWindowDialog)
-        # textpane = QTextEdit()
-        # textpane.setText("TextAs\nAnalysis Like Never Before")
-        # textpane.setStyleSheet("background:transparent;")
-        # textpane.setReadOnly(True)
-        #
-        # vBox2.addWidget(textpane)
-        # groupBox2.setLayout(vBox2)
-        #
-        # hbox1 = QHBoxLayout(self.AboutWindowDialog)
-        # hbox1.addWidget(groupBox1)
-        # hbox1.addWidget(groupBox2)
-        # self.AboutWindowDialog.setLayout(hbox1)
-        # self.AboutWindowDialog.show()
         file = open('LICENSE', 'r')
         lic = file.read()
         QMessageBox().about(self, "About TextAS", lic)
@@ -6567,8 +6755,8 @@ class Window(QMainWindow):
         TweetDialog.setGeometry(self.width * 0.375, self.height * 0.375, self.width / 4, self.height / 4)
         TweetDialog.setParent(self)
         TweetDialog.setAttribute(Qt.WA_DeleteOnClose)
-        TweetDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        TweetDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        TweetDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        TweetDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Tweet HashTag Label
         TweetHashtagLabel = QLabel(TweetDialog)
@@ -6718,8 +6906,8 @@ class Window(QMainWindow):
         URLDialog.setGeometry(self.width * 0.3, self.height * 0.425, self.width*2/5 , self.height*0.15)
         URLDialog.setParent(self)
         URLDialog.setAttribute(Qt.WA_DeleteOnClose)
-        URLDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        URLDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        URLDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        URLDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Tweet HashTag Label
         URLLabel = QLabel(URLDialog)
@@ -6794,8 +6982,8 @@ class Window(QMainWindow):
         YoutubeDialog.setGeometry(self.width * 0.3, self.height * 0.4, self.width * 2 / 5, self.height * 0.20)
         YoutubeDialog.setParent(self)
         YoutubeDialog.setAttribute(Qt.WA_DeleteOnClose)
-        YoutubeDialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        YoutubeDialog.setWindowFlags(self.windowFlags() | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        YoutubeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        YoutubeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         # Summarization Default Radio Button
         VideoURLRadioButton = QRadioButton(YoutubeDialog)

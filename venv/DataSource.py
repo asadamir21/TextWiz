@@ -27,11 +27,8 @@ import docx2txt, PyPDF2, tweepy
 from Youtube.KeyWord import *
 from Youtube.URL import *
 
-import re
-import os
 import win32com.client as win32
 from win32com.client import constants
-
 
 
 class DataSource():
@@ -516,46 +513,28 @@ class DataSource():
 
     #detection
     def detect(self):
+        self.LanguageDetectionError = False
+
         blob = TextBlob(self.DataSourcetext)
         try:
-            if blob.detect_language() != 'en':
-                self.isEnglish = False
-            else:
-                self.isEnglish = True
+            self.OriginalText = blob.detect_language()
         except:
             self.LanguageDetectionError = True
 
     #translation
-    def translate(self):
-        if not self.isEnglish and not hasattr(self, 'DataSourceTranslatedText'):
-            blob = TextBlob(self.DataSourcetext)
-            try:
-                self.DataSourceTranslatedText = blob.translate(to='en')
+    def translate(self, TranslateTo):
+        self.TranslationError = False
+        blob = TextBlob(self.DataSourcetext)
+        try:
+            self.DataSourceTranslatedText = blob.translate(to=TranslateTo)
+            QMessageBox.information(self.MainWindow, "Translation Success",
+                                    self.DataSourceName + " is Translated Successfully!", QMessageBox.Ok)
 
-                TranslationSuccessBox = QMessageBox()
-                TranslationSuccessBox.setIcon(QMessageBox.Information)
-                TranslationSuccessBox.setWindowTitle("Translation Success")
-                TranslationSuccessBox.setText(self.DataSourceName + " is Translated Successfully!")
-                TranslationSuccessBox.setStandardButtons(QMessageBox.Ok)
-                TranslationSuccessBox.exec_()
-
-                self.isTranslated = True
-            except Exception as e:
-                TranslationErrorBox = QMessageBox()
-                TranslationErrorBox.setIcon(QMessageBox.Critical)
-                TranslationErrorBox.setWindowTitle("Translation Error")
-                TranslationErrorBox.setText("An Error occurred. The language is undetectable")
-                TranslationErrorBox.setDetailedText(str(e))
-                TranslationErrorBox.setStandardButtons(QMessageBox.Ok)
-                TranslationErrorBox.exec_()
-
-        elif hasattr(self, 'DataSourceTranslatedText'):
-            TranslationErrorBox = QMessageBox()
-            TranslationErrorBox.setIcon(QMessageBox.Information)
-            TranslationErrorBox.setWindowTitle("Translation Error")
-            TranslationErrorBox.setText(self.DataSourceName + " is already Translated!")
-            TranslationErrorBox.setStandardButtons(QMessageBox.Ok)
-            TranslationErrorBox.exec_()
+            self.isTranslated = True
+        except Exception as e:
+            self.TranslationError = True
+            QMessageBox.critical(self.MainWindow, "Translation Error",
+                                 "An Error occurred. The language is undetectable", QMessageBox.Ok)
 
     # Create Case
     def CreateCase(self, CaseTopic, selectedText):

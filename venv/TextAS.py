@@ -7,14 +7,10 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
-from matplotlib.container import StemContainer
-from tweepy import TweepError
 from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
 from File import *
-from spacy import displacy
 import humanfriendly
-
 
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
 
@@ -101,6 +97,21 @@ class Window(QMainWindow):
         self.width = Monitor_Resolution_Info.get("Work")[2]
         self.height = Monitor_Resolution_Info.get("Work")[3]
 
+        self.settings = QSettings('TextAS', 'TextAS')
+
+        self.theme = self.settings.value('theme', '')
+
+        if self.theme == '' or self.theme == 'Light':
+            self.setStyleSheet(open('Styles/Light.css', 'r').read())
+        elif self.theme == 'Dark':
+            self.setStyleSheet(open('Styles/Dark.css', 'r').read())
+        elif self.theme == 'DarkGrey':
+            self.setStyleSheet(open('Styles/DarkGrey.css', 'r').read())
+        elif self.theme == 'DarkOrange':
+            self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+
+            self.settings.setValue('theme', 'DarkOrange')
+
         self.left = 0;
         self.top = 0;
 
@@ -116,7 +127,7 @@ class Window(QMainWindow):
         for row in coordinatecsvreader:
             self.Coordinates.append([row[0], row[1], row[2]])
 
-        self.setStyleSheet(open('Styles/Light.css', 'r').read())
+
 
         self.initWindows()
 
@@ -254,6 +265,10 @@ class Window(QMainWindow):
         toggleReportButton.triggered.connect(lambda: self.LeftPaneHide(self.ReportLabel, self.ReportTreeWidget))
         viewMenu.addAction(toggleReportButton)
 
+        ChangeThemeButton = QAction('Change Theme', self)
+        ChangeThemeButton.triggered.connect(lambda: self.ChangeThemeDialog())
+        viewMenu.addAction(ChangeThemeButton)
+
         # *****************************  ImportMenuItem *************************************
 
         WordFileButton = QAction(QIcon("Images/Word.png"),'Word File', self)
@@ -315,13 +330,19 @@ class Window(QMainWindow):
         # Summarize Tool
         SummarizeTool = QAction('Summarize', self)
         SummarizeTool.setStatusTip('Summarize')
-        SummarizeTool.triggered.connect(lambda: self.DataSourceSummarize(None))
+        SummarizeTool.triggered.connect(lambda: self.DataSourceSummarize())
         ToolMenu.addAction(SummarizeTool)
+
+        # Summarize Tool
+        TranslateTool = QAction('Translate', self)
+        TranslateTool.setStatusTip('Translate')
+        TranslateTool.triggered.connect(lambda: self.DataSourceTranslateDialog())
+        ToolMenu.addAction(TranslateTool)
 
         # Stem Word Tool
         FindStemWordTool = QAction('Find Stem Word', self)
         FindStemWordTool.setStatusTip('Find Stem Words')
-        FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords(None))
+        FindStemWordTool.triggered.connect(lambda: self.DataSourceFindStemWords())
         ToolMenu.addAction(FindStemWordTool)
 
         # Part of Speech
@@ -336,6 +357,12 @@ class Window(QMainWindow):
         EntityRelationship.triggered.connect(lambda: self.DataSourceEntityRelationShipDialog())
         ToolMenu.addAction(EntityRelationship)
 
+        # Sentiment Analysis
+        SentimentAnalysis = QAction('Sentiments Analysis', self)
+        SentimentAnalysis.setToolTip('Sentiments Analysis')
+        SentimentAnalysis.triggered.connect(lambda: self.DataSourcesSentimentAnalysis())
+        ToolMenu.addAction(SentimentAnalysis)
+
         # Topic Modelling
         TopicModelling = QAction('Topic Modelling', self)
         TopicModelling.setToolTip('Topic Modelling')
@@ -347,12 +374,6 @@ class Window(QMainWindow):
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
         ToolMenu.addAction(GenerateQuestion)
-
-        # Sentiment Analysis
-        SentimentAnalysis = QAction('Sentiments Analysis', self)
-        SentimentAnalysis.setToolTip('Sentiments Analysis')
-        SentimentAnalysis.triggered.connect(lambda: self.DataSourcesSentimentAnalysis())
-        ToolMenu.addAction(SentimentAnalysis)
 
         # Find Similarity
         FindSimilarity = QAction('Find Similarity', self)
@@ -562,11 +583,111 @@ class Window(QMainWindow):
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
 
         self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.menuBar().height() - self.toolbar.height())
-
         self.horizontalLayout.addWidget(self.tabWidget)
 
         self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
+
         self.setCentralWidget(self.centralwidget)
+
+        self.WelcomePage()
+
+    # Welcome Page
+    def WelcomePage(self):
+        # Welcome Tab
+        TextASWelcomeTab = QWidget()
+
+        # LayoutWidget For within Welcome Tab
+        TextASWelcomeTabverticalLayoutWidget = QWidget(TextASWelcomeTab)
+        TextASWelcomeTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        TextASWelcomeTabverticalLayoutWidget.setGeometry(0, 0, self.horizontalLayoutWidget.width(), self.horizontalLayoutWidget.height())
+
+        # Box Layout for Welcome Tab
+        TextASWelcomeTabverticalLayout = QVBoxLayout(TextASWelcomeTabverticalLayoutWidget)
+        TextASWelcomeTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        TextASWelcomeWeb = QWebEngineView()
+        TextASWelcomeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+        TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+        TextASWelcomeTabverticalLayout.addWidget(TextASWelcomeWeb)
+        #TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+
+        #TextASWelcomeWeb.load(QUrl(os.getcwd() + "\welcomepage\Light\welcome.html"))
+        TextASWelcomeWeb.setHtml(open("welcomepage/Light/welcome.html").read())
+
+        self.tabWidget.addTab(TextASWelcomeTab, "Welcome")
+        self.tabWidget.setCurrentWidget(TextASWelcomeTab)
+
+    # Change Theme Dialog
+    def ChangeThemeDialog(self):
+        ChangeThemeDialog = QDialog()
+        ChangeThemeDialog.setWindowTitle("Show Word Frequency Table")
+        ChangeThemeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                       self.height / 10)
+        ChangeThemeDialog.setParent(self)
+        ChangeThemeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        ChangeThemeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Theme Label
+        Themelabel = QLabel(ChangeThemeDialog)
+        Themelabel.setGeometry(ChangeThemeDialog.width() * 0.125,
+                               ChangeThemeDialog.height() * 0.2,
+                               ChangeThemeDialog.width() / 4,
+                               ChangeThemeDialog.height() * 0.1)
+
+        Themelabel.setText("Theme")
+        Themelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(Themelabel)
+
+        # Data Source ComboBox
+        ThemeComboBox = QComboBox(ChangeThemeDialog)
+        ThemeComboBox.setGeometry(ChangeThemeDialog.width() * 0.4,
+                                  ChangeThemeDialog.height() * 0.2,
+                                  ChangeThemeDialog.width() / 2,
+                                  ChangeThemeDialog.height() / 10)
+
+        ThemeComboBox.addItem('Light')
+        ThemeComboBox.addItem('Dark')
+        ThemeComboBox.addItem('DarkGrey')
+        ThemeComboBox.addItem('DarkOrange')
+
+        ThemeComboBox.setCurrentText(self.theme)
+
+        self.LineEditSizeAdjustment(ThemeComboBox)
+
+        # Stem Word Button Box
+        ChangeThemebuttonBox = QDialogButtonBox(ChangeThemeDialog)
+        ChangeThemebuttonBox.setGeometry(ChangeThemeDialog.width() * 0.125,
+                                         ChangeThemeDialog.height() * 0.7,
+                                         ChangeThemeDialog.width() * 3 / 4,
+                                         ChangeThemeDialog.height() / 5)
+        ChangeThemebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        ChangeThemebuttonBox.button(QDialogButtonBox.Ok).setText('Change')
+
+
+        self.LineEditSizeAdjustment(ChangeThemebuttonBox)
+
+        ChangeThemebuttonBox.accepted.connect(ChangeThemeDialog.accept)
+        ChangeThemebuttonBox.rejected.connect(ChangeThemeDialog.reject)
+
+        ChangeThemebuttonBox.accepted.connect(lambda: self.ChangeTheme(ThemeComboBox.currentText()))
+
+        ChangeThemeDialog.exec()
+
+    # Change Theme
+    def ChangeTheme(self, ThemeText):
+        self.theme = ThemeText
+
+        if self.theme == 'Light':
+            self.setStyleSheet(open('Styles/Light.css', 'r').read())
+        elif self.theme == 'Dark':
+            self.setStyleSheet(open('Styles/Dark.css', 'r').read())
+        elif self.theme == 'DarkGrey':
+            self.setStyleSheet(open('Styles/DarkGrey.css', 'r').read())
+        elif self.theme == 'DarkOrange':
+            self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
+
+        self.settings.setValue('theme', self.theme)
 
     #Tab Close Handler
     def tabCloseHandler(self, index):
@@ -864,18 +985,6 @@ class Window(QMainWindow):
                         if hasattr(DS, 'DataSourceTextSummary'):
                             DataSourceRightClickMenu.addAction(DataSourceSummary)
 
-                # Data Source Translate
-                DataSourceTranslate = QAction('Translate', self.DataSourceTreeWidget)
-                DataSourceTranslate.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceTranslate(index))
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if not hasattr(DS, 'isEnglish') and not hasattr(DS, 'LanguageDetectionError'):
-                            DS.detect()
-                        if not hasattr(DS, 'isEnglish') and hasattr(DS, 'LanguageDetectionError'):
-                            pass
-                        elif not DS.isEnglish:
-                            DataSourceRightClickMenu.addAction(DataSourceTranslate)
 
                 # Data Source Show Translation
                 DataSourceShowTranslation = QAction('Show Translation', self.DataSourceTreeWidget)
@@ -884,7 +993,6 @@ class Window(QMainWindow):
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
                         if hasattr(DS, 'DataSourceTranslatedText'):
-                            DataSourceRightClickMenu.removeAction(DataSourceTranslate)
                             DataSourceRightClickMenu.addAction(DataSourceShowTranslation)
 
                 # Data Source Rename
@@ -942,36 +1050,54 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
         DataSourceWidgetDetailDialogBox.setParent(self)
         DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.4, self.height * 0.45, self.width/5, self.height/10)
+        DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3, self.height*0.1)
         DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         for letter in DataSourceWidgetItemName.text(0):
             if letter == '(':
                 DataSourceStrTypeName = DataSourceWidgetItemName.text(0)[0: int(DataSourceWidgetItemName.text(0).index(letter))]
 
+        # Data Source Type label
         DataSourceTypeLabel = QLabel(DataSourceWidgetDetailDialogBox)
         DataSourceTypeLabel.setText("Data Source Type:")
-        DataSourceTypeLabel.setGeometry(DataSourceWidgetDetailDialogBox.width()*0.2, DataSourceWidgetDetailDialogBox.height()*0.2, DataSourceWidgetDetailDialogBox.width()/2, DataSourceWidgetDetailDialogBox.height()/5)
+        DataSourceTypeLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                        DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                        DataSourceWidgetDetailDialogBox.width()/4,
+                                        DataSourceWidgetDetailDialogBox.height()/5)
         DataSourceTypeLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.LabelSizeAdjustment(DataSourceTypeLabel)
 
-        DataSourceTypeName = QLabel(DataSourceWidgetDetailDialogBox)
+        # Data Source Type lineEdit
+        DataSourceTypeName = QLineEdit(DataSourceWidgetDetailDialogBox)
         DataSourceTypeName.setText(DataSourceStrTypeName)
-        DataSourceTypeName.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.5, DataSourceWidgetDetailDialogBox.height() * 0.2, DataSourceWidgetDetailDialogBox.width()/2, DataSourceWidgetDetailDialogBox.height()/5)
+        DataSourceTypeName.setReadOnly(True)
+        DataSourceTypeName.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.4,
+                                       DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                       DataSourceWidgetDetailDialogBox.width()/2,
+                                       DataSourceWidgetDetailDialogBox.height()/5)
         DataSourceTypeName.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceTypeName)
+        self.LineEditSizeAdjustment(DataSourceTypeName)
 
+        # Data Source Child label
         DataSourceChildLabel = QLabel(DataSourceWidgetDetailDialogBox)
         DataSourceChildLabel.setText("No. of Data Sources:")
-        DataSourceChildLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.2, DataSourceWidgetDetailDialogBox.height() * 0.5, DataSourceWidgetDetailDialogBox.width()/2, DataSourceWidgetDetailDialogBox.height()/5)
+        DataSourceChildLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                         DataSourceWidgetDetailDialogBox.width()/4,
+                                         DataSourceWidgetDetailDialogBox.height()/5)
         DataSourceChildLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.LabelSizeAdjustment(DataSourceChildLabel)
 
-        DataSourceChildCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        # Data Source Child lineEdit
+        DataSourceChildCountLabel = QLineEdit(DataSourceWidgetDetailDialogBox)
+        DataSourceChildCountLabel.setReadOnly(True)
         DataSourceChildCountLabel.setText(str(DataSourceWidgetItemName.childCount()))
-        DataSourceChildCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.5, DataSourceWidgetDetailDialogBox.height() * 0.5, DataSourceWidgetDetailDialogBox.width()/2, DataSourceWidgetDetailDialogBox.height()/5)
+        DataSourceChildCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.4,
+                                              DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                              DataSourceWidgetDetailDialogBox.width()/2,
+                                              DataSourceWidgetDetailDialogBox.height()/5)
         DataSourceChildCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceChildCountLabel)
+        self.LineEditSizeAdjustment(DataSourceChildCountLabel)
 
         DataSourceWidgetDetailDialogBox.exec_()
 
@@ -2384,7 +2510,7 @@ class Window(QMainWindow):
     # ****************************************************************************
 
     # Data Source Create Query
-    def DataSourceFindStemWords(self, DataSourceWidgetItemName):
+    def DataSourceFindStemWords(self):
         DataSourceStemWord = QDialog()
         DataSourceStemWord.setWindowTitle("Find Stem Words")
         DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.4, self.width / 4, self.height / 5)
@@ -2414,12 +2540,9 @@ class Window(QMainWindow):
         StemWordDSComboBox.setGeometry(DataSourceStemWord.width() * 0.4, DataSourceStemWord.height() * 0.2,
                                        DataSourceStemWord.width() / 2, DataSourceStemWord.height() / 10)
 
-        if DataSourceWidgetItemName is None:
-            for DS in myFile.DataSourceList:
-                StemWordDSComboBox.addItem(DS.DataSourceName)
-        else:
-            StemWordDSComboBox.addItem(DataSourceWidgetItemName.text(0))
-            StemWordDSComboBox.setDisabled(True)
+
+        for DS in myFile.DataSourceList:
+            StemWordDSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(StemWordDSComboBox)
 
@@ -3305,6 +3428,7 @@ class Window(QMainWindow):
                 CreateCasesPreview.setText(DS.DataSourcetext)
                 break
 
+               
         self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
         self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
 
@@ -3601,7 +3725,7 @@ class Window(QMainWindow):
     # ****************************************************************************
 
     # Data Source Summary
-    def DataSourceSummarize(self, DataSourceWidgetItemName):
+    def DataSourceSummarize(self):
         # Summarization Dialog Box
         SummarizeDialog = QDialog()
         SummarizeDialog.setWindowTitle("Summarize")
@@ -3643,14 +3767,9 @@ class Window(QMainWindow):
         SummarizeDSComboBox.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.1,
                                         SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
 
-        if DataSourceWidgetItemName is None:
-            for DS in myFile.DataSourceList:
-                SummarizeDSComboBox.addItem(DS.DataSourceName)
-        else:
-            SummarizeDSComboBox.addItem(DataSourceWidgetItemName.text(0))
-            SummarizeDSComboBox.setDisabled(True)
+        for DS in myFile.DataSourceList:
+            SummarizeDSComboBox.addItem(DS.DataSourceName)
         self.LineEditSizeAdjustment(SummarizeDSComboBox)
-
 
         # Summarize Word QSpinBox
         SummarizeWord = QDoubleSpinBox(SummarizeDialog)
@@ -3716,66 +3835,35 @@ class Window(QMainWindow):
         SummarizebuttonBox.accepted.connect(SummarizeDialog.accept)
         SummarizebuttonBox.rejected.connect(SummarizeDialog.reject)
 
-        # if Selected using Context Menu
-        if DataSourceWidgetItemName is not None:
-            SummarizebuttonBox.accepted.connect(
-                lambda: self.DSSummarizeFromDialog(DataSourceWidgetItemName, SummarizeDSComboBox.currentText(), DefaultRadioButton.isChecked(),
-                                                   TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),
-                                                   SummarizeWord.value(), SummarizeRatio.value()))
 
-        # if Selected using Toolbar
-        else:
-            SummarizebuttonBox.accepted.connect(
-                lambda: self.DSSummarizeFromDialog(None, SummarizeDSComboBox.currentText(), DefaultRadioButton.isChecked(),
-                                                   TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),
-                                                   SummarizeWord.value(), SummarizeRatio.value()))
+        SummarizebuttonBox.accepted.connect(
+            lambda: self.DSSummarizeFromDialog(SummarizeDSComboBox.currentText(), DefaultRadioButton.isChecked(),
+                                               TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),
+                                               SummarizeWord.value(), SummarizeRatio.value()))
 
         SummarizeDialog.exec()
 
     # Data Source Summarize
-    def DSSummarizeFromDialog(self, DataSourceWidgetItemName, DSName, DefaultRadioButton, TotalWordCountRadioButton, RatioRadioButton, SummarizeWord, SummarizeRatio):
-        # if Selected using Context Menu
-        if DataSourceWidgetItemName is not None:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                    if DefaultRadioButton:
-                        DS.Summarize(True, None, None)
-                    elif TotalWordCountRadioButton:
-                        DS.Summarize(False, "Total Word Count", SummarizeWord)
-                    elif RatioRadioButton:
-                        DS.Summarize(False, "Ratio", SummarizeRatio)
-                    break
-
-        # if Selected using Toolbar
-        else:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DSName:
-                    if DefaultRadioButton:
-                        DS.Summarize(True, None, None)
-                    elif TotalWordCountRadioButton:
-                        DS.Summarize(False, "Total Word Count", SummarizeWord)
-                    elif RatioRadioButton:
-                        DS.Summarize(False, "Ratio", SummarizeRatio)
-                    break
+    def DSSummarizeFromDialog(self, DSName, DefaultRadioButton, TotalWordCountRadioButton, RatioRadioButton, SummarizeWord, SummarizeRatio):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DSName:
+                if DefaultRadioButton:
+                    DS.Summarize(True, None, None)
+                elif TotalWordCountRadioButton:
+                    DS.Summarize(False, "Total Word Count", SummarizeWord)
+                elif RatioRadioButton:
+                    DS.Summarize(False, "Ratio", SummarizeRatio)
+                break
 
         if (len(DS.DataSourceTextSummary.split()) > 0):
-            SummarySuccess = QMessageBox()
-            SummarySuccess.setIcon(QMessageBox.Information)
-            SummarySuccess.setText(
-                DS.DataSourceName + " summarize successfully! The Summarize Text now contains " + str(
-                    len(DS.DataSourceTextSummary.split())))
-            SummarySuccess.setWindowTitle("Success")
-            SummarySuccess.setStandardButtons(QMessageBox.Ok)
-            SummarySuccess.exec_()
+            QMessageBox.information(self, "Success",
+                                    DS.DataSourceName + " summarize successfully! The Summarize Text now contains " + str(len(DS.DataSourceTextSummary.split())), 
+                                    QMessageBox.Ok)
         else:
             delattr(DS, 'DataSourceTextSummary')
-            SummaryError = QMessageBox()
-            SummaryError.setIcon(QMessageBox.Warning)
-            SummaryError.setText(
-                DS.DataSourceName + " summarization failed! The Text may contains no words or is already summarized")
-            SummaryError.setWindowTitle("Error")
-            SummaryError.setStandardButtons(QMessageBox.Ok)
-            SummaryError.exec_()
+            QMessageBox.warning(self, "Error",
+                                DS.DataSourceName + " summarization failed! The Text may contains no words or is already summarized",
+                                QMessageBox.Ok)
 
     #Data Source Summary Preview
     def DataSourceSummaryPreview(self, DataSourceWidgetItemName):
@@ -3814,44 +3902,217 @@ class Window(QMainWindow):
     # ****************************************************************************
 
     # Data Source Translate
-    def DataSourceTranslate(self, DataSourceWidgetItemName):
+    def DataSourceTranslateDialog(self):
+        DataSourceTranslateDialog = QDialog()
+        DataSourceTranslateDialog.setWindowTitle("Translate")
+        DataSourceTranslateDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        DataSourceTranslateDialog.setParent(self)
+        DataSourceTranslateDialog.setAttribute(Qt.WA_DeleteOnClose)
+        DataSourceTranslateDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceTranslateDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        TranslateDSLabel = QLabel(DataSourceTranslateDialog)
+        TranslateDSLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.1,
+                                     DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
+        TranslateDSLabel.setText("Data Source")
+        self.LabelSizeAdjustment(TranslateDSLabel)
+
+        # Data Source Original Text Label
+        TranslateOriginalTextLabel = QLabel(DataSourceTranslateDialog)
+        TranslateOriginalTextLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.25,
+                                               DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
+        TranslateOriginalTextLabel.setText("Original Text")
+        self.LabelSizeAdjustment(TranslateOriginalTextLabel)
+
+        # Translate To Label
+        TranslateToLabel = QLabel(DataSourceTranslateDialog)
+        TranslateToLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.4,
+                                     DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
+        TranslateToLabel.setText("Translate To:")
+        self.LabelSizeAdjustment(TranslateToLabel)
+
+        # Data Source ComboBox
+        TranslateDSComboBox = QComboBox(DataSourceTranslateDialog)
+        TranslateDSComboBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.1,
+                                        DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                DS.translate()
+            TranslateDSComboBox.addItem(DS.DataSourceName)
+        self.LineEditSizeAdjustment(TranslateDSComboBox)
+
+        # Data Source Original Text LineEdit
+        TranslateOriginalTextLineEdit = QLineEdit(DataSourceTranslateDialog)
+        TranslateOriginalTextLineEdit.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.25,
+                                                  DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+        TranslateOriginalTextLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+        TranslateOriginalTextLineEdit.setReadOnly(True)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == TranslateDSComboBox.currentText():
+                if not hasattr(DS, 'OriginalText'):
+                    DS.detect()
+                    if not DS.LanguageDetectionError:
+                        for langcode, lang in self.languages:
+                            if langcode == DS.OriginalText:
+                                TranslateOriginalTextLineEdit.setText(lang)
+                                break
+                    else:
+                        TranslateOriginalTextLineEdit.setText("undetectable")
+                else:
+                    for langcode, lang in self.languages:
+                        if langcode == DS.OriginalText:
+                            TranslateOriginalTextLineEdit.setText(lang)
+                            break
+        self.LineEditSizeAdjustment(TranslateOriginalTextLineEdit)
+
+        # Translate To ComboBox
+        TranslateToComboBox = QComboBox(DataSourceTranslateDialog)
+        TranslateToComboBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.4,
+                                        DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+        TranslateToComboBox.setLayoutDirection(Qt.LeftToRight)
+
+        for langcode, lang in self.languages:
+            if not langcode == TranslateOriginalTextLineEdit.text():
+                TranslateToComboBox.addItem(lang)
+
+        self.LineEditSizeAdjustment(TranslateToComboBox)
+
+        TranslatebuttonBox = QDialogButtonBox(DataSourceTranslateDialog)
+        TranslatebuttonBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.8,
+                                       DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+        TranslatebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        TranslatebuttonBox.button(QDialogButtonBox.Ok).setText('Translate')
+        self.LineEditSizeAdjustment(TranslatebuttonBox)
+
+        if len(TranslateDSComboBox.currentText()) == 0 or TranslateOriginalTextLineEdit.text() == "undetectable":
+            TranslatebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        else:
+            TranslatebuttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+        TranslateDSComboBox.currentTextChanged.connect(
+            lambda: self.TranslateDSComboboxTextChanged(TranslatebuttonBox, TranslateOriginalTextLineEdit, TranslateToComboBox))
+
+        TranslatebuttonBox.accepted.connect(DataSourceTranslateDialog.accept)
+        TranslatebuttonBox.rejected.connect(DataSourceTranslateDialog.reject)
+
+        TranslatebuttonBox.accepted.connect(lambda: self.DataSourceTranslate(TranslateDSComboBox.currentText(), TranslateToComboBox.currentText()))
+        DataSourceTranslateDialog.exec_()
+
+    # Translate DSCombobox Text Changed       
+    def TranslateDSComboboxTextChanged(self, buttonBox, OriginalText, TranslateTo):
+        DSComboBox = self.sender()
+
+        # Original Text LineEdit
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DSComboBox.currentText():
+                if not hasattr(DS, 'OriginalText'):
+                    DS.detect()
+                    if not DS.LanguageDetectionError:
+                        for langcode, lang in self.languages:
+                            if langcode == DS.OriginalText:
+                                OriginalText.setText(lang)
+                                break
+                    else:
+                        OriginalText.setText("undetectable")
+                else:
+                    for langcode, lang in self.languages:
+                        if langcode == DS.OriginalText:
+                            OriginalText.setText(lang)
+                            break
+
+        # Translate To ComboBox
+        TranslateTo.clear()
+        for langcode, lang in self.languages:
+            if not langcode == OriginalText.text():
+                TranslateTo.addItem(lang)
+
+        if OriginalText.text() == "undetectable":
+            TranslatebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    # Data Source Translate
+    def DataSourceTranslate(self, DataSourceName, TranslateTo):
+        for langcode, lang in self.languages:
+            if lang == TranslateTo:
                 break
 
-    # Data Source Show Translation
-    def DataSourceShowTranslation(self, DataSourceWidgetItemName):
-        DataSourcePreviewTab = QWidget()
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                DS.translate(langcode)
+                break
 
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        if not DS.TranslationError:
+            DataSourceShowTranslationTabFlag = False
 
-        # Box Layout for Word Cloud Tab
-        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        try:
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourcePreview.setReadOnly(True)
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourcePreview.setText(str(DS.DataSourceTranslatedText))
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Translated Text':
+                    DataSourceShowTranslationTabFlag = True
                     break
 
-            myFile.TabList.append(
-                Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
-                    DataSourceWidgetItemName.text(0)))
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+            DataSourceShowTranslationTab = QWidget()
+            DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+            DataSourceShowTranslationTab.setSizePolicy(self.sizePolicy)
 
-        except Exception as e:
-            print(str(e))
+            # LayoutWidget For within Translation Tab
+            DataSourceShowTranslationTabVerticalLayoutWidget = QWidget(DataSourceShowTranslationTab)
+            DataSourceShowTranslationTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
+            # Box Layout for Translation Tab
+            DataSourceShowTranslationTabVerticalLayout = QHBoxLayout(DataSourceShowTranslationTabVerticalLayoutWidget)
+            DataSourceShowTranslationTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Data Source Translation Text Edit
+            DataSourceTranslationPreview = QTextEdit(DataSourceShowTranslationTabVerticalLayoutWidget)
+            DataSourceTranslationPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourceTranslationPreview.setReadOnly(True)
+            DataSourceTranslationPreview.setText(str(DS.DataSourceTranslatedText))
+
+            if DataSourceShowTranslationTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = DataSourceShowTranslationTab
+                                break
+
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                tabs.tabWidget = DataSourceShowTranslationTab
+            else:
+                # Adding Translation Tab to TabList
+                myFile.TabList.append(Tab("Translated Text", DataSourceShowTranslationTab, DataSourceName))
+
+                ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:  # if no Parent Widget
+                    # Adding Parent Query
+                    DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                    DSQueryWidget.setText(0, DataSourceName)
+                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                    DSQueryWidget.setExpanded(True)
+
+                    # Adding Translation Query
+                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                    DSNewCaseNode.setText(0, 'Translated Text')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        # Adding Translation Query
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Translated Text')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                # Adding Translation Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        DS.setQuery(DSNewCaseNode, DataSourceShowTranslationTab)
+
+                # Adding Translation Tab to QTabWidget
+                self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
+                self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
 
     # ****************************************************************************
     # *************************** Data Source Remove *****************************
@@ -3870,10 +4131,31 @@ class Window(QMainWindow):
 
                     DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
 
-                    count = len(DS.QueryList)
+                    # Removing Queries
+                    for query in range(len(DS.QueryList)):
+                        self.QueryChildRemove(DS.QueryList[0][0])
 
-                    for query in range(count):
-                        self.QueryRemove(DS.QueryList[0][0])
+                    # Removing Cases
+                    for cases in DS.CasesList:
+                        ItemsWidget = self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0)
+                        for widgets in ItemsWidget:
+                            self.CasesParentRemove(widgets)
+
+                    # Removing Queries
+                    for sentiments in range(len(DS.SentimentList)):
+                        ItemsWidget = self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0)
+                        for widgets in ItemsWidget:
+                            self.SentimentsRemove(widgets)
+
+                    # Removing Queries
+                    for visuals in range(len(DS.VisualizationList)):
+                        self.VisualizationChildRemove(DS.VisualizationList[0][0])
+
+                    # Removing all tabs related to Data Source
+                    for tabs in myFile.TabList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                            myFile.TabList.remove(tabs)
 
                     myFile.DataSourceList.remove(DS)
                     DS.__del__()
@@ -4821,6 +5103,7 @@ class Window(QMainWindow):
             lambda: self.DataSourcesCreateDashboard(DSComboBox.currentText()))
 
         DataSourcesCreateDashboardDialog.exec()
+        print()
 
     # Create Dashboard
     def DataSourcesCreateDashboard(self, DataSourceName):
@@ -5329,7 +5612,7 @@ class Window(QMainWindow):
             QueryRightClickMenu.addAction(QueryShow)
 
             QueryRemove = QAction('Remove', self.QueryTreeWidget)
-            QueryRemove.triggered.connect(lambda: self.QueryChildRemove(QueryItemName))
+            QueryRemove.triggered.connect(lambda: self.QueryChildRemoveDialog(QueryItemName))
             QueryRightClickMenu.addAction(QueryRemove)
 
             QueryRightClickMenu.popup(QueryWidgetPos)
@@ -5365,34 +5648,37 @@ class Window(QMainWindow):
         else:
             pass
 
-    # Remove Child Query (Tab)
-    def QueryChildRemove(self, QueryItemName):
+    # Remove Child Query (Tab) Dialog
+    def QueryChildRemoveDialog(self, QueryItemName):
         QueryRemoveChoice = QMessageBox.critical(self, 'Remove',
                                                         "Are you sure you want to remove this Data Source's Query?",
                                                         QMessageBox.Yes | QMessageBox.No)
 
         if QueryRemoveChoice == QMessageBox.Yes:
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == QueryItemName.parent().text(0):
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            for query in DS.QueryList:
-                                if query[0] == QueryItemName and query[1] == tabs.tabWidget:
-                                    myFile.TabList.remove(tabs)
-                                    DS.QueryList.remove(query)
-                                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                    tabs.__del__()
-                                    break
-
-            if QueryItemName.parent().childCount() == 1:
-                tempParent = QueryItemName.parent()
-                tempParent.removeChild(QueryItemName)
-                self.QueryTreeWidget.invisibleRootItem().removeChild(tempParent)
-            else:
-                QueryItemName.parent().removeChild(QueryItemName)
-
+            self.QueryChildRemove(QueryItemName)
         else:
             pass
+
+    # Remove Child Query (Tab)
+    def QueryChildRemove(self, QueryItemName):
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == QueryItemName.parent().text(0):
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        for query in DS.QueryList:
+                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
+                                myFile.TabList.remove(tabs)
+                                DS.QueryList.remove(query)
+                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                tabs.__del__()
+                                break
+
+        if QueryItemName.parent().childCount() == 1:
+            tempParent = QueryItemName.parent()
+            tempParent.removeChild(QueryItemName)
+            self.QueryTreeWidget.invisibleRootItem().removeChild(tempParent)
+        else:
+            QueryItemName.parent().removeChild(QueryItemName)
 
     # Preview Query/Tab on double click
     def QueryDoubleClickHandler(self, QueryItemName):
@@ -5484,7 +5770,7 @@ class Window(QMainWindow):
 
             # Case Remove
             CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
-            CasesParentRemove.triggered.connect(lambda: self.CasesParentRemove(CasesItemName))
+            CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
             CasesRightClickMenu.addAction(CasesParentRemove)
 
             # Cases Detail
@@ -5509,7 +5795,7 @@ class Window(QMainWindow):
 
             # Case Remove
             CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
-            CasesChildRemove.triggered.connect(lambda: self.CasesChildRemove(CasesItemName))
+            CasesChildRemove.triggered.connect(lambda: self.CasesChildRemoveDialog(CasesItemName))
             CasesRightClickMenu.addAction(CasesChildRemove)
 
             # Case Child Detail
@@ -5519,20 +5805,24 @@ class Window(QMainWindow):
 
             CasesRightClickMenu.popup(CasesWidgetPos)
 
-    # Cases Parent Remove
-    def CasesParentRemove(self, CasesItemName):
+    # Cases Parent Remove Dialog
+    def CasesParentRemoveDialog(self, CasesItemName):
         CasesRemoveChoice = QMessageBox.critical(self, 'Remove',
                                                       "Are you sure you want to remove this Data Source's Cases?",
                                                       QMessageBox.Yes | QMessageBox.No)
 
         if CasesRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.text(0):
-                    self.CasesTreeWidget.invisibleRootItem().removeChild(CasesItemName)
-                    DS.CasesList.clear()
-                    break
+            self.CasesParentRemove(CasesItemName)
         else:
             pass
+
+    # Cases Parent Remove
+    def CasesParentRemove(self, CasesItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.text(0):
+                self.CasesTreeWidget.invisibleRootItem().removeChild(CasesItemName)
+                DS.CasesList.clear()
+                break
 
     # Cases Parent Detail
     def CasesParentDetail(self, CasesItemName):
@@ -5781,31 +6071,35 @@ class Window(QMainWindow):
         else:
             CasesRenameSuccessBox = QMessageBox.Critical(self, "Rename Error", "A Case with Similar Name Exist!",QMessageBox.Ok)
 
-    # Cases Remove
-    def CasesChildRemove(self, CasesItemName):
+    # Cases Remove Dialog
+    def CasesChildRemoveDialog(self, CasesItemName):
         CasesRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Case?",
                                                  QMessageBox.Yes | QMessageBox.No)
 
         if CasesRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.parent().text(0):
-                    try:
-                        if CasesItemName.parent().childCount() == 1:
-                            tempParent = CasesItemName.parent()
-                            tempParent.removeChild(CasesItemName)
-                            self.CasesTreeWidget.invisibleRootItem().removeChild(tempParent)
-                        else:
-                            CasesItemName.parent().removeChild(CasesItemName)
-
-                    except Exception as e:
-                        print(str(e))
-
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == CasesItemName.text(0):
-                            DS.CasesList.remove(cases)
-                            break
+            self.CasesChildRemove(CasesItemName)
         else:
             pass
+
+    # Cases Remove Dialog
+    def CasesChildRemove(self, CasesItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.parent().text(0):
+                try:
+                    if CasesItemName.parent().childCount() == 1:
+                        tempParent = CasesItemName.parent()
+                        tempParent.removeChild(CasesItemName)
+                        self.CasesTreeWidget.invisibleRootItem().removeChild(tempParent)
+                    else:
+                        CasesItemName.parent().removeChild(CasesItemName)
+
+                except Exception as e:
+                    print(str(e))
+
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CasesItemName.text(0):
+                        DS.CasesList.remove(cases)
+                        break
 
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
@@ -5959,7 +6253,7 @@ class Window(QMainWindow):
 
             # Sentiments Remove
             SentimentsRemove = QAction('Remove', self.SentimentTreeWidget)
-            SentimentsRemove.triggered.connect(lambda checked, index=SentimentsItemName: self.SentimentsRemove(index))
+            SentimentsRemove.triggered.connect(lambda checked, index=SentimentsItemName: self.SentimentsRemoveDialog(index))
 
             SentimentsRightClickMenu.addAction(SentimentsRemove)
 
@@ -6179,22 +6473,25 @@ class Window(QMainWindow):
 
             Table.removeRow(row)
 
-    # Sentiments Remove
-    def SentimentsRemove(self, SentimentsItemName):
+    # Sentiments Remove Dialog
+    def SentimentsRemoveDialog(self, SentimentsItemName):
         SentimentsRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Data Source's Sentiments?",
                                                      QMessageBox.Yes | QMessageBox.No)
 
         if SentimentsRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == SentimentsItemName.text(0):
-                    self.SentimentTreeWidget.invisibleRootItem().removeChild(SentimentsItemName)
-
-                    for sentiments in DS.SentimentList:
-                        sentiments.SentimentTextList.clear()
-
-                    break
+            self.SentimentsRemove(SentimentsItemName)
         else:
             pass
+
+    # Sentiments Remove
+    def SentimentsRemove(self, SentimentsItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == SentimentsItemName.text(0):
+                self.SentimentTreeWidget.invisibleRootItem().removeChild(SentimentsItemName)
+
+                for sentiments in DS.SentimentList:
+                    sentiments.SentimentTextList.clear()
+                break
 
     # Sentiment Child Detail
     def SentimentsChildDetail(self, SentimentsItemName):
@@ -6281,6 +6578,14 @@ class Window(QMainWindow):
         self.LineEditSizeAdjustment(NoofSentimentTextLineEdit)
 
         SentimentsChildDetailDialogBox.exec_()
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == SentimentsItemName.text(0):
+                self.SentimentTreeWidget.invisibleRootItem().removeChild(SentimentsItemName)
+
+                for sentiments in DS.SentimentList:
+                    sentiments.SentimentTextList.clear()
+
+                break
 
     # ****************************************************************************
     # *********************** Visualization Context Menu *************************
@@ -6354,6 +6659,11 @@ class Window(QMainWindow):
             VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemove(VisualizationItemName))
             VisualizationRightClickMenu.addAction(VisualizationRemove)
 
+            # Visualization Detail
+            VisualizationDetail = QAction('Detail', self.VisualizationTreeWidget)
+            VisualizationDetail.triggered.connect(lambda: self.VisualizationDetail(VisualizationItemName))
+            VisualizationRightClickMenu.addAction(VisualizationDetail)
+
             VisualizationRightClickMenu.popup(VisualizationWidgetPos)
 
         # Child Sentiments
@@ -6367,7 +6677,7 @@ class Window(QMainWindow):
 
             # Visualization Remove
             VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
-            VisualizationRemove.triggered.connect(lambda: self.VisualizationChildRemove(VisualizationItemName))
+            VisualizationRemove.triggered.connect(lambda: self.VisualizationChildRemoveDialog(VisualizationItemName))
             VisualizationRightClickMenu.addAction(VisualizationRemove)
 
             VisualizationRightClickMenu.popup(VisualizationWidgetPos)
@@ -6393,36 +6703,100 @@ class Window(QMainWindow):
         else:
             pass
 
+    # Visualization Parent Detail
+    def VisualizationDetail(self, VisualizationItemName):
+        VisualizationDetailDialogBox = QDialog()
+        VisualizationDetailDialogBox.setModal(True)
+        VisualizationDetailDialogBox.setWindowTitle("Details")
+        VisualizationDetailDialogBox.setParent(self)
+        VisualizationDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
+        VisualizationDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
+                                               self.height / 10)
+        VisualizationDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == VisualizationItemName.text(0):
+                break
+
+        # ************************************** Labels *************************************
+
+        # Data Source Name Label
+        DataSourceNameLabel = QLabel(VisualizationDetailDialogBox)
+        DataSourceNameLabel.setText("Name:")
+        DataSourceNameLabel.setGeometry(VisualizationDetailDialogBox.width() * 0.1,
+                                        VisualizationDetailDialogBox.height() * 0.2,
+                                        VisualizationDetailDialogBox.width() / 4,
+                                        VisualizationDetailDialogBox.height() / 5)
+        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNameLabel)
+
+        # Data Source Path Label
+        DataSourceNoofVisualizationLabel = QLabel(VisualizationDetailDialogBox)
+        DataSourceNoofVisualizationLabel.setText("No of Visualizations:")
+        DataSourceNoofVisualizationLabel.setGeometry(VisualizationDetailDialogBox.width() * 0.1,
+                                                     VisualizationDetailDialogBox.height() * 0.6,
+                                                     VisualizationDetailDialogBox.width() / 4,
+                                                     VisualizationDetailDialogBox.height() / 5)
+        DataSourceNoofVisualizationLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(DataSourceNoofVisualizationLabel)
+
+        # ************************************** LineEdit *************************************
+
+        # Data Source Name LineEdit
+        DataSourceNameLineEdit = QLineEdit(VisualizationDetailDialogBox)
+        DataSourceNameLineEdit.setText(VisualizationItemName.text(0))
+        DataSourceNameLineEdit.setReadOnly(True)
+        DataSourceNameLineEdit.setGeometry(VisualizationDetailDialogBox.width() * 0.35,
+                                           VisualizationDetailDialogBox.height() * 0.2,
+                                           VisualizationDetailDialogBox.width() * 0.6,
+                                           VisualizationDetailDialogBox.height() / 5)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+        # Data Source Path LineEdit
+        DataSourceNoofVisualizationLineEdit = QLineEdit(VisualizationDetailDialogBox)
+        DataSourceNoofVisualizationLineEdit.setText(str(len(DS.VisualizationList)))
+        DataSourceNoofVisualizationLineEdit.setReadOnly(True)
+        DataSourceNoofVisualizationLineEdit.setGeometry(VisualizationDetailDialogBox.width() * 0.35,
+                                                        VisualizationDetailDialogBox.height() * 0.6,
+                                                        VisualizationDetailDialogBox.width() * 0.6,
+                                                        VisualizationDetailDialogBox.height() / 5)
+        DataSourceNoofVisualizationLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LineEditSizeAdjustment(DataSourceNoofVisualizationLineEdit)
+
+        VisualizationDetailDialogBox.exec_()
+
     # Visualization Child Remove
-    def VisualizationChildRemove(self, VisualizationItemName):
+    def VisualizationChildRemoveDialog(self, VisualizationItemName):
         VisualizationRemoveChoice = QMessageBox.critical(self, 'Remove',
                                                         "Are you sure you want to remove this Data Source's Visualization?",
                                                         QMessageBox.Yes | QMessageBox.No)
 
         if VisualizationRemoveChoice == QMessageBox.Yes:
-
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == VisualizationItemName.parent().text(0):
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            for visual in DS.VisualizationList:
-                                if visual[0] == VisualizationItemName and visual[1] == tabs.tabWidget:
-                                    myFile.TabList.remove(tabs)
-                                    DS.VisualizationList.remove(visual)
-                                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                    tabs.__del__()
-                                    break
-
-
-            if VisualizationItemName.parent().childCount() == 1:
-                tempParent = VisualizationItemName.parent()
-                tempParent.removeChild(VisualizationItemName)
-                self.VisualizationTreeWidget.invisibleRootItem().removeChild(tempParent)
-            else:
-                VisualizationItemName.parent().removeChild(VisualizationItemName)
-
+            self.VisualizationChildRemove(VisualizationItemName)
         else:
             pass
+
+    # Visualization Child Remove
+    def VisualizationChildRemove(self, VisualizationItemName):
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == VisualizationItemName.parent().text(0):
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        for visual in DS.VisualizationList:
+                            if visual[0] == VisualizationItemName and visual[1] == tabs.tabWidget:
+                                myFile.TabList.remove(tabs)
+                                DS.VisualizationList.remove(visual)
+                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                tabs.__del__()
+                                break
+
+        if VisualizationItemName.parent().childCount() == 1:
+            tempParent = VisualizationItemName.parent()
+            tempParent.removeChild(VisualizationItemName)
+            self.VisualizationTreeWidget.invisibleRootItem().removeChild(tempParent)
+        else:
+            VisualizationItemName.parent().removeChild(VisualizationItemName)
 
     # Preview Visual/Tab on double click
     def VisualizationDoubleClickHandler(self, VisualizationItemName):

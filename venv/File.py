@@ -54,15 +54,15 @@ class File():
         tfidf = vect.fit_transform(SimilarityCorpus)
         pairwise_similarity = tfidf * tfidf.T
 
-        high = pairwise_similarity.toarray().tolist()
+        self.high = pairwise_similarity.toarray().tolist()
 
         highlist = []
 
-        for row in range(len(high)):
-            for column in range(len(high[row])):
+        for row in range(len(self.high)):
+            for column in range(len(self.high[row])):
                 if row != column and row < column:
 
-                    column2 = round(high[row][column] * 100, 5)
+                    column2 = round(self.high[row][column] * 100, 5)
 
                     for DS in self.DataSourceList:
                         if SimilarityCorpus[column] == DS.DataSourcetext:
@@ -78,6 +78,18 @@ class File():
         highlist = sorted(highlist, key=lambda l: l[2], reverse=True)
 
         return highlist
+
+    # Data Source Document Clustering
+    def DocumnetClustering(self):
+        self.DocumnetClusteringDataSourceError = False
+
+        if len(self.DataSourceList) > 1:
+            if hasattr(self, 'high'):
+                pass
+            else:
+                self.FindSimilarityBetweenDataSource()
+        else:
+            self.DocumnetClusteringDataSourceError = True
 
     #Data Source Similar Phrases
     def FindSimilarPhrases(self):

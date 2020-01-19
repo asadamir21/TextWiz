@@ -178,6 +178,7 @@ class Query():
         frequency_list, frequency = self.GenerateFrequencyList(result)
         return frequency_list
 
+    # Part of Speech
     def PartOfSpeech(self, DataSourceName, DataSourceText, limit):
         os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
 
@@ -190,14 +191,19 @@ class Query():
         stra = " "
         list_to_string = stra.join(word_list)
 
-        nlp = spacy.load("en_core_web_sm")
+        # nlp = spacy.load("en_core_web_sm")
 
-        doc = nlp(list_to_string)
+        # doc = nlp(list_to_string)
+
+        tokens = nltk.word_tokenize(list_to_string)
+        doc = nltk.pos_tag(tokens)
+        # print(tokens)
+        # print(doc)
 
         pos_list = []
         i = 0
-        for token in doc:
-            pos_list.append([token.text, token.pos_, freq_list[i]])
+        for word, pos in doc:
+            pos_list.append([word, pos, freq_list[i]])
             i += 1
 
         # print(pos_list)
@@ -213,15 +219,15 @@ class Query():
         adj_limit = 0
 
         for word, tag, freq in pos_list:
-            if (tag == "NOUN") and (noun_limit < limit):
+            if (tag == "NN" or tag == 'NNS') and (noun_limit < limit):
                 word_tag = Node(word + "\n" + str(freq), parent=noun_node)
                 noun_limit += 1
 
-            elif (tag == "VERB") and (verb_limit < limit):
+            elif (tag == "VB" or tag == 'VBD') and (verb_limit < limit):
                 word_tag = Node(word + "\n" + str(freq), parent=verb_node)
                 verb_limit += 1
 
-            elif (tag == "ADJ") and (adj_limit < limit):
+            elif (tag == "JJ" or tag == 'JJR' or tag == 'JJS') and (adj_limit < limit):
                 word_tag = Node(word + "\n" + str(freq), parent=adj_node)
                 adj_limit += 1
 
@@ -239,11 +245,11 @@ class Query():
         blob2 = TextBlob(DataSourceText)
 
         for word, tag, freq in pos_list:
-            if tag == "NOUN":
+            if tag == "NN" or tag == 'NNS':
                 noun_count += 1
-            elif tag == "VERB":
+            elif tag == "VB" or tag == 'VBD':
                 verb_count += 1
-            elif tag == "ADJ":
+            elif tag == "JJ" or tag == 'JJR' or tag == 'JJS':
                 adj_count += 1
 
         return ([POSTreeImage, pos_list, noun_count, verb_count, adj_count])

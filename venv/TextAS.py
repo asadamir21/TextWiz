@@ -105,8 +105,6 @@ class Window(QMainWindow):
             self.setStyleSheet(open('Styles/Light.css', 'r').read())
         elif self.theme == 'Dark':
             self.setStyleSheet(open('Styles/Dark.css', 'r').read())
-        elif self.theme == 'DarkGrey':
-            self.setStyleSheet(open('Styles/DarkGrey.css', 'r').read())
         elif self.theme == 'DarkOrange':
             self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
 
@@ -387,19 +385,24 @@ class Window(QMainWindow):
         CreateDasboard = QAction('Create Dashboard', self)
         CreateDasboard.setToolTip('Find Similarity Between Data Sources')
         CreateDasboard.triggered.connect(lambda: self.DataSourcesCreateDashboardDialog())
+        VisualizationMenu.addAction(CreateDasboard)
 
         # Create Word Cloud Tool
         CreateWordCloudTool = QAction('Create Word Cloud', self)
         CreateWordCloudTool.setStatusTip('Create Word Cloud')
         CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud())
+        VisualizationMenu.addAction(CreateWordCloudTool)
+
+        # Document Clustering
+        DocumentClusteringTool = QAction('Document Clustering', self)
+        DocumentClusteringTool.setStatusTip('Document Clustering')
+        DocumentClusteringTool.triggered.connect(lambda: self.DataSourceDocumentClustering())
+        VisualizationMenu.addAction(DocumentClusteringTool)
 
         # Create Coordinate Map Tool
         CreateCoordinateMapTool = QAction('Coordinate Map', self)
         CreateCoordinateMapTool.setStatusTip('Coordinate Map')
         CreateCoordinateMapTool.triggered.connect(lambda: self.DataSourceCoordinateMapDialog())
-
-        VisualizationMenu.addAction(CreateDasboard)
-        VisualizationMenu.addAction(CreateWordCloudTool)
         VisualizationMenu.addAction(CreateCoordinateMapTool)
 
         # *****************************  HelpMenuItem ***************************************
@@ -589,7 +592,7 @@ class Window(QMainWindow):
 
         self.setCentralWidget(self.centralwidget)
 
-        self.WelcomePage()
+        #self.WelcomePage()
 
     # Welcome Page
     def WelcomePage(self):
@@ -648,7 +651,6 @@ class Window(QMainWindow):
 
         ThemeComboBox.addItem('Light')
         ThemeComboBox.addItem('Dark')
-        ThemeComboBox.addItem('DarkGrey')
         ThemeComboBox.addItem('DarkOrange')
 
         ThemeComboBox.setCurrentText(self.theme)
@@ -682,8 +684,6 @@ class Window(QMainWindow):
             self.setStyleSheet(open('Styles/Light.css', 'r').read())
         elif self.theme == 'Dark':
             self.setStyleSheet(open('Styles/Dark.css', 'r').read())
-        elif self.theme == 'DarkGrey':
-            self.setStyleSheet(open('Styles/DarkGrey.css', 'r').read())
         elif self.theme == 'DarkOrange':
             self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
 
@@ -827,6 +827,144 @@ class Window(QMainWindow):
                             self.QueryTreeWidget.invisibleRootItem().removeChild(widget)
                     break
 
+    # Document Clustering
+    def DataSourceDocumentClustering(self):
+        DataSourceDocumentClusteringTabFlag = False
+        DataSourceDocumentClusteringTabFlag2 = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Document Clustering':
+                if self.tabWidget.currentWidget() != tabs.tabWidget:
+                    self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                DataSourceDocumentClusteringTabFlag = True
+                break
+            elif tabs.TabName == 'Document Clustering':
+                DataSourceDocumentClusteringTabFlag2 = True
+                break
+
+        myFile.DocumnetClustering()
+
+        if not DataSourceDocumentClusteringTabFlag:
+            if not myFile.DocumnetClusteringDataSourceError:
+                # Creating New Tab for Data Sources Similarity
+                DataSourceDocumentClusteringTab = QWidget()
+
+                # LayoutWidget For within DataSourcesSimilarity Tab
+                DataSourceDocumentClusteringTabVerticalLayoutWidget = QWidget(DataSourceDocumentClusteringTab)
+                DataSourceDocumentClusteringTabVerticalLayoutWidget.setGeometry(0, 0,
+                                                                          self.tabWidget.width(),
+                                                                          self.tabWidget.height() / 10)
+
+                # Box Layout for DataSourcesSimilarity Tab
+                DataSourceDocumentClusteringTabVerticalLayout = QVBoxLayout(DataSourceDocumentClusteringTabVerticalLayoutWidget)
+                DataSourceDocumentClusteringTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+                # Document Clustering ComboBox
+                DocumentClusteringComboBox = QComboBox(DataSourceDocumentClusteringTabVerticalLayoutWidget)
+                DocumentClusteringComboBox.setGeometry(DataSourceDocumentClusteringTabVerticalLayoutWidget.width() * 0.8,
+                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.height() * 0.4,
+                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.width() / 10,
+                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.height() / 5)
+                DocumentClusteringComboBox.addItem('Scatter Plot')
+                DocumentClusteringComboBox.addItem('Dendrogram')
+                self.LineEditSizeAdjustment(DocumentClusteringComboBox)
+
+
+                # LayoutWidget For within DataSourcesSimilarity Tab
+                DataSourceDocumentClusteringTabVerticalLayoutWidget2 = QWidget(DataSourceDocumentClusteringTab)
+                DataSourceDocumentClusteringTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
+                                                                         self.tabWidget.width(),
+                                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+
+                # Box Layout for DataSourcesSimilarity Tab
+                DataSourceDocumentClusteringTabVerticalLayout2 = QVBoxLayout(DataSourceDocumentClusteringTabVerticalLayoutWidget2)
+                DataSourceDocumentClusteringTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+                canvas = FigureCanvas(myFile.ScatterFigure)
+                DataSourceDocumentClusteringTabVerticalLayout2.addWidget(canvas)
+
+                canvas2 = myFile.plot_canvas
+                DataSourceDocumentClusteringTabVerticalLayout2.addWidget(canvas2)
+                canvas2.hide()
+
+                #canvas.draw()
+
+                DocumentClusteringComboBox.currentTextChanged.connect(lambda: self.toggleDCCanvasView(DataSourceDocumentClusteringTabVerticalLayoutWidget2, canvas, canvas2))
+
+                if DataSourceDocumentClusteringTabFlag2:
+                    tabs.DataSourceName = len(myFile.DataSourceList)
+
+                    if tabs.tabWidget.isHidden():
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+                        tabs.tabWidget = DataSourceDocumentClusteringTab
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+                        tabs.tabWidget = DataSourceDocumentClusteringTab
+
+                else:
+                    # Adding Word Cloud Tab to QTabWidget
+                    myFile.TabList.append(
+                        Tab("Document Clustering", DataSourceDocumentClusteringTab, len(myFile.DataSourceList)))
+
+                    # Adding Word Frequency Query
+                    ItemsWidget = self.VisualizationTreeWidget.findItems("Document Clustering", Qt.MatchExactly, 0)
+
+                    if len(ItemsWidget) == 0:
+                        DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                        DSVisualWidget.setText(0, "Document Clustering")
+                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+
+                    self.tabWidget.addTab(DataSourceDocumentClusteringTab, "Document Clustering")
+                    self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+
+            else:
+                DataSourceDocumnetClusteringErrorBox = QMessageBox.critical(self, "Data Sources Documnet Clustering",
+                                                                           "An Error Occured! Clustering can only be done if Data Sources are more than three",
+                                                                            QMessageBox.Ok)
+
+    # Update Similarity Between Data Sources
+    def DataSourceDocumentClusteringUpdate(self):
+        for tabs in myFile.TabList:
+            if tabs.TabName == "Document Clustering":
+                if self.tabWidget.indexOf(tabs.tabWidget) >= 0:
+                    currentTab = self.tabWidget.currentWidget()
+                    if len(myFile.DataSourceList) > 3:
+                        self.DataSourceDocumentClustering()
+                        self.tabWidget.setCurrentWidget(currentTab)
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                        ItemsWidget = self.VisualizationTreeWidget.findItems("Document Clustering", Qt.MatchExactly, 0)
+                        for widget in ItemsWidget:
+                            self.VisualizationTreeWidget.invisibleRootItem().removeChild(widget)
+                    break
+                else:
+                    if len(myFile.DataSourceList) > 3:
+                        self.DataSourceDocumentClustering()
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                        ItemsWidget = self.VisualizationTreeWidget.findItems("Document Clustering", Qt.MatchExactly, 0)
+                        for widget in ItemsWidget:
+                            self.VisualizationTreeWidget.invisibleRootItem().removeChild(widget)
+                    break
+
+    # Toggle POS View
+    def toggleDCCanvasView(self, LayoutWidget, canvas, canvas2):
+        ComboBox = self.sender()
+
+        if ComboBox.currentText() == 'Scatter Plot':
+            canvas2.hide()
+            canvas.show()
+        else:
+            canvas.hide()
+            canvas2.show()
+
     #Get Which Data Source Widget Item and its Position
     def FindDataSourceTreeWidgetContextMenu(self, DataSourceMouseRightClickEvent):
         if DataSourceMouseRightClickEvent.reason == DataSourceMouseRightClickEvent.Mouse:
@@ -862,157 +1000,116 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Data Source
     def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
-        try:
-            #Parent Data Source7
-            if DataSourceWidgetItemName.parent() == None:
-                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+        #Parent Data Source7
+        if DataSourceWidgetItemName.parent() == None:
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-                DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
-                DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
+            DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
 
-                if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
-                    DataSourceExpand.setDisabled(True)
-                else:
-                    DataSourceExpand.setDisabled(False)
-
-                DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
-                DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
-
-                if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
-                    DataSourceCollapse.setDisabled(True)
-                else:
-                    DataSourceCollapse.setDisabled(False)
-
-                DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
-                DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
-
-                DataSourceRightClickMenu.addAction(DataSourceExpand)
-                DataSourceRightClickMenu.addAction(DataSourceCollapse)
-                DataSourceRightClickMenu.addAction(DataSourceDetail)
-                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
-
-            #Child DataSource
+            if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
+                DataSourceExpand.setDisabled(True)
             else:
-                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+                DataSourceExpand.setDisabled(False)
 
-                # Data Source Preview Web Page
+            DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
+            DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+
+            if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
+                DataSourceCollapse.setDisabled(True)
+            else:
+                DataSourceCollapse.setDisabled(False)
+
+            DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
+
+            DataSourceRightClickMenu.addAction(DataSourceExpand)
+            DataSourceRightClickMenu.addAction(DataSourceCollapse)
+            DataSourceRightClickMenu.addAction(DataSourceDetail)
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+
+        #Child DataSource
+        else:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    break
+
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+
+            # Data Source Preview Web Page
+            if hasattr(DS, 'DataSourceHTML'):
                 DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
                 DataSourcePreviewWeb.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreviewWeb(index))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'DataSourceHTML'):
-                            DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
-
-                # Data Source Show Tweet Data
+            # Data Source Show Tweet Data
+            if hasattr(DS, 'TweetData'):
                 DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
                 DataSourceShowTweetData.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTweetData(index))
+                DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'TweetData'):
-                            DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
+            # Data Source Show Youtube Comments
+            DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
 
-                try:
-                    # Data Source Show Youtube Comments
-                    DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
+            if hasattr(DS, 'YoutubeURLFlag'):
+                DataSourceShowYoutubeComments.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsURL(index))
+                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                            if hasattr(DS, 'YoutubeURLFlag'):
-                                DataSourceShowYoutubeComments.triggered.connect(
-                                    lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsURL(index))
-                                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
-                            if hasattr(DS, 'YoutubeKeyWordFlag'):
-                                DataSourceShowYoutubeComments.triggered.connect(
-                                    lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsKeyWord(index))
-                                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+            if hasattr(DS, 'YoutubeKeyWordFlag'):
+                DataSourceShowYoutubeComments.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowYoutubeCommentsKeyWord(index))
+                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-                except Exception as e:
-                    print(str(e))
-
-                # Data Source View Images
+            # Data Source View Images
+            if hasattr(DS, 'DataSourceImage'):
                 DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
                 DataSourceViewImages.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceViewImage(index))
+                DataSourceRightClickMenu.addAction(DataSourceViewImages)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'DataSourceImage'):
-                            DataSourceRightClickMenu.addAction(DataSourceViewImages)
+            # Data Sources Preview
+            DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
 
+            if DS.DataSourceext == "Pdf files (*.pdf)":
+                DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePDFPreview(index))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+            elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWordPreview(index))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+            elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
+                DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
 
-                # Data Sources Preview
-                DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if DS.DataSourceext == "Pdf files (*.pdf)":
-                            DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePDFPreview(index))
-                            DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-                        elif DS.DataSourceext == "Doc files (*.doc *.docx)":
-                            DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWordPreview(index))
-                            DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-                        else:
-                            DataSourcePreviewText.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourcePreview(index))
-                            DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-
-
-                # Data Source Add Image
+            # Data Source Add Image
+            if hasattr(DS, 'DataSourceImage'):
                 DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
                 DataSourceAddImage.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceAddImage(index))
+                DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'DataSourceImage'):
-                            DataSourceRightClickMenu.addAction(DataSourceAddImage)
+            # Data Source Create Cases
+            DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
+            DataSourceCreateCases.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCases(index))
+            DataSourceRightClickMenu.addAction(DataSourceCreateCases)
 
-                # Data Source Create Cases
-                DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
-                DataSourceCreateCases.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateCases(index))
-                DataSourceRightClickMenu.addAction(DataSourceCreateCases)
+            # Data Source Create Sentiments
+            DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
+            DataSourceCreateSentiments.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateSentiments(index))
+            DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
 
-                # Data Source Create Sentiments
-                DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
-                DataSourceCreateSentiments.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceCreateSentiments(index))
-                DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
+            # Data Source Rename
+            DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
+            DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
+            DataSourceRightClickMenu.addAction(DataSourceRename)
 
-                # Data Source Show Summary
-                DataSourceSummary = QAction('Show Summary', self.DataSourceTreeWidget)
-                DataSourceSummary.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceSummaryPreview(index))
+            # Data Source Remove
+            DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+            DataSourceRemove.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRemove(index))
+            DataSourceRightClickMenu.addAction(DataSourceRemove)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'DataSourceTextSummary'):
-                            DataSourceRightClickMenu.addAction(DataSourceSummary)
+            # Data Source Child Detail
+            DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceChildDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceChildDetail(index))
+            DataSourceRightClickMenu.addAction(DataSourceChildDetail)
 
-
-                # Data Source Show Translation
-                DataSourceShowTranslation = QAction('Show Translation', self.DataSourceTreeWidget)
-                DataSourceShowTranslation.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceShowTranslation(index))
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        if hasattr(DS, 'DataSourceTranslatedText'):
-                            DataSourceRightClickMenu.addAction(DataSourceShowTranslation)
-
-                # Data Source Rename
-                DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
-                DataSourceRename.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRename(index))
-                DataSourceRightClickMenu.addAction(DataSourceRename)
-
-                # Data Source Remove
-                DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
-                DataSourceRemove.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceRemove(index))
-                DataSourceRightClickMenu.addAction(DataSourceRemove)
-
-                # Data Source Child Detail
-                DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
-                DataSourceChildDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceChildDetail(index))
-                DataSourceRightClickMenu.addAction(DataSourceChildDetail)
-
-                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
-        except Exception as e:
-            print(str(e))
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
     # Label Size Adjustment
     def LabelSizeAdjustment(self, label):
@@ -1711,6 +1808,8 @@ class Window(QMainWindow):
 
             if len(DS.AddImagePathDoublingError) == 0:
                 DataSourceAddImageSuccessBox = QMessageBox.information(self, "Add Image",  "Images Added Successfully", QMessageBox.Ok)
+                self.DataSourceSimilarityUpdate()
+                self.DataSourceDocumentClusteringUpdate()
             else:
                 ImagePathErrorText = ""
 
@@ -2459,72 +2558,67 @@ class Window(QMainWindow):
 
     # Rename Data Source and Widget
     def DSRename(self, DataSourceWidgetItemName, name):
-        try:
-            DataSourceRenameCheck = False
+        DataSourceRenameCheck = False
 
-            for DSN in myFile.DataSourceList:
-                if DSN.DataSourceName == name:
-                    DataSourceRenameCheck = True
+        for DSN in myFile.DataSourceList:
+            if DSN.DataSourceName == name:
+                DataSourceRenameCheck = True
+                break
+
+        if not DataSourceRenameCheck:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                    for tab in myFile.TabList:
+                        if tab.DataSourceName == DS.DataSourceName:
+                            tab.DataSourceName = name
+
+                    # ************** updating queries *****************
+                    for query in DS.QueryList:
+                        for letter in query[0].text(0):
+                            if letter == '(':
+                                QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
+                                DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
+
+                                if DataSourceName == DS.DataSourceName:
+                                    query[0].setText(0, QueryName + "(" + name + ")")
+                                    query[0].setToolTip(0, query[0].text(0))
+
+                    # ************** updating cases *****************
+                    ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
+                    for widgets in ItemsWidget:
+                        widgets.setText(0, name)
+                        widgets.setToolTip(0, widgets.text(0))
+
+                    # *********** updating sentiments ***************
+                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
+                    for widgets in ItemsWidget:
+                        widgets.setText(0, name)
+                        widgets.setToolTip(0, widgets.text(0))
+
+                    # ********* updating Visualizations *************
+
+                    # ************ updating Reports *****************
+
+                    # ************ updating File Name *****************
+                    DS.DataSourceName = name
+
+                    self.DataSourceSimilarityUpdate()
+                    self.DataSourceDocumentClusteringUpdate()
                     break
 
-            if not DataSourceRenameCheck:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        for tab in myFile.TabList:
-                            if tab.DataSourceName == DS.DataSourceName:
-                                tab.DataSourceName = name
-
-                        # ************** updating queries *****************
-                        for query in DS.QueryList:
-                            for letter in query[0].text(0):
-                                if letter == '(':
-                                    QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
-                                    DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
-
-                                    if DataSourceName == DS.DataSourceName:
-                                        query[0].setText(0, QueryName + "(" + name + ")")
-                                        query[0].setToolTip(0, query[0].text(0))
-
-                        # ************** updating cases *****************
-                        ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
-                        for widgets in ItemsWidget:
-                            widgets.setText(0, name)
-                            widgets.setToolTip(0, widgets.text(0))
-
-                        # *********** updating sentiments ***************
-                        ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
-                        for widgets in ItemsWidget:
-                            widgets.setText(0, name)
-                            widgets.setToolTip(0, widgets.text(0))
-
-                        # ********* updating Visualizations *************
-
-                        # ************ updating Reports *****************
-
-                        DS.DataSourceName = name
-                        break
 
 
+            DataSourceWidgetItemName.setText(0, name)
+            DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
 
-                DataSourceWidgetItemName.setText(0, name)
-                DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
+            QMessageBox.information(self, "Rename Success",
+                                    "Data Source Rename Successfully!",
+                                    QMessageBox.Ok)
 
-                DataSourceRenameSuccessBox = QMessageBox()
-                DataSourceRenameSuccessBox.setIcon(QMessageBox.Information)
-                DataSourceRenameSuccessBox.setWindowTitle("Rename Success")
-                DataSourceRenameSuccessBox.setText("Data Source Rename Successfully!")
-                DataSourceRenameSuccessBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceRenameSuccessBox.exec_()
-
-            else:
-                DataSourceRenameErrorBox = QMessageBox()
-                DataSourceRenameErrorBox.setIcon(QMessageBox.Critical)
-                DataSourceRenameErrorBox.setWindowTitle("Rename Error")
-                DataSourceRenameErrorBox.setText("A Data Source with Similar Name Exist!")
-                DataSourceRenameErrorBox.setStandardButtons(QMessageBox.Ok)
-                DataSourceRenameErrorBox.exec_()
-        except Exception as e:
-            print(str(e))
+        else:
+            QMessageBox.critical(self, "Rename Error",
+                                    "A Data Source with Similar Name Exist!",
+                                    QMessageBox.Ok)
 
     # ****************************************************************************
     # ************************ Data Sources StemWords ****************************
@@ -3880,6 +3974,7 @@ class Window(QMainWindow):
             QMessageBox.information(self, "Success",
                                     DS.DataSourceName + " summarize successfully! The Summarize Text now contains " + str(len(DS.DataSourceTextSummary.split())), 
                                     QMessageBox.Ok)
+            self.DataSourceSummaryPreview(DS.DataSourceName)
         else:
             delattr(DS, 'DataSourceTextSummary')
             QMessageBox.warning(self, "Error",
@@ -3887,36 +3982,71 @@ class Window(QMainWindow):
                                 QMessageBox.Ok)
 
     #Data Source Summary Preview
-    def DataSourceSummaryPreview(self, DataSourceWidgetItemName):
-        DataSourcePreviewTab = QWidget()
+    def DataSourceSummaryPreview(self, DataSourceName):
+        DataSourceSummaryPreviewTabFlag = False
 
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary':
+                DataSourceSummaryPreviewTabFlag = True
+                break
 
-        # Box Layout for Word Cloud Tab
-        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+        if not DataSourceSummaryPreviewTabFlag:
+            DataSourceSummaryPreviewTab = QWidget()
 
-        try:
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourcePreview.setReadOnly(True)
+            # LayoutWidget For within DataSource Preview Tab
+            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourceSummaryPreviewTab)
+            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+            # Box Layout for Word Cloud Tab
+            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+
+            DataSourceSummaryPreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourceSummaryPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourceSummaryPreview.setReadOnly(True)
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    DataSourcePreview.setText(DS.DataSourceTextSummary)
+                if DS.DataSourceName == DataSourceName:
+                    DataSourceSummaryPreview.setText(DS.DataSourceTextSummary)
                     break
 
-            myFile.TabList.append(
-                Tab(self.tabWidget.tabText(self.tabWidget.indexOf(DataSourcePreviewTab)), DataSourcePreviewTab,
-                    DataSourceWidgetItemName.text(0)))
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+            # Adding Preview Tab to TabList
+            myFile.TabList.append(Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName))
 
-        except Exception as e:
-            print(str(e))
+            # Adding Word Frequency Query
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSVisualWidget.setText(0, DataSourceName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
+
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Summary')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Summary')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Word Frequency Query to QueryList
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.setQuery(DSNewCaseNode, DataSourceSummaryPreviewTab)
+
+            # Adding Preview Tab to QTabWidget
+            self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
+            self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+
+        else:
+            # updating tab
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # ****************************************************************************
     # ************************ Data Sources Translation **************************
@@ -4150,6 +4280,12 @@ class Window(QMainWindow):
                     if DataSourceWidgetItemName.parent().childCount() == 1:
                         DataSourceWidgetItemName.parent().setHidden(True)
 
+
+                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
+                        ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
+                        str(DataSourceWidgetItemName.parent().childCount()-1)
+                    ))
+
                     DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
 
                     # Removing Queries
@@ -4183,6 +4319,7 @@ class Window(QMainWindow):
                     break
 
             self.DataSourceSimilarityUpdate()
+            self.DataSourceDocumentClusteringUpdate()
 
         else:
             pass
@@ -6887,7 +7024,6 @@ class Window(QMainWindow):
 
     # About Window Tab
     def AboutWindow(self):
-        myFile.DocumnetClustering()
         file = open('LICENSE', 'r')
         lic = file.read()
         QMessageBox().about(self, "About TextAS", lic)
@@ -6925,7 +7061,9 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -6966,7 +7104,9 @@ class Window(QMainWindow):
 
                             newNode.setToolTip(0, newNode.text(0))
                             dummyDataSource.setNode(newNode)
+
                             self.DataSourceSimilarityUpdate()
+                            self.DataSourceDocumentClusteringUpdate()
                         else:
                             dummyDataSource.__del__()
                     else:
@@ -7007,7 +7147,9 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
 
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0:
@@ -7047,7 +7189,9 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0:
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -7087,7 +7231,9 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0:
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -7129,7 +7275,9 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
                         dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0:
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -7359,6 +7507,7 @@ class Window(QMainWindow):
                 newNode.setToolTip(0, newNode.text(0))
                 dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
+                self.DataSourceDocumentClusteringUpdate()
             else:
                 if len(dummyDataSource.DataSourcetext) == 0:
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -7468,6 +7617,7 @@ class Window(QMainWindow):
                 newNode.setToolTip(0, newNode.text(0))
                 dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
+                self.DataSourceDocumentClusteringUpdate()
             else:
                 if len(dummyDataSource.YoutubeData) == 0:
                     if VideoURLCheck:

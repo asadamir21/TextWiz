@@ -90,14 +90,14 @@ class OpenWindow(QFileDialog):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title = "TextAS"
+        self.title = "TextWiz"
 
         Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
 
         self.width = Monitor_Resolution_Info.get("Work")[2]
         self.height = Monitor_Resolution_Info.get("Work")[3]
 
-        self.settings = QSettings('TextAS', 'TextAS')
+        self.settings = QSettings('TextWiz', 'TextWiz')
 
         self.theme = self.settings.value('theme', '')
 
@@ -597,29 +597,29 @@ class Window(QMainWindow):
     # Welcome Page
     def WelcomePage(self):
         # Welcome Tab
-        TextASWelcomeTab = QWidget()
+        TextWizWelcomeTab = QWidget()
 
         # LayoutWidget For within Welcome Tab
-        TextASWelcomeTabverticalLayoutWidget = QWidget(TextASWelcomeTab)
-        TextASWelcomeTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        TextASWelcomeTabverticalLayoutWidget.setGeometry(0, 0, self.horizontalLayoutWidget.width(), self.horizontalLayoutWidget.height())
+        TextWizWelcomeTabverticalLayoutWidget = QWidget(TextWizWelcomeTab)
+        TextWizWelcomeTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+        TextWizWelcomeTabverticalLayoutWidget.setGeometry(0, 0, self.horizontalLayoutWidget.width(), self.horizontalLayoutWidget.height())
 
         # Box Layout for Welcome Tab
-        TextASWelcomeTabverticalLayout = QVBoxLayout(TextASWelcomeTabverticalLayoutWidget)
-        TextASWelcomeTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+        TextWizWelcomeTabverticalLayout = QVBoxLayout(TextWizWelcomeTabverticalLayoutWidget)
+        TextWizWelcomeTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        TextASWelcomeWeb = QWebEngineView()
-        TextASWelcomeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-        TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-        TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        TextASWelcomeTabverticalLayout.addWidget(TextASWelcomeWeb)
-        #TextASWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        TextWizWelcomeWeb = QWebEngineView()
+        TextWizWelcomeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+        TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+        TextWizWelcomeTabverticalLayout.addWidget(TextWizWelcomeWeb)
+        #TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
 
-        #TextASWelcomeWeb.load(QUrl(os.getcwd() + "\welcomepage\Light\welcome.html"))
-        TextASWelcomeWeb.setHtml(open("welcomepage/Light/welcome.html").read())
+        #TextWizWelcomeWeb.load(QUrl(os.getcwd() + "\welcomepage\Light\welcome.html"))
+        TextWizWelcomeWeb.setHtml(open("welcomepage/Light/welcome.html").read())
 
-        self.tabWidget.addTab(TextASWelcomeTab, "Welcome")
-        self.tabWidget.setCurrentWidget(TextASWelcomeTab)
+        self.tabWidget.addTab(TextWizWelcomeTab, "Welcome")
+        self.tabWidget.setCurrentWidget(TextWizWelcomeTab)
 
     # Change Theme Dialog
     def ChangeThemeDialog(self):
@@ -2695,163 +2695,159 @@ class Window(QMainWindow):
 
     # Show StemWords on Tab
     def mapStemWordonTab(self, word, DataSourceName):
-        try:
-            DataSourceStemWordTabFlag = False
+        DataSourceStemWordTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word':
-                    DataSourceStemWordTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word':
+                DataSourceStemWordTabFlag = True
+                break
 
-            # Creating New Tab for Stem Word
-            StemWordTab = QWidget()
+        # Creating New Tab for Stem Word
+        StemWordTab = QWidget()
 
-            # LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                        self.tabWidget.height() / 10)
+        # LayoutWidget For within Stem Word Tab
+        StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
+        StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                    self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
-            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Stem Word Tab
+        StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
+        StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # StemWord Text Edit
-            StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
-            StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
+        # StemWord Text Edit
+        StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
+        StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
+                                     StemWordTabVerticalLayoutWidget.height() * 0.375,
+                                     StemWordTabVerticalLayoutWidget.width() / 4,
+                                     StemWordTabVerticalLayoutWidget.height() / 4)
+        StemWordCompleter = QCompleter()
+        StemWordLineEdit.setCompleter(StemWordCompleter)
+        StemWordModel = QStringListModel()
+        StemWordCompleter.setModel(StemWordModel)
+
+        StemWordLineEdit.textChanged.connect(
+            lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
+
+        # StemWord Submit Button
+        StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
+        StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
                                          StemWordTabVerticalLayoutWidget.height() * 0.375,
                                          StemWordTabVerticalLayoutWidget.width() / 4,
                                          StemWordTabVerticalLayoutWidget.height() / 4)
-            StemWordCompleter = QCompleter()
-            StemWordLineEdit.setCompleter(StemWordCompleter)
-            StemWordModel = QStringListModel()
-            StemWordCompleter.setModel(StemWordModel)
+        StemWordSubmitButton.setText("Find Stem Words")
+        StemWordSubmitButton.setEnabled(False)
 
-            StemWordLineEdit.textChanged.connect(
-                lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
+        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
 
-            # StemWord Submit Button
-            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
-            StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
-                                             StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                             StemWordTabVerticalLayoutWidget.width() / 4,
-                                             StemWordTabVerticalLayoutWidget.height() / 4)
-            StemWordSubmitButton.setText("Find Stem Words")
-            StemWordSubmitButton.setEnabled(False)
+        # 2nd LayoutWidget For within Stem Word Tab
+        StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
+        StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
+        # 2nd Box Layout for Stem Word Tab
+        StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
+        StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-            # 2nd LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+        StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+        StemWordTable.setColumnCount(2)
+        StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
+                                  StemWordTabVerticalLayoutWidget2.height())
 
-            # 2nd Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
-            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        StemWordTable.setSizePolicy(self.sizePolicy)
+        StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
+        StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
-            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
-            StemWordTable.setColumnCount(2)
-            StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
-                                      StemWordTabVerticalLayoutWidget2.height())
+        for i in range(StemWordTable.columnCount()):
+            StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            StemWordTable.horizontalHeaderItem(i).setFont(
+                QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            StemWordTable.setSizePolicy(self.sizePolicy)
-            StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-            StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
-            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        StemWordSubmitButton.clicked.connect(
+            lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceName, StemWordTable))
+
+        dummyQuery = Query()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
+                break
+
+        if len(rowList) != 0:
+            for row in rowList:
+                StemWordTable.insertRow(rowList.index(row))
+                for item in row:
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(item))
+                    StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
+                    StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                        Qt.AlignHCenter | Qt.AlignVCenter)
+                    StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
+                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            StemWordTable.resizeColumnsToContents()
+            StemWordTable.resizeRowsToContents()
+
+            StemWordTable.setSortingEnabled(True)
+            StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+            row_width = 0
 
             for i in range(StemWordTable.columnCount()):
-                StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                StemWordTable.horizontalHeaderItem(i).setFont(
-                    QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            StemWordSubmitButton.clicked.connect(
-                lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceName, StemWordTable))
+            if DataSourceStemWordTabFlag:
+                # change tab in query
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        for query in DS.QueryList:
+                            if query[1] == tabs.tabWidget:
+                                query[1] = StemWordTab
+                                break
 
-            dummyQuery = Query()
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(StemWordTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(StemWordTab)
+                tabs.tabWidget = StemWordTab
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
-                    break
+            else:
+                # Adding Stem Word Tab to QTabWidget
+                myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceName))
 
-            if len(rowList) != 0:
-                for row in rowList:
-                    StemWordTable.insertRow(rowList.index(row))
-                    for item in row:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
-                        StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
-                        StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
-                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-                StemWordTable.resizeColumnsToContents()
-                StemWordTable.resizeRowsToContents()
+                if len(ItemsWidget) == 0:  # if no Parent Widget
+                    # Adding Parent Query
+                    DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                    DSQueryWidget.setText(0, DataSourceName)
+                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                    DSQueryWidget.setExpanded(True)
 
-                StemWordTable.setSortingEnabled(True)
-                StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
-
-                for i in range(StemWordTable.columnCount()):
-                    StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-                if DataSourceStemWordTabFlag:
-                    # change tab in query
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == DataSourceName:
-                            for query in DS.QueryList:
-                                if query[1] == tabs.tabWidget:
-                                    query[1] = StemWordTab
-                                    break
-
-                    # updating tab
-                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(StemWordTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(StemWordTab)
-                    tabs.tabWidget = StemWordTab
+                    # Adding Stem Word Query
+                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                    DSNewCaseNode.setText(0, 'Stem Word')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
                 else:
-                    # Adding Stem Word Tab to QTabWidget
-                    myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceName))
-
-                    ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                    if len(ItemsWidget) == 0:  # if no Parent Widget
-                        # Adding Parent Query
-                        DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                        DSQueryWidget.setText(0, DataSourceName)
-                        DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
-                        DSQueryWidget.setExpanded(True)
-
+                    for widgets in ItemsWidget:
                         # Adding Stem Word Query
-                        DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Stem Word')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                    else:
-                        for widgets in ItemsWidget:
-                            # Adding Stem Word Query
-                            DSNewCaseNode = QTreeWidgetItem(widgets)
-                            DSNewCaseNode.setText(0, 'Stem Word')
-                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                # Adding Stem Word Query to QueryList
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        DS.setQuery(DSNewCaseNode, StemWordTab)
 
-                    # Adding Stem Word Query to QueryList
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == DataSourceName:
-                            DS.setQuery(DSNewCaseNode, StemWordTab)
+                # Adding Stem Word Tab to QTabWidget
+                self.tabWidget.addTab(StemWordTab, "Stem Word")
+                self.tabWidget.setCurrentWidget(StemWordTab)
 
-                    # Adding Stem Word Tab to QTabWidget
-                    self.tabWidget.addTab(StemWordTab, "Stem Word")
-                    self.tabWidget.setCurrentWidget(StemWordTab)
-
-            else:
-                QMessageBox(self, "Stem Word Error",
-                            "An Error Occurred! No Stem Word Found of the Word \"" + word + "\"",
-                            QMessageBox.Ok)
-
-        except Exception as e:
-            print(str(e))
+        else:
+            QMessageBox(self, "Stem Word Error",
+                        "An Error Occurred! No Stem Word Found of the Word \"" + word + "\"",
+                        QMessageBox.Ok)
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):
@@ -3446,11 +3442,30 @@ class Window(QMainWindow):
 
         # LayoutWidget For within Topic Modelling Tab
         TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
-        TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height()/10)
 
         # Box Layout for Topic Modelling Tab
         TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
         TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # ComboBox for Topic Modelling Tab
+        TopicModellingComboBox = QComboBox(POSTabVerticalLayoutWidget)
+        TopicModellingComboBox.setGeometry(TopicModellingTabVerticalLayoutWidget.width() * 0.8,
+                                           TopicModellingTabVerticalLayoutWidget.height() * 0.4,
+                                           TopicModellingTabVerticalLayoutWidget.width() / 10,
+                                           TopicModellingTabVerticalLayoutWidget.height() / 5)
+        TopicModellingComboBox.addItem("Show Table")
+        TopicModellingComboBox.addItem("Show Graph")
+        self.LineEditSizeAdjustment(TopicModellingComboBox)
+
+
+        # LayoutWidget For within Topic Modelling Tab
+        TopicModellingTabVerticalLayoutWidget2 = QWidget(TopicModellingTab)
+        TopicModellingTabVerticalLayoutWidget2.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
+
+        # Box Layout for Topic Modelling Tab
+        TopicModellingTabVerticalLayout2 = QHBoxLayout(TopicModellingTabVerticalLayoutWidget2)
+        TopicModellingTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
         # Data Source Topic Modelling HTML
         for DS in myFile.DataSourceList:
@@ -6994,7 +7009,7 @@ class Window(QMainWindow):
 
     #Open File
     def OpenFileWindow(self):
-        self.dummyWindow = OpenWindow("Open File", "TextAS File *.tax", 0)
+        self.dummyWindow = OpenWindow("Open File", "TextWiz File *.tax", 0)
 
     #Print Window
     def printWindow(self):
@@ -7026,7 +7041,7 @@ class Window(QMainWindow):
     def AboutWindow(self):
         file = open('LICENSE', 'r')
         lic = file.read()
-        QMessageBox().about(self, "About TextAS", lic)
+        QMessageBox().about(self, "About TextWiz", lic)
 
     # ****************************************************************************
     # *************************** Import Features ********************************
@@ -7425,7 +7440,7 @@ class Window(QMainWindow):
             else:
                 dummyDataSource.__del__()
                 DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
-                                                                       "TextAS is unable to retrive any tweet",
+                                                                       "TextWiz is unable to retrive any tweet",
                                                                        QMessageBox.Ok)
         else:
             dummyDataSource.__del__()
@@ -7643,7 +7658,7 @@ class Window(QMainWindow):
                                                                     QMessageBox.Ok)
 
 if __name__ == "__main__":
-    WindowTitleLogo = "Images/TextASLogo.png"
+    WindowTitleLogo = "Images/TextWizLogo.png"
     isSaveAs = True
     myFile = File()
     myFile.setCreatedDate(datetime.datetime.now())
@@ -7652,18 +7667,18 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    # TextASSplash = QSplashScreen()
-    # TextASSplash.resize(200, 100)
-    # TextASSplashPixmap = QPixmap("Images/TextASSplash.png")
-    # TextASSplash.setPixmap(TextASSplashPixmap)
+    # TextWizSplash = QSplashScreen()
+    # TextWizSplash.resize(200, 100)
+    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
+    # TextWizSplash.setPixmap(TextWizSplashPixmap)
     #
-    # SplahScreenProgressBar = QProgressBar(TextASSplash)
-    # SplahScreenProgressBar.setGeometry(TextASSplash.width() / 10, TextASSplash.height() * 0.9,
-    #                         TextASSplash.width() * 0.8, TextASSplash.height() * 0.035)
+    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
+    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
     # SplahScreenProgressBar.setTextVisible(False)
     # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
     #
-    # TextASSplash.show()
+    # TextWizSplash.show()
     #
     # for i in range(0, 100):
     #     SplahScreenProgressBar.setValue(i)
@@ -7671,8 +7686,8 @@ if __name__ == "__main__":
     #     while time.time() < t + 0.05:
     #         App.processEvents()
     #
-    # TextASSplash.close()
+    # TextWizSplash.close()
 
-    TextASMainwindow = Window()
-    TextASMainwindow.show()
+    TextWizMainwindow = Window()
+    TextWizMainwindow.show()
     sys.exit(App.exec())

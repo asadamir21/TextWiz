@@ -7509,10 +7509,11 @@ class Window(QMainWindow):
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
             else:
-                if len(dummyDataSource.DataSourcetext) == 0:
+                if not dummyDataSource.DataSourceLoadError and len(dummyDataSource.DataSourcetext) == 0:
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                         dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                         QMessageBox.Ok)
+
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()

@@ -316,7 +316,7 @@ class Query():
         return tokens
 
     def TopicModelling(self, DataSourceText, Topic_NUM):
-        spacy.load('en_core_web_sm')
+        #spacy.load('en_core_web_sm')
 
         text_data = []
 

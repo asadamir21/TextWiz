@@ -2348,174 +2348,170 @@ class Window(QMainWindow):
 
     # Sentiment Analysis Tabel
     def SentimentAnalysisTable(self, DataSourceName):
-        try:
-            DataSourceSentimentAnalysisFlag = False
+        DataSourceSentimentAnalysisFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
-                    DataSourceSentimentAnalysisFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
+                DataSourceSentimentAnalysisFlag = True
+                break
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.SentimentAnalysis()
-                    rowList = DS.AutomaticSentimentList
-                    break
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                DS.SentimentAnalysis()
+                rowList = DS.AutomaticSentimentList
+                break
 
-            SentimentAnalysisTab = QWidget()
-            SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                                                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-            SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
+        SentimentAnalysisTab = QWidget()
+        SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                                                      self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+        SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Stem Word Tab
-            SentimentAnalysisTabVerticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                                  self.tabWidget.height() / 10)
+        # LayoutWidget For within Stem Word Tab
+        SentimentAnalysisTabVerticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
+        SentimentAnalysisTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                              self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
-            SentimentAnalysisTabVerticalLayout2 = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget2)
-            SentimentAnalysisTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Stem Word Tab
+        SentimentAnalysisTabVerticalLayout2 = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget2)
+        SentimentAnalysisTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-            # Positive_Count Label
-            PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-            PositiveCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                           POSTabVerticalLayoutWidget.height() * 0.142,
-                                           POSTabVerticalLayoutWidget.width() / 20,
-                                           POSTabVerticalLayoutWidget.height() / 7)
-            PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
-            PositiveCountLabel.setAlignment(Qt.AlignVCenter)
-            PositiveCountLabel.adjustSize()
+        # Positive_Count Label
+        PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+        PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.142,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
+        PositiveCountLabel.setAlignment(Qt.AlignVCenter)
+        PositiveCountLabel.adjustSize()
 
-            # Neutral_Count Label
-            NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-            NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
-                                          SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.428,
-                                          SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
-                                          SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
-            NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
-            NeutralCountLabel.setAlignment(Qt.AlignVCenter)
-            NeutralCountLabel.adjustSize()
+        # Neutral_Count Label
+        NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+        NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
+                                      SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.428,
+                                      SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
+                                      SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
+        NeutralCountLabel.setAlignment(Qt.AlignVCenter)
+        NeutralCountLabel.adjustSize()
 
-            # Negative_Count Label
-            NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-            NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
-                                           SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.714,
-                                           SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
-                                           SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
-            NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
-            NegativeCountLabel.setAlignment(Qt.AlignVCenter)
-            NegativeCountLabel.adjustSize()
+        # Negative_Count Label
+        NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
+        NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.714,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
+                                       SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
+        NegativeCountLabel.setAlignment(Qt.AlignVCenter)
+        NegativeCountLabel.adjustSize()
 
-            # Download Button For Frequency Table
-            DownloadAsCSVButton = QPushButton('Download')
-            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+        # Download Button For Frequency Table
+        DownloadAsCSVButton = QPushButton('Download')
+        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-            DownloadAsCSVButtonFont = QFont("sans-serif")
-            DownloadAsCSVButtonFont.setPixelSize(14)
-            DownloadAsCSVButtonFont.setBold(True)
+        DownloadAsCSVButtonFont = QFont("sans-serif")
+        DownloadAsCSVButtonFont.setPixelSize(14)
+        DownloadAsCSVButtonFont.setBold(True)
 
-            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-            SentimentAnalysisTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+        SentimentAnalysisTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-            # LayoutWidget For within Word Frequency Tab
-            SentimentAnalysisTabverticalLayoutWidget = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
-            SentimentAnalysisTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+        # LayoutWidget For within Word Frequency Tab
+        SentimentAnalysisTabverticalLayoutWidget = QWidget(SentimentAnalysisTab)
+        SentimentAnalysisTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                self.tabWidget.height() - self.tabWidget.height() / 10)
+        SentimentAnalysisTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
-            SentimentAnalysisverticalLayout = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget)
-            SentimentAnalysisverticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Box Layout for Word Frequency Tab
+        SentimentAnalysisverticalLayout = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget)
+        SentimentAnalysisverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
-            SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget)
-            SentimentAnalysisTable.setColumnCount(2)
-            SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget.width(),
-                                                     SentimentAnalysisTabverticalLayoutWidget.height())
+        # Table for Word Frequency
+        SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget)
+        SentimentAnalysisTable.setColumnCount(2)
+        SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget.width(),
+                                                 SentimentAnalysisTabverticalLayoutWidget.height())
 
-            SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
+        SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
 
-            SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-            SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
-            SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+        SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
+        SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+        for i in range(SentimentAnalysisTable.columnCount()):
+            SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+            SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+
+        if len(rowList) != 0:
+            for row in rowList:
+                SentimentAnalysisTable.insertRow(rowList.index(row))
+                for item in row:
+                    if row.index(item) == 0:
+                        ptext = QPlainTextEdit()
+                        ptext.setReadOnly(True)
+                        ptext.setPlainText(item);
+                        SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                    else:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
+                        SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+            SentimentAnalysisTable.resizeColumnsToContents()
+            SentimentAnalysisTable.resizeRowsToContents()
+
+            SentimentAnalysisTable.setSortingEnabled(True)
+            SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
             for i in range(SentimentAnalysisTable.columnCount()):
-                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+            if DataSourceSentimentAnalysisFlag:
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                tabs.tabWidget = SentimentAnalysisTab
 
-            if len(rowList) != 0:
-                for row in rowList:
-                    SentimentAnalysisTable.insertRow(rowList.index(row))
-                    for item in row:
-                        if row.index(item) == 0:
-                            ptext = QPlainTextEdit()
-                            ptext.setReadOnly(True)
-                            ptext.setPlainText(item);
-                            SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName))
 
-                        else:
-                            intItem = QTableWidgetItem()
-                            intItem.setData(Qt.EditRole, QVariant(item))
-                            SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
-                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
-                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
-                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                # Adding Word Frequency Query
+                ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-                SentimentAnalysisTable.resizeColumnsToContents()
-                SentimentAnalysisTable.resizeRowsToContents()
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
 
-                SentimentAnalysisTable.setSortingEnabled(True)
-                SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-
-                for i in range(SentimentAnalysisTable.columnCount()):
-                    SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-                if DataSourceSentimentAnalysisFlag:
-                    # updating tab
-                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
-                    tabs.tabWidget = SentimentAnalysisTab
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
                 else:
-                    # Adding Word Frequency Tab to TabList
-                    myFile.TabList.append(Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName))
-
-                    # Adding Word Frequency Query
-                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                    if len(ItemsWidget) == 0:
-                        DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                        DSVisualWidget.setText(0, DataSourceName)
-                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                        DSVisualWidget.setExpanded(True)
-
-                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    for widgets in ItemsWidget:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                    else:
-                        for widgets in ItemsWidget:
-                            DSNewCaseNode = QTreeWidgetItem(widgets)
-                            DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
-                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
+                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
-                    # Adding Word Frequency Tab to QTabWidget
-                    self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
-                    self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
-
-            else:
-                QMessageBox.information(self, "Word Frequency Error",
-                                        "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
-
-        except Exception as e:
-            print(str(e))
+        else:
+            QMessageBox.information(self, "Word Frequency Error",
+                                    "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -3449,19 +3445,21 @@ class Window(QMainWindow):
         TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
         # ComboBox for Topic Modelling Tab
-        TopicModellingComboBox = QComboBox(POSTabVerticalLayoutWidget)
+        TopicModellingComboBox = QComboBox(TopicModellingTabVerticalLayoutWidget)
         TopicModellingComboBox.setGeometry(TopicModellingTabVerticalLayoutWidget.width() * 0.8,
                                            TopicModellingTabVerticalLayoutWidget.height() * 0.4,
                                            TopicModellingTabVerticalLayoutWidget.width() / 10,
                                            TopicModellingTabVerticalLayoutWidget.height() / 5)
+
+        TopicModellingComboBox.addItem("Show Word CLoud")
         TopicModellingComboBox.addItem("Show Table")
-        TopicModellingComboBox.addItem("Show Graph")
+        TopicModellingComboBox.addItem("Show Word CLoud")
         self.LineEditSizeAdjustment(TopicModellingComboBox)
 
 
         # LayoutWidget For within Topic Modelling Tab
         TopicModellingTabVerticalLayoutWidget2 = QWidget(TopicModellingTab)
-        TopicModellingTabVerticalLayoutWidget2.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
+        TopicModellingTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/10, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
 
         # Box Layout for Topic Modelling Tab
         TopicModellingTabVerticalLayout2 = QHBoxLayout(TopicModellingTabVerticalLayoutWidget2)
@@ -3476,7 +3474,7 @@ class Window(QMainWindow):
 
         # Topic Modelling HTML Viewer
         TopicModellingHTMLWeb = QWebEngineView()
-        TopicModellingTabVerticalLayout.addWidget(TopicModellingHTMLWeb)
+        TopicModellingTabVerticalLayout2.addWidget(TopicModellingHTMLWeb)
         TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
 
         if DataSourceTotalModellingTabFlag:
@@ -4138,7 +4136,7 @@ class Window(QMainWindow):
         TranslateToComboBox.setLayoutDirection(Qt.LeftToRight)
 
         for langcode, lang in self.languages:
-            if not langcode == TranslateOriginalTextLineEdit.text():
+            if not lang == TranslateOriginalTextLineEdit.text():
                 TranslateToComboBox.addItem(lang)
 
         self.LineEditSizeAdjustment(TranslateToComboBox)
@@ -4189,7 +4187,7 @@ class Window(QMainWindow):
         # Translate To ComboBox
         TranslateTo.clear()
         for langcode, lang in self.languages:
-            if not langcode == OriginalText.text():
+            if not lang == OriginalText.text():
                 TranslateTo.addItem(lang)
 
         if OriginalText.text() == "undetectable":
@@ -5880,39 +5878,36 @@ class Window(QMainWindow):
 
     # Get Which Cases Widget Item and its Position
     def FindCasesTreeWidgetContextMenu(self, CasesMouseRightClickEvent):
-        try:
-            if CasesMouseRightClickEvent.reason == CasesMouseRightClickEvent.Mouse:
-                CasesMouseRightClickPos = CasesMouseRightClickEvent.globalPos()
-                CasesMouseRightClickItem = self.CasesTreeWidget.itemAt(CasesMouseRightClickEvent.pos())
+        if CasesMouseRightClickEvent.reason == CasesMouseRightClickEvent.Mouse:
+            CasesMouseRightClickPos = CasesMouseRightClickEvent.globalPos()
+            CasesMouseRightClickItem = self.CasesTreeWidget.itemAt(CasesMouseRightClickEvent.pos())
+        else:
+            CasesMouseRightClickPos = None
+            Casesselection = self.CasesTreeWidget.selectedItems()
+
+            if Casesselection:
+                CasesMouseRightClickItem = Casesselection[0]
             else:
-                CasesMouseRightClickPos = None
-                Casesselection = self.CasesTreeWidget.selectedItems()
-
-                if Casesselection:
-                    CasesMouseRightClickItem = Casesselection[0]
-                else:
-                    CasesMouseRightClickItem = self.CasesTreeWidget.currentItem()
-                    if CasesMouseRightClickItem is None:
-                        CasesMouseRightClickItem = self.CasesTreeWidget.invisibleRootItem().child(0)
-                if CasesMouseRightClickItem is not None:
-                    CasesParent = CasesMouseRightClickItem.parent()
-                    while CasesParent is not None:
-                        CasesParent.setExpanded(True)
-                        CasesParent = CasesParent.parent()
+                CasesMouseRightClickItem = self.CasesTreeWidget.currentItem()
+                if CasesMouseRightClickItem is None:
+                    CasesMouseRightClickItem = self.CasesTreeWidget.invisibleRootItem().child(0)
+            if CasesMouseRightClickItem is not None:
+                CasesParent = CasesMouseRightClickItem.parent()
+                while CasesParent is not None:
+                    CasesParent.setExpanded(True)
+                    CasesParent = CasesParent.parent()
+                Casesitemrect = self.CasesTreeWidget.visualItemRect(CasesMouseRightClickItem)
+                Casesportrect = self.CasesTreeWidget.viewport().rect()
+                if not Casesportrect.contains(Casesitemrect.topLeft()):
+                    self.CasesTreeWidget.scrollToItem(CasesMouseRightClickItem, QTreeWidget.PositionAtCenter)
                     Casesitemrect = self.CasesTreeWidget.visualItemRect(CasesMouseRightClickItem)
-                    Casesportrect = self.CasesTreeWidget.viewport().rect()
-                    if not Casesportrect.contains(Casesitemrect.topLeft()):
-                        self.CasesTreeWidget.scrollToItem(CasesMouseRightClickItem, QTreeWidget.PositionAtCenter)
-                        Casesitemrect = self.CasesTreeWidget.visualItemRect(CasesMouseRightClickItem)
 
-                    Casesitemrect.setLeft(Casesportrect.left())
-                    Casesitemrect.setWidth(Casesportrect.width())
-                    CasesMouseRightClickPos = self.CasesTreeWidget.mapToGlobal(Casesitemrect.center())
+                Casesitemrect.setLeft(Casesportrect.left())
+                Casesitemrect.setWidth(Casesportrect.width())
+                CasesMouseRightClickPos = self.CasesTreeWidget.mapToGlobal(Casesitemrect.center())
 
-            if CasesMouseRightClickPos is not None:
-                self.CasesTreeWidgetContextMenu(CasesMouseRightClickItem, CasesMouseRightClickPos)
-        except Exception as e:
-            print(str(e))
+        if CasesMouseRightClickPos is not None:
+            self.CasesTreeWidgetContextMenu(CasesMouseRightClickItem, CasesMouseRightClickPos)
 
     # Setting ContextMenu on Clicked Query
     def CasesTreeWidgetContextMenu(self, CasesItemName, CasesWidgetPos):
@@ -6401,7 +6396,6 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Sentiments
     def SentimentsTreeWidgetContextMenu(self, SentimentsItemName, SentimentsWidgetPos):
-
         # Parent Sentiments
         if SentimentsItemName.parent() == None:
             SentimentsRightClickMenu = QMenu(self.SentimentTreeWidget)
@@ -6766,78 +6760,91 @@ class Window(QMainWindow):
 
     # Get Which Visualization Widget Item and its Position
     def FindVisualizationTreeWidgetContextMenu(self, VisualizationMouseRightClickEvent):
-        try:
-            if VisualizationMouseRightClickEvent.reason == VisualizationMouseRightClickEvent.Mouse:
-                VisualizationMouseRightClickPos = VisualizationMouseRightClickEvent.globalPos()
-                VisualizationMouseRightClickItem = self.VisualizationTreeWidget.itemAt(VisualizationMouseRightClickEvent.pos())
+        if VisualizationMouseRightClickEvent.reason == VisualizationMouseRightClickEvent.Mouse:
+            VisualizationMouseRightClickPos = VisualizationMouseRightClickEvent.globalPos()
+            VisualizationMouseRightClickItem = self.VisualizationTreeWidget.itemAt(VisualizationMouseRightClickEvent.pos())
+        else:
+            VisualizationMouseRightClickPos = None
+            Visualizationselection = self.VisualizationTreeWidget.selectedItems()
+
+            if Visualizationselection:
+                VisualizationMouseRightClickItem = Visualizationselection[0]
             else:
-                VisualizationMouseRightClickPos = None
-                Visualizationselection = self.VisualizationTreeWidget.selectedItems()
+                VisualizationMouseRightClickItem = self.VisualizationTreeWidget.currentItem()
+                if VisualizationMouseRightClickItem is None:
+                    VisualizationMouseRightClickItem = self.VisualizationTreeWidget.invisibleRootItem().child(0)
+            if VisualizationMouseRightClickItem is not None:
+                VisualizationParent = VisualizationMouseRightClickItem.parent()
+                while VisualizationParent is not None:
+                    VisualizationParent.setExpanded(True)
+                    VisualizationParent = VisualizationParent.parent()
 
-                if Visualizationselection:
-                    VisualizationMouseRightClickItem = Visualizationselection[0]
-                else:
-                    VisualizationMouseRightClickItem = self.VisualizationTreeWidget.currentItem()
-                    if VisualizationMouseRightClickItem is None:
-                        VisualizationMouseRightClickItem = self.VisualizationTreeWidget.invisibleRootItem().child(0)
-                if VisualizationMouseRightClickItem is not None:
-                    VisualizationParent = VisualizationMouseRightClickItem.parent()
-                    while VisualizationParent is not None:
-                        VisualizationParent.setExpanded(True)
-                        VisualizationParent = VisualizationParent.parent()
+                Visualizationitemrect = self.VisualizationTreeWidget.visualItemRect(VisualizationMouseRightClickItem)
+                Visualizationportrect = self.VisualizationTreeWidget.viewport().rect()
 
+                if not Visualizationportrect.contains(Visualizationitemrect.topLeft()):
+                    self.VisualizationTreeWidget.scrollToItem(VisualizationMouseRightClickItem, QTreeWidget.PositionAtCenter)
                     Visualizationitemrect = self.VisualizationTreeWidget.visualItemRect(VisualizationMouseRightClickItem)
-                    Visualizationportrect = self.VisualizationTreeWidget.viewport().rect()
 
-                    if not Visualizationportrect.contains(Visualizationitemrect.topLeft()):
-                        self.VisualizationTreeWidget.scrollToItem(VisualizationMouseRightClickItem, QTreeWidget.PositionAtCenter)
-                        Visualizationitemrect = self.VisualizationTreeWidget.visualItemRect(VisualizationMouseRightClickItem)
+                Visualizationitemrect.setLeft(Visualizationportrect.left())
+                Visualizationitemrect.setWidth(Visualizationportrect.width())
+                VisualizationMouseRightClickPos = self.VisualizationTreeWidget.mapToGlobal(Visualizationitemrect.center())
 
-                    Visualizationitemrect.setLeft(Visualizationportrect.left())
-                    Visualizationitemrect.setWidth(Visualizationportrect.width())
-                    VisualizationMouseRightClickPos = self.VisualizationTreeWidget.mapToGlobal(Visualizationitemrect.center())
-
-            if VisualizationMouseRightClickPos is not None:
-                self.VisualizationTreeWidgetContextMenu(VisualizationMouseRightClickItem, VisualizationMouseRightClickPos)
-
-        except Exception as e:
-            print(str(e))
+        if VisualizationMouseRightClickPos is not None:
+            self.VisualizationTreeWidgetContextMenu(VisualizationMouseRightClickItem, VisualizationMouseRightClickPos)
 
     # Setting ContextMenu on Clicked Sentiments
     def VisualizationTreeWidgetContextMenu(self, VisualizationItemName, VisualizationWidgetPos):
         # Parent Sentiments
         if VisualizationItemName.parent() == None:
-            VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
+            if VisualizationItemName.text(0) == "Document Clustering":
+                VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
 
-            # Visualization Expand
-            VisualizationExpand = QAction('Expand', self.VisualizationTreeWidget)
-            VisualizationExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
-            if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == True):
-                VisualizationExpand.setDisabled(True)
+                # Show Tab
+                VisualizationShow = QAction('Show', self.VisualizationTreeWidget)
+                VisualizationShow.triggered.connect(lambda: self.VisualizationDoubleClickHandler(VisualizationItemName))
+                VisualizationRightClickMenu.addAction(VisualizationShow)
+
+                # Visualization Remove
+                VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
+                VisualizationRemove.triggered.connect(
+                    lambda: self.VisualizationParentRemove(VisualizationItemName))
+                VisualizationRightClickMenu.addAction(VisualizationRemove)
+
+                VisualizationRightClickMenu.popup(VisualizationWidgetPos)
+
             else:
-                VisualizationExpand.setDisabled(False)
-            VisualizationRightClickMenu.addAction(VisualizationExpand)
+                VisualizationRightClickMenu = QMenu(self.VisualizationTreeWidget)
 
-            # Visualization Collapse
-            VisualizationCollapse = QAction('Collapse', self.VisualizationTreeWidget)
-            VisualizationCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
-            if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == False):
-                VisualizationCollapse.setDisabled(True)
-            else:
-                VisualizationCollapse.setDisabled(False)
-            VisualizationRightClickMenu.addAction(VisualizationCollapse)
+                # Visualization Expand
+                VisualizationExpand = QAction('Expand', self.VisualizationTreeWidget)
+                VisualizationExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
+                if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == True):
+                    VisualizationExpand.setDisabled(True)
+                else:
+                    VisualizationExpand.setDisabled(False)
+                VisualizationRightClickMenu.addAction(VisualizationExpand)
 
-            # Visualization Remove
-            VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
-            VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemove(VisualizationItemName))
-            VisualizationRightClickMenu.addAction(VisualizationRemove)
+                # Visualization Collapse
+                VisualizationCollapse = QAction('Collapse', self.VisualizationTreeWidget)
+                VisualizationCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(VisualizationItemName))
+                if (VisualizationItemName.childCount() == 0 or VisualizationItemName.isExpanded() == False):
+                    VisualizationCollapse.setDisabled(True)
+                else:
+                    VisualizationCollapse.setDisabled(False)
+                VisualizationRightClickMenu.addAction(VisualizationCollapse)
 
-            # Visualization Detail
-            VisualizationDetail = QAction('Detail', self.VisualizationTreeWidget)
-            VisualizationDetail.triggered.connect(lambda: self.VisualizationDetail(VisualizationItemName))
-            VisualizationRightClickMenu.addAction(VisualizationDetail)
+                # Visualization Remove
+                VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
+                VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemove(VisualizationItemName))
+                VisualizationRightClickMenu.addAction(VisualizationRemove)
 
-            VisualizationRightClickMenu.popup(VisualizationWidgetPos)
+                # Visualization Detail
+                VisualizationDetail = QAction('Detail', self.VisualizationTreeWidget)
+                VisualizationDetail.triggered.connect(lambda: self.VisualizationDetail(VisualizationItemName))
+                VisualizationRightClickMenu.addAction(VisualizationDetail)
+
+                VisualizationRightClickMenu.popup(VisualizationWidgetPos)
 
         # Child Sentiments
         else:
@@ -6862,17 +6869,26 @@ class Window(QMainWindow):
                                                         QMessageBox.Yes | QMessageBox.No)
 
         if VisualizationRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == VisualizationItemName.text(0):
-                    for tabs in myFile.TabList:
-                        if tabs.DataSourceName == DS.DataSourceName:
-                            myFile.TabList.remove(tabs)
-                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                            tabs.__del__()
+            if VisualizationItemName.text(0) == 'Document Clustering':
+                for tabs in myFile.TabList:
+                    if tabs.TabName == 'Document Clustering':
+                        myFile.TabList.remove(tabs)
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        tabs.__del__()
 
-                    self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
-                    DS.VisualizationList.clear()
-                    break
+                self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
+            else:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == VisualizationItemName.text(0):
+                        for tabs in myFile.TabList:
+                            if tabs.DataSourceName == DS.DataSourceName:
+                                myFile.TabList.remove(tabs)
+                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                tabs.__del__()
+
+                        self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
+                        DS.VisualizationList.clear()
+                        break
         else:
             pass
 
@@ -6973,16 +6989,24 @@ class Window(QMainWindow):
 
     # Preview Visual/Tab on double click
     def VisualizationDoubleClickHandler(self, VisualizationItemName):
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == VisualizationItemName.parent().text(0):
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == tabs.DataSourceName:
-                        for visuals in DS.VisualizationList:
-                            if visuals[0] == VisualizationItemName and visuals[1] == tabs.tabWidget:
-                                if self.tabWidget.currentWidget() != tabs.tabWidget:
-                                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                                    self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                                break
+        if VisualizationItemName.text(0) == 'Document Clustering':
+            for tabs in myFile.TabList:
+                if tabs.TabName == 'Document Clustering':
+                    if self.tabWidget.currentWidget() != tabs.tabWidget:
+                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                    break
+        else:
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == VisualizationItemName.parent().text(0):
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            for visuals in DS.VisualizationList:
+                                if visuals[0] == VisualizationItemName and visuals[1] == tabs.tabWidget:
+                                    if self.tabWidget.currentWidget() != tabs.tabWidget:
+                                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                                    break
 
     # ****************************************************************************
     # *********************** Application Basic Features *************************

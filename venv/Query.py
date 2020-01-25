@@ -342,7 +342,6 @@ class Query():
         lda = models.ldamodel.LdaModel.load('Topic Modelling Files/model5.gensim')
 
         lda_display = pyLDAvis.gensim.prepare(lda, corpus, dictionary, sort_topics=True)
-
         return pyLDAvis.prepared_data_to_html(lda_display)
 
     #  *********************************** Question Generator **********************************

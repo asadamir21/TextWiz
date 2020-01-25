@@ -1,28 +1,13 @@
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
+
+
 import random
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.manifold import MDS
-from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 from scipy.cluster.hierarchy import ward, dendrogram, linkage
 import sys
-
-import matplotlib
-matplotlib.use("Qt5Agg")
-import numpy as np
-from numpy import arange, sin, pi
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
 from PyQt5.QtWidgets import QWidget, QMainWindow, QApplication, QSizePolicy, QVBoxLayout, QPushButton
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QCursor
-
-
 
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -108,65 +93,60 @@ class File():
 
     # Data Source Document Clustering
     def DocumnetClustering(self):
-        try:
-            self.DocumnetClusteringDataSourceError = False
+        self.DocumnetClusteringDataSourceError = False
 
-            if len(self.DataSourceList) > 3:
-                self.FindSimilarityBetweenDataSource()
+        if len(self.DataSourceList) > 3:
+            self.FindSimilarityBetweenDataSource()
 
-                #Dendrogram
-                self.plot_canvas = MyStaticMplCanvas(width=5, height=4, dpi=100)
-                self.plot_canvas.compute_initial_figure(self.high, [DS.DataSourceName for DS in self.DataSourceList])
+            #Dendrogram
+            self.plot_canvas = MyStaticMplCanvas(width=5, height=4, dpi=100)
+            self.plot_canvas.compute_initial_figure(self.high, [DS.DataSourceName for DS in self.DataSourceList])
 
-                # Scatter Plot
-                self.ScatterFigure = plt.figure(figsize=(10, 5))
-                ax = self.ScatterFigure.add_subplot(111)
+            # Scatter Plot
+            self.ScatterFigure = plt.figure(figsize=(10, 5))
+            ax = self.ScatterFigure.add_subplot(111)
 
-                doc_titles = [DS.DataSourceName for DS in self.DataSourceList]
+            doc_titles = [DS.DataSourceName for DS in self.DataSourceList]
 
-                num_clusters = 4
-                km = KMeans(n_clusters=num_clusters)
-                km.fit(self.highNumpy)
-                clusters = km.labels_.tolist()
+            num_clusters = 4
+            km = KMeans(n_clusters=num_clusters)
+            km.fit(self.highNumpy)
+            clusters = km.labels_.tolist()
 
-                xs, ys = self.highNumpy[:, 0], self.highNumpy[:, 1]
+            xs, ys = self.highNumpy[:, 0], self.highNumpy[:, 1]
 
-                df = pd.DataFrame(dict(x=xs, y=ys, label=clusters, title=doc_titles))
+            df = pd.DataFrame(dict(x=xs, y=ys, label=clusters, title=doc_titles))
 
-                # group by cluster
-                groups = df.groupby('label')
+            # group by cluster
+            groups = df.groupby('label')
 
-                ax.margins(0.05)  # Optional, just adds 5% padding to the autoscaling
+            ax.margins(0.05)  # Optional, just adds 5% padding to the autoscaling
 
-                for name, group in groups:
-                    ax.plot(group.x, group.y, marker='o', linestyle='', ms=12,
-                            mec='none')
-                    ax.set_aspect('auto')
-                    ax.tick_params(
-                        axis='x',  # changes apply to the x-axis
-                        which='both',  # both major and minor ticks are affected
-                        bottom='off',  # ticks along the bottom edge are off
-                        top='off',  # ticks along the top edge are off
-                        labelbottom='off')
-                    ax.tick_params(
-                        axis='y',  # changes apply to the y-axis
-                        which='both',  # both major and minor ticks are affected
-                        left='off',  # ticks along the bottom edge are off
-                        top='off',  # ticks along the top edge are off
-                        labelleft='off')
+            for name, group in groups:
+                ax.plot(group.x, group.y, marker='o', linestyle='', ms=12,
+                        mec='none')
+                ax.set_aspect('auto')
+                ax.tick_params(
+                    axis='x',  # changes apply to the x-axis
+                    which='both',  # both major and minor ticks are affected
+                    bottom='off',  # ticks along the bottom edge are off
+                    top='off',  # ticks along the top edge are off
+                    labelbottom='off')
+                ax.tick_params(
+                    axis='y',  # changes apply to the y-axis
+                    which='both',  # both major and minor ticks are affected
+                    left='off',  # ticks along the bottom edge are off
+                    top='off',  # ticks along the top edge are off
+                    labelleft='off')
 
-                ax.legend(numpoints=1)  # show legend with only 1 point
+            ax.legend(numpoints=1)  # show legend with only 1 point
 
-                # add label in x,y position with the label as the film title
-                for i in range(len(df)):
-                    ax.text(df.iloc[i]['x'], df.iloc[i]['y'], df.iloc[i]['title'], size=8)
+            # add label in x,y position with the label as the film title
+            for i in range(len(df)):
+                ax.text(df.iloc[i]['x'], df.iloc[i]['y'], df.iloc[i]['title'], size=8)
 
-            else:
-                self.DocumnetClusteringDataSourceError = True
-
-        except Exception as e:
-            print(str(e))
-
+        else:
+            self.DocumnetClusteringDataSourceError = True
 
 class MyMplCanvas(FigureCanvas):
     #Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
@@ -183,8 +163,6 @@ class MyMplCanvas(FigureCanvas):
                                    QSizePolicy.Expanding,
                                    QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
-
-
 
 class MyStaticMplCanvas(MyMplCanvas):
     #Simple canvas with dendrogram plot
@@ -233,6 +211,3 @@ class MyStaticMplCanvas(MyMplCanvas):
               if max_d:
                   self.axes.axhline(y=max_d, c='k', linestyle='--', color='red')
           return ddata
-
-
-

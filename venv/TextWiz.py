@@ -393,6 +393,18 @@ class Window(QMainWindow):
         CreateWordCloudTool.triggered.connect(lambda: self.DataSourceCreateCloud())
         VisualizationMenu.addAction(CreateWordCloudTool)
 
+        # Word Tree Tool
+        WordTreeTool = QAction('Word Tree', self)
+        WordTreeTool.setStatusTip('Word Tree')
+        WordTreeTool.triggered.connect(lambda: self.DataSourceWordTreeDialog())
+        VisualizationMenu.addAction(WordTreeTool)
+
+        # Word Tree Tool
+        SentimentAnalysisTool = QAction('Sentiment Analysis', self)
+        SentimentAnalysisTool.setStatusTip('Sentiment Analysis')
+        SentimentAnalysisTool.triggered.connect(lambda: self.DataSourceSentimentAnalysisVisualDialog())
+        VisualizationMenu.addAction(SentimentAnalysisTool)
+
         # Document Clustering
         DocumentClusteringTool = QAction('Document Clustering', self)
         DocumentClusteringTool.setStatusTip('Document Clustering')
@@ -3371,7 +3383,7 @@ class Window(QMainWindow):
     # Data Source Topic Modelling Dialog
     def DataSourceTopicModellingDialog(self):
         TopicModellingDialog = QDialog()
-        TopicModellingDialog.setWindowTitle("Entity RelationShip")
+        TopicModellingDialog.setWindowTitle("Topic Modelling")
         TopicModellingDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                              self.height / 10)
         TopicModellingDialog.setParent(self)
@@ -5281,7 +5293,7 @@ class Window(QMainWindow):
         print("Hello")
 
     # ****************************************************************************
-    # ************************ Data Sources Word CLoud ***************************
+    # ************************ Data Sources Word Cloud ***************************
     # ****************************************************************************
 
     # Data Source Create World Cloud
@@ -5471,6 +5483,312 @@ class Window(QMainWindow):
 
         if all(path):
             dummypixmap.save(path[0] + ".png", "PNG")
+
+    # ****************************************************************************
+    # ************************* Data Sources Tree Word ***************************
+    # ****************************************************************************
+
+    # Data Source Word Tree Dialog
+    def DataSourceWordTreeDialog(self):
+        DataSourceWordTreeDialog = QDialog()
+        DataSourceWordTreeDialog.setWindowTitle("Word Tree")
+        DataSourceWordTreeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                  self.height / 10)
+        DataSourceWordTreeDialog.setParent(self)
+        DataSourceWordTreeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceWordTreeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceWordTreeDialog)
+        DataSourcelabel.setGeometry(DataSourceWordTreeDialog.width() * 0.125,
+                                    DataSourceWordTreeDialog.height() * 0.2,
+                                    DataSourceWordTreeDialog.width() / 4,
+                                    DataSourceWordTreeDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceWordTreeDialog)
+        DSComboBox.setGeometry(DataSourceWordTreeDialog.width() * 0.4,
+                               DataSourceWordTreeDialog.height() * 0.2,
+                               DataSourceWordTreeDialog.width() / 2,
+                               DataSourceWordTreeDialog.height() / 10)
+        # if len(myFile.DataSourceList) > 1:
+        #     DSComboBox.addItem("All")
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourceWordTreebuttonBox = QDialogButtonBox(DataSourceWordTreeDialog)
+        DataSourceWordTreebuttonBox.setGeometry(DataSourceWordTreeDialog.width() * 0.125,
+                                                      DataSourceWordTreeDialog.height() * 0.7,
+                                                      DataSourceWordTreeDialog.width() * 3 / 4,
+                                                      DataSourceWordTreeDialog.height() / 5)
+        DataSourceWordTreebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceWordTreebuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if DSComboBox.count() == 0:
+            DataSourceWordTreebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(DataSourceWordTreebuttonBox)
+
+        DataSourceWordTreebuttonBox.accepted.connect(DataSourceWordTreeDialog.accept)
+        DataSourceWordTreebuttonBox.rejected.connect(DataSourceWordTreeDialog.reject)
+
+        DataSourceWordTreebuttonBox.accepted.connect(
+            lambda: self.DataSourceWordTree(DSComboBox.currentText()))
+
+        DataSourceWordTreeDialog.exec()
+
+    # Data Source Word Tree
+    def DataSourceWordTree(self, DataSourceName):
+        DataSourceWordTreeTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Tree':
+                DataSourceWordTreeTabFlag = True
+                break
+
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                WordTreeHTML = DS.CreateWordTree()
+                break
+
+        # Creating New Tab for Word Tree
+        DataSourceWordTreeTab = QWidget()
+
+        # LayoutWidget For within Word Tree Tab
+        DataSourceWordTreeTabVerticalLayoutWidget = QWidget(DataSourceWordTreeTab)
+        DataSourceWordTreeTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+        # Box Layout for Word Tree Tab
+        DataSourceWordTreeTabVerticalLayout = QHBoxLayout(DataSourceWordTreeTabVerticalLayoutWidget)
+        DataSourceWordTreeTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        WordTreeWeb = QWebEngineView()
+        WordTreeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+        DataSourceWordTreeTabVerticalLayout.addWidget(WordTreeWeb)
+        WordTreeWeb.setHtml(WordTreeHTML)
+
+        if DataSourceWordTreeTabFlag:
+            # change tab in query
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    for visual in DS.VisualizationList:
+                        if visual[1] == tabs.tabWidget:
+                            visual[1] = DataSourceWordTreeTab
+                            break
+
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(DataSourceWordTreeTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+            tabs.tabWidget = DataSourceWordTreeTab
+
+        else:
+            # Adding Word Tree Tab to QTabWidget
+            myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
+
+            ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:  # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Word Tree Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Word Tree')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Word Tree Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Word Tree')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Word Tree Visual to VisualList
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.setVisual(DSNewCaseNode, DataSourceWordTreeTab)
+
+            # Adding Word Tree Tab to QTabWidget
+            self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
+            self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+
+    # ****************************************************************************
+    # ************************* Data Sources Tree Word ***************************
+    # ****************************************************************************
+
+    # Data Source Sentiment Analysis Visual Dialog
+    def DataSourceSentimentAnalysisVisualDialog(self):
+        DataSourceSentimentAnalysisVisualDialog = QDialog()
+        DataSourceSentimentAnalysisVisualDialog.setWindowTitle("Sentiment Analysis")
+        DataSourceSentimentAnalysisVisualDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                            self.height / 10)
+        DataSourceSentimentAnalysisVisualDialog.setParent(self)
+        DataSourceSentimentAnalysisVisualDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        DataSourceSentimentAnalysisVisualDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceSentimentAnalysisVisualDialog)
+        DataSourcelabel.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.125,
+                                    DataSourceSentimentAnalysisVisualDialog.height() * 0.2,
+                                    DataSourceSentimentAnalysisVisualDialog.width() / 4,
+                                    DataSourceSentimentAnalysisVisualDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceSentimentAnalysisVisualDialog)
+        DSComboBox.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.4,
+                               DataSourceSentimentAnalysisVisualDialog.height() * 0.2,
+                               DataSourceSentimentAnalysisVisualDialog.width() / 2,
+                               DataSourceSentimentAnalysisVisualDialog.height() / 10)
+        # if len(myFile.DataSourceList) > 1:
+        #     DSComboBox.addItem("All")
+        for DS in myFile.DataSourceList:
+            DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourceSentimentAnalysisVisualbuttonBox = QDialogButtonBox(DataSourceSentimentAnalysisVisualDialog)
+        DataSourceSentimentAnalysisVisualbuttonBox.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.125,
+                                                               DataSourceSentimentAnalysisVisualDialog.height() * 0.7,
+                                                               DataSourceSentimentAnalysisVisualDialog.width() * 3 / 4,
+                                                               DataSourceSentimentAnalysisVisualDialog.height() / 5)
+        DataSourceSentimentAnalysisVisualbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceSentimentAnalysisVisualbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if DSComboBox.count() == 0:
+            DataSourceSentimentAnalysisVisualbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(DataSourceSentimentAnalysisVisualbuttonBox)
+
+        DataSourceSentimentAnalysisVisualbuttonBox.accepted.connect(DataSourceSentimentAnalysisVisualDialog.accept)
+        DataSourceSentimentAnalysisVisualbuttonBox.rejected.connect(DataSourceSentimentAnalysisVisualDialog.reject)
+
+        DataSourceSentimentAnalysisVisualbuttonBox.accepted.connect(
+            lambda: self.DataSourceSentimentAnalysisVisual(DSComboBox.currentText()))
+
+        DataSourceSentimentAnalysisVisualDialog.exec()
+
+    # Data Source Sentiment Analysis Visual
+    def DataSourceSentimentAnalysisVisual(self, DataSourceName):
+        DataSourceSentimentAnalysisVisualTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Sentiment Analysis Visualization':
+                DataSourceSentimentAnalysisVisualTabFlag = True
+                break
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                DS.SentimentAnalysisVisualization()
+                break
+
+        # Creating New Tab for Data Sources Similarity
+        DataSourceSentimentAnalysisVisualTab = QWidget()
+
+        # LayoutWidget For within DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget = QWidget(DataSourceSentimentAnalysisVisualTab)
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 4)
+
+        # Box Layout for DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayout = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Data Source Label
+        DataSoureLabel = QLabel()
+        DataSoureLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
+        DataSoureLabel.setStyleSheet("font-size: 20px;font-weight: bold; margin-left: 10px; border-radius: 25px; background: white;")
+        DataSoureLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout.addWidget(DataSoureLabel)
+
+
+        # LayoutWidget For within DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2 = QWidget(DataSourceSentimentAnalysisVisualTab)
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/4,
+                                                                              self.tabWidget.width()/2, self.tabWidget.height()*0.75)
+
+        # Box Layout for DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayout2 = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+        # LayoutWidget For within DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3 = QWidget(DataSourceSentimentAnalysisVisualTab)
+        DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3.setGeometry(self.tabWidget.width() / 2, self.tabWidget.height()/4,
+                                                                             self.tabWidget.width() / 2, self.tabWidget.height()*0.75)
+        # Box Layout for DataSourcesSimilarity Tab
+        DataSourceSentimentAnalysisVisualTabVerticalLayout3 = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout3.setContentsMargins(0, 0, 0, 0)
+
+        canvas = FigureCanvas(DS.BarSentimentFigure)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout2.addWidget(canvas)
+
+        canvas2 = FigureCanvas(DS.PieSentimentFigure)
+        DataSourceSentimentAnalysisVisualTabVerticalLayout3.addWidget(canvas2)
+
+        if DataSourceSentimentAnalysisVisualTabFlag:
+            # change tab in query
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    for visual in DS.VisualizationList:
+                        if visual[1] == tabs.tabWidget:
+                            visual[1] = DataSourceSentimentAnalysisVisualTab
+                            break
+
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(DataSourceSentimentAnalysisVisualTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(DataSourceSentimentAnalysisVisualTab)
+            tabs.tabWidget = DataSourceSentimentAnalysisVisualTab
+
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Sentiment Analysis Visualization", DataSourceSentimentAnalysisVisualTab, DataSourceName))
+
+            # Adding Word Frequency Query
+            ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:  # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Word Tree Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Sentiment Analysis Visualization')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Word Tree Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Sentiment Analysis Visualization')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            # Adding Word Tree Visual to VisualList
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.setVisual(DSNewCaseNode, DataSourceSentimentAnalysisVisualTab)
+
+            # Adding Preview Tab to QTabWidget
+            self.tabWidget.addTab(DataSourceSentimentAnalysisVisualTab, "Sentiment Analysis Visualization")
+            self.tabWidget.setCurrentWidget(DataSourceSentimentAnalysisVisualTab)
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************
@@ -5692,7 +6010,6 @@ class Window(QMainWindow):
             if (len(SecondLineEdit.text()) > 0):
                 ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
-    
     # ****************************************************************************
     # *************************** Query Context Menu *****************************
     # ****************************************************************************
@@ -6155,25 +6472,21 @@ class Window(QMainWindow):
 
     # Cases Remove Component Row
     def deleteCaseComponentRow(self, CasesItemName, Table):
-        try:
-            button = self.sender()
-            if button:
-                row = Table.indexAt(button.pos()).row()
-                temp = Table.item(row, 0)
+        button = self.sender()
+        if button:
+            row = Table.indexAt(button.pos()).row()
+            temp = Table.item(row, 0)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == CasesItemName.parent().text(0):
-                        for case in DS.CasesList:
-                            if case.CaseTopic == CasesItemName.text(0):
-                                for topicComponents in case.TopicCases:
-                                    if temp.text() == topicComponents[0] and row == case.TopicCases.index(topicComponents):
-                                        case.TopicCases.remove(topicComponents)
-                                        break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.parent().text(0):
+                    for case in DS.CasesList:
+                        if case.CaseTopic == CasesItemName.text(0):
+                            for topicComponents in case.TopicCases:
+                                if temp.text() == topicComponents[0] and row == case.TopicCases.index(topicComponents):
+                                    case.TopicCases.remove(topicComponents)
+                                    break
 
-                Table.removeRow(row)
-
-        except Exception as e:
-            print(str(e))
+            Table.removeRow(row)
 
     # Cases Rename
     def CasesRename(self, CasesItemName):

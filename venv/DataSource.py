@@ -1,3 +1,12 @@
+import matplotlib
+matplotlib.use("Qt5Agg")
+import numpy as np
+from numpy import arange, sin, pi
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+
 from PyQt5.QtWidgets import *
 
 from Query import *
@@ -9,8 +18,11 @@ from stat import *
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlencode, parse_qs
 from textblob import TextBlob
-from nltk import tokenize
+from nltk.tokenize import sent_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.stem import PorterStemmer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from operator import itemgetter
 
 import urllib
 import requests
@@ -134,10 +146,11 @@ class DataSource():
     # TXT File
     def TxtDataSource(self):
         try:
-            file = open(self.DataSourcePath, 'r')
+            file = open(self.DataSourcePath, 'r', encoding='utf-8')
             self.DataSourcetext = file.read();
             self.DataSourceLoadError = False
         except Exception as e:
+            print(str(e))
             self.DataSourceLoadError = True
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
@@ -549,12 +562,9 @@ class DataSource():
             self.CasesList.append(Cases(CaseTopic, len(self.DataSourcetext)))
             self.AddtoCase(CaseTopic, selectedText)
         else:
-            CasesCreationErrorBox = QMessageBox()
-            CasesCreationErrorBox.setIcon(QMessageBox.Information)
-            CasesCreationErrorBox.setWindowTitle("Creation Error")
-            CasesCreationErrorBox.setText("A Case with that Topic is already created")
-            CasesCreationErrorBox.setStandardButtons(QMessageBox.Ok)
-            CasesCreationErrorBox.exec_()
+            QMessageBox.information(self.MainWindow, "Creation Error",
+                                    "A Case with that Topic is already created",
+                                    QMessageBox.Ok)
 
     # Add to Case
     def AddtoCase(self, CaseTopic, SelectedText):
@@ -571,7 +581,7 @@ class DataSource():
 
     # Automatic Sentiment Analysis
     def SentimentAnalysis(self):
-        DataSourceTextTokenize = tokenize.sent_tokenize(self.DataSourcetext)
+        DataSourceTextTokenize = sent_tokenize(self.DataSourcetext)
 
         analyzer = SentimentIntensityAnalyzer()
 
@@ -583,29 +593,146 @@ class DataSource():
             vs = analyzer.polarity_scores(line)
 
             vs = analyzer.polarity_scores(line)
-            if not vs['neg'] > 0.1:
-                if vs['pos'] - vs['neg'] > 0:
-                    self.AutomaticSentimentList.append([line, 'Positive'])
-                    self.PositiveSentimentCount += 1
-                else:
-                    self.AutomaticSentimentList.append([line, 'Neutral'])
-                    self.NeutralSentimentCount += 1
+            if vs['compound'] >= 0.05:
+                self.AutomaticSentimentList.append([line, 'Positive'])
+                self.PositiveSentimentCount += 1
 
-            elif not vs['pos'] > 0.1:
-                if vs['pos'] - vs['neg'] <= 0:
-                    self.AutomaticSentimentList.append([line, 'Negative'])
-                    self.NegativeSentimentCount += 1
-                else:
-                    self.AutomaticSentimentList.append([line, 'Neutral'])
-                    self.NeutralSentimentCount += 1
-
-            else:
+            elif vs['compound'] > -0.05 and vs['compound'] < 0.05:
                 self.AutomaticSentimentList.append([line, 'Neutral'])
                 self.NeutralSentimentCount += 1
+
+            elif vs['compound'] <= -0.05:
+                self.AutomaticSentimentList.append([line, 'Negative'])
+                self.NegativeSentimentCount += 1
 
     # Create Dashboard
     def CreateDashboard(self):
         print("Hello")
+
+    # Word Tree
+    def CreateWordTree(self):
+        CleanDataSourceText = self.DataSourcetext.replace('\n', ' ').replace('\r', '')
+        CleanDataSourceText = CleanDataSourceText.lower()
+
+
+        tokenize = sent_tokenize(CleanDataSourceText)
+
+        word = self.FindWordWithMaxFrequency()
+
+        tokenizeList = []
+        for token in tokenize:
+            if word in token:# or LemWord in token or StemWord in token:
+                tokenizeList.append(token)
+
+        HTMLData = "[['Phrases'], "
+        for items in tokenizeList:
+            HTMLData = HTMLData + "['" + items + "'], "
+
+        HTMLData = HTMLData + "]"
+
+        EntityHTML = '''
+                     <html>
+                          <head>
+                            <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+                            <script type="text/javascript">
+                              google.charts.load('current', {packages:['wordtree']});
+                              google.charts.setOnLoadCallback(drawChart);
+
+                              function drawChart() {
+                                var data = google.visualization.arrayToDataTable(
+                     '''
+
+        EntityHTML = EntityHTML + HTMLData
+        EntityHTML = EntityHTML + '''
+                                            );
+
+                                            var options = {
+                                              wordtree: {
+                                                format: 'implicit',
+                                                word: 
+                                   '''
+        EntityHTML = EntityHTML + "'" + word + "'"
+        EntityHTML = EntityHTML +     '''         
+                                            ,
+                                                type: 'double',
+                                              }
+                                            };
+
+                                            var chart = new google.visualization.WordTree(document.getElementById('wordtree_basic'));
+                                            chart.draw(data, options);
+                                          }
+                                        </script>
+                                      </head>
+                                      <body>
+                                        <div id="wordtree_basic" style="width: 900px; height: 500px;"></div>
+                                      </body>
+                                 </html>   
+                                 '''
+        return EntityHTML
+
+    # Find Word with Maximum Frequency
+    def FindWordWithMaxFrequency(self):
+        # convert all text to lowercase
+        doc_text = self.DataSourcetext.lower()
+
+        # remove numbers
+        doc_text = re.sub(r'\d+', '', doc_text)
+
+        # remove punctuation, characters and whitespaces
+        doc_text = re.sub('\W+', ' ', doc_text)
+
+        # remove stopwords and tokenize
+        stop_words = set(stopwords.words('english'))
+        tokens = word_tokenize(doc_text)
+        result = [i for i in tokens if not i in stop_words]
+
+        wordlist = []
+
+        for word in result:
+            if len(word) > 2:
+                wordlist.append(word)
+
+        wordfreq = []
+        for w in wordlist:
+            wordfreq.append(wordlist.count(w))
+
+        return max(list(zip(wordlist, wordfreq)), key=itemgetter(1))[0]
+
+    # Sentiment Analsysis Visuals
+    def SentimentAnalysisVisualization(self):
+        if not hasattr(self, 'PositiveSentimentCount'):
+            self.SentimentAnalysis()
+
+        # Pie Chart
+        self.PieSentimentFigure = plt.figure(figsize=(10, 5))
+        ax1 = self.PieSentimentFigure.add_subplot(111)
+
+        # Data to plot
+        labels = 'Positive', 'Negative', 'Neutral'
+        sizes = [self.PositiveSentimentCount, self.NegativeSentimentCount, self.NeutralSentimentCount]
+        colors = ['lightgreen', 'lightcoral', 'yellow']
+        explode = (0, 0, 0)  # explode 1st slice
+
+        # Plot
+        ax1.pie(sizes, explode=explode, labels=labels, colors=colors,
+                autopct='%1.1f%%', shadow=True, startangle=140)
+
+        ax1.legend(labels, loc="upper left")
+        ax1.axis('equal')
+
+        # Bar Chart
+        self.BarSentimentFigure = plt.figure(figsize=(10, 5))
+        ax2 = self.BarSentimentFigure.add_subplot(111)
+
+        objects = ('Positive', 'Negative', 'Neutral')
+        y_pos = np.arange(len(objects))
+        performance = [self.PositiveSentimentCount, self.NegativeSentimentCount, self.NeutralSentimentCount]
+        colors = ['lightgreen', 'lightcoral', 'yellow']
+
+        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=colors)
+        ax2.set_xticks(y_pos)
+        ax2.set_xticklabels(objects)
+        ax2.set_ylabel('Count')
 
     # Set Query
     def setQuery(self, QueryTreeWidgetItem, TabItem):

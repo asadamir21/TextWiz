@@ -1,3 +1,5 @@
+from builtins import set
+
 import matplotlib
 matplotlib.use("Qt5Agg")
 import numpy as np
@@ -6,8 +8,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-
 from PyQt5.QtWidgets import *
+from PyQt5.QtChart import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 from Query import *
 from pyglet import *
@@ -24,14 +28,7 @@ from nltk.stem import PorterStemmer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from operator import itemgetter
 
-import urllib
-import requests
-import cv2
-import pytesseract
-
-import re
-import ntpath, pyglet
-import os, time
+import urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv
 
 #PDF, Word, Twitter
 import docx2txt, PyPDF2, tweepy
@@ -384,6 +381,41 @@ class DataSource():
                 self.DataSourceModifiedTime.append(time.asctime(time.localtime(st[ST_MTIME])))
                 self.DataSourceChangeTime.append(time.asctime(time.localtime(st[ST_CTIME])))
 
+    # CSV File
+    def CSVDataSource(self, HeaderLabel):
+        try:
+            self.CSVHeader = HeaderLabel
+            self.CSVHeaderLabel = []
+            self.CSVReader = list(csv.reader(open(self.DataSourcePath, 'r', encoding='utf-8')))
+
+            if self.CSVHeader:
+                self.CSVHeaderLabel = self.CSVReader[0]
+                self.CSVData = self.CSVReader[1:]
+            else:
+                self.CSVData = list(csv.reader(open(self.DataSourcePath, 'r', encoding='utf-8')))
+
+                for i in range(len(self.CSVData[0])):
+                    self.CSVHeaderLabel.append("Column " + str(i + 1))
+
+            for row in self.CSVData:
+                self.DataSourcetext += " ".join(row)
+
+            self.DataSourceLoadError = False
+
+        except Exception as e:
+            print(str(e))
+            self.DataSourceLoadError = True
+            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
+                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
+                                                          QMessageBox.Ok)
+
+        if not self.DataSourceLoadError:
+            st = os.stat(self.DataSourcePath)
+            self.DataSourceSize = st[ST_SIZE]
+            self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
+            self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
+            self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
+
     # Web URL
     def WebDataSource(self):
         try:
@@ -581,29 +613,63 @@ class DataSource():
 
     # Automatic Sentiment Analysis
     def SentimentAnalysis(self):
-        DataSourceTextTokenize = sent_tokenize(self.DataSourcetext)
+        try:
+            DataSourceTextTokenize = []
+            if self.DataSourceext == "Youtube":
+                print()
+                #for Data in self.YoutubeData:
+            elif self.DataSourceext == "Tweet":
+                for Tweet in self.TweetData:
+                    DataSourceTextTokenize.append(self.deEmojify(self.tweet_cleaner(Tweet[3])))
 
-        analyzer = SentimentIntensityAnalyzer()
+            else:
+                DataSourceTextTokenize = sent_tokenize(self.DataSourcetext)
 
-        self.PositiveSentimentCount = 0
-        self.NegativeSentimentCount = 0
-        self.NeutralSentimentCount = 0
+                print(len(DataSourceTextTokenize))
+                for token in DataSourceTextTokenize:
+                    if token == "." or token == "r.":
+                        DataSourceTextTokenize.remove(token)
+                    #print(token)
+                    #print("********************************************")
+                #     DataSourceTextTokenize[DataSourceTextTokenize.index(token)] = self.deEmojify(self.tweet_cleaner(token))
+                #     print(DataSourceTextTokenize[DataSourceTextTokenize.index(token)])
+                print(len(DataSourceTextTokenize))
 
-        for line in DataSourceTextTokenize:
-            vs = analyzer.polarity_scores(line)
+            analyzer = SentimentIntensityAnalyzer()
 
-            vs = analyzer.polarity_scores(line)
-            if vs['compound'] >= 0.05:
-                self.AutomaticSentimentList.append([line, 'Positive'])
-                self.PositiveSentimentCount += 1
+            self.PositiveSentimentCount = 0
+            self.NegativeSentimentCount = 0
+            self.NeutralSentimentCount = 0
 
-            elif vs['compound'] > -0.05 and vs['compound'] < 0.05:
-                self.AutomaticSentimentList.append([line, 'Neutral'])
-                self.NeutralSentimentCount += 1
+            for line in DataSourceTextTokenize:
+                vs = analyzer.polarity_scores(line)
 
-            elif vs['compound'] <= -0.05:
-                self.AutomaticSentimentList.append([line, 'Negative'])
-                self.NegativeSentimentCount += 1
+                vs = analyzer.polarity_scores(line)
+                if vs['compound'] > 0.05:
+                    self.AutomaticSentimentList.append([line, 'Positive'])
+                    self.PositiveSentimentCount += 1
+
+                elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
+                    self.AutomaticSentimentList.append([line, 'Neutral'])
+                    self.NeutralSentimentCount += 1
+
+                elif vs['compound'] <= -0.05:
+                    self.AutomaticSentimentList.append([line, 'Negative'])
+                    self.NegativeSentimentCount += 1
+
+        except Exception as e:
+            print(str(e))
+
+    # Tweet Cleaner
+    def tweet_cleaner(self, text):
+        text = re.sub(r'https?://[A-Za-z0-9./]+', '', text)
+        text = "".join([char for char in text if char not in string.punctuation])
+        text = re.sub('[0-9]+', '', text)
+        return text
+
+    # Emoji Cleaner
+    def deEmojify(self, inputString):
+        return inputString.encode('ascii', 'ignore').decode('ascii')
 
     # Create Dashboard
     def CreateDashboard(self):
@@ -613,7 +679,6 @@ class DataSource():
     def CreateWordTree(self):
         CleanDataSourceText = self.DataSourcetext.replace('\n', ' ').replace('\r', '')
         CleanDataSourceText = CleanDataSourceText.lower()
-
 
         tokenize = sent_tokenize(CleanDataSourceText)
 
@@ -719,6 +784,48 @@ class DataSource():
 
         ax1.legend(labels, loc="upper left")
         ax1.axis('equal')
+
+        data = {
+            "Positive": (self.PositiveSentimentCount, QColor("green")),
+            "Neutral": (self.NeutralSentimentCount, QColor("yellow")),
+            "Negative": (self.NegativeSentimentCount, QColor("red")),
+        }
+
+        series = QPieSeries()
+
+        series.setLabelsVisible(True)
+        series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
+        series.setLabelsVisible(True)
+
+        _sliceList = []
+
+        for name, (value, color) in data.items():
+            _slice = series.append(name, value)
+            _slice.setBrush(color)
+            _slice.setLabelVisible(False)
+            _slice.setLabelPosition(QPieSlice.LabelInsideHorizontal)
+            _slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+            _sliceList.append(_slice)
+
+        for _slice in _sliceList:
+            _slice.setLabel(_slice.label() + " " + str(round(100 * _slice.percentage(), 2)) + "%")
+
+        chart = QChart()
+        chart.setAnimationOptions(QChart.AllAnimations)
+
+        # chart.setTheme(QChart.ChartThemeBlueNcs)
+        # chart.setTheme(QChart.ChartThemeHighContrast)
+        # chart.setTheme(QChart.ChartThemeBlueIcy)
+        chart.setTheme(QChart.ChartThemeQt)
+
+        chart.addSeries(series)
+
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignRight)
+        chart.legend().setFont(QFont("Times", 10))
+
+        self.chartview = QChartView(chart)
+        self.chartview.setRenderHint(QPainter.Antialiasing)
 
         # Bar Chart
         self.BarSentimentFigure = plt.figure(figsize=(10, 5))

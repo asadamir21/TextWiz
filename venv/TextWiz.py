@@ -1732,7 +1732,6 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
-
     # Previous Image Button
     def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
         LeftButton = self.sender()
@@ -2189,8 +2188,11 @@ class Window(QMainWindow):
                         rowdata = []
                         for column in range(Table.columnCount()):
                             item = Table.item(row, column)
+                            item2 = Table.cellWidget(row, column)
                             if item is not None:
                                 rowdata.append(item.text())
+                            elif item2 is not None:
+                                rowdata.append(item2.toPlainText())
                             else:
                                 rowdata.append('')
                         writer.writerow(rowdata)
@@ -2417,7 +2419,7 @@ class Window(QMainWindow):
         SentimentAnalysisDialog = QDialog()
         SentimentAnalysisDialog.setWindowTitle("Sentiment Analysis")
         SentimentAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                            self.height / 10)
+                                            self.height / 5)
         SentimentAnalysisDialog.setParent(self)
         SentimentAnalysisDialog.setWindowFlags(Qt.WindowCloseButtonHint)
         SentimentAnalysisDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
@@ -2441,14 +2443,47 @@ class Window(QMainWindow):
                                SentimentAnalysisDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if DS.DataSourceext == "Youtube" or DS.DataSourceext == "Tweet" or DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
+
+        # Data Source Label
+        DataSourceColumnLabel = QLabel(SentimentAnalysisDialog)
+        DataSourceColumnLabel.setGeometry(SentimentAnalysisDialog.width() * 0.125,
+                                          SentimentAnalysisDialog.height() * 0.45,
+                                          SentimentAnalysisDialog.width() / 4,
+                                          SentimentAnalysisDialog.height() * 0.1)
+
+        DataSourceColumnLabel.setText("Column")
+        DataSourceColumnLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourceColumnLabel)
+
+        # Data Source ComboBox
+        ColumnComboBox = QComboBox(SentimentAnalysisDialog)
+        ColumnComboBox.setGeometry(SentimentAnalysisDialog.width() * 0.4,
+                                   SentimentAnalysisDialog.height() * 0.45,
+                                   SentimentAnalysisDialog.width() / 2,
+                                   SentimentAnalysisDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DSComboBox.currentText():
+                if DS.DataSourceext == "Youtube":
+                    ColumnComboBox.addItem("Youtube Comments")
+                    ColumnComboBox.setDisabled(True)
+                elif DS.DataSourceext == "Tweet":
+                    ColumnComboBox.addItem("Tweet Text")
+                    ColumnComboBox.setDisabled(True)
+                elif DS.DataSourceext == "CSV files (*.csv)":
+                    for rows in DS.CSVHeaderLabel:
+                        ColumnComboBox.addItem(rows)
+
+        self.LineEditSizeAdjustment(ColumnComboBox)
 
         # Stem Word Button Box
         SentimentAnalysisbuttonBox = QDialogButtonBox(SentimentAnalysisDialog)
         SentimentAnalysisbuttonBox.setGeometry(SentimentAnalysisDialog.width() * 0.125,
-                                               SentimentAnalysisDialog.height() * 0.7,
+                                               SentimentAnalysisDialog.height() * 0.8,
                                                SentimentAnalysisDialog.width() * 3 / 4,
                                                SentimentAnalysisDialog.height() / 5)
         SentimentAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
@@ -2459,16 +2494,38 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(SentimentAnalysisbuttonBox)
 
+        DSComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisDSColumnChange(ColumnComboBox))
+
         SentimentAnalysisbuttonBox.accepted.connect(SentimentAnalysisDialog.accept)
         SentimentAnalysisbuttonBox.rejected.connect(SentimentAnalysisDialog.reject)
 
         SentimentAnalysisbuttonBox.accepted.connect(
-            lambda: self.SentimentAnalysisTable(DSComboBox.currentText()))
+            lambda: self.SentimentAnalysisTable(DSComboBox.currentText(), ColumnComboBox.currentText()))
 
         SentimentAnalysisDialog.exec()
 
-    # Sentiment Analysis Tabel
-    def SentimentAnalysisTable(self, DataSourceName):
+    # Sentiment Analysis DS Column Changer
+    def SentimentAnalysisDSColumnChange(self, ColumnComboBox):
+        DSComboBox = self.sender()
+
+        while ColumnComboBox.count() > 0:
+            ColumnComboBox.removeItem(0)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DSComboBox.currentText():
+                if DS.DataSourceext == "Youtube":
+                    ColumnComboBox.addItem("Youtube Comments")
+                    ColumnComboBox.setDisabled(True)
+                elif DS.DataSourceext == "Tweet":
+                    ColumnComboBox.addItem("Tweet Text")
+                    ColumnComboBox.setDisabled(True)
+                elif DS.DataSourceext == "CSV files (*.csv)":
+                    for rows in DS.CSVHeaderLabel:
+                        ColumnComboBox.addItem(rows)
+                    ColumnComboBox.setDisabled(False)
+
+    # Sentiment Analysis Table
+    def SentimentAnalysisTable(self, DataSourceName, ColumnName):
         DataSourceSentimentAnalysisFlag = False
 
         for tabs in myFile.TabList:
@@ -2478,7 +2535,7 @@ class Window(QMainWindow):
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceName:
-                DS.SentimentAnalysis()
+                DS.SentimentAnalysis(ColumnName)
                 rowList = DS.AutomaticSentimentList
                 break
 
@@ -5669,7 +5726,7 @@ class Window(QMainWindow):
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceName:
-                WordTreeHTML = DS.CreateWordTree()
+                WordTreeHTML = DS.CreateWordTree(self.tabWidget.width(), self.tabWidget.height())
                 break
 
         # Creating New Tab for Word Tree
@@ -7798,6 +7855,7 @@ class Window(QMainWindow):
 
         #Header Label Radio Button
         CSVHeaderRadioButton = QRadioButton(CSVDialog)
+        CSVHeaderRadioButton.setChecked(True)
         CSVHeaderRadioButton.setText("Contains Header")
         CSVHeaderRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.4,
                                          CSVDialog.width() / 10, CSVDialog.height() / 10)

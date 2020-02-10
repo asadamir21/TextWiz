@@ -1,6 +1,8 @@
 from builtins import set
 
 import matplotlib
+from dateutil.rrule import weekday
+
 matplotlib.use("Qt5Agg")
 import numpy as np
 from numpy import arange, sin, pi
@@ -612,53 +614,52 @@ class DataSource():
         self.SentimentList.append(Sentiments("Bad"))
 
     # Automatic Sentiment Analysis
-    def SentimentAnalysis(self):
-        try:
-            DataSourceTextTokenize = []
-            if self.DataSourceext == "Youtube":
-                print()
-                #for Data in self.YoutubeData:
-            elif self.DataSourceext == "Tweet":
-                for Tweet in self.TweetData:
-                    DataSourceTextTokenize.append(self.deEmojify(self.tweet_cleaner(Tweet[3])))
+    def SentimentAnalysis(self, ColumnName):
+        DataSourceTextTokenize = []
+        if self.DataSourceext == "Youtube":
+            for Comment in self.YoutubeData:
+                Temp = self.deEmojify(self.tweet_cleaner(Comment[0]))
+                if len(Temp) > 0:
+                    DataSourceTextTokenize.append(Temp)
 
-            else:
-                DataSourceTextTokenize = sent_tokenize(self.DataSourcetext)
+        elif self.DataSourceext == "Tweet":
+            for Tweet in self.TweetData:
+                Temp = self.deEmojify(self.tweet_cleaner(Tweet[3]))
+                if len(Temp) > 0:
+                    DataSourceTextTokenize.append(Temp)
 
-                print(len(DataSourceTextTokenize))
-                for token in DataSourceTextTokenize:
-                    if token == "." or token == "r.":
-                        DataSourceTextTokenize.remove(token)
-                    #print(token)
-                    #print("********************************************")
-                #     DataSourceTextTokenize[DataSourceTextTokenize.index(token)] = self.deEmojify(self.tweet_cleaner(token))
-                #     print(DataSourceTextTokenize[DataSourceTextTokenize.index(token)])
-                print(len(DataSourceTextTokenize))
+        elif self.DataSourceext == "CSV files (*.csv)":
+            for Header in self.CSVHeaderLabel:
+                if Header == ColumnName:
+                    index = self.CSVHeaderLabel.index(Header)
+                    break
 
-            analyzer = SentimentIntensityAnalyzer()
+            for data in self.CSVData:
+                Temp = self.deEmojify(self.tweet_cleaner(data[index]))
+                if len(Temp) > 0:
+                    DataSourceTextTokenize.append(Temp)
 
-            self.PositiveSentimentCount = 0
-            self.NegativeSentimentCount = 0
-            self.NeutralSentimentCount = 0
+        analyzer = SentimentIntensityAnalyzer()
 
-            for line in DataSourceTextTokenize:
-                vs = analyzer.polarity_scores(line)
+        self.PositiveSentimentCount = 0
+        self.NegativeSentimentCount = 0
+        self.NeutralSentimentCount = 0
 
-                vs = analyzer.polarity_scores(line)
-                if vs['compound'] > 0.05:
-                    self.AutomaticSentimentList.append([line, 'Positive'])
-                    self.PositiveSentimentCount += 1
+        for line in DataSourceTextTokenize:
+            vs = analyzer.polarity_scores(line)
 
-                elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
-                    self.AutomaticSentimentList.append([line, 'Neutral'])
-                    self.NeutralSentimentCount += 1
+            vs = analyzer.polarity_scores(line)
+            if vs['compound'] > 0.05:
+                self.AutomaticSentimentList.append([line, 'Positive'])
+                self.PositiveSentimentCount += 1
 
-                elif vs['compound'] <= -0.05:
-                    self.AutomaticSentimentList.append([line, 'Negative'])
-                    self.NegativeSentimentCount += 1
+            elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
+                self.AutomaticSentimentList.append([line, 'Neutral'])
+                self.NeutralSentimentCount += 1
 
-        except Exception as e:
-            print(str(e))
+            elif vs['compound'] <= -0.05:
+                self.AutomaticSentimentList.append([line, 'Negative'])
+                self.NegativeSentimentCount += 1
 
     # Tweet Cleaner
     def tweet_cleaner(self, text):
@@ -676,7 +677,7 @@ class DataSource():
         print("Hello")
 
     # Word Tree
-    def CreateWordTree(self):
+    def CreateWordTree(self, width, height):
         CleanDataSourceText = self.DataSourcetext.replace('\n', ' ').replace('\r', '')
         CleanDataSourceText = CleanDataSourceText.lower()
 
@@ -729,7 +730,7 @@ class DataSource():
                                         </script>
                                       </head>
                                       <body>
-                                        <div id="wordtree_basic" style="width: 900px; height: 500px;"></div>
+                                        <div id="wordtree_basic" style="width:''' + str(width) + '''px; height: "''' + str(height) + '''px;"></div>
                                       </body>
                                  </html>   
                                  '''

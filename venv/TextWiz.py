@@ -406,12 +406,6 @@ class Window(QMainWindow):
         WordTreeTool.triggered.connect(lambda: self.DataSourceWordTreeDialog())
         VisualizationMenu.addAction(WordTreeTool)
 
-        # Word Tree Tool
-        SentimentAnalysisTool = QAction('Sentiment Analysis', self)
-        SentimentAnalysisTool.setStatusTip('Sentiment Analysis')
-        SentimentAnalysisTool.triggered.connect(lambda: self.DataSourceSentimentAnalysisVisualDialog())
-        VisualizationMenu.addAction(SentimentAnalysisTool)
-
         # Document Clustering
         DocumentClusteringTool = QAction('Document Clustering', self)
         DocumentClusteringTool.setStatusTip('Document Clustering')
@@ -2311,7 +2305,6 @@ class Window(QMainWindow):
         # Table for Generate Question
         GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
         GenerateQuestionsTable.setColumnCount(1)
-        # WordFrequencyTable.setModel(WordFrequencyTableModel)
         GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
                                        GenerateQuestionsTabverticalLayoutWidget.height())
 
@@ -2369,7 +2362,7 @@ class Window(QMainWindow):
 
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
                 tabs.tabWidget = GenerateQuestionsTab
             else:
@@ -2536,6 +2529,7 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceName:
                 DS.SentimentAnalysis(ColumnName)
+                DS.SentimentAnalysisVisualization()
                 rowList = DS.AutomaticSentimentList
                 break
 
@@ -2545,50 +2539,49 @@ class Window(QMainWindow):
         SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
         # LayoutWidget For within Stem Word Tab
-        SentimentAnalysisTabVerticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
-        SentimentAnalysisTabVerticalLayoutWidget2.setGeometry(0, 0, self.tabWidget.width(),
+        SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
+        SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
                                                               self.tabWidget.height() / 10)
-
         # Box Layout for Stem Word Tab
-        SentimentAnalysisTabVerticalLayout2 = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget2)
-        SentimentAnalysisTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
+        SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
         # Positive_Count Label
-        PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-        PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.142,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+        PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                       SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
+                                       SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                       SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
         PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
         PositiveCountLabel.setAlignment(Qt.AlignVCenter)
         PositiveCountLabel.adjustSize()
 
         # Neutral_Count Label
-        NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-        NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
-                                      SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.428,
-                                      SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
-                                      SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+        NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                      SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
+                                      SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                      SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
         NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
         NeutralCountLabel.setAlignment(Qt.AlignVCenter)
         NeutralCountLabel.adjustSize()
 
         # Negative_Count Label
-        NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget2)
-        NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.05,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.714,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.width() / 20,
-                                       SentimentAnalysisTabVerticalLayoutWidget2.height() / 7)
+        NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+        NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                       SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
+                                       SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                       SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
         NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
         NegativeCountLabel.setAlignment(Qt.AlignVCenter)
         NegativeCountLabel.adjustSize()
 
-        # Download Button For Frequency Table
-        DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget2)
-        DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.8,
-                                        SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.4,
-                                        SentimentAnalysisTabVerticalLayoutWidget2.width() * 0.15,
-                                        SentimentAnalysisTabVerticalLayoutWidget2.height() * 0.2)
+        # Download Button For Sentiment Analysis Table
+        DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
+        DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
+                                        SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                        SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                        SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
         DownloadAsCSVButton.setText("Download")
         DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
         DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
@@ -2600,26 +2593,41 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DownloadAsCSVButton)
 
-        # LayoutWidget For within Word Frequency Tab
-        SentimentAnalysisTabverticalLayoutWidget = QWidget(SentimentAnalysisTab)
-        SentimentAnalysisTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                self.tabWidget.height() - self.tabWidget.height() / 10)
-        SentimentAnalysisTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+        # Data Source Label
+        DataSourceLabel = QLabel()
+        DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
+        DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
+        DataSourceLabel.setAlignment(Qt.AlignVCenter)
+        DataSourceLabel.hide()
+        SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
 
-        # Box Layout for Word Frequency Tab
-        SentimentAnalysisverticalLayout = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget)
-        SentimentAnalysisverticalLayout.setContentsMargins(0, 0, 0, 0)
+        # Data Source Sentiment Analysis  ComboBox
+        DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
+        DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
+                                 SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                 SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                 SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+        DSSAComboBox.addItem("Show Table")
+        DSSAComboBox.addItem("Show Chart")
+        self.LineEditSizeAdjustment(DSSAComboBox)
+
+        # LayoutWidget For within Sentiment Analysis Tab
+        SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
+        SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                self.tabWidget.height() - self.tabWidget.height() / 10)
+        SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
+
+        # Box Layout for Sentiment Analysis Tab
+        SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
+        SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
 
         # Table for Word Frequency
-        SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget)
+        SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
         SentimentAnalysisTable.setColumnCount(2)
-        SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget.width(),
-                                                 SentimentAnalysisTabverticalLayoutWidget.height())
-
+        SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
+                                                 SentimentAnalysisTabverticalLayoutWidget2.height())
         SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
-
         SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
         SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
         SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
@@ -2629,6 +2637,7 @@ class Window(QMainWindow):
 
         DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
 
+
         if len(rowList) != 0:
             for row in rowList:
                 SentimentAnalysisTable.insertRow(rowList.index(row))
@@ -2637,6 +2646,7 @@ class Window(QMainWindow):
                         ptext = QPlainTextEdit()
                         ptext.setReadOnly(True)
                         ptext.setPlainText(item);
+                        ptext.setFixedHeight(self.tabWidget.height()/15)
                         SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
 
                     else:
@@ -2657,10 +2667,51 @@ class Window(QMainWindow):
             for i in range(SentimentAnalysisTable.columnCount()):
                 SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
+            # Sentiment Analysis Chart
+
+            # LayoutWidget For within Sentiment Analysis Tab
+            SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
+                                                                  self.tabWidget.width()/2,
+                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
+            SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
+
+            # Box Layout for Sentiment Analysis Tab
+            SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
+            SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
+
+            canvas = FigureCanvas(DS.BarSentimentFigure)
+            SentimentAnalysisverticalLayout3.addWidget(canvas)
+            SentimentAnalysisTabverticalLayoutWidget3.hide()
+
+
+            SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
+                                                                  self.tabWidget.width()/2,
+                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
+            SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
+
+            # Box Layout for Sentiment Analysis Tab
+            SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
+            SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
+
+            canvas2 = FigureCanvas(DS.PieSentimentFigure)
+            SentimentAnalysisverticalLayout4.addWidget(DS.chartview)
+            SentimentAnalysisTabverticalLayoutWidget4.hide()
+
+            DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
+                                                                                           PositiveCountLabel,
+                                                                                           NegativeCountLabel,
+                                                                                           NeutralCountLabel,
+                                                                                           DownloadAsCSVButton,
+                                                                                           SentimentAnalysisTabverticalLayoutWidget2,
+                                                                                           SentimentAnalysisTabverticalLayoutWidget3,
+                                                                                           SentimentAnalysisTabverticalLayoutWidget4))
+
             if DataSourceSentimentAnalysisFlag:
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
                 tabs.tabWidget = SentimentAnalysisTab
 
@@ -2694,6 +2745,29 @@ class Window(QMainWindow):
         else:
             QMessageBox.information(self, "Word Frequency Error",
                                     "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
+
+    # Sentiment Analysis ComboBox
+    def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
+        DSSAComboBox = self.sender()
+
+        if DSSAComboBox.currentText() == "Show Table":
+            DataSourceLabel.hide()
+            PositiveCountLabel.show(),
+            NegativeCountLabel.show(),
+            NeutralCountLabel.show(),
+            DownloadASCSVButton.show()
+            Layout1.show()
+            Layout2.hide()
+            Layout3.hide()
+        else:
+            DataSourceLabel.show()
+            PositiveCountLabel.hide(),
+            NegativeCountLabel.hide(),
+            NeutralCountLabel.hide(),
+            DownloadASCSVButton.hide()
+            Layout1.hide()
+            Layout2.show()
+            Layout3.show()
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -5793,177 +5867,6 @@ class Window(QMainWindow):
             # Adding Word Tree Tab to QTabWidget
             self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
             self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
-
-    # ****************************************************************************
-    # ************************* Data Sources Tree Word ***************************
-    # ****************************************************************************
-
-    # Data Source Sentiment Analysis Visual Dialog
-    def DataSourceSentimentAnalysisVisualDialog(self):
-        DataSourceSentimentAnalysisVisualDialog = QDialog()
-        DataSourceSentimentAnalysisVisualDialog.setWindowTitle("Sentiment Analysis")
-        DataSourceSentimentAnalysisVisualDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                            self.height / 10)
-        DataSourceSentimentAnalysisVisualDialog.setParent(self)
-        DataSourceSentimentAnalysisVisualDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceSentimentAnalysisVisualDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourceSentimentAnalysisVisualDialog)
-        DataSourcelabel.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.125,
-                                    DataSourceSentimentAnalysisVisualDialog.height() * 0.2,
-                                    DataSourceSentimentAnalysisVisualDialog.width() / 4,
-                                    DataSourceSentimentAnalysisVisualDialog.height() * 0.1)
-
-        DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
-
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceSentimentAnalysisVisualDialog)
-        DSComboBox.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.4,
-                               DataSourceSentimentAnalysisVisualDialog.height() * 0.2,
-                               DataSourceSentimentAnalysisVisualDialog.width() / 2,
-                               DataSourceSentimentAnalysisVisualDialog.height() / 10)
-        # if len(myFile.DataSourceList) > 1:
-        #     DSComboBox.addItem("All")
-        for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
-
-        self.LineEditSizeAdjustment(DSComboBox)
-
-        # Stem Word Button Box
-        DataSourceSentimentAnalysisVisualbuttonBox = QDialogButtonBox(DataSourceSentimentAnalysisVisualDialog)
-        DataSourceSentimentAnalysisVisualbuttonBox.setGeometry(DataSourceSentimentAnalysisVisualDialog.width() * 0.125,
-                                                               DataSourceSentimentAnalysisVisualDialog.height() * 0.7,
-                                                               DataSourceSentimentAnalysisVisualDialog.width() * 3 / 4,
-                                                               DataSourceSentimentAnalysisVisualDialog.height() / 5)
-        DataSourceSentimentAnalysisVisualbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        DataSourceSentimentAnalysisVisualbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
-
-        if DSComboBox.count() == 0:
-            DataSourceSentimentAnalysisVisualbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(DataSourceSentimentAnalysisVisualbuttonBox)
-
-        DataSourceSentimentAnalysisVisualbuttonBox.accepted.connect(DataSourceSentimentAnalysisVisualDialog.accept)
-        DataSourceSentimentAnalysisVisualbuttonBox.rejected.connect(DataSourceSentimentAnalysisVisualDialog.reject)
-
-        DataSourceSentimentAnalysisVisualbuttonBox.accepted.connect(
-            lambda: self.DataSourceSentimentAnalysisVisual(DSComboBox.currentText()))
-
-        DataSourceSentimentAnalysisVisualDialog.exec()
-
-    # Data Source Sentiment Analysis Visual
-    def DataSourceSentimentAnalysisVisual(self, DataSourceName):
-        try:
-            DataSourceSentimentAnalysisVisualTabFlag = False
-
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Sentiment Analysis Visualization':
-                    DataSourceSentimentAnalysisVisualTabFlag = True
-                    break
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.SentimentAnalysisVisualization()
-                    break
-
-            # Creating New Tab for Data Sources Similarity
-            DataSourceSentimentAnalysisVisualTab = QWidget()
-
-            # LayoutWidget For within DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget = QWidget(DataSourceSentimentAnalysisVisualTab)
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 4)
-
-            # Box Layout for DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayout = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            # Data Source Label
-            DataSoureLabel = QLabel()
-            DataSoureLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
-            DataSoureLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: white;")
-            DataSoureLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout.addWidget(DataSoureLabel)
-
-
-            # LayoutWidget For within DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2 = QWidget(DataSourceSentimentAnalysisVisualTab)
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/4,
-                                                                                  self.tabWidget.width()/2, self.tabWidget.height()*0.75)
-
-            # Box Layout for DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayout2 = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget2)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-            # LayoutWidget For within DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3 = QWidget(DataSourceSentimentAnalysisVisualTab)
-            DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3.setGeometry(self.tabWidget.width() / 2, self.tabWidget.height()/4,
-                                                                                  self.tabWidget.width() / 2, self.tabWidget.height()*0.75)
-            # Box Layout for DataSourcesSimilarity Tab
-            DataSourceSentimentAnalysisVisualTabVerticalLayout3 = QVBoxLayout(DataSourceSentimentAnalysisVisualTabVerticalLayoutWidget3)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout3.setContentsMargins(0, 0, 0, 0)
-
-            canvas = FigureCanvas(DS.BarSentimentFigure)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout2.addWidget(canvas)
-
-            canvas2 = FigureCanvas(DS.PieSentimentFigure)
-            #DataSourceSentimentAnalysisVisualTabVerticalLayout3.addWidget(canvas2)
-            DataSourceSentimentAnalysisVisualTabVerticalLayout3.addWidget(DS.chartview)
-
-            if DataSourceSentimentAnalysisVisualTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for visual in DS.VisualizationList:
-                            if visual[1] == tabs.tabWidget:
-                                visual[1] = DataSourceSentimentAnalysisVisualTab
-                                break
-
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(DataSourceSentimentAnalysisVisualTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(DataSourceSentimentAnalysisVisualTab)
-                tabs.tabWidget = DataSourceSentimentAnalysisVisualTab
-
-            else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Sentiment Analysis Visualization", DataSourceSentimentAnalysisVisualTab, DataSourceName))
-
-                # Adding Word Frequency Query
-                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                if len(ItemsWidget) == 0:  # if no Parent Widget
-                    # Adding Parent Query
-                    DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
-                    DSQueryWidget.setText(0, DataSourceName)
-                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
-                    DSQueryWidget.setExpanded(True)
-
-                    # Adding Word Tree Query
-                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
-                    DSNewCaseNode.setText(0, 'Sentiment Analysis Visualization')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                else:
-                    for widgets in ItemsWidget:
-                        # Adding Word Tree Query
-                        DSNewCaseNode = QTreeWidgetItem(widgets)
-                        DSNewCaseNode.setText(0, 'Sentiment Analysis Visualization')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                # Adding Word Tree Visual to VisualList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setVisual(DSNewCaseNode, DataSourceSentimentAnalysisVisualTab)
-
-                # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(DataSourceSentimentAnalysisVisualTab, "Sentiment Analysis Visualization")
-                self.tabWidget.setCurrentWidget(DataSourceSentimentAnalysisVisualTab)
-
-        except Exception as e:
-            print(str(e))
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************

@@ -766,9 +766,6 @@ class DataSource():
 
     # Sentiment Analsysis Visuals
     def SentimentAnalysisVisualization(self):
-        if not hasattr(self, 'PositiveSentimentCount'):
-            self.SentimentAnalysis()
-
         # Pie Chart
         self.PieSentimentFigure = plt.figure(figsize=(10, 5))
         ax1 = self.PieSentimentFigure.add_subplot(111)

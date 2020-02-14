@@ -30,7 +30,7 @@ from nltk.stem import PorterStemmer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from operator import itemgetter
 
-import urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv
+import urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
 
 #PDF, Word, Twitter
 import docx2txt, PyPDF2, tweepy
@@ -832,12 +832,40 @@ class DataSource():
         objects = ('Positive', 'Negative', 'Neutral')
         y_pos = np.arange(len(objects))
         performance = [self.PositiveSentimentCount, self.NegativeSentimentCount, self.NeutralSentimentCount]
-        colors = ['lightgreen', 'lightcoral', 'yellow']
+        colors = ['green', 'red', 'yellow']
 
         ax2.bar(y_pos, performance, align='center', alpha=0.5, color=colors)
         ax2.set_xticks(y_pos)
         ax2.set_xticklabels(objects)
         ax2.set_ylabel('Count')
+
+    # Cases Coverage Graph
+    def allCasesCoverage(self):
+
+        # Bar Chart
+        self.BarCasesCoverageFigure = plt.figure(figsize=(10, 5))
+        ax2 = self.BarCasesCoverageFigure.add_subplot(111)
+
+        objects = tuple(cases.CaseTopic for cases in self.CasesList)
+        performance = []
+        for cases in self.CasesList:
+            totalweightage = 0
+            for casetext in cases.TopicCases:
+                totalweightage += casetext[3]
+            performance.append(totalweightage)
+
+        AllColors = []
+        for colorname, colorhex in matplotlib.colors.cnames.items():
+            AllColors.append(colorname)
+
+        colors = [random.choice(AllColors) for i in range(len(self.CasesList))]
+
+        y_pos = np.arange(len(objects))
+
+        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=colors)
+        ax2.set_xticks(y_pos)
+        ax2.set_xticklabels(objects)
+        ax2.set_ylabel('Case Weigthage')
 
     # Set Query
     def setQuery(self, QueryTreeWidgetItem, TabItem):

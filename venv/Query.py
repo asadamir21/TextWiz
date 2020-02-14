@@ -155,6 +155,25 @@ class Query():
 
         return WordFrequencyRow
 
+    def FindSimpleFrequency(self, DataSourceText):
+        WordFrequencyRow = []
+
+        DataSourceTextLower = DataSourceText
+
+        match_pattern = re.findall(r'\w+', DataSourceTextLower)
+        frequency_list, frequency = self.GenerateFrequencyList(match_pattern)
+
+        total_count = 0
+
+        for words in frequency_list:
+            total_count += frequency[words]
+
+        for words in frequency_list:
+            weighted_percentage = round((frequency[words]/total_count)*100,2)
+            WordFrequencyRow.append([words, len(words), frequency[words], weighted_percentage])
+
+        return WordFrequencyRow
+
     def FindStemmedWords(self, StemWord, DataSourceText):
         StemWordList = []
 

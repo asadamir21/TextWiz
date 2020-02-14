@@ -561,21 +561,6 @@ class Window(QMainWindow):
 
         self.verticalLayout.addWidget(self.VisualizationTreeWidget)
 
-        # Report Widget
-        self.ReportLabel = QLabel()
-        self.ReportLabel.setText("Reports")
-        self.ReportLabel.setAlignment(Qt.AlignCenter)
-        self.verticalLayout.addWidget(self.ReportLabel)
-
-        self.ReportTreeWidget = QTreeWidget()
-        self.ReportTreeWidget.setHeaderLabel('Report')
-        self.ReportTreeWidget.setAlternatingRowColors(True)
-        self.ReportTreeWidget.header().setHidden(True)
-        # self.VisualizationTreeWidget.itemDoubleClicked.connect(self.QueryDoubleClickHandler)
-        self.ReportTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-
-        self.verticalLayout.addWidget(self.ReportTreeWidget)
-
         # ********************************** Right Tab Widget *******************************
 
         # Windows Title Bar Size
@@ -1327,10 +1312,8 @@ class Window(QMainWindow):
                     intItem = QTableWidgetItem()
                     intItem.setData(Qt.EditRole, QVariant(item))
                     ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
-                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             ShowTweetDataTable.resizeColumnsToContents()
             ShowTweetDataTable.resizeRowsToContents()
@@ -1637,94 +1620,85 @@ class Window(QMainWindow):
 
     # Data Source View CSV Data
     def DataSourceViewCSVData(self, DataSourceWidgetItemName):
-        try:
-            DataSourceViewCSVDataTabFlag = False
+        DataSourceViewCSVDataTabFlag = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data':
-                    DataSourceViewCSVDataTabFlag = True
-                    break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data':
+                DataSourceViewCSVDataTabFlag = True
+                break
 
-            if not DataSourceViewCSVDataTabFlag:
-                ViewCSVDataTab = QWidget()
-                ViewCSVDataTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top,
-                                                         self.width - self.verticalLayoutWidget.width(),self.horizontalLayoutWidget.height()))
-                ViewCSVDataTab.setSizePolicy(self.sizePolicy)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                rowList = DS.CSVData
+                break
 
-                # LayoutWidget For within Word Frequency Tab
-                ViewCSVDataTabverticalLayoutWidget = QWidget(ViewCSVDataTab)
-                ViewCSVDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                       self.tabWidget.height())
-                ViewCSVDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+        if not DataSourceViewCSVDataTabFlag:
+            ViewCSVDataTab = QWidget()
+            ViewCSVDataTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top,
+                                                     self.width - self.verticalLayoutWidget.width(),self.horizontalLayoutWidget.height()))
+            ViewCSVDataTab.setSizePolicy(self.sizePolicy)
 
-                # Box Layout for Word Frequency Tab
-                ViewCSVDataTabverticalLayout = QVBoxLayout(ViewCSVDataTabverticalLayoutWidget)
-                ViewCSVDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # LayoutWidget For within Word Frequency Tab
+            ViewCSVDataTabverticalLayoutWidget = QWidget(ViewCSVDataTab)
+            ViewCSVDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
+                                                                   self.tabWidget.height())
+            ViewCSVDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-                # Table for Word Frequency
-                ViewCSVDataTable = QTableWidget(ViewCSVDataTabverticalLayoutWidget)
-                ViewCSVDataTable.setColumnCount(7)
-                ViewCSVDataTable.setGeometry(0, 0, ViewCSVDataTabverticalLayoutWidget.width(),
-                                                     ViewCSVDataTabverticalLayoutWidget.height())
-                ViewCSVDataTable.setSizePolicy(self.sizePolicy)
+            # Box Layout for Word Frequency Tab
+            ViewCSVDataTabverticalLayout = QVBoxLayout(ViewCSVDataTabverticalLayoutWidget)
+            ViewCSVDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-                ViewCSVDataTable.setWindowFlags(
-                    ViewCSVDataTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            # Table for Word Frequency
+            ViewCSVDataTable = QTableWidget(ViewCSVDataTabverticalLayoutWidget)
+            ViewCSVDataTable.setColumnCount(len(DS.CSVHeaderLabel))
+            ViewCSVDataTable.setGeometry(0, 0, ViewCSVDataTabverticalLayoutWidget.width(),
+                                                 ViewCSVDataTabverticalLayoutWidget.height())
+            ViewCSVDataTable.setSizePolicy(self.sizePolicy)
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
-                        rowList = DS.CSVData
-                        break
+            ViewCSVDataTable.setWindowFlags(ViewCSVDataTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-                ViewCSVDataTable.setHorizontalHeaderLabels(DS.CSVHeaderLabel)
-                ViewCSVDataTable.horizontalHeader().setStyleSheet(
-                    "::section {""background-color: grey;  color: white;}")
 
-                for i in range(ViewCSVDataTable.columnCount()):
-                    ViewCSVDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                    ViewCSVDataTable.horizontalHeaderItem(i).setFont(
-                        QFont(ViewCSVDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+            ViewCSVDataTable.setHorizontalHeaderLabels(DS.CSVHeaderLabel)
+            ViewCSVDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
-                for row in rowList:
-                    ViewCSVDataTable.insertRow(rowList.index(row))
-                    for item in row:
-                        # if row.index(item) == 0:
-                        #     ptext = QPlainTextEdit()
-                        #     ptext.setReadOnly(True)
-                        #     ptext.setPlainText(item);
-                        #     ViewCSVDataTable.setCellWidget(rowList.index(row), row.index(item), ptext)
-                        # else:
-                            intItem = QTableWidgetItem()
-                            intItem.setData(Qt.EditRole, QVariant(item))
-                            ViewCSVDataTable.setItem(rowList.index(row), row.index(item), intItem)
-                            ViewCSVDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
-                            ViewCSVDataTable.item(rowList.index(row), row.index(item)).setFlags(
-                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+            for i in range(ViewCSVDataTable.columnCount()):
+                ViewCSVDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                ViewCSVDataTable.horizontalHeaderItem(i).setFont(
+                    QFont(ViewCSVDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-                ViewCSVDataTable.resizeColumnsToContents()
-                ViewCSVDataTable.resizeRowsToContents()
+            for row in rowList:
+                ViewCSVDataTable.insertRow(rowList.index(row))
+                for item in row:
+                    try:
+                        newitem = int(item)
+                    except ValueError:
+                        newitem = item
 
-                ViewCSVDataTable.setSortingEnabled(True)
-                row_width = 0
+                    intItem = QTableWidgetItem()
+                    intItem.setData(Qt.EditRole, QVariant(newitem))
+                    ViewCSVDataTable.setItem(rowList.index(row), row.index(item), intItem)
+                    ViewCSVDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignVCenter)
+                    ViewCSVDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
-                for i in range(ViewCSVDataTable.columnCount()):
-                    ViewCSVDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+            ViewCSVDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            ViewCSVDataTable.resizeColumnsToContents()
+            ViewCSVDataTable.resizeRowsToContents()
+            ViewCSVDataTable.setSortingEnabled(True)
 
-                # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
+            # for i in range(ViewCSVDataTable.columnCount()):
+            #     ViewCSVDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
-                self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+            # Adding Word Frequency Tab to TabList
+            myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
 
-            else:
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
+            self.tabWidget.setCurrentWidget(ViewCSVDataTab)
 
-        except Exception as e:
-            print(str(e))
+        else:
+            # Adding Word Frequency Tab to QTabWidget
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Previous Image Button
     def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
@@ -2696,7 +2670,7 @@ class Window(QMainWindow):
             SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
 
             canvas2 = FigureCanvas(DS.PieSentimentFigure)
-            SentimentAnalysisverticalLayout4.addWidget(DS.chartview)
+            SentimentAnalysisverticalLayout4.addWidget(canvas2)
             SentimentAnalysisTabverticalLayoutWidget4.hide()
 
             DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
@@ -6312,8 +6286,7 @@ class Window(QMainWindow):
 
             # Cases Expand
             CasesExpand = QAction('Expand', self.CasesTreeWidget)
-            CasesExpand.triggered.connect(
-                lambda checked, index=CasesItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            CasesExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
             if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
                 CasesExpand.setDisabled(True)
             else:
@@ -6322,14 +6295,17 @@ class Window(QMainWindow):
 
             # Cases Collapse
             CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
-            CasesCollapse.triggered.connect(
-                lambda checked, index=CasesItemName: self.DataSourceWidgetItemExpandCollapse(index))
-
+            CasesCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
             if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
                 CasesCollapse.setDisabled(True)
             else:
                 CasesCollapse.setDisabled(False)
             CasesRightClickMenu.addAction(CasesCollapse)
+
+            # Cases Coverage
+            CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
+            CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
+            CasesRightClickMenu.addAction(CasesCoverage)
 
             # Case Remove
             CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
@@ -6367,6 +6343,144 @@ class Window(QMainWindow):
             CasesRightClickMenu.addAction(CasesDetail)
 
             CasesRightClickMenu.popup(CasesWidgetPos)
+
+    # Cases Coverage
+    def CasesParentCoverage(self, CasesItemName):
+        try:
+            CasesParentCoverageTabFlag = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage':
+                    CasesParentCoverageTabFlag = True
+                    break
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    DS.allCasesCoverage()
+                    break
+
+
+            # Creating New Tab for Stem Word
+            CasesParentCoverageTab = QWidget()
+
+            # ******************************* LayoutWidget For within Stem Word Tab ************************************
+            CasesParentCoverageTabVerticalLayoutWidget = QWidget(CasesParentCoverageTab)
+            CasesParentCoverageTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+
+            # Box Layout for Stem Word Tab
+            CasesParentCoverageTabVerticalLayout = QHBoxLayout(CasesParentCoverageTabVerticalLayoutWidget)
+            CasesParentCoverageTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            # Data Source Label
+            DataSourceLabel = QLabel()
+            DataSourceLabel.setText(CasesItemName.text(0))
+            DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
+            DataSourceLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+            CasesParentCoverageTabVerticalLayout.addWidget(DataSourceLabel)
+
+
+            # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
+            CasesParentCoverageTabVerticalLayoutWidget2 = QWidget(CasesParentCoverageTab)
+            CasesParentCoverageTabVerticalLayoutWidget2.setGeometry(0,
+                                                                    self.tabWidget.height() / 10,
+                                                                    self.tabWidget.width()/4,
+                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
+
+            # 2nd Box Layout for Stem Word Tab
+            CasesParentCoverageTabVerticalLayout2 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget2)
+
+            CasesList = QListWidget(CasesParentCoverageTabVerticalLayoutWidget2)
+            CasesList.setGeometry(0, 0,
+                                  self.tabWidget.width()/4,
+                                  self.tabWidget.height() - self.tabWidget.height() / 10)
+
+
+            for cases in DS.CasesList:
+                CasesList.addItem(cases.CaseTopic)
+
+
+            # *************************** 3rd LayoutWidget For within Stem Word Tab *************************************
+            CasesParentCoverageTabVerticalLayoutWidget3 = QWidget(CasesParentCoverageTab)
+            CasesParentCoverageTabVerticalLayoutWidget3.setGeometry(self.tabWidget.width()*0.25,
+                                                                    self.tabWidget.height()*0.1,
+                                                                    self.tabWidget.width()*0.75,
+                                                                    self.tabWidget.height()*0.45)
+            # 3rd Box Layout for Stem Word Tab
+            CasesParentCoverageTabVerticalLayout3 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget3)
+
+            dummyQuery = Query()
+            TempText = ""
+            for cases in DS.CasesList:
+                for caseText in cases.TopicCases:
+                    TempText += caseText[0]
+
+            rowList = dummyQuery.FindSimpleFrequency(TempText)
+
+            # Table for Word Frequency
+            CasesParentCoverageTable = QTableWidget(CasesParentCoverageTabVerticalLayoutWidget3)
+            CasesParentCoverageTable.setColumnCount(4)
+            CasesParentCoverageTable.setGeometry(0, 0,
+                                                 CasesParentCoverageTabVerticalLayoutWidget3.width(),
+                                                 CasesParentCoverageTabVerticalLayoutWidget3.height())
+            CasesParentCoverageTable.setSizePolicy(self.sizePolicy)
+            CasesParentCoverageTable.setWindowFlags(CasesParentCoverageTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            CasesParentCoverageTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Average"])
+            CasesParentCoverageTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(CasesParentCoverageTable.columnCount()):
+                CasesParentCoverageTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                CasesParentCoverageTable.horizontalHeaderItem(i).setFont(QFont(CasesParentCoverageTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    CasesParentCoverageTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        CasesParentCoverageTable.setItem(rowList.index(row), row.index(item), intItem)
+                        CasesParentCoverageTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        CasesParentCoverageTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                CasesParentCoverageTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                CasesParentCoverageTable.resizeColumnsToContents()
+                CasesParentCoverageTable.resizeRowsToContents()
+
+                CasesParentCoverageTable.setSortingEnabled(True)
+                CasesParentCoverageTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+
+                for i in range(CasesParentCoverageTable.columnCount()):
+                    CasesParentCoverageTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            # *************************** 4th LayoutWidget For within Stem Word Tab *************************************
+            CasesParentCoverageTabVerticalLayoutWidget4 = QWidget(CasesParentCoverageTab)
+            CasesParentCoverageTabVerticalLayoutWidget4.setGeometry(self.tabWidget.width()*0.25,
+                                                                    self.tabWidget.height()*0.55,
+                                                                    self.tabWidget.width()*0.75,
+                                                                    self.tabWidget.height()*0.45)
+            # 4th Box Layout for Stem Word Tab
+            CasesParentCoverageTabVerticalLayout4 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget4)
+
+            canvas = FigureCanvas(DS.BarCasesCoverageFigure)
+            CasesParentCoverageTabVerticalLayout4.addWidget(canvas)
+
+            if CasesParentCoverageTabFlag:
+                # updating tab
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
+                tabs.tabWidget = CasesParentCoverageTab
+
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(
+                    Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0)))
+
+                self.tabWidget.addTab(CasesParentCoverageTab, "Cases Coverage")
+                self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
+
+        except Exception as e:
+            print(str(e))
 
     # Cases Parent Remove Dialog
     def CasesParentRemoveDialog(self, CasesItemName):

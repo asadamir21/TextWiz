@@ -70,8 +70,12 @@ class OpenWindow(QFileDialog):
             home = os.path.join(os.path.expanduser('~'), 'Documents')
 
             if os.path.isdir(home):
-                self.filepath =  self.getOpenFileName(self, title, home, ext)
+                self.filepath =  self.getOpenFileNames(self, title, home, ext)
+        elif flag == -1:
+            home = os.path.join(os.path.expanduser('~'), 'Documents')
 
+            if os.path.isdir(home):
+                self.filepath =  self.getOpenFileName(self, title, home, ext)
         elif flag == 1:
             home = os.path.join(os.path.expanduser('~'), 'Pictures')
 
@@ -143,27 +147,27 @@ class Window(QMainWindow):
         self.toolbar.setMovable(False)
 
         WordAct = QAction(QIcon('Images/Word.png'), 'Word', self)
-        WordAct.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
+        WordAct.triggered.connect(lambda: self.ImportFileWindow("Word"))
         self.toolbar.addAction(WordAct)
 
         PDFAct = QAction(QIcon('Images/PDF.png'), 'PDF', self)
-        PDFAct.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
+        PDFAct.triggered.connect(lambda: self.ImportFileWindow("PDF"))
         self.toolbar.addAction(PDFAct)
 
         NotepadAct = QAction(QIcon('Images/Notepad.png'), 'txt', self)
-        NotepadAct.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
+        NotepadAct.triggered.connect(lambda: self.ImportFileWindow("Txt"))
         self.toolbar.addAction(NotepadAct)
 
         RTFAct = QAction(QIcon('Images/rtf.png'), 'RTF', self)
-        RTFAct.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
+        RTFAct.triggered.connect(lambda: self.ImportFileWindow("RTF"))
         self.toolbar.addAction(RTFAct)
 
         SoundAct = QAction(QIcon('Images/Sound.png'), 'Audio', self)
-        SoundAct.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
+        SoundAct.triggered.connect(lambda: self.ImportFileWindow("Sound"))
         self.toolbar.addAction(SoundAct)
 
         ImageAct = QAction(QIcon('Images/ImageDataSource.png'), 'Image', self)
-        ImageAct.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
+        ImageAct.triggered.connect(lambda: self.ImportFileWindow("Image"))
         self.toolbar.addAction(ImageAct)
 
         CSVAct = QAction(QIcon('Images/CSV.png'), 'csv', self)
@@ -171,15 +175,15 @@ class Window(QMainWindow):
         self.toolbar.addAction(CSVAct)
 
         TwitterAct = QAction(QIcon('Images/Twitter.png'), 'Twitter', self)
-        TwitterAct.triggered.connect(lambda checked: self.ImportTweetWindow())
+        TwitterAct.triggered.connect(lambda: self.ImportTweetWindow())
         self.toolbar.addAction(TwitterAct)
 
         WebAct = QAction(QIcon('Images/Web.png'), 'URL', self)
-        WebAct.triggered.connect(lambda checked: self.ImportURLWindow())
+        WebAct.triggered.connect(lambda: self.ImportURLWindow())
         self.toolbar.addAction(WebAct)
 
         YoutubeAct = QAction(QIcon('Images/Youtube.png'), 'Youtube', self)
-        YoutubeAct.triggered.connect(lambda checked: self.ImportYoutubeWindow())
+        YoutubeAct.triggered.connect(lambda: self.ImportYoutubeWindow())
         self.toolbar.addAction(YoutubeAct)
 
         self.toolbar.addSeparator()
@@ -275,32 +279,32 @@ class Window(QMainWindow):
 
         WordFileButton = QAction(QIcon("Images/Word.png"),'Word File', self)
         WordFileButton.setStatusTip('Word File')
-        WordFileButton.triggered.connect(lambda checked, index="Word": self.ImportFileWindow(index))
+        WordFileButton.triggered.connect(lambda: self.ImportFileWindow("Word"))
         importMenu.addAction(WordFileButton)
 
         PDFFileButton = QAction(QIcon("Images/PDF.png"), 'PDF File', self)
         PDFFileButton.setStatusTip('PDF File')
-        PDFFileButton.triggered.connect(lambda checked, index="PDF": self.ImportFileWindow(index))
+        PDFFileButton.triggered.connect(lambda: self.ImportFileWindow("PDF"))
         importMenu.addAction(PDFFileButton)
 
         TXTFileButton = QAction(QIcon("Images/Notepad.png"), 'Notepad File', self)
         TXTFileButton.setStatusTip('Notepad File')
-        TXTFileButton.triggered.connect(lambda checked, index="Txt": self.ImportFileWindow(index))
+        TXTFileButton.triggered.connect(lambda: self.ImportFileWindow("Txt"))
         importMenu.addAction(TXTFileButton)
 
         RTFFileButton = QAction(QIcon("Images/rtf.png"), 'RTF File', self)
         RTFFileButton.setStatusTip('RTF File')
-        RTFFileButton.triggered.connect(lambda checked, index="RTF": self.ImportFileWindow(index))
+        RTFFileButton.triggered.connect(lambda: self.ImportFileWindow("RTF"))
         importMenu.addAction(RTFFileButton)
 
         SoundFileButton = QAction(QIcon("Images/Sound.png"), 'Audio File', self)
         SoundFileButton.setStatusTip('Word File')
-        SoundFileButton.triggered.connect(lambda checked, index="Sound": self.ImportFileWindow(index))
+        SoundFileButton.triggered.connect(lambda: self.ImportFileWindow("Sound"))
         importMenu.addAction(SoundFileButton)
 
         ImageFileButton = QAction(QIcon("Images\ImageDataSource.png"), 'Image File', self)
         ImageFileButton.setStatusTip('Image File')
-        ImageFileButton.triggered.connect(lambda checked, index="Image": self.ImportFileWindow(index))
+        ImageFileButton.triggered.connect(lambda: self.ImportFileWindow("Image"))
         importMenu.addAction(ImageFileButton)
 
         CSVFileButton = QAction(QIcon("Images\CSV.png"), 'csv', self)
@@ -1007,7 +1011,7 @@ class Window(QMainWindow):
             DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
             DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
-            DataSourceExpand.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            DataSourceExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
 
             if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
                 DataSourceExpand.setDisabled(True)
@@ -1015,7 +1019,7 @@ class Window(QMainWindow):
                 DataSourceExpand.setDisabled(False)
 
             DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
-            DataSourceCollapse.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemExpandCollapse(index))
+            DataSourceCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
 
             if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
                 DataSourceCollapse.setDisabled(True)
@@ -1023,7 +1027,7 @@ class Window(QMainWindow):
                 DataSourceCollapse.setDisabled(False)
 
             DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
-            DataSourceDetail.triggered.connect(lambda checked, index=DataSourceWidgetItemName: self.DataSourceWidgetItemDetail(index))
+            DataSourceDetail.triggered.connect(lambda: self.DataSourceWidgetItemDetail(DataSourceWidgetItemName))
 
             DataSourceRightClickMenu.addAction(DataSourceExpand)
             DataSourceRightClickMenu.addAction(DataSourceCollapse)
@@ -1050,9 +1054,15 @@ class Window(QMainWindow):
                 DataSourceShowTweetData.triggered.connect(lambda: self.DataSourceShowTweetData(DataSourceWidgetItemName))
                 DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
 
+            # Youtube Show Video
+            DataSourceYoutubeShowVideo = QAction('Show Video', self.DataSourceTreeWidget)
+
+            if DS.DataSourceext == "Youtube" and hasattr(DS, 'YoutubeURLFlag'):
+                DataSourceYoutubeShowVideo.triggered.connect(lambda: self.DataSourceYoutubeShowVideo(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceYoutubeShowVideo)
+
             # Data Source Show Youtube Comments
             DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
-
             if hasattr(DS, 'YoutubeURLFlag'):
                 DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsURL(DataSourceWidgetItemName))
                 DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
@@ -1315,6 +1325,7 @@ class Window(QMainWindow):
                     ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            ShowTweetDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ShowTweetDataTable.resizeColumnsToContents()
             ShowTweetDataTable.resizeRowsToContents()
 
@@ -1335,6 +1346,47 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+
+    # Data Source Youtube Show Video
+    def DataSourceYoutubeShowVideo(self, DataSourceWidgetItemName):
+        DataSourceYoutubeShowVideoTabFlag = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Video':
+                DataSourceYoutubeShowVideoTabFlag = True
+                break
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                break
+
+        if not DataSourceYoutubeShowVideoTabFlag:
+            # Creating New Tab for Stem Word
+            VideoTab = QWidget()
+
+            # LayoutWidget For within Stem Word Tab
+            VideoTabVerticalLayoutWidget = QWidget(VideoTab)
+            VideoTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+
+            # Box Layout for Stem Word Tab
+            VideoTabVerticalLayout = QHBoxLayout(VideoTabVerticalLayoutWidget)
+            VideoTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+            VideoTabWebPage = QWebEngineView()
+            VideoTabWebPage.setContextMenuPolicy(Qt.PreventContextMenu)
+            VideoTabWebPage.setUrl(QUrl(DS.DataSourcePath))
+            VideoTabVerticalLayout.addWidget(VideoTabWebPage)
+
+            # Adding Preview Tab to TabList
+            myFile.TabList.append(Tab("Show Video", VideoTab, DataSourceWidgetItemName.text(0)))
+
+            # Adding Preview Tab to QTabWidget
+            self.tabWidget.addTab(VideoTab, "Show Video")
+            self.tabWidget.setCurrentWidget(VideoTab)
+        else:
+            # updating tab
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsURL(self, DataSourceWidgetItemName):
@@ -1389,6 +1441,7 @@ class Window(QMainWindow):
                         ptext = QPlainTextEdit()
                         ptext.setReadOnly(True)
                         ptext.setPlainText(item);
+                        ptext.setFixedHeight(self.tabWidget.height() / 15)
                         ShowYoutubeCommentsTable.setCellWidget(rowList.index(row), row.index(item), ptext)
 
                     else:
@@ -1400,6 +1453,7 @@ class Window(QMainWindow):
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            ShowYoutubeCommentsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ShowYoutubeCommentsTable.resizeColumnsToContents()
             ShowYoutubeCommentsTable.resizeRowsToContents()
 
@@ -1477,6 +1531,7 @@ class Window(QMainWindow):
                         ptext = QPlainTextEdit()
                         ptext.setReadOnly(True)
                         ptext.setPlainText(item);
+                        ptext.setFixedHeight(self.tabWidget.height() / 15)
                         ShowYoutubeCommentsTable.setCellWidget(rowList.index(row), row.index(item), ptext)
                     else:
                         intItem = QTableWidgetItem()
@@ -1491,6 +1546,7 @@ class Window(QMainWindow):
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            ShowYoutubeCommentsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ShowYoutubeCommentsTable.resizeColumnsToContents()
             ShowYoutubeCommentsTable.resizeRowsToContents()
 
@@ -2028,7 +2084,6 @@ class Window(QMainWindow):
         # Table for Word Frequency
         WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
         WordFrequencyTable.setColumnCount(7)
-        # WordFrequencyTable.setModel(WordFrequencyTableModel)
         WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(),
                                        WordFrequencyTabverticalLayoutWidget.height())
 
@@ -2061,6 +2116,7 @@ class Window(QMainWindow):
                         ptext = QPlainTextEdit()
                         ptext.setReadOnly(True)
                         ptext.setPlainText(item);
+                        ptext.setFixedHeight(self.tabWidget.height() / 15)
                         WordFrequencyTable.setCellWidget(rowList.index(row), row.index(item), ptext)
 
                     else:
@@ -2072,6 +2128,7 @@ class Window(QMainWindow):
                         WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            WordFrequencyTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             WordFrequencyTable.resizeColumnsToContents()
             WordFrequencyTable.resizeRowsToContents()
 
@@ -2129,12 +2186,9 @@ class Window(QMainWindow):
                 self.tabWidget.setCurrentWidget(WordFrequencyTab)
 
         else:
-            WordFrequencyErrorBox = QMessageBox()
-            WordFrequencyErrorBox.setIcon(QMessageBox.Critical)
-            WordFrequencyErrorBox.setWindowTitle("Word Frequency Error")
-            WordFrequencyErrorBox.setText("An Error Occurred! No Text Found in " + DataSourceName)
-            WordFrequencyErrorBox.setStandardButtons(QMessageBox.Ok)
-            WordFrequencyErrorBox.exec_()
+            QMessageBox.critical(self, "Word Frequency Error",
+                                 "An Error Occurred! No Text Found in " + DataSourceName,
+                                 QMessageBox.Ok)
 
     # Save Table as CSV
     def SaveTableAsCSV(self, Table):
@@ -2165,8 +2219,24 @@ class Window(QMainWindow):
                                 rowdata.append('')
                         writer.writerow(rowdata)
 
+                    SaveSuccessBox = QMessageBox(self)
+                    SaveSuccessBox.setIcon(QMessageBox.Information)
+                    SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
+                    SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
+                    SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: self.OpenSaveTableCSVFile(path[0]))
+                    SaveSuccessBox.show()
+
+                    #self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
         except PermissionError:
             QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
+    # Open CSV File With Save Table
+    def OpenSaveTableCSVFile(self, path):
+        try:
+           os.startfile(path)
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # *************************** Question Generator *****************************
@@ -2312,9 +2382,10 @@ class Window(QMainWindow):
                 ptext.setReadOnly(True)
                 ptext.setPlainText(row)
                 ptext.adjustSize()
-
+                ptext.setFixedHeight(self.tabWidget.height() / 15)
                 GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
 
+            GenerateQuestionsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             GenerateQuestionsTable.resizeColumnsToContents()
             GenerateQuestionsTable.resizeRowsToContents()
 
@@ -2632,6 +2703,7 @@ class Window(QMainWindow):
                         SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            SentimentAnalysisTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             SentimentAnalysisTable.resizeColumnsToContents()
             SentimentAnalysisTable.resizeRowsToContents()
 
@@ -3281,6 +3353,7 @@ class Window(QMainWindow):
                         Qt.AlignHCenter | Qt.AlignVCenter)
                     POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            POSTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             POSTable.resizeColumnsToContents()
             POSTable.resizeRowsToContents()
 
@@ -3505,6 +3578,7 @@ class Window(QMainWindow):
                     DSERTable.item(Entity_List.index(row), row.index(item)).setFlags(
                         Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
+            DSERTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             DSERTable.resizeColumnsToContents()
             DSERTable.resizeRowsToContents()
 
@@ -3884,6 +3958,8 @@ class Window(QMainWindow):
                 DSNewCaseNode.setText(0, CaseTopic)
                 DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
+            self.CasesParentCoverageUpdate(DSNewCaseNode.parent())
+
     # Add to Case onClick
     def AddtoCaseDialog(self, selectedText, DataSourceWidgetItemName):
         AddtoCaseDialogBox = QDialog()
@@ -3940,6 +4016,20 @@ class Window(QMainWindow):
                 for cases in DS.CasesList:
                     if cases.CaseTopic == CaseTopic:
                         cases.addtoCase(selectedText)
+
+                        # Updating Cases Parent Coverage
+                        ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
+                        for widgets in ItemsWidget:
+                            self.CasesParentCoverageUpdate(widgets)
+
+                        # Updating Show Component Table
+                        for childCount in range(widgets.childCount()):
+                            ItemsWidget2 = widgets.child(childCount)
+
+                            if ItemsWidget2.text(0) == CaseTopic:
+                                self.CasesShowTopicComponentUpdate(ItemsWidget2)
+                                break
+
                         break
 
     # ****************************************************************************
@@ -6482,6 +6572,24 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+    # Cases Coverage Update
+    def CasesParentCoverageUpdate(self, CasesItemName):
+        for tabs in myFile.TabList:
+            if tabs.TabName == "Cases Coverage" and tabs.DataSourceName == CasesItemName.text(0) :
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
+                        break
+
+                if self.tabWidget.indexOf(tabs.tabWidget) >= 0:
+                    currentTab = self.tabWidget.currentWidget()
+                    if len(DS.CasesList) > 0:
+                        self.CasesParentCoverage(CasesItemName)
+                        self.tabWidget.setCurrentWidget(currentTab)
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                    break
+
     # Cases Parent Remove Dialog
     def CasesParentRemoveDialog(self, CasesItemName):
         CasesRemoveChoice = QMessageBox.critical(self, 'Remove',
@@ -6564,12 +6672,12 @@ class Window(QMainWindow):
 
         CasesParentDetailDialogBox.exec_()
 
-    # Cases Show Topic
+    # Cases Show Topic Component
     def CasesShowTopicComponent(self, CasesItemName):
         CaseShowComponentTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == CasesItemName.parent().text(0) and tabs.TabName == 'Case Show Topic Component':
+            if tabs.DataSourceName == CasesItemName.parent().text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0):
                 CaseShowComponentTabFlag = True
                 break
 
@@ -6583,6 +6691,15 @@ class Window(QMainWindow):
         # Box Layout for Stem Word Tab
         CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
         CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Case Name label
+        CaseNameLabel = QLabel(CaseShowComponentTabVerticalLayoutWidget)
+        CaseNameLabel.setGeometry(0, 0,
+                                  CaseShowComponentTabVerticalLayoutWidget.width(),
+                                  CaseShowComponentTabVerticalLayoutWidget.height())
+        CaseNameLabel.setText(CasesItemName.parent().text(0) + '\n' + CasesItemName.text(0))
+        CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
+        CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
 
         # 2nd LayoutWidget For within Stem Word Tab
         CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
@@ -6656,11 +6773,30 @@ class Window(QMainWindow):
 
         else:
             # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(
-                Tab("Case Show Topic Component", CaseShowComponentTab, CasesItemName.parent().text(0)))
+            dummyTab = Tab("Case Show Topic Component", CaseShowComponentTab, CasesItemName.parent().text(0))
+            dummyTab.setTabCase(CasesItemName.text(0))
+            myFile.TabList.append(dummyTab)
 
             self.tabWidget.addTab(CaseShowComponentTab, "Case Show Topic Component")
             self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+
+    # Cases Show Topic Component Update
+    def CasesShowTopicComponentUpdate(self, CasesItemName):
+        for tabs in myFile.TabList:
+            if tabs.TabName == 'Case Show Topic Component' and tabs.DataSourceName == CasesItemName.parent().text(0) and tabs.tabCase == CasesItemName.text(0):
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
+                        break
+
+                if self.tabWidget.indexOf(tabs.tabWidget) >= 0:
+                    currentTab = self.tabWidget.currentWidget()
+                    if len(DS.CasesList) > 0:
+                        self.CasesShowTopicComponent(CasesItemName)
+                        self.tabWidget.setCurrentWidget(currentTab)
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                    break
 
     # Cases Remove Component Row
     def deleteCaseComponentRow(self, CasesItemName, Table):
@@ -6679,6 +6815,8 @@ class Window(QMainWindow):
                                     break
 
             Table.removeRow(row)
+
+        self.CasesParentCoverageUpdate(CasesItemName)
 
     # Cases Rename
     def CasesRename(self, CasesItemName):
@@ -6750,7 +6888,9 @@ class Window(QMainWindow):
                                                  QMessageBox.Yes | QMessageBox.No)
 
         if CasesRemoveChoice == QMessageBox.Yes:
+            TempParent = CasesItemName.parent()
             self.CasesChildRemove(CasesItemName)
+            self.CasesParentCoverageUpdate(TempParent)
         else:
             pass
 
@@ -7538,7 +7678,7 @@ class Window(QMainWindow):
 
     #Open File
     def OpenFileWindow(self):
-        self.dummyWindow = OpenWindow("Open File", "TextWiz File *.tax", 0)
+        self.dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 0)
 
     #Print Window
     def printWindow(self):
@@ -7596,67 +7736,25 @@ class Window(QMainWindow):
             dummyWindow.__del__()
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
+                for pth in path[0]:
+                    dummyDataSource = DataSource(pth, path[1], self)
 
-                DataSourceNameCheck = False
+                    DataSourceNameCheck = False
 
-                for DS in myFile.DataSourceList:
-                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                        DataSourceNameCheck = True
+                    for DS in myFile.DataSourceList:
+                        if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                            DataSourceNameCheck = True
 
-                if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        newNode = QTreeWidgetItem(self.wordTreeWidget)
-                        newNode.setText(0, ntpath.basename(path[0]))
-                        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                    if not DataSourceNameCheck:
+                        if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                            myFile.setDataSources(dummyDataSource)
+                            newNode = QTreeWidgetItem(self.wordTreeWidget)
+                            newNode.setText(0, ntpath.basename(pth))
+                            self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
 
-                        if self.wordTreeWidget.isHidden():
-                            self.wordTreeWidget.setHidden(False)
-                            self.wordTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
-
-                        self.DataSourceSimilarityUpdate()
-                        self.DataSourceDocumentClusteringUpdate()
-                    else:
-                        if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                                QMessageBox.Ok)
-                        dummyDataSource.__del__()
-                else:
-                    dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                        QMessageBox.Ok)
-
-        elif check == "PDF":
-            dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
-            path = dummyWindow.filepath
-            dummyWindow.__del__()
-
-            if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
-
-                DataSourceNameCheck = False
-
-                for DS in myFile.DataSourceList:
-                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                        DataSourceNameCheck = True
-
-                if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        if not dummyDataSource.DataSourceLoadError:
-                            newNode = QTreeWidgetItem(self.pdfTreeWidget)
-                            newNode.setText(0, ntpath.basename(path[0]))
-                            self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
-
-                            if self.pdfTreeWidget.isHidden():
-                                self.pdfTreeWidget.setHidden(False)
-                                self.pdfTreeWidget.setExpanded(True)
+                            if self.wordTreeWidget.isHidden():
+                                self.wordTreeWidget.setHidden(False)
+                                self.wordTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
                             dummyDataSource.setNode(newNode)
@@ -7664,18 +7762,62 @@ class Window(QMainWindow):
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
                         else:
+                            if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
+                                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                    dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                    QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
-                        if len(dummyDataSource.DataSourcetext) == 0:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                                QMessageBox.Ok)
                         dummyDataSource.__del__()
-                else:
-                    dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                        QMessageBox.Ok)
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                            QMessageBox.Ok)
+
+        elif check == "PDF":
+            dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
+
+            if all(path):
+                for pth in path[0]:
+                    dummyDataSource = DataSource(pth, path[1], self)
+
+                    DataSourceNameCheck = False
+
+                    for DS in myFile.DataSourceList:
+                        if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                            DataSourceNameCheck = True
+
+                    if not DataSourceNameCheck:
+                        if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                            myFile.setDataSources(dummyDataSource)
+                            if not dummyDataSource.DataSourceLoadError:
+                                newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                                newNode.setText(0, ntpath.basename(pth))
+                                self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+
+                                if self.pdfTreeWidget.isHidden():
+                                    self.pdfTreeWidget.setHidden(False)
+                                    self.pdfTreeWidget.setExpanded(True)
+
+                                newNode.setToolTip(0, newNode.text(0))
+                                dummyDataSource.setNode(newNode)
+
+                                self.DataSourceSimilarityUpdate()
+                                self.DataSourceDocumentClusteringUpdate()
+                            else:
+                                dummyDataSource.__del__()
+                        else:
+                            if len(dummyDataSource.DataSourcetext) == 0:
+                                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                    dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                    QMessageBox.Ok)
+                            dummyDataSource.__del__()
+                    else:
+                        dummyDataSource.__del__()
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                            QMessageBox.Ok)
 
         elif check == "Txt":
             dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)", 0)
@@ -7683,42 +7825,43 @@ class Window(QMainWindow):
             dummyWindow.__del__()
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
+                for pth in path[0]:
+                    dummyDataSource = DataSource(pth, path[1], self)
 
-                DataSourceNameCheck = False
+                    DataSourceNameCheck = False
 
-                for DS in myFile.DataSourceList:
-                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                        DataSourceNameCheck = True
+                    for DS in myFile.DataSourceList:
+                        if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                            DataSourceNameCheck = True
 
-                if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        newNode = QTreeWidgetItem(self.txtTreeWidget)
-                        newNode.setText(0, ntpath.basename(path[0]))
-                        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                    if not DataSourceNameCheck:
+                        if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                            myFile.setDataSources(dummyDataSource)
+                            newNode = QTreeWidgetItem(self.txtTreeWidget)
+                            newNode.setText(0, ntpath.basename(pth))
+                            self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
 
-                        if self.txtTreeWidget.isHidden():
-                            self.txtTreeWidget.setHidden(False)
-                            self.txtTreeWidget.setExpanded(True)
+                            if self.txtTreeWidget.isHidden():
+                                self.txtTreeWidget.setHidden(False)
+                                self.txtTreeWidget.setExpanded(True)
 
-                        newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
+                            newNode.setToolTip(0, newNode.text(0))
+                            dummyDataSource.setNode(newNode)
 
-                        self.DataSourceSimilarityUpdate()
-                        self.DataSourceDocumentClusteringUpdate()
+                            self.DataSourceSimilarityUpdate()
+                            self.DataSourceDocumentClusteringUpdate()
 
+                        else:
+                            if len(dummyDataSource.DataSourcetext) == 0:
+                                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
+                            dummyDataSource.__del__()
                     else:
-                        if len(dummyDataSource.DataSourcetext) == 0:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
-                else:
-                    dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                        QMessageBox.Ok)
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                            QMessageBox.Ok)
 
         elif check == "RTF":
             dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
@@ -7726,40 +7869,41 @@ class Window(QMainWindow):
             dummyWindow.__del__()
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
+                for pth in path[0]:
+                    dummyDataSource = DataSource(pth, path[1], self)
 
-                DataSourceNameCheck = False
+                    DataSourceNameCheck = False
 
-                for DS in myFile.DataSourceList:
-                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                        DataSourceNameCheck = True
+                    for DS in myFile.DataSourceList:
+                        if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                            DataSourceNameCheck = True
 
-                if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        newNode = QTreeWidgetItem(self.rtfTreeWidget)
-                        newNode.setText(0, ntpath.basename(path[0]))
-                        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+                    if not DataSourceNameCheck:
+                        if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                            myFile.setDataSources(dummyDataSource)
+                            newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                            newNode.setText(0, ntpath.basename(pth))
+                            self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
 
-                        if self.rtfTreeWidget.isHidden():
-                            self.rtfTreeWidget.setHidden(False)
+                            if self.rtfTreeWidget.isHidden():
+                                self.rtfTreeWidget.setHidden(False)
 
-                        newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
+                            newNode.setToolTip(0, newNode.text(0))
+                            dummyDataSource.setNode(newNode)
 
-                        self.DataSourceSimilarityUpdate()
-                        self.DataSourceDocumentClusteringUpdate()
+                            self.DataSourceSimilarityUpdate()
+                            self.DataSourceDocumentClusteringUpdate()
+                        else:
+                            if len(dummyDataSource.DataSourcetext) == 0:
+                                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
+                            dummyDataSource.__del__()
                     else:
-                        if len(dummyDataSource.DataSourcetext) == 0:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
-                else:
-                    dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                        QMessageBox.Ok)
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                            QMessageBox.Ok)
 
         elif check == "Sound":
             dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
@@ -7767,41 +7911,42 @@ class Window(QMainWindow):
             dummyWindow.__del__()
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
+                for pth in path[0]:
+                    dummyDataSource = DataSource(pth, path[1], self)
 
-                DataSourceNameCheck = False
+                    DataSourceNameCheck = False
 
-                for DS in myFile.DataSourceList:
-                    if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                        DataSourceNameCheck = True
+                    for DS in myFile.DataSourceList:
+                        if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                            DataSourceNameCheck = True
 
-                if not DataSourceNameCheck:
-                    if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        newNode = QTreeWidgetItem(self.audioSTreeWidget)
-                        newNode.setText(0, ntpath.basename(path[0]))
-                        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+                    if not DataSourceNameCheck:
+                        if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                            myFile.setDataSources(dummyDataSource)
+                            newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                            newNode.setText(0, ntpath.basename(pth))
+                            self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
 
-                        if self.audioSTreeWidget.isHidden():
-                            self.audioSTreeWidget.setHidden(False)
-                            self.audioSTreeWidget.setExpanded(True)
+                            if self.audioSTreeWidget.isHidden():
+                                self.audioSTreeWidget.setHidden(False)
+                                self.audioSTreeWidget.setExpanded(True)
 
-                        newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
+                            newNode.setToolTip(0, newNode.text(0))
+                            dummyDataSource.setNode(newNode)
 
-                        self.DataSourceSimilarityUpdate()
-                        self.DataSourceDocumentClusteringUpdate()
+                            self.DataSourceSimilarityUpdate()
+                            self.DataSourceDocumentClusteringUpdate()
+                        else:
+                            if len(dummyDataSource.DataSourcetext) == 0:
+                                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
+                            dummyDataSource.__del__()
                     else:
-                        if len(dummyDataSource.DataSourcetext) == 0:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                            QMessageBox.Ok)
                         dummyDataSource.__del__()
-                else:
-                    dummyDataSource.__del__()
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                        QMessageBox.Ok)
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                                                            QMessageBox.Ok)
 
         elif check == "Image":
             dummyWindow = OpenWindow("Open Image File",
@@ -7899,7 +8044,7 @@ class Window(QMainWindow):
 
     # CSV Browse
     def CSVBrowseButtonAction(self, LineEdit):
-        dummyWindow = OpenWindow("Open CSV File", "CSV files (*.csv)", 0)
+        dummyWindow = OpenWindow("Open CSV File", "CSV files (*.csv)", -1)
         LineEdit.setText(dummyWindow.filepath[0])
         dummyWindow.__del__()
 

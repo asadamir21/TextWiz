@@ -30,7 +30,7 @@ from nltk.stem import PorterStemmer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from operator import itemgetter
 
-import urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
+import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
 
 #PDF, Word, Twitter
 import docx2txt, PyPDF2, tweepy
@@ -38,10 +38,6 @@ import docx2txt, PyPDF2, tweepy
 #Youtube
 from Youtube.KeyWord import *
 from Youtube.URL import *
-
-import win32com.client as win32
-from win32com.client import constants
-
 
 class DataSource():
     def __init__(self, path, ext, MainWindow):
@@ -89,24 +85,31 @@ class DataSource():
                 self.DataSourcetext = docx2txt.process(self.DataSourcePath)
                 self.DataSourceLoadError = False
             else:
-                word = win32.gencache.EnsureDispatch('Word.Application')
-                doc = word.Documents.Open(self.DataSourcePath)
+                if platform.system() == "Windows":
+                    import win32com.client as win32
+                    from win32com.client import constants
 
-                # Rename path with .docx
-                new_file_abs = os.path.abspath(self.DataSourcePath)
+                    word = win32.gencache.EnsureDispatch('Word.Application')
+                    doc = word.Documents.Open(self.DataSourcePath)
 
-                new_file_abs = re.sub(r'\.\w+$', '.docx', new_file_abs)
+                    # Rename path with .docx
+                    new_file_abs = os.path.abspath(self.DataSourcePath)
 
-                # Save and Close
-                word.ActiveDocument.SaveAs(
-                    new_file_abs, FileFormat=constants.wdFormatXMLDocument
-                )
-                doc.Close(False)
+                    new_file_abs = re.sub(r'\.\w+$', '.docx', new_file_abs)
 
-                self.DataSourcetext = docx2txt.process(new_file_abs)
-                self.DataSourceLoadError = False
+                    # Save and Close
+                    word.ActiveDocument.SaveAs(
+                        new_file_abs, FileFormat=constants.wdFormatXMLDocument
+                    )
+                    doc.Close(False)
 
-                os.remove(new_file_abs)
+                    self.DataSourcetext = docx2txt.process(new_file_abs)
+                    self.DataSourceLoadError = False
+
+                    os.remove(new_file_abs)
+
+                elif platform.system() == "Linux":
+                    pass
 
         except Exception as e:
             self.DataSourceLoadError = True

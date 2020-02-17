@@ -7,11 +7,9 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
-from win32api import GetMonitorInfo, MonitorFromPoint
 from PIL import  Image
 from File import *
-import humanfriendly
-
+import humanfriendly, platform
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
 
 class MarkerModel(QAbstractListModel):
@@ -96,10 +94,15 @@ class Window(QMainWindow):
         super().__init__()
         self.title = "TextWiz"
 
-        Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
-
-        self.width = Monitor_Resolution_Info.get("Work")[2]
-        self.height = Monitor_Resolution_Info.get("Work")[3]
+        if platform.system() == "Windows":
+            from win32api import GetMonitorInfo, MonitorFromPoint
+            Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
+            self.width = Monitor_Resolution_Info.get("Work")[2]
+            self.height = Monitor_Resolution_Info.get("Work")[3]
+        elif platform.system() == "Linux":
+            import gtk
+            self.width = gtk.gdk.screen_width()
+            self.height = gtk.gdk.screen_height()
 
         self.settings = QSettings('TextWiz', 'TextWiz')
 
@@ -568,10 +571,13 @@ class Window(QMainWindow):
         # ********************************** Right Tab Widget *******************************
 
         # Windows Title Bar Size
-        rect = win32gui.GetWindowRect(self.winId())
-        clientRect = win32gui.GetClientRect(self.winId())
-        windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)
-        titleOffset = ((rect[3] - rect[1]) - clientRect[3]) - windowOffset
+        if platform.system() == "Windows":
+            rect = win32gui.GetWindowRect(self.winId())
+            clientRect = win32gui.GetClientRect(self.winId())
+            windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)
+            titleOffset = ((rect[3] - rect[1]) - clientRect[3]) - windowOffset
+        else:
+            titleOffset = 0
 
         self.verticalLayoutWidget.setGeometry(self.left, self.top, self.width / 8, self.height - titleOffset - self.toolbar.height())
 
@@ -580,7 +586,6 @@ class Window(QMainWindow):
 
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-
 
         self.tabWidget = QTabWidget(self.horizontalLayoutWidget)
         self.tabWidget.setSizePolicy(self.sizePolicy)
@@ -2189,54 +2194,6 @@ class Window(QMainWindow):
             QMessageBox.critical(self, "Word Frequency Error",
                                  "An Error Occurred! No Text Found in " + DataSourceName,
                                  QMessageBox.Ok)
-
-    # Save Table as CSV
-    def SaveTableAsCSV(self, Table):
-        try:
-            path = QFileDialog.getSaveFileName(
-                self, 'Save File', '', 'CSV(*.csv)')
-
-            if all(path):
-                with open(path[0], 'w', newline='') as stream:
-                    writer = csv.writer(stream)
-
-                    HeaderList = []
-                    for i in range(Table.columnCount()):
-                        HeaderList.append(Table.horizontalHeaderItem(i).text())
-
-                    writer.writerow(HeaderList)
-
-                    for row in range(Table.rowCount()):
-                        rowdata = []
-                        for column in range(Table.columnCount()):
-                            item = Table.item(row, column)
-                            item2 = Table.cellWidget(row, column)
-                            if item is not None:
-                                rowdata.append(item.text())
-                            elif item2 is not None:
-                                rowdata.append(item2.toPlainText())
-                            else:
-                                rowdata.append('')
-                        writer.writerow(rowdata)
-
-                    SaveSuccessBox = QMessageBox(self)
-                    SaveSuccessBox.setIcon(QMessageBox.Information)
-                    SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
-                    SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
-                    SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: self.OpenSaveTableCSVFile(path[0]))
-                    SaveSuccessBox.show()
-
-                    #self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
-
-        except PermissionError:
-            QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
-
-    # Open CSV File With Save Table
-    def OpenSaveTableCSVFile(self, path):
-        try:
-           os.startfile(path)
-        except Exception as e:
-            print(str(e))
 
     # ****************************************************************************
     # *************************** Question Generator *****************************
@@ -6079,7 +6036,7 @@ class Window(QMainWindow):
             self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
 
     # ****************************************************************************
-    # ****************************** Enable/Disable ******************************
+    # ********************** Enable/Disable/Reusable Function ********************
     # ****************************************************************************
 
     # Enable Ok Button (Line Edit)
@@ -6151,6 +6108,54 @@ class Window(QMainWindow):
 
             if (len(SecondLineEdit.text()) > 0):
                 ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+    # Save Table as CSV
+    def SaveTableAsCSV(self, Table):
+        try:
+            path = QFileDialog.getSaveFileName(
+                self, 'Save File', '', 'CSV(*.csv)')
+
+            if all(path):
+                with open(path[0], 'w', newline='') as stream:
+                    writer = csv.writer(stream)
+
+                    HeaderList = []
+                    for i in range(Table.columnCount()):
+                        HeaderList.append(Table.horizontalHeaderItem(i).text())
+
+                    writer.writerow(HeaderList)
+
+                    for row in range(Table.rowCount()):
+                        rowdata = []
+                        for column in range(Table.columnCount()):
+                            item = Table.item(row, column)
+                            item2 = Table.cellWidget(row, column)
+                            if item is not None:
+                                rowdata.append(item.text())
+                            elif item2 is not None:
+                                rowdata.append(item2.toPlainText())
+                            else:
+                                rowdata.append('')
+                        writer.writerow(rowdata)
+
+                    SaveSuccessBox = QMessageBox(self)
+                    SaveSuccessBox.setIcon(QMessageBox.Information)
+                    SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
+                    SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
+                    SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: self.OpenSaveTableCSVFile(path[0]))
+                    SaveSuccessBox.show()
+
+                    #self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
+        except PermissionError:
+            QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
+    # Open CSV File With Save Table
+    def OpenSaveTableCSVFile(self, path):
+        try:
+           os.startfile(path)
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # *************************** Query Context Menu *****************************

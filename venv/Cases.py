@@ -4,10 +4,18 @@ class Cases:
         self.CaseTopic = CaseTopic
         self.TopicCases = []
         self.ParentTextlen = ParentTextlen
+        self.ParentCaseList = []
+        self.MergedCase = False
 
     def addtoCase(self, TopicText):
         self.ParentTextlen += len(TopicText)
         self.TopicCases.append([TopicText, len(TopicText.split()), len(TopicText), len(TopicText)/self.ParentTextlen])
+
+    def setParentCase(self, ParentCaseName):
+        self.ParentCaseList.append(ParentCaseName)
+
+    def setMergeCaseFlag(self):
+        self.MergedCase = True
 
     def removefromCase(self, TopicText):
         self.TopicCases.remove(TopicText)

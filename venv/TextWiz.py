@@ -6402,6 +6402,20 @@ class Window(QMainWindow):
             CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
             CasesRightClickMenu.addAction(CasesCoverage)
 
+            # Merge Cases
+            MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
+            MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
+
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    if len(DS.CasesList) > 1:
+                        MergeCases.setDisabled(False)
+                    else:
+                        MergeCases.setDisabled(True)
+
+            CasesRightClickMenu.addAction(MergeCases)
+
             # Case Remove
             CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
             CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
@@ -6438,6 +6452,148 @@ class Window(QMainWindow):
             CasesRightClickMenu.addAction(CasesDetail)
 
             CasesRightClickMenu.popup(CasesWidgetPos)
+
+    # Merge Cases
+    def MergeCasesDialog(self, CasesItemName):
+        MergeCasesDialog = QDialog()
+        MergeCasesDialog.setWindowTitle("Merge Cases")
+        MergeCasesDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        MergeCasesDialog.setParent(self)
+        MergeCasesDialog.setAttribute(Qt.WA_DeleteOnClose)
+        MergeCasesDialog.setWindowFlags(Qt.WindowCloseButtonHint)
+        MergeCasesDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Case Name Label
+        CaseNameLabel = QLabel(MergeCasesDialog)
+        CaseNameLabel.setGeometry(MergeCasesDialog.width() * 0.2,
+                                  MergeCasesDialog.height() * 0.1,
+                                  MergeCasesDialog.width() / 5,
+                                  MergeCasesDialog.height() / 15)
+        CaseNameLabel.setText("Case Name")
+        self.LabelSizeAdjustment(CaseNameLabel)
+
+        # Case Name LineEdit
+        CaseNameLineEdit = QLineEdit(MergeCasesDialog)
+        CaseNameLineEdit.setGeometry(MergeCasesDialog.width() * 0.5,
+                                     MergeCasesDialog.height() * 0.1,
+                                     MergeCasesDialog.width() * 0.3,
+                                     MergeCasesDialog.height() / 15)
+        self.LineEditSizeAdjustment(CaseNameLineEdit)
+
+        # Cases List View
+        ListModel = QStandardItemModel()
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.text(0):
+                for cases in DS.CasesList:
+                    if not cases.MergedCase:
+                        item = QStandardItem(cases.CaseTopic)
+                        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                        item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
+                        ListModel.appendRow(item)
+
+        CasesListView = QListView(MergeCasesDialog)
+        CasesListView.setGeometry(MergeCasesDialog.width() * 0.2,
+                                  MergeCasesDialog.height() * 0.2,
+                                  MergeCasesDialog.width() * 0.6,
+                                  MergeCasesDialog.height() / 2)
+        CasesListView.setModel(ListModel)
+
+
+        MergeCasesbuttonBox = QDialogButtonBox(MergeCasesDialog)
+        MergeCasesbuttonBox.setGeometry(MergeCasesDialog.width() * 0.5,
+                                        MergeCasesDialog.height() * 0.8,
+                                        MergeCasesDialog.width() / 3,
+                                        MergeCasesDialog.height() / 15)
+        MergeCasesbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        MergeCasesbuttonBox.button(QDialogButtonBox.Ok).setText('Merge')
+        MergeCasesbuttonBox.button(QDialogButtonBox.Ok).setDisabled(True)
+        self.LineEditSizeAdjustment(MergeCasesbuttonBox)
+
+        CaseNameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(MergeCasesbuttonBox, True))
+
+        MergeCasesbuttonBox.accepted.connect(MergeCasesDialog.accept)
+        MergeCasesbuttonBox.rejected.connect(MergeCasesDialog.reject)
+
+        MergeCasesbuttonBox.accepted.connect(lambda: self.MergeCases(CasesItemName, CaseNameLineEdit.text(), ListModel))
+
+        MergeCasesDialog.exec_()
+
+    def MergeCases(self, CasesItemName, MergeCaseName, ListModel):
+        try:
+            SingleSelectionInListError = False
+
+            CheckedCasesList = []
+
+            for listRow in range(ListModel.rowCount()):
+                dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
+
+                for object in dummyList:
+                    if object.checkState() == 2:
+                        CheckedCasesList.append(object.text())
+
+            if len(CheckedCasesList) < 2:
+                SingleSelectionInListError = True
+
+            if not SingleSelectionInListError:
+                MergeCaseNameDuplicateError = False
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
+                        for cases in DS.CasesList:
+                            if cases.CaseTopic == MergeCaseName:
+                                MergeCaseNameDuplicateError = True
+                                break
+
+                if not MergeCaseNameDuplicateError:
+                    # Creating New Case (MergeCase)
+                    NewCase = Cases(MergeCaseName, 0)
+                    NewCase.setMergeCaseFlag()
+
+                    DS.CasesList.append(NewCase)
+
+                    # Setting Parent of Cases
+                    for CheckedCases in CheckedCasesList:
+                        for cases in DS.CasesList:
+                            if cases.CaseTopic == CheckedCases:
+                                cases.setParentCase(NewCase)
+
+                    # Removing All Child
+                    while CasesItemName.childCount() != 0:
+                        CasesItemName.removeChild(CasesItemName.child(0))
+
+
+                    for cases in DS.CasesList:
+                        if cases.MergedCase:
+                            DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
+                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                            DSMergeCaseWidget.setExpanded(True)
+
+                            for childCases in DS.CasesList:
+                                if cases in childCases.ParentCaseList:
+                                    DSChildCaseNode = QTreeWidgetItem(DSMergeCaseWidget)
+                                    DSChildCaseNode.setText(0, childCases.CaseTopic)
+                                    DSChildCaseNode.setToolTip(0, DSChildCaseNode.text(0))
+
+                        elif len(cases.ParentCaseList) == 0:
+                            DSCaseWidget = QTreeWidgetItem(CasesItemName)
+                            DSCaseWidget.setText(0, cases.CaseTopic)
+                            DSCaseWidget.setToolTip(0, DSCaseWidget.text(0))
+
+
+                else:
+                    MergeCaseNameDuplicateErrorBox = QMessageBox.critical(self, "A Case with a similar",
+                                                                          "A Case with a similar Name Exists! Please Try a different Name",
+                                                                          QMessageBox.Ok)
+            else:
+                SingleSelectionInListErrorBox = QMessageBox.critical(self, "Selection Error",
+                                                                    "Please Select More than one cases from the list to merge",
+                                                                    QMessageBox.Ok)
+
+
+        except Exception as e:
+            print(str(e))
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):

@@ -35,6 +35,13 @@ import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet,
 #PDF, Word, Twitter
 import docx2txt, PyPDF2, tweepy
 
+#Audio
+import wave
+#from pydub import AudioSegment
+#from pydub.silence import split_on_silence
+from ffmpeg import *
+import speech_recognition as sr
+
 #Youtube
 from Youtube.KeyWord import *
 from Youtube.URL import *
@@ -310,7 +317,32 @@ class DataSource():
     def AudioDataSource(self):
         try:
             self.DataSourceLoadError = False
+
+            if str(self.DataSourcePath).lower().endswith('.mp3'):
+                self.converttowav(self.DataSourcePath)
+                self.ConvertedAudioPath = os.getcwd() + "\CAudio.wav"
+
+            r = sr.Recognizer()
+
+            if str(self.DataSourcePath).lower().endswith('.wav'):
+                hellow = sr.AudioFile(self.DataSourcePath)
+            else:
+                hellow = sr.AudioFile(self.ConvertedAudioPath)
+
+            with hellow as source:
+                audioX = r.record(source)
+
+            try:
+                self.DataSourcetext = r.recognize_wit(audioX, "DE4XGSVUN6PC3L3TWBSR7XIIKXGBYSVI")
+                print(self.DataSourcetext)
+            except Exception as e:
+                print(str(e))
+
+            if str(self.DataSourcePath).lower().endswith('.mp3'):
+                os.remove(self.ConvertedAudioPath)
+
         except Exception as e:
+            print(str(e))
             self.DataSourceLoadError = True
             DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
                                                           "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
@@ -322,6 +354,12 @@ class DataSource():
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
+
+    def converttowav(self, audiopath):
+        os.environ["PATH"] += os.pathsep + 'ffmpeg/bin/'
+        audiotowav = AudioSegment.from_mp3(audiopath)
+        audiotowav.export(os.getcwd() + "\CAudio.wav", format="wav")
+
 
     # Image File
     def ImageDataSource(self):
@@ -445,25 +483,30 @@ class DataSource():
                                                QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
-            self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
+            self.DataSourceForbiddenLoadError = False
+            try:
+                self.DataSourceHTML = urllib.request.urlopen(self.DataSourcePath).read()
+            except urllib.error.HTTPError as e:
+                self.DataSourceForbiddenLoadError = True
 
-            soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
+            if not self.DataSourceForbiddenLoadError:
+                soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
 
-            # kill all script and style elements
-            for script in soup(["script", "style"]):
-                script.extract()  # rip it out
+                # kill all script and style elements
+                for script in soup(["script", "style"]):
+                    script.extract()  # rip it out
 
-            # get text
-            text = soup.get_text()
+                # get text
+                text = soup.get_text()
 
-            # break into lines and remove leading and trailing space on each
-            lines = (line.strip() for line in text.splitlines())
-            # break multi-headlines into a line each
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            # drop blank lines
-            text = '\n'.join(chunk for chunk in chunks if chunk)
+                # break into lines and remove leading and trailing space on each
+                lines = (line.strip() for line in text.splitlines())
+                # break multi-headlines into a line each
+                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                # drop blank lines
+                text = '\n'.join(chunk for chunk in chunks if chunk)
 
-            self.DataSourcetext = text
+                self.DataSourcetext = text
 
     # Twitter Tweet
     def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
@@ -589,19 +632,8 @@ class DataSource():
 
     # Create Case
     def CreateCase(self, CaseTopic, selectedText):
-        self.CasesNameConflict = False
-
-        for cases in self.CasesList:
-            if cases.CaseTopic == CaseTopic:
-                self.CasesNameConflict = True
-
-        if not self.CasesNameConflict:
-            self.CasesList.append(Cases(CaseTopic, len(self.DataSourcetext)))
-            self.AddtoCase(CaseTopic, selectedText)
-        else:
-            QMessageBox.information(self.MainWindow, "Creation Error",
-                                    "A Case with that Topic is already created",
-                                    QMessageBox.Ok)
+        self.CasesList.append(Cases(CaseTopic, len(self.DataSourcetext)))
+        self.AddtoCase(CaseTopic, selectedText)
 
     # Add to Case
     def AddtoCase(self, CaseTopic, SelectedText):

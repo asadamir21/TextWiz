@@ -65,26 +65,13 @@ class OpenWindow(QFileDialog):
         self.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         if flag == 0:
-            home = os.path.join(os.path.expanduser('~'), 'Documents')
-
-            if os.path.isdir(home):
-                self.filepath =  self.getOpenFileNames(self, title, home, ext)
+            self.filepath =  self.getOpenFileNames(self, title, "", ext)
         elif flag == -1:
-            home = os.path.join(os.path.expanduser('~'), 'Documents')
-
-            if os.path.isdir(home):
-                self.filepath =  self.getOpenFileName(self, title, home, ext)
+            self.filepath =  self.getOpenFileName(self, title, "", ext)
         elif flag == 1:
-            home = os.path.join(os.path.expanduser('~'), 'Pictures')
-
-            if os.path.isdir(home):
-                self.filepath = self.getSaveFileName(self, title, home, ext)
-
+            self.filepath = self.getSaveFileName(self, title, "", ext)
         elif flag == 2:
-            home = os.path.join(os.path.expanduser('~'), 'Pictures')
-
-            if os.path.isdir(home):
-                self.filepath = self.getOpenFileNames(self, title, home, ext)
+            self.filepath = self.getOpenFileNames(self, title, "", ext)
 
     def __del__(self):
         self.delete = True
@@ -1107,15 +1094,16 @@ class Window(QMainWindow):
                 DataSourceAddImage.triggered.connect(lambda: self.DataSourceAddImage(DataSourceWidgetItemName))
                 DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
-            # Data Source Create Cases
-            DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
-            DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
-            DataSourceRightClickMenu.addAction(DataSourceCreateCases)
+            if DS.DataSourceext != "URL" and DS.DataSourceext !=  'Tweet' and DS.DataSourceext !=  'Youtube' and DS.DataSourcetext != "CSV" :
+                # Data Source Create Cases
+                DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
+                DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceCreateCases)
 
-            # Data Source Create Sentiments
-            DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
-            DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
-            DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
+                # Data Source Create Sentiments
+                DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
+                DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
 
             # Data Source Rename
             DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
@@ -3897,25 +3885,39 @@ class Window(QMainWindow):
 
     # Case Create Click
     def CreateCaseClick(self, CaseTopic, selectedText, DataSourceWidgetItemName):
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+        if CaseTopic != DataSourceWidgetItemName.text(0):
+            CasesNameConflict = False
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CaseTopic:
+                            CasesNameConflict = True
+                            break
+
+            if not CasesNameConflict:
                 DS.CreateCase(CaseTopic, selectedText)
-                break
+                if (len(DS.CasesList) == 1):
+                    DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
+                    DSCaseWidget.setText(0, DS.DataSourceName)
+                    DSCaseWidget.setExpanded(True)
 
-        if not DS.CasesNameConflict:
-            if (len(DS.CasesList) == 1):
-                DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
-                DSCaseWidget.setText(0, DS.DataSourceName)
-                DSCaseWidget.setExpanded(True)
+                ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly, 0)
 
-            ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly, 0)
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, CaseTopic)
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            for widgets in ItemsWidget:
-                DSNewCaseNode = QTreeWidgetItem(widgets)
-                DSNewCaseNode.setText(0, CaseTopic)
-                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            self.CasesParentCoverageUpdate(DSNewCaseNode.parent())
+                self.CasesParentCoverageUpdate(DSNewCaseNode.parent())
+            else:
+                QMessageBox.information(self, "Creation Error",
+                                        "A Case with that Topic is already created",
+                                        QMessageBox.Ok)
+        else:
+            QMessageBox.critical(self, "Case Name Error",
+                                "Case cannot have the same Name as its Data Source",
+                                 QMessageBox.Ok)
 
     # Add to Case onClick
     def AddtoCaseDialog(self, selectedText, DataSourceWidgetItemName):
@@ -4799,7 +4801,7 @@ class Window(QMainWindow):
 
             # Data Source Word Count LineEdit
             DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
             DataSourceWordCountLineEdit.setReadOnly(True)
             DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                     DataSourceWidgetDetailDialogBox.height() * 0.8,
@@ -4981,7 +4983,7 @@ class Window(QMainWindow):
 
                 # Data Source Word Count LineEdit
                 DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+                DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
                 DataSourceWordCountLineEdit.setReadOnly(True)
                 DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                         DataSourceWidgetDetailDialogBox.height() * 0.8,
@@ -5058,7 +5060,7 @@ class Window(QMainWindow):
 
                 # Data Source Word Count LineEdit
                 DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+                DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
                 DataSourceWordCountLineEdit.setReadOnly(True)
                 DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                         DataSourceWidgetDetailDialogBox.height() * 0.55,
@@ -5142,7 +5144,7 @@ class Window(QMainWindow):
 
             # Data Source Word Count LineEdit
             DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext)))
+            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
             DataSourceWordCountLineEdit.setReadOnly(True)
             DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
@@ -6375,85 +6377,108 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Query
     def CasesTreeWidgetContextMenu(self, CasesItemName, CasesWidgetPos):
-        # Parent Data Source
-        if CasesItemName.parent() == None:
-            CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+        try:
+            # Parent Data Source
+            if CasesItemName.parent() == None:
+                CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-            # Cases Expand
-            CasesExpand = QAction('Expand', self.CasesTreeWidget)
-            CasesExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
-            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
-                CasesExpand.setDisabled(True)
+                # Cases Expand
+                CasesExpand = QAction('Expand', self.CasesTreeWidget)
+                CasesExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
+                if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
+                    CasesExpand.setDisabled(True)
+                else:
+                    CasesExpand.setDisabled(False)
+                CasesRightClickMenu.addAction(CasesExpand)
+
+                # Cases Collapse
+                CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
+                CasesCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
+                if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
+                    CasesCollapse.setDisabled(True)
+                else:
+                    CasesCollapse.setDisabled(False)
+                CasesRightClickMenu.addAction(CasesCollapse)
+
+                # Cases Coverage
+                CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
+                CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
+                CasesRightClickMenu.addAction(CasesCoverage)
+
+                # Merge Cases
+                MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
+                MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
+
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
+                        if len(DS.CasesList) > 1:
+                            MergeCases.setDisabled(False)
+                        else:
+                            MergeCases.setDisabled(True)
+
+                CasesRightClickMenu.addAction(MergeCases)
+
+                # Case Remove
+                CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
+                CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
+                CasesRightClickMenu.addAction(CasesParentRemove)
+
+                # Cases Detail
+                CasesDetail = QAction('Details', self.CasesTreeWidget)
+                CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
+                CasesRightClickMenu.addAction(CasesDetail)
+                CasesRightClickMenu.popup(CasesWidgetPos)
+
+            # Child DataSource
             else:
-                CasesExpand.setDisabled(False)
-            CasesRightClickMenu.addAction(CasesExpand)
+                MergeCaseFlag = False
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.parent().text(0):
+                        for cases in DS.CasesList:
+                            if cases.CaseTopic == CasesItemName.text(0):
+                                if cases.MergedCase:
+                                    MergeCaseFlag = True
 
-            # Cases Collapse
-            CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
-            CasesCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
-            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
-                CasesCollapse.setDisabled(True)
-            else:
-                CasesCollapse.setDisabled(False)
-            CasesRightClickMenu.addAction(CasesCollapse)
+                if MergeCaseFlag:
+                    CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-            # Cases Coverage
-            CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
-            CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
-            CasesRightClickMenu.addAction(CasesCoverage)
+                    # Case Rename
+                    CasesRename = QAction('Rename', self.CasesTreeWidget)
+                    CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
+                    CasesRightClickMenu.addAction(CasesRename)
 
-            # Merge Cases
-            MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
-            MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
+                    CasesRightClickMenu.popup(CasesWidgetPos)
 
+                else:
+                    CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.text(0):
-                    if len(DS.CasesList) > 1:
-                        MergeCases.setDisabled(False)
-                    else:
-                        MergeCases.setDisabled(True)
+                    # Case Show components
+                    CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
+                    CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
+                    CasesRightClickMenu.addAction(CasesShowTopicText)
 
-            CasesRightClickMenu.addAction(MergeCases)
+                    # Case Rename
+                    CasesRename = QAction('Rename', self.CasesTreeWidget)
+                    CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
+                    CasesRightClickMenu.addAction(CasesRename)
 
-            # Case Remove
-            CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
-            CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
-            CasesRightClickMenu.addAction(CasesParentRemove)
+                    # Case Remove
+                    CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
+                    CasesChildRemove.triggered.connect(lambda: self.CasesChildRemoveDialog(CasesItemName))
+                    CasesRightClickMenu.addAction(CasesChildRemove)
 
-            # Cases Detail
-            CasesDetail = QAction('Details', self.CasesTreeWidget)
-            CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
-            CasesRightClickMenu.addAction(CasesDetail)
-            CasesRightClickMenu.popup(CasesWidgetPos)
+                    # Case Child Detail
+                    CasesDetail = QAction('Details', self.CasesTreeWidget)
+                    CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
+                    CasesRightClickMenu.addAction(CasesDetail)
 
-        # Child DataSource
-        else:
-            CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+                    CasesRightClickMenu.popup(CasesWidgetPos)
 
-            # Case Show components
-            CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
-            CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
-            CasesRightClickMenu.addAction(CasesShowTopicText)
+        except Exception as e:
+            print(str(e))
 
-            # Case Rename
-            CasesRename = QAction('Rename', self.CasesTreeWidget)
-            CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
-            CasesRightClickMenu.addAction(CasesRename)
-
-            # Case Remove
-            CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
-            CasesChildRemove.triggered.connect(lambda: self.CasesChildRemoveDialog(CasesItemName))
-            CasesRightClickMenu.addAction(CasesChildRemove)
-
-            # Case Child Detail
-            CasesDetail = QAction('Details', self.CasesTreeWidget)
-            CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
-            CasesRightClickMenu.addAction(CasesDetail)
-
-            CasesRightClickMenu.popup(CasesWidgetPos)
-
-    # Merge Cases
+    # Merge Cases Dailog
     def MergeCasesDialog(self, CasesItemName):
         MergeCasesDialog = QDialog()
         MergeCasesDialog.setWindowTitle("Merge Cases")
@@ -6519,33 +6544,36 @@ class Window(QMainWindow):
 
         MergeCasesDialog.exec_()
 
+    # Merge Cases
     def MergeCases(self, CasesItemName, MergeCaseName, ListModel):
-        try:
-            SingleSelectionInListError = False
+        # Check Selection in List
+        SingleSelectionInListError = False
 
-            CheckedCasesList = []
+        CheckedCasesList = []
 
-            for listRow in range(ListModel.rowCount()):
-                dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
+        for listRow in range(ListModel.rowCount()):
+            dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
 
-                for object in dummyList:
-                    if object.checkState() == 2:
-                        CheckedCasesList.append(object.text())
+            for object in dummyList:
+                if object.checkState() == 2:
+                    CheckedCasesList.append(object.text())
 
-            if len(CheckedCasesList) < 2:
-                SingleSelectionInListError = True
+        if len(CheckedCasesList) < 2:
+            SingleSelectionInListError = True
 
-            if not SingleSelectionInListError:
-                MergeCaseNameDuplicateError = False
+        if not SingleSelectionInListError:
+            # Check Merge Case Name
+            MergeCaseNameDuplicateError = False
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == CasesItemName.text(0):
-                        for cases in DS.CasesList:
-                            if cases.CaseTopic == MergeCaseName:
-                                MergeCaseNameDuplicateError = True
-                                break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == MergeCaseName:
+                            MergeCaseNameDuplicateError = True
+                            break
 
-                if not MergeCaseNameDuplicateError:
+            if not MergeCaseNameDuplicateError:
+                if  MergeCaseName != CasesItemName.text(0):
                     # Creating New Case (MergeCase)
                     NewCase = Cases(MergeCaseName, 0)
                     NewCase.setMergeCaseFlag()
@@ -6562,7 +6590,7 @@ class Window(QMainWindow):
                     while CasesItemName.childCount() != 0:
                         CasesItemName.removeChild(CasesItemName.child(0))
 
-
+                    # Setting All Child
                     for cases in DS.CasesList:
                         if cases.MergedCase:
                             DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
@@ -6581,19 +6609,19 @@ class Window(QMainWindow):
                             DSCaseWidget.setText(0, cases.CaseTopic)
                             DSCaseWidget.setToolTip(0, DSCaseWidget.text(0))
 
-
                 else:
-                    MergeCaseNameDuplicateErrorBox = QMessageBox.critical(self, "A Case with a similar",
-                                                                          "A Case with a similar Name Exists! Please Try a different Name",
-                                                                          QMessageBox.Ok)
+                    QMessageBox.critical(self, "Case Name Error",
+                                         "Case cannot have the same Name as its Data Source",
+                                         QMessageBox.Ok)
+
             else:
-                SingleSelectionInListErrorBox = QMessageBox.critical(self, "Selection Error",
-                                                                    "Please Select More than one cases from the list to merge",
-                                                                    QMessageBox.Ok)
-
-
-        except Exception as e:
-            print(str(e))
+                QMessageBox.critical(self, "Case Name Error",
+                                     "A Case with a similar Name Exists! Please Try a different Name",
+                                     QMessageBox.Ok)
+        else:
+            QMessageBox.critical(self, "Selection Error",
+                                 "Please Select More than one cases from the list to merge",
+                                 QMessageBox.Ok)
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
@@ -6837,8 +6865,14 @@ class Window(QMainWindow):
     def CasesShowTopicComponent(self, CasesItemName):
         CaseShowComponentTabFlag = False
 
+        dummyParent = CasesItemName.parent()
+
+        while dummyParent != None:
+            tempParent = dummyParent
+            dummyParent = dummyParent.parent()
+
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == CasesItemName.parent().text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0):
+            if tabs.DataSourceName == tempParent.text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0):
                 CaseShowComponentTabFlag = True
                 break
 
@@ -6858,7 +6892,7 @@ class Window(QMainWindow):
         CaseNameLabel.setGeometry(0, 0,
                                   CaseShowComponentTabVerticalLayoutWidget.width(),
                                   CaseShowComponentTabVerticalLayoutWidget.height())
-        CaseNameLabel.setText(CasesItemName.parent().text(0) + '\n' + CasesItemName.text(0))
+        CaseNameLabel.setText(CasesItemName.text(0))
         CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
         CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
 
@@ -6891,7 +6925,7 @@ class Window(QMainWindow):
                 QFont(CaseShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceName == CasesItemName.parent().text(0):
+            if DS.DataSourceName == tempParent.text(0):
                 for cases in DS.CasesList:
                     if cases.CaseTopic == CasesItemName.text(0):
                         Case_List = cases.TopicCases
@@ -6934,7 +6968,7 @@ class Window(QMainWindow):
 
         else:
             # Adding Word Cloud Tab to QTabWidget
-            dummyTab = Tab("Case Show Topic Component", CaseShowComponentTab, CasesItemName.parent().text(0))
+            dummyTab = Tab("Case Show Topic Component", CaseShowComponentTab, tempParent.text(0))
             dummyTab.setTabCase(CasesItemName.text(0))
             myFile.TabList.append(dummyTab)
 
@@ -7021,8 +7055,14 @@ class Window(QMainWindow):
     def CRename(self, CasesItemName, CaseName):
         CaseRenameCheck = False
 
+        dummyParent = CasesItemName.parent()
+
+        while dummyParent != None:
+            tempParent = dummyParent
+            dummyParent = dummyParent.parent()
+
         for DS in myFile.DataSourceList:
-            if DS.DataSourceName == CasesItemName.parent().text(0):
+            if DS.DataSourceName == tempParent.text(0):
                 for case in DS.CasesList:
                     if case.CaseTopic == CaseName:
                         CaseRenameCheck = True
@@ -7030,7 +7070,7 @@ class Window(QMainWindow):
 
         if not CaseRenameCheck:
             for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.parent().text(0):
+                if DS.DataSourceName == tempParent.text(0):
                     for case in DS.CasesList:
                         if case.CaseTopic == CasesItemName.text(0):
                             case.CaseTopic = CaseName
@@ -7039,9 +7079,13 @@ class Window(QMainWindow):
             CasesItemName.setText(0, CaseName)
             CasesItemName.setToolTip(0, CasesItemName.text(0))
 
-            CasesRenameSuccessBox = QMessageBox.Information(self, "Rename Success", "Case Rename Successfully!", QMessageBox.Ok)
+            QMessageBox.information(self, "Rename Success",
+                                    "Case Rename Successfully!",
+                                    QMessageBox.Ok)
         else:
-            CasesRenameSuccessBox = QMessageBox.Critical(self, "Rename Error", "A Case with Similar Name Exist!",QMessageBox.Ok)
+            QMessageBox.critical(self, "Rename Error",
+                                 "A Case with Similar Name Exist!",
+                                 QMessageBox.Ok)
 
     # Cases Remove Dialog
     def CasesChildRemoveDialog(self, CasesItemName):
@@ -8443,40 +8487,54 @@ class Window(QMainWindow):
 
     # Import From URL
     def ImportFromURL(self, URL):
-        dummyDataSource = DataSource(URL, "URL", self)
-        DataSourceNameCheck = False
+        try:
+            dummyDataSource = DataSource(URL, "URL", self)
+            DataSourceNameCheck = False
 
-        for DS in myFile.DataSourceList:
-            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                DataSourceNameCheck = True
+            for DS in myFile.DataSourceList:
+                if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                    DataSourceNameCheck = True
 
-        if not DataSourceNameCheck:
-            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                myFile.setDataSources(dummyDataSource)
-                newNode = QTreeWidgetItem(self.WebTreeWidget)
-                newNode.setText(0, URL)
-                self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+            if not DataSourceNameCheck:
+                if not dummyDataSource.DataSourceLoadError:
+                    if not dummyDataSource.DataSourceForbiddenLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                        myFile.setDataSources(dummyDataSource)
+                        newNode = QTreeWidgetItem(self.WebTreeWidget)
+                        newNode.setText(0, URL)
+                        self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
 
-                if self.WebTreeWidget.isHidden():
-                    self.WebTreeWidget.setHidden(False)
-                    self.WebTreeWidget.setExpanded(True)
+                        if self.WebTreeWidget.isHidden():
+                            self.WebTreeWidget.setHidden(False)
+                            self.WebTreeWidget.setExpanded(True)
 
-                newNode.setToolTip(0, newNode.text(0))
-                dummyDataSource.setNode(newNode)
-                self.DataSourceSimilarityUpdate()
-                self.DataSourceDocumentClusteringUpdate()
+                        newNode.setToolTip(0, newNode.text(0))
+                        dummyDataSource.setNode(newNode)
+                        self.DataSourceSimilarityUpdate()
+                        self.DataSourceDocumentClusteringUpdate()
+                    else:
+                        if dummyDataSource.DataSourceForbiddenLoadError:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                "HTTP Error 403: Forbidden\n" +
+                                                                                dummyDataSource.DataSourceName + " is not accessible",
+                                                                                QMessageBox.Ok)
+
+                        elif dummyDataSource.DataSourcetext == 0:
+                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                                QMessageBox.Ok)
+                else:
+                    QMessageBox.critical(self, "Import Error",
+                                         "TextWiz is unable to load " + dummyDataSource.DataSourceName,
+                                         QMessageBox.Ok)
+
+                    dummyDataSource.__del__()
             else:
-                if not dummyDataSource.DataSourceLoadError and len(dummyDataSource.DataSourcetext) == 0:
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                        QMessageBox.Ok)
-
                 dummyDataSource.__del__()
-        else:
-            dummyDataSource.__del__()
-            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                   "A Web Source with Similar URL Exist!",
-                                                                   QMessageBox.Ok)
+                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                       "A Web Source with Similar URL Exist!",
+                                                                       QMessageBox.Ok)
+        except Exception as e:
+            print(str(e))
 
     # Import From Youtube Window
     def ImportYoutubeWindow(self):

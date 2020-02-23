@@ -1029,7 +1029,7 @@ class Window(QMainWindow):
         #Child DataSource
         else:
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     break
 
             DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
@@ -1245,7 +1245,7 @@ class Window(QMainWindow):
             PreviewWebTabVerticalLayout.addWidget(PreviewHTMLWebPage)
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("utf-8"))
                     break
 
@@ -1305,7 +1305,7 @@ class Window(QMainWindow):
                     QFont(ShowTweetDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     rowList = DS.TweetData
                     break
 
@@ -1423,7 +1423,7 @@ class Window(QMainWindow):
                     QFont(ShowYoutubeCommentsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     rowList = DS.YoutubeData
                     break
 
@@ -1513,7 +1513,7 @@ class Window(QMainWindow):
                     QFont(ShowYoutubeCommentsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     rowList = DS.YoutubeData
                     break
 
@@ -1612,7 +1612,7 @@ class Window(QMainWindow):
         ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 image_files = DS.DataSourceImage
                 break
 
@@ -1677,7 +1677,7 @@ class Window(QMainWindow):
                 break
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 rowList = DS.CSVData
                 break
 
@@ -1825,7 +1825,7 @@ class Window(QMainWindow):
             DataSourceverticalLayout.addWidget(PDFPreviewWeb)
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
                     PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
                     break
@@ -1863,7 +1863,7 @@ class Window(QMainWindow):
             DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     WordActivex = QAxContainer.QAxWidget()
                     WordActivex.setFocusPolicy(Qt.StrongFocus)
                     #contr = WordActivex.setControl("{00460182-9E5E-11d5-B7C8-B8269041DD57}")
@@ -1911,7 +1911,7 @@ class Window(QMainWindow):
         DataSourcePreview.setContextMenuPolicy(Qt.CustomContextMenu)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 DataSourcePreview.setText(DS.DataSourcetext)
                 break
 
@@ -1939,7 +1939,7 @@ class Window(QMainWindow):
 
         if all(path):
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     DS.AddImage(path[0])
                     break
 
@@ -2810,7 +2810,7 @@ class Window(QMainWindow):
 
         if not DataSourceRenameCheck:
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     for tab in myFile.TabList:
                         if tab.DataSourceName == DS.DataSourceName:
                             tab.DataSourceName = name
@@ -3801,7 +3801,7 @@ class Window(QMainWindow):
             lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 CreateCasesPreview.setText(DS.DataSourcetext)
                 break
 
@@ -3831,7 +3831,7 @@ class Window(QMainWindow):
             CasesSelectedTextClickMenu.addAction(AddToCase)
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     if len(DS.CasesList) > 0:
                         AddToCase.setEnabled(True)
                         break
@@ -3946,7 +3946,7 @@ class Window(QMainWindow):
                                       AddtoCaseDialogBox.height() / 5)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for cases in DS.CasesList:
                     AddtoCaseComboBox.addItem(cases.CaseTopic)
                 break
@@ -3971,7 +3971,7 @@ class Window(QMainWindow):
     # Case Create Click
     def AddtoCaseClick(self, CaseTopic, selectedText, DataSourceWidgetItemName):
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for cases in DS.CasesList:
                     if cases.CaseTopic == CaseTopic:
                         cases.addtoCase(selectedText)
@@ -4017,7 +4017,7 @@ class Window(QMainWindow):
             lambda checked, index=QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 CreateSentimentsPreview.setText(DS.DataSourcetext)
                 break
 
@@ -4069,7 +4069,7 @@ class Window(QMainWindow):
                                             AddtoSentimentsDialogBox.height() / 5)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for sentiments in DS.SentimentList:
                     AddtoSentimentsComboBox.addItem(sentiments.SentimentType)
                 break
@@ -4096,7 +4096,7 @@ class Window(QMainWindow):
         NewWidgetAddFlagList = []
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for sentiments in DS.SentimentList:
                     if len(sentiments.SentimentTextList) == 0:
                         NewWidgetAddFlagList.append(True)
@@ -4107,7 +4107,7 @@ class Window(QMainWindow):
 
         if all([ v for v in NewWidgetAddFlagList]) and len(ItemsWidget) == 0:
             for DS in myFile.DataSourceList:
-                if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
                     DSSentimentWidget.setText(0, DS.DataSourceName)
                     DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
@@ -4121,7 +4121,7 @@ class Window(QMainWindow):
                             DSNewSentimentNode.setText(0, sentiments.SentimentType)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for sentiments in DS.SentimentList:
                     if sentiments.SentimentType == SentimentType:
                         sentiments.addSentiment(selectedText)
@@ -4563,58 +4563,59 @@ class Window(QMainWindow):
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
-        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
-                                                      QMessageBox.Yes | QMessageBox.No)
+        try:
+            DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
+                                                          QMessageBox.Yes | QMessageBox.No)
 
-        if DataSourceRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    if DataSourceWidgetItemName.parent().childCount() == 1:
-                        DataSourceWidgetItemName.parent().setHidden(True)
+            if DataSourceRemoveChoice == QMessageBox.Yes:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                        if DataSourceWidgetItemName.parent().childCount() == 1:
+                            DataSourceWidgetItemName.parent().setHidden(True)
 
 
-                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
-                        ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
-                        str(DataSourceWidgetItemName.parent().childCount()-1)
-                    ))
+                        DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
+                            ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
+                            str(DataSourceWidgetItemName.parent().childCount()-1)
+                        ))
 
-                    DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
+                        DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
 
-                    # Removing Queries
-                    for query in range(len(DS.QueryList)):
-                        self.QueryChildRemove(DS.QueryList[0][0])
+                        # Removing Queries
+                        for query in range(len(DS.QueryList)):
+                            self.QueryChildRemove(DS.QueryList[0][0])
 
-                    # Removing Cases
-                    for cases in DS.CasesList:
-                        ItemsWidget = self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0)
-                        for widgets in ItemsWidget:
+                        # Removing Cases
+                        for widgets in self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
                             self.CasesParentRemove(widgets)
 
-                    # Removing Queries
-                    for sentiments in range(len(DS.SentimentList)):
-                        ItemsWidget = self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0)
-                        for widgets in ItemsWidget:
+                        # Removing sentiments
+                        for widgets in self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
                             self.SentimentsRemove(widgets)
 
-                    # Removing Queries
-                    for visuals in range(len(DS.VisualizationList)):
-                        self.VisualizationChildRemove(DS.VisualizationList[0][0])
+                        # Removing Visualization
+                        for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                            while VisualTreeItems.childCount() > 0:
+                                self.VisualizationChildRemove(VisualTreeItems.child(0))
 
-                    # Removing all tabs related to Data Source
-                    for tabs in myFile.TabList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                            myFile.TabList.remove(tabs)
 
-                    myFile.DataSourceList.remove(DS)
-                    DS.__del__()
-                    break
+                        # Removing all tabs related to Data Source
+                        for tabs in myFile.TabList:
+                            if DS.DataSourceName == tabs.DataSourceName:
+                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                                myFile.TabList.remove(tabs)
 
-            self.DataSourceSimilarityUpdate()
-            self.DataSourceDocumentClusteringUpdate()
+                        myFile.DataSourceList.remove(DS)
+                        DS.__del__()
+                        break
 
-        else:
-            pass
+                self.DataSourceSimilarityUpdate()
+                self.DataSourceDocumentClusteringUpdate()
+
+            else:
+                pass
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # ************************* Data Source Child Detail *************************
@@ -4628,7 +4629,7 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setParent(self)
 
         for DS in myFile.DataSourceList:
-            if DS.DataSourceTreeWidgetItemNode == DataSourceWidgetItemName:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 break
 
         if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "CSV files (*.csv)":
@@ -7794,7 +7795,10 @@ class Window(QMainWindow):
 
         # Data Source Path LineEdit
         DataSourceNoofVisualizationLineEdit = QLineEdit(VisualizationDetailDialogBox)
-        DataSourceNoofVisualizationLineEdit.setText(str(len(DS.VisualizationList)))
+
+        for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+            DataSourceNoofVisualizationLineEdit.setText(str(VisualTreeItems.childCount()))
+
         DataSourceNoofVisualizationLineEdit.setReadOnly(True)
         DataSourceNoofVisualizationLineEdit.setGeometry(VisualizationDetailDialogBox.width() * 0.35,
                                                         VisualizationDetailDialogBox.height() * 0.6,
@@ -7962,7 +7966,7 @@ class Window(QMainWindow):
                                 self.wordTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            dummyDataSource.setNode(newNode)
+                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8006,7 +8010,7 @@ class Window(QMainWindow):
                                     self.pdfTreeWidget.setExpanded(True)
 
                                 newNode.setToolTip(0, newNode.text(0))
-                                dummyDataSource.setNode(newNode)
+                                #dummyDataSource.setNode(newNode)
 
                                 self.DataSourceSimilarityUpdate()
                                 self.DataSourceDocumentClusteringUpdate()
@@ -8051,7 +8055,7 @@ class Window(QMainWindow):
                                 self.txtTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            dummyDataSource.setNode(newNode)
+                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8094,7 +8098,7 @@ class Window(QMainWindow):
                                 self.rtfTreeWidget.setHidden(False)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            dummyDataSource.setNode(newNode)
+                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8137,7 +8141,7 @@ class Window(QMainWindow):
                                 self.audioSTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            dummyDataSource.setNode(newNode)
+                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8181,7 +8185,7 @@ class Window(QMainWindow):
                             self.ImageSTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
+                        #dummyDataSource.setNode(newNode)
 
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
@@ -8277,7 +8281,7 @@ class Window(QMainWindow):
                     self.CSVTreeWidget.setExpanded(True)
 
                 newNode.setToolTip(0, newNode.text(0))
-                dummyDataSource.setNode(newNode)
+                #dummyDataSource.setNode(newNode)
 
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
@@ -8297,7 +8301,7 @@ class Window(QMainWindow):
     def ImportTweetWindow(self):
         TweetDialog = QDialog()
         TweetDialog.setWindowTitle("Import From Twitter")
-        TweetDialog.setGeometry(self.width * 0.375, self.height * 0.375, self.width / 4, self.height / 4)
+        TweetDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width * 0.3, self.height * 0.3)
         TweetDialog.setParent(self)
         TweetDialog.setAttribute(Qt.WA_DeleteOnClose)
         TweetDialog.setWindowFlags(Qt.WindowCloseButtonHint)
@@ -8306,42 +8310,35 @@ class Window(QMainWindow):
         # Tweet HashTag Label
         TweetHashtagLabel = QLabel(TweetDialog)
         TweetHashtagLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.1,
-                                      TweetDialog.width() / 5, TweetDialog.height() / 15)
+                                      TweetDialog.width() / 5, TweetDialog.height() / 10)
         TweetHashtagLabel.setText("Hastag")
         self.LabelSizeAdjustment(TweetHashtagLabel)
 
         # Tweet Date Label
         DateLabel = QLabel(TweetDialog)
-        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.25,
-                              TweetDialog.width() / 5, TweetDialog.height() / 15)
+        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.3,
+                              TweetDialog.width() / 5, TweetDialog.height() / 10)
         DateLabel.setText("Since")
         self.LabelSizeAdjustment(DateLabel)
 
-        # Tweet Language Label
-        TweetLanguageLabel = QLabel(TweetDialog)
-        TweetLanguageLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.4,
-                                       TweetDialog.width() / 5, TweetDialog.height() / 15)
-        TweetLanguageLabel.setText("Language")
-        self.LabelSizeAdjustment(TweetLanguageLabel)
-
         # No. of Tweets Label Label
         NTweetLabel = QLabel(TweetDialog)
-        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.55,
-                                TweetDialog.width() / 5, TweetDialog.height() / 15)
+        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.5,
+                                TweetDialog.width() / 5, TweetDialog.height() / 10)
         NTweetLabel.setText("No of Tweets")
         self.LabelSizeAdjustment(NTweetLabel)
 
         # Twitter HashTag LineEdit
         TweetHashtagLineEdit = QLineEdit(TweetDialog)
         TweetHashtagLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.1,
-                                         TweetDialog.width() / 3, TweetDialog.height() / 15)
+                                         TweetDialog.width() * 0.3, TweetDialog.height() / 10)
         TweetHashtagLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.LineEditSizeAdjustment(TweetHashtagLineEdit)
 
         # Tweet Since Date
         DateCalendar = QDateEdit(TweetDialog)
-        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.25,
-                                 TweetDialog.width() / 3, TweetDialog.height() / 15)
+        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.3,
+                                 TweetDialog.width() * 0.3, TweetDialog.height() / 10)
         DateCalendar.setCalendarPopup(True)
         DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         DateCalendar.setMaximumDate(QDate(datetime.datetime.today()))
@@ -8349,20 +8346,10 @@ class Window(QMainWindow):
         DateCalendar.setDate(datetime.datetime.today())
         self.LineEditSizeAdjustment(DateCalendar)
 
-        # Tweet Language ComboBox
-        TweetLanguageComboBox = QComboBox(TweetDialog)
-        TweetLanguageComboBox.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.4,
-                                          TweetDialog.width() / 3, TweetDialog.height() / 15)
-
-        for languagecode, language in self.languages:
-            TweetLanguageComboBox.addItem(language)
-
-        self.LineEditSizeAdjustment(TweetLanguageComboBox)
-
         # Tweet No Label
         NTweetLineEdit = QDoubleSpinBox(TweetDialog)
-        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.55,
-                                   TweetDialog.width() / 3, TweetDialog.height() / 15)
+        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.5,
+                                   TweetDialog.width() * 0.3, TweetDialog.height() / 10)
         NTweetLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         NTweetLineEdit.setDecimals(0)
         NTweetLineEdit.setMinimum(10)
@@ -8371,8 +8358,8 @@ class Window(QMainWindow):
 
         # TweetDialog ButtonBox
         TweetbuttonBox = QDialogButtonBox(TweetDialog)
-        TweetbuttonBox.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.8,
-                                   TweetDialog.width() / 3, TweetDialog.height() / 15)
+        TweetbuttonBox.setGeometry(TweetDialog.width() * 0.4, TweetDialog.height() * 0.75,
+                                   TweetDialog.width() * 0.4, TweetDialog.height() / 10)
         TweetbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         TweetbuttonBox.button(QDialogButtonBox.Ok).setText('Get')
         TweetbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -8384,13 +8371,14 @@ class Window(QMainWindow):
         TweetbuttonBox.rejected.connect(TweetDialog.reject)
 
         TweetbuttonBox.accepted.connect(
-            lambda: self.ImportFromTweet(str(TweetHashtagLineEdit.text()), str(DateCalendar.text()),
-                                         TweetLanguageComboBox.currentText(), NTweetLineEdit.text()))
+            lambda: self.ImportFromTweet(str(TweetHashtagLineEdit.text()),
+                                         str(DateCalendar.text()),
+                                         NTweetLineEdit.text()))
 
         TweetDialog.exec_()
 
     # Import From Tweet
-    def ImportFromTweet(self, Hashtag, Since, language, NoOfTweet):
+    def ImportFromTweet(self, Hashtag, Since, NoOfTweet):
         dummyDataSource = DataSource(Hashtag, "Tweet", self)
         DataSourceNameCheck = False
 
@@ -8399,10 +8387,7 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            for languagecode, lang in self.languages:
-                if lang == language:
-                    dummyDataSource.TweetDataSource(Hashtag, Since, languagecode, NoOfTweet)
-                    break
+            dummyDataSource.TweetDataSource(Hashtag, Since, NoOfTweet)
 
             if not dummyDataSource.DataSourceLoadError:
                 if not dummyDataSource.DataSourceRetrieveZeroError:
@@ -8416,7 +8401,7 @@ class Window(QMainWindow):
                         self.TweetTreeWidget.setExpanded(True)
 
                     newNode.setToolTip(0, newNode.text(0))
-                    dummyDataSource.setNode(newNode)
+                    #dummyDataSource.setNode(newNode)
                     self.DataSourceSimilarityUpdate()
                 else:
                     dummyDataSource.__del__()
@@ -8508,7 +8493,7 @@ class Window(QMainWindow):
                             self.WebTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
-                        dummyDataSource.setNode(newNode)
+                        #dummyDataSource.setNode(newNode)
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
                     else:
@@ -8631,7 +8616,7 @@ class Window(QMainWindow):
                     self.YoutubeTreeWidget.setExpanded(True)
 
                 newNode.setToolTip(0, newNode.text(0))
-                dummyDataSource.setNode(newNode)
+                #dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
             else:

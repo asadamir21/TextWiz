@@ -355,11 +355,11 @@ class DataSource():
             self.DataSourceModifiedTime = time.asctime(time.localtime(st[ST_MTIME]))
             self.DataSourceChangeTime = time.asctime(time.localtime(st[ST_CTIME]))
 
+    # Audio Convert to .wav
     def converttowav(self, audiopath):
         os.environ["PATH"] += os.pathsep + 'ffmpeg/bin/'
         audiotowav = AudioSegment.from_mp3(audiopath)
         audiotowav.export(os.getcwd() + "\CAudio.wav", format="wav")
-
 
     # Image File
     def ImageDataSource(self):
@@ -509,7 +509,7 @@ class DataSource():
                 self.DataSourcetext = text
 
     # Twitter Tweet
-    def TweetDataSource(self, Hashtag, Since, Language, NoOfTweet):
+    def TweetDataSource(self, Hashtag, Since, NoOfTweet):
         try:
             self.DataSourceHashtag = Hashtag
 
@@ -590,10 +590,6 @@ class DataSource():
             YoutubeErrorBox = QMessageBox.critical(self.MainWindow, "Youtube Error",
                                                "Unable to Retrieve Comments of Key Word: " + self.DataSourcePath,
                                                QMessageBox.Ok)
-
-    # Set Node
-    def setNode(self, WidgetItemNode):
-        self.DataSourceTreeWidgetItemNode = WidgetItemNode
 
     # Summary
     def Summarize(self, Default, Criteria, Value):

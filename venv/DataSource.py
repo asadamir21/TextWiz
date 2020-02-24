@@ -66,7 +66,6 @@ class DataSource():
         self.SentimentList = []
         self.VisualizationList = []
         self.AutomaticSentimentList = []
-        self.MainWindow = MainWindow
 
         if(ext == "Doc files (*.doc *.docx)"):
             self.WordDataSource()
@@ -120,7 +119,6 @@ class DataSource():
 
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName  + " is Unable to load", QMessageBox.Ok)
 
 
         if not self.DataSourceLoadError:
@@ -141,9 +139,6 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
-                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
-                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -159,12 +154,7 @@ class DataSource():
             self.DataSourcetext = file.read();
             self.DataSourceLoadError = False
         except Exception as e:
-            print(str(e))
             self.DataSourceLoadError = True
-            self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
-                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
-                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -181,7 +171,6 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error", "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load", QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -344,9 +333,6 @@ class DataSource():
         except Exception as e:
             print(str(e))
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
-                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
-                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -376,9 +362,7 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
-                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
-                                                          QMessageBox.Ok)
+
 
         if not self.DataSourceLoadError:
             self.DataSourceSize = []
@@ -446,11 +430,7 @@ class DataSource():
             self.DataSourceLoadError = False
 
         except Exception as e:
-            print(str(e))
             self.DataSourceLoadError = True
-            DataSourceLoadErrorBox = QMessageBox.critical(self.MainWindow, "Load Error",
-                                                          "Any Error occurred. There was a Problem, the File " + self.DataSourceName + " is Unable to load",
-                                                          QMessageBox.Ok)
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)
@@ -468,19 +448,18 @@ class DataSource():
                 response.raise_for_status()
             except requests.exceptions.HTTPError as e:
                 self.DataSourceLoadError = True
-                URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
-                                                              str(e),
-                                                              QMessageBox.Ok)
+                self.DataSourceURLHTTPError = True
+                self.DataSoureURLErrorMessage = str(e)
+
         except requests.exceptions.ConnectionError as e:
             self.DataSourceLoadError = True
-            URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
-                                               "Unable to Connect to url: " + self.DataSourcePath,
-                                               QMessageBox.Ok)
+            self.DataSourceURLConnectionError = True
+            self.DataSoureURLErrorMessage = str(e)
+
         except requests.exceptions.MissingSchema as e:
             self.DataSourceLoadError = True
-            URLErrorBox = QMessageBox.critical(self.MainWindow, "URL Error",
-                                               str(e),
-                                               QMessageBox.Ok)
+            self.DataSourceURLMissingSchema = True
+            self.DataSoureURLErrorMessage = str(e)
 
         if not self.DataSourceLoadError:
             self.DataSourceForbiddenLoadError = False
@@ -568,9 +547,6 @@ class DataSource():
             self.DataSourceLoadError = False
         except Exception as e:
             self.DataSourceLoadError = True
-            YoutubeErrorBox = QMessageBox.critical(self.MainWindow, "Youtube Error",
-                                                   "Unable to Retrieve Comments from URL: " + self.DataSourcePath,
-                                                   QMessageBox.Ok)
 
     # Yotube Comments From KeyWord
     def YoutubeKeyWord(self):
@@ -581,15 +557,10 @@ class DataSource():
             self.DataSourcetext = ""
             for row in range(len(self.YoutubeData)):
                 self.DataSourcetext = self.DataSourcetext + self.YoutubeData[row][4]
-
             self.DataSourceLoadError = False
 
         except Exception as e:
             self.DataSourceLoadError = True
-            self.DataSourceLoadError = True
-            YoutubeErrorBox = QMessageBox.critical(self.MainWindow, "Youtube Error",
-                                               "Unable to Retrieve Comments of Key Word: " + self.DataSourcePath,
-                                               QMessageBox.Ok)
 
     # Summary
     def Summarize(self, Default, Criteria, Value):
@@ -617,14 +588,9 @@ class DataSource():
         blob = TextBlob(self.DataSourcetext)
         try:
             self.DataSourceTranslatedText = blob.translate(to=TranslateTo)
-            QMessageBox.information(self.MainWindow, "Translation Success",
-                                    self.DataSourceName + " is Translated Successfully!", QMessageBox.Ok)
-
             self.isTranslated = True
         except Exception as e:
             self.TranslationError = True
-            QMessageBox.critical(self.MainWindow, "Translation Error",
-                                 "An Error occurred. The language is undetectable", QMessageBox.Ok)
 
     # Create Case
     def CreateCase(self, CaseTopic, selectedText):
@@ -898,60 +864,53 @@ class DataSource():
         ax2.set_xticklabels(objects)
         ax2.set_ylabel('Case Weigthage')
 
-    # Set Query
-    def setQuery(self, QueryTreeWidgetItem, TabItem):
-        self.QueryList.append([QueryTreeWidgetItem, TabItem])
-
-    # Set Visual
-    def setVisual(self, VisualizationTreeWidgetItem, TabItem):
-        self.VisualizationList.append([VisualizationTreeWidgetItem, TabItem])
-
-    # Set Animation
-    def Animation(self, name):
-        try:
-            loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
-            loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
-
-            self.myLoadingDialog = QDialog()
-            self.myLoadingDialog.setModal(True)
-            self.myLoadingDialog.setParent(self.MainWindow)
-
-            LoadingGifMovie = QMovie()
-            LoadingGifMovie.setFileName("Loading gifs/" + name)
-
-            gifWidth = loadingGIFSprite.width
-            gifheight = loadingGIFSprite.height
-
-            self.myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
-                                             pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
-            self.myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
-            self.myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
-
-            movie_screen = QLabel()
-
-            # Make label fit the gif
-            movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            movie_screen.setAlignment(Qt.AlignCenter)
-
-            main_layout = QVBoxLayout()
-            main_layout.addWidget(movie_screen)
-
-            css = qstylizer.style.StyleSheet()
-            css.setValues(backgroundColor="transparent")
-            self.myLoadingDialog.setStyleSheet(css.toString())
-            self.myLoadingDialog.setLayout(main_layout)
-
-            # Add the QMovie object to the label
-            LoadingGifMovie.setCacheMode(QMovie.CacheAll)
-            LoadingGifMovie.setSpeed(100)
-            movie_screen.setMovie(LoadingGifMovie)
-            LoadingGifMovie.start()
-
-            self.myLoadingDialog.exec_()
-
-        except Exception as e:
-            print(str(e))
+    # # Set Animation
+    # def Animation(self, name):
+    #     try:
+    #         loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
+    #         loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
+    #
+    #         self.myLoadingDialog = QDialog()
+    #         self.myLoadingDialog.setModal(True)
+    #         self.myLoadingDialog.setParent(self.MainWindow)
+    #
+    #         LoadingGifMovie = QMovie()
+    #         LoadingGifMovie.setFileName("Loading gifs/" + name)
+    #
+    #         gifWidth = loadingGIFSprite.width
+    #         gifheight = loadingGIFSprite.height
+    #
+    #         self.myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
+    #                                          pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
+    #         self.myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
+    #         self.myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
+    #
+    #         movie_screen = QLabel()
+    #
+    #         # Make label fit the gif
+    #         movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+    #         movie_screen.setAlignment(Qt.AlignCenter)
+    #
+    #         main_layout = QVBoxLayout()
+    #         main_layout.addWidget(movie_screen)
+    #
+    #         css = qstylizer.style.StyleSheet()
+    #         css.setValues(backgroundColor="transparent")
+    #         self.myLoadingDialog.setStyleSheet(css.toString())
+    #         self.myLoadingDialog.setLayout(main_layout)
+    #
+    #         # Add the QMovie object to the label
+    #         LoadingGifMovie.setCacheMode(QMovie.CacheAll)
+    #         LoadingGifMovie.setSpeed(100)
+    #         movie_screen.setMovie(LoadingGifMovie)
+    #         LoadingGifMovie.start()
+    #
+    #         self.myLoadingDialog.exec_()
+    #
+    #     except Exception as e:
+    #         print(str(e))
 
     # Delete Object
+
     def __del__(self):
         self.DataSourceDelete = True

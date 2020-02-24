@@ -1246,7 +1246,13 @@ class Window(QMainWindow):
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("utf-8"))
+                    try:
+                        PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("utf-8"))
+                    except UnicodeDecodeError:
+                        try:
+                            PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("ISO-8859-1"))
+                        except UnicodeDecodeError:
+                            PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("ISO-8859-4"))
                     break
 
             # Adding Preview Tab to TabList
@@ -2133,14 +2139,6 @@ class Window(QMainWindow):
                 WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if DataSourceShowFrequencyTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = WordFrequencyTab
-                                break
-
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                 self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
@@ -2168,11 +2166,6 @@ class Window(QMainWindow):
                         DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Word Frequency')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                # Adding Word Frequency Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(DSNewCaseNode, WordFrequencyTab)
 
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
@@ -2342,14 +2335,6 @@ class Window(QMainWindow):
                 GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if GenerateQuestionsTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = GenerateQuestionsTab
-                                break
-
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                 self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
@@ -2379,11 +2364,6 @@ class Window(QMainWindow):
                         DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Generate Questions')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                # Adding Generate Questions Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(DSNewCaseNode, GenerateQuestionsTab)
 
                 # Adding Generate Questions Tab to QTabWidget
                 self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
@@ -2816,31 +2796,24 @@ class Window(QMainWindow):
                             tab.DataSourceName = name
 
                     # ************** updating queries *****************
-                    for query in DS.QueryList:
-                        for letter in query[0].text(0):
-                            if letter == '(':
-                                QueryName = query[0].text(0)[0: int(query[0].text(0).index(letter)) - 1]
-                                DataSourceName = query[0].text(0)[int(query[0].text(0).index(letter)) + 1: -1]
-
-                                if DataSourceName == DS.DataSourceName:
-                                    query[0].setText(0, QueryName + "(" + name + ")")
-                                    query[0].setToolTip(0, query[0].text(0))
+                    for widgets in self.QueryTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0):
+                        widgets.setText(0, name)
+                        widgets.setToolTip(0, widgets.text(0))
 
                     # ************** updating cases *****************
-                    ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
-                    for widgets in ItemsWidget:
+                    for widgets in self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0):
                         widgets.setText(0, name)
                         widgets.setToolTip(0, widgets.text(0))
 
                     # *********** updating sentiments ***************
-                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
-                    for widgets in ItemsWidget:
+                    for widgets in self.SentimentTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0):
                         widgets.setText(0, name)
                         widgets.setToolTip(0, widgets.text(0))
 
                     # ********* updating Visualizations *************
-
-                    # ************ updating Reports *****************
+                    for widgets in self.VisualizationTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0):
+                        widgets.setText(0, name)
+                        widgets.setToolTip(0, widgets.text(0))
 
                     # ************ updating File Name *****************
                     DS.DataSourceName = name
@@ -3039,14 +3012,6 @@ class Window(QMainWindow):
                 StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if DataSourceStemWordTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = StemWordTab
-                                break
-
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                 self.tabWidget.addTab(StemWordTab, tabs.TabName)
@@ -3077,11 +3042,6 @@ class Window(QMainWindow):
                         DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Stem Word')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                # Adding Stem Word Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(DSNewCaseNode, StemWordTab)
 
                 # Adding Stem Word Tab to QTabWidget
                 self.tabWidget.addTab(StemWordTab, "Stem Word")
@@ -3205,7 +3165,7 @@ class Window(QMainWindow):
         DataSourcePOSTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Part of Speech':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Parts of Speech':
                 DataSourcePOSTabFlag = True
                 break
 
@@ -3334,14 +3294,6 @@ class Window(QMainWindow):
         POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
 
         if DataSourcePOSTabFlag:
-            # change tab in query
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    for query in DS.QueryList:
-                        if query[1] == tabs.tabWidget:
-                            query[1] = POSTab
-                            break
-
             # updating tab
             self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
             self.tabWidget.addTab(POSTab, tabs.TabName)
@@ -3350,7 +3302,7 @@ class Window(QMainWindow):
 
         else:
             # Adding Part of Speech Tab to QTabWidget
-            myFile.TabList.append(Tab("Part of Speech", POSTab, DataSourceName))
+            myFile.TabList.append(Tab("Parts of Speech", POSTab, DataSourceName))
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3372,11 +3324,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Parts of Speech')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            # Adding Part of Speech Query to QueryList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(DSNewCaseNode, POSTab)
 
             # Adding Part of Speech Tab to QTabWidget
             self.tabWidget.addTab(POSTab, "Parts of Speech")
@@ -3548,14 +3495,6 @@ class Window(QMainWindow):
         DSERComboBox.currentTextChanged.connect(lambda: self.toggleERView(DSERTable, EntityHTMLWeb, DependencyHTMLWeb))
 
         if DataSourceERTabFlag:
-            # change tab in query
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    for query in DS.QueryList:
-                        if query[1] == tabs.tabWidget:
-                            query[1] = DSERTab
-                            break
-
             # updating tab
             self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
             self.tabWidget.addTab(DSERTab, tabs.TabName)
@@ -3586,11 +3525,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Entity Relationship')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            # Adding Entity Relationship Query to QueryList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(DSNewCaseNode, DSERTab)
 
             # Adding Entity Relationship Tab to QTabWidget
             self.tabWidget.addTab(DSERTab, "Entity Relationship")
@@ -3727,14 +3661,6 @@ class Window(QMainWindow):
         TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
 
         if DataSourceTotalModellingTabFlag:
-            # change tab in query
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    for query in DS.QueryList:
-                        if query[1] == tabs.tabWidget:
-                            query[1] = TopicModellingTab
-                            break
-
             # updating tab
             self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
             self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
@@ -3765,11 +3691,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Topic Modelling')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            # Adding Topic Modelling Query to QueryList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(DSNewCaseNode, TopicModellingTab)
 
             # Adding Topic Modelling Tab to QTabWidget
             self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
@@ -4326,11 +4247,6 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Summary')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            # Adding Word Frequency Query to QueryList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setQuery(DSNewCaseNode, DataSourceSummaryPreviewTab)
-
             # Adding Preview Tab to QTabWidget
             self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
             self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
@@ -4481,7 +4397,13 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceName:
                 DS.translate(langcode)
-                break
+                if DS.TranslationError:
+                    QMessageBox.critical(self, "Translation Error",
+                                         "An Error occurred. The language is undetectable", QMessageBox.Ok)
+                elif DS.isTranslated:
+                    QMessageBox.information(self, "Translation Success",
+                                            DS.DataSourceName + " is Translated Successfully!", QMessageBox.Ok)
+
 
         if not DS.TranslationError:
             DataSourceShowTranslationTabFlag = False
@@ -4510,14 +4432,6 @@ class Window(QMainWindow):
             DataSourceTranslationPreview.setText(str(DS.DataSourceTranslatedText))
 
             if DataSourceShowTranslationTabFlag:
-                # change tab in query
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        for query in DS.QueryList:
-                            if query[1] == tabs.tabWidget:
-                                query[1] = DataSourceShowTranslationTab
-                                break
-
                 # updating tab
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                 self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
@@ -4548,11 +4462,6 @@ class Window(QMainWindow):
                         DSNewCaseNode.setText(0, 'Translated Text')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                # Adding Translation Query to QueryList
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.setQuery(DSNewCaseNode, DataSourceShowTranslationTab)
-
                 # Adding Translation Tab to QTabWidget
                 self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
                 self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
@@ -4563,59 +4472,54 @@ class Window(QMainWindow):
 
     #Data Source Remove
     def DataSourceRemove(self, DataSourceWidgetItemName):
-        try:
-            DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
-                                                          QMessageBox.Yes | QMessageBox.No)
+        DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
+                                                      QMessageBox.Yes | QMessageBox.No)
 
-            if DataSourceRemoveChoice == QMessageBox.Yes:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                        if DataSourceWidgetItemName.parent().childCount() == 1:
-                            DataSourceWidgetItemName.parent().setHidden(True)
-
-
-                        DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
-                            ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
-                            str(DataSourceWidgetItemName.parent().childCount()-1)
-                        ))
-
-                        DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
-
-                        # Removing Queries
-                        for query in range(len(DS.QueryList)):
-                            self.QueryChildRemove(DS.QueryList[0][0])
-
-                        # Removing Cases
-                        for widgets in self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                            self.CasesParentRemove(widgets)
-
-                        # Removing sentiments
-                        for widgets in self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                            self.SentimentsRemove(widgets)
-
-                        # Removing Visualization
-                        for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                            while VisualTreeItems.childCount() > 0:
-                                self.VisualizationChildRemove(VisualTreeItems.child(0))
+        if DataSourceRemoveChoice == QMessageBox.Yes:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    if DataSourceWidgetItemName.parent().childCount() == 1:
+                        DataSourceWidgetItemName.parent().setHidden(True)
 
 
-                        # Removing all tabs related to Data Source
-                        for tabs in myFile.TabList:
-                            if DS.DataSourceName == tabs.DataSourceName:
-                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                myFile.TabList.remove(tabs)
+                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
+                        ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
+                        str(DataSourceWidgetItemName.parent().childCount()-1)
+                    ))
 
-                        myFile.DataSourceList.remove(DS)
-                        DS.__del__()
-                        break
+                    DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
 
-                self.DataSourceSimilarityUpdate()
-                self.DataSourceDocumentClusteringUpdate()
+                    # Removing Queries
+                    for QueryTreeItems in self.QueryTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                        self.QueryParentRemove(QueryTreeItems)
 
-            else:
-                pass
-        except Exception as e:
-            print(str(e))
+                    # Removing Cases
+                    for CasesTreeItems in self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                        self.CasesParentRemove(CasesTreeItems)
+
+                    # Removing sentiments
+                    for SentimentTreeItems in self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                        self.SentimentsRemove(SentimentTreeItems)
+
+                    # Removing Visualization
+                    for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                        self.VisualizationParentRemove(VisualTreeItems)
+
+                    # Removing all tabs related to Data Source
+                    for tabs in myFile.TabList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                            myFile.TabList.remove(tabs)
+
+                    myFile.DataSourceList.remove(DS)
+                    DS.__del__()
+                    break
+
+            self.DataSourceSimilarityUpdate()
+            self.DataSourceDocumentClusteringUpdate()
+
+        else:
+            pass
 
     # ****************************************************************************
     # ************************* Data Source Child Detail *************************
@@ -5726,11 +5630,6 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Word Cloud')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == WCDSName:
-                     DS.setVisual(DSNewCaseNode, WordCloudTab)
-
             self.tabWidget.addTab(WordCloudTab, "Word Cloud")
             self.tabWidget.setCurrentWidget(WordCloudTab)
 
@@ -5844,13 +5743,6 @@ class Window(QMainWindow):
         WordTreeWeb.setHtml(WordTreeHTML)
 
         if DataSourceWordTreeTabFlag:
-            # change tab in query
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    for visual in DS.VisualizationList:
-                        if visual[1] == tabs.tabWidget:
-                            visual[1] = DataSourceWordTreeTab
-                            break
 
             # updating tab
             self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
@@ -5861,7 +5753,6 @@ class Window(QMainWindow):
         else:
             # Adding Word Tree Tab to QTabWidget
             myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
-
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
             if len(ItemsWidget) == 0:  # if no Parent Widget
@@ -5882,11 +5773,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Word Tree')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            # Adding Word Tree Visual to VisualList
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setVisual(DSNewCaseNode, DataSourceWordTreeTab)
 
             # Adding Word Tree Tab to QTabWidget
             self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
@@ -6030,10 +5916,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Coordinate Map')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceName:
-                    DS.setVisual(DSNewCaseNode, DataSourceCoordinateMapTab)
 
             self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
             self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
@@ -6208,7 +6090,7 @@ class Window(QMainWindow):
                 QueryRightClickMenu.addAction(QueryShow)
 
                 QueryRemove = QAction('Remove', self.QueryTreeWidget)
-                QueryRemove.triggered.connect(lambda: self.QueryParentRemove(QueryItemName))
+                QueryRemove.triggered.connect(lambda: self.QueryParentRemoveDialog(QueryItemName))
                 QueryRightClickMenu.addAction(QueryRemove)
 
                 QueryRightClickMenu.popup(QueryWidgetPos)
@@ -6237,7 +6119,7 @@ class Window(QMainWindow):
 
                 # Query Remove
                 QueryRemove = QAction('Remove', self.QueryTreeWidget)
-                QueryRemove.triggered.connect(lambda: self.QueryParentRemove(QueryItemName))
+                QueryRemove.triggered.connect(lambda: self.QueryParentRemoveDialog(QueryItemName))
 
                 QueryRightClickMenu.addAction(QueryRemove)
 
@@ -6255,36 +6137,40 @@ class Window(QMainWindow):
 
             QueryRightClickMenu.popup(QueryWidgetPos)
 
-    # Remove Parent Query (Tab)
-    def QueryParentRemove(self, QueryItemName):
+    # Remove Parent Query (Tab) Dialog
+    def QueryParentRemoveDialog(self, QueryItemName):
         QueryRemoveChoice = QMessageBox.critical(self, 'Remove',
                                                         "Are you sure you want to remove this Data Source's all Queries?",
                                                          QMessageBox.Yes | QMessageBox.No)
 
         if QueryRemoveChoice == QMessageBox.Yes:
-            if QueryItemName.text(0) == 'Data Sources Similarity':
-                for tabs in myFile.TabList:
-                    if tabs.TabName == 'Data Sources Similarity':
-                        myFile.TabList.remove(tabs)
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        tabs.__del__()
-
-                self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
-
-            else:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == QueryItemName.text(0):
-                        for tabs in myFile.TabList:
-                            if tabs.DataSourceName == DS.DataSourceName:
-                                myFile.TabList.remove(tabs)
-                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                tabs.__del__()
-
-                        self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
-                        DS.QueryList.clear()
-                        break
+            self.QueryParentRemove(QueryItemName)
         else:
             pass
+
+    # Remove Parent Query (Tab)
+    def QueryParentRemove(self, QueryItemName):
+        if QueryItemName.text(0) == 'Data Sources Similarity':
+            for tabs in myFile.TabList:
+                if tabs.TabName == 'Data Sources Similarity':
+                    myFile.TabList.remove(tabs)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    tabs.__del__()
+
+            self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
+
+        else:
+            # Removing Tabs From TabWidget
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == QueryItemName.text(0):
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    tabs.__del__()
+
+            # Removing Tabs From TabList
+            myFile.TabList = [tabs for tabs in myFile.TabList if
+                              not tabs.DataSourceName == QueryItemName.text(0)]
+
+            self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
 
     # Remove Child Query (Tab) Dialog
     def QueryChildRemoveDialog(self, QueryItemName):
@@ -6300,16 +6186,11 @@ class Window(QMainWindow):
     # Remove Child Query (Tab)
     def QueryChildRemove(self, QueryItemName):
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == QueryItemName.parent().text(0):
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == tabs.DataSourceName:
-                        for query in DS.QueryList:
-                            if query[0] == QueryItemName and query[1] == tabs.tabWidget:
-                                myFile.TabList.remove(tabs)
-                                DS.QueryList.remove(query)
-                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                tabs.__del__()
-                                break
+            if tabs.DataSourceName == QueryItemName.parent().text(0) and tabs.TabName == QueryItemName.text(0):
+                myFile.TabList.remove(tabs)
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                tabs.__del__()
+                break
 
         if QueryItemName.parent().childCount() == 1:
             tempParent = QueryItemName.parent()
@@ -6329,15 +6210,11 @@ class Window(QMainWindow):
                     break
         else:
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == QueryItemName.parent().text(0):
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            for query in DS.QueryList:
-                                if query[0] == QueryItemName and query[1] == tabs.tabWidget:
-                                    if self.tabWidget.currentWidget() != tabs.tabWidget:
-                                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                                    break
+                if tabs.DataSourceName == QueryItemName.parent().text(0) and tabs.TabName == QueryItemName.text(0):
+                    if self.tabWidget.currentWidget() != tabs.tabWidget:
+                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        break
 
     # ****************************************************************************
     # *************************** Cases Context Menu *****************************
@@ -7659,7 +7536,7 @@ class Window(QMainWindow):
                 # Visualization Remove
                 VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
                 VisualizationRemove.triggered.connect(
-                    lambda: self.VisualizationParentRemove(VisualizationItemName))
+                    lambda: self.VisualizationParentRemoveDialog(VisualizationItemName))
                 VisualizationRightClickMenu.addAction(VisualizationRemove)
 
                 VisualizationRightClickMenu.popup(VisualizationWidgetPos)
@@ -7687,7 +7564,7 @@ class Window(QMainWindow):
 
                 # Visualization Remove
                 VisualizationRemove = QAction('Remove', self.VisualizationTreeWidget)
-                VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemove(VisualizationItemName))
+                VisualizationRemove.triggered.connect(lambda: self.VisualizationParentRemoveDialog(VisualizationItemName))
                 VisualizationRightClickMenu.addAction(VisualizationRemove)
 
                 # Visualization Detail
@@ -7713,35 +7590,39 @@ class Window(QMainWindow):
 
             VisualizationRightClickMenu.popup(VisualizationWidgetPos)
 
-    # Visualization Parent Remove
-    def VisualizationParentRemove(self, VisualizationItemName):
+    # Visualization Parent Remove Dialog
+    def VisualizationParentRemoveDialog(self, VisualizationItemName):
         VisualizationRemoveChoice = QMessageBox.critical(self, 'Remove',
                                                         "Are you sure you want to remove this Data Source's all Visualization?",
                                                         QMessageBox.Yes | QMessageBox.No)
 
         if VisualizationRemoveChoice == QMessageBox.Yes:
-            if VisualizationItemName.text(0) == 'Document Clustering':
-                for tabs in myFile.TabList:
-                    if tabs.TabName == 'Document Clustering':
-                        myFile.TabList.remove(tabs)
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        tabs.__del__()
-
-                self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
-            else:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == VisualizationItemName.text(0):
-                        for tabs in myFile.TabList:
-                            if tabs.DataSourceName == DS.DataSourceName:
-                                myFile.TabList.remove(tabs)
-                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                tabs.__del__()
-
-                        self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
-                        DS.VisualizationList.clear()
-                        break
+            self.VisualizationParentRemove(VisualizationItemName)
         else:
             pass
+
+    # Visualization Parent Remove
+    def VisualizationParentRemove(self, VisualizationItemName):
+        if VisualizationItemName.text(0) == 'Document Clustering':
+            for tabs in myFile.TabList:
+                if tabs.TabName == 'Document Clustering':
+                    myFile.TabList.remove(tabs)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    tabs.__del__()
+
+            self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
+        else:
+            # Removing Tabs From TabWidget
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == VisualizationItemName.text(0):
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    tabs.__del__()
+
+            # Removing Tabs From TabList
+            myFile.TabList = [tabs for tabs in myFile.TabList if
+                              not tabs.DataSourceName == VisualizationItemName.text(0)]
+
+            self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
 
     # Visualization Parent Detail
     def VisualizationDetail(self, VisualizationItemName):
@@ -7823,16 +7704,11 @@ class Window(QMainWindow):
     # Visualization Child Remove
     def VisualizationChildRemove(self, VisualizationItemName):
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == VisualizationItemName.parent().text(0):
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == tabs.DataSourceName:
-                        for visual in DS.VisualizationList:
-                            if visual[0] == VisualizationItemName and visual[1] == tabs.tabWidget:
-                                myFile.TabList.remove(tabs)
-                                DS.VisualizationList.remove(visual)
-                                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                                tabs.__del__()
-                                break
+            if tabs.DataSourceName == VisualizationItemName.parent().text(0) and tabs.TabName == VisualizationItemName.text(0):
+                myFile.TabList.remove(tabs)
+                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                tabs.__del__()
+                break
 
         if VisualizationItemName.parent().childCount() == 1:
             tempParent = VisualizationItemName.parent()
@@ -7852,15 +7728,11 @@ class Window(QMainWindow):
                     break
         else:
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == VisualizationItemName.parent().text(0):
-                    for DS in myFile.DataSourceList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            for visuals in DS.VisualizationList:
-                                if visuals[0] == VisualizationItemName and visuals[1] == tabs.tabWidget:
-                                    if self.tabWidget.currentWidget() != tabs.tabWidget:
-                                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                                    break
+                if tabs.DataSourceName == VisualizationItemName.parent().text(0) and tabs.TabName == VisualizationItemName.text(0):
+                    if self.tabWidget.currentWidget() != tabs.tabWidget:
+                        self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        break
 
     # ****************************************************************************
     # *********************** Application Basic Features *************************
@@ -7975,6 +7847,10 @@ class Window(QMainWindow):
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                     dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                     QMessageBox.Ok)
+                            elif dummyDataSource.DataSourceLoadError:
+                                QMessageBox.critical(self, "Load Error",
+                                                    "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                     QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
@@ -8021,6 +7897,10 @@ class Window(QMainWindow):
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                     dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                     QMessageBox.Ok)
+                            elif dummyDataSource.DataSourceLoadError:
+                                QMessageBox.critical(self, "Load Error",
+                                                    "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                     QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
@@ -8065,6 +7945,10 @@ class Window(QMainWindow):
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                 dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                 QMessageBox.Ok)
+                            elif dummyDataSource.DataSourceLoadError:
+                                QMessageBox.critical(self, "Load Error",
+                                                    "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                     QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
@@ -8107,6 +7991,10 @@ class Window(QMainWindow):
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                 dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                 QMessageBox.Ok)
+                            elif dummyDataSource.DataSourceLoadError:
+                                QMessageBox.critical(self, "Load Error",
+                                                     "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                     QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
@@ -8150,6 +8038,10 @@ class Window(QMainWindow):
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                 dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                 QMessageBox.Ok)
+                            elif dummyDataSource.DataSourceLoadError:
+                                QMessageBox.critical(self, "Load Error",
+                                                     "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                     QMessageBox.Ok)
                             dummyDataSource.__del__()
                     else:
                         dummyDataSource.__del__()
@@ -8194,6 +8086,10 @@ class Window(QMainWindow):
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                             QMessageBox.Ok)
+                        elif dummyDataSource.DataSourceLoadError:
+                            QMessageBox.critical(self, "Load Error",
+                                                 "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                                 QMessageBox.Ok)
                         dummyDataSource.__del__()
                 else:
                     dummyDataSource.__del__()
@@ -8290,6 +8186,10 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                         dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                         QMessageBox.Ok)
+                elif dummyDataSource.DataSourceLoadError:
+                    QMessageBox.critical(self, "Load Error",
+                                         "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                         QMessageBox.Ok)
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()
@@ -8507,11 +8407,11 @@ class Window(QMainWindow):
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                                 dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                                 QMessageBox.Ok)
-                else:
-                    QMessageBox.critical(self, "Import Error",
-                                         "TextWiz is unable to load " + dummyDataSource.DataSourceName,
-                                         QMessageBox.Ok)
-
+                elif dummyDataSource.DataSourceLoadError:
+                    if hasattr(dummyDataSource, "DataSourceURLHTTPError") or hasattr(dummyDataSource, "DataSourceURLConnectionError") or hasattr(dummyDataSource, "DataSourceURLMissingSchema"):
+                        QMessageBox.critical(self, "URL Error",
+                                             dummyDataSource.DataSoureURLErrorMessage,
+                                             QMessageBox.Ok)
                     dummyDataSource.__del__()
             else:
                 dummyDataSource.__del__()
@@ -8619,17 +8519,28 @@ class Window(QMainWindow):
                 #dummyDataSource.setNode(newNode)
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
-            else:
-                if len(dummyDataSource.YoutubeData) == 0:
-                    if VideoURLCheck:
-                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                            "No Youtube comment Retreive From the URL: " + URL,
-                                                                            QMessageBox.Ok)
-                    else:
-                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                            "No comment Retreive of Key Word: " + KeyWord,
-                                                                            QMessageBox.Ok)
+
+            elif len(dummyDataSource.YoutubeData) == 0:
+                if VideoURLCheck:
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "No Youtube comment Retreive From the URL: " + URL,
+                                                                        QMessageBox.Ok)
+                else:
+                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                        "No comment Retreive of Key Word: " + KeyWord,
+                                                                        QMessageBox.Ok)
                 dummyDataSource.__del__()
+
+            elif dummyDataSource.DataSourceLoadError:
+                if VideoURLCheck:
+                    QMessageBox.critical(self, "Youtube Error",
+                                        "Unable to Retrieve Comments from URL: " + dummyDataSource.DataSourcePath,
+                                         QMessageBox.Ok)
+                else:
+                    QMessageBox.critical(self, "Youtube Error",
+                                         "Unable to Retrieve Comments of Key Word: " + dummyDataSource.DataSourcePath,
+                                         QMessageBox.Ok)
+
         else:
             dummyDataSource.__del__()
 

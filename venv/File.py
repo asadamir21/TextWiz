@@ -5,10 +5,6 @@ from sklearn.cluster import KMeans
 import pandas as pd
 from scipy.cluster.hierarchy import ward, dendrogram, linkage
 import sys
-from PyQt5.QtWidgets import QWidget, QMainWindow, QApplication, QSizePolicy, QVBoxLayout, QPushButton
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QCursor
-
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from DataSource import *
@@ -159,9 +155,7 @@ class MyMplCanvas(FigureCanvas):
 
         FigureCanvas.__init__(self, fig)
 
-        FigureCanvas.setSizePolicy(self,
-                                   QSizePolicy.Expanding,
-                                   QSizePolicy.Expanding)
+        #FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
 class MyStaticMplCanvas(MyMplCanvas):

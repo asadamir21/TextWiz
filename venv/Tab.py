@@ -4,6 +4,10 @@ class Tab():
         self.TabName = tabName
         self.tabWidget = tabWidget
         self.DataSourceName = DataSourceName
+        self.isActive = True
+
+    def setisActive(self, Flag):
+        self.isActive = Flag
 
     def setTabCase(self, TabCase):
         self.tabCase = TabCase

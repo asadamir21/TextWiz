@@ -10,11 +10,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtChart import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-
 from Query import *
 from pyglet import *
 
@@ -47,7 +42,7 @@ from Youtube.KeyWord import *
 from Youtube.URL import *
 
 class DataSource():
-    def __init__(self, path, ext, MainWindow):
+    def __init__(self, path, ext):
         super().__init__()
         self.DataSourcePath = path
 
@@ -409,30 +404,35 @@ class DataSource():
                 self.DataSourceChangeTime.append(time.asctime(time.localtime(st[ST_CTIME])))
 
     # CSV File
-    def CSVDataSource(self, HeaderLabel):
+    def CSVDataSource(self, HeaderLabel, CSVPathFlag):
         try:
             self.CSVHeader = HeaderLabel
+            self.CSVPathFlag = CSVPathFlag
             self.CSVHeaderLabel = []
-            self.CSVReader = list(csv.reader(open(self.DataSourcePath, 'r', encoding='utf-8')))
 
             if self.CSVHeader:
-                self.CSVHeaderLabel = self.CSVReader[0]
-                self.CSVData = self.CSVReader[1:]
+                self.CSVData = pd.read_csv(self.DataSourcePath)
+                self.CSVHeaderLabel = self.CSVData.columns.tolist()
             else:
-                self.CSVData = list(csv.reader(open(self.DataSourcePath, 'r', encoding='utf-8')))
-
-                for i in range(len(self.CSVData[0])):
+                self.CSVData = pd.read_csv(self.DataSourcePath, header=None)
+                for i in range(len(self.CSVData.columns)):
                     self.CSVHeaderLabel.append("Column " + str(i + 1))
 
             for row in self.CSVData:
                 self.DataSourcetext += " ".join(row)
 
             self.DataSourceLoadError = False
+            self.DataSourceHTTPError = False
+
+        except urllib.error.HTTPError:
+            self.DataSourceHTTPError = True
+            self.DataSourceLoadError = False
 
         except Exception as e:
+            self.DataSourceHTTPError = False
             self.DataSourceLoadError = True
 
-        if not self.DataSourceLoadError:
+        if not self.DataSourceLoadError and self.CSVPathFlag:
             st = os.stat(self.DataSourcePath)
             self.DataSourceSize = st[ST_SIZE]
             self.DataSourceAccessTime = time.asctime(time.localtime(st[ST_ATIME]))

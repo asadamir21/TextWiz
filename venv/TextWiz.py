@@ -10,7 +10,8 @@ from PyQt5.QtWebEngineWidgets import *
 from PIL import  Image
 from File import *
 import humanfriendly, platform
-import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime
+import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime, copy
+
 
 class MarkerModel(QAbstractListModel):
     PositionRole, SourceRole = range(Qt.UserRole, Qt.UserRole + 2)
@@ -208,6 +209,11 @@ class Window(QMainWindow):
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
 
+        SaveASButton = QAction(QIcon("Images/Save.png"), 'Save As', self)
+        SaveASButton.setShortcut('Ctrl+S')
+        SaveASButton.setStatusTip('File Saved')
+        SaveASButton.triggered.connect(self.SaveASWindow)
+
         printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
@@ -221,6 +227,7 @@ class Window(QMainWindow):
         fileMenu.addAction(newFileButton)
         fileMenu.addAction(OpenFileButton)
         fileMenu.addAction(SaveButton)
+        fileMenu.addAction(SaveASButton)
         fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
 
@@ -689,6 +696,10 @@ class Window(QMainWindow):
 
     #Tab Close Handler
     def tabCloseHandler(self, index):
+        for tabs in myFile.TabList:
+            if tabs.tabWidget == self.tabWidget.widget(index):
+                tabs.setisActive(False)
+                break
         self.tabWidget.removeTab(index)
 
     #Find Similarity Between Data Sources
@@ -697,7 +708,7 @@ class Window(QMainWindow):
         DataSourceSimilarityTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Data Sources Similarity':
+            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Data Sources Similarity' and tabs.tabWidget != None:
                 if self.tabWidget.currentWidget() != tabs.tabWidget:
                     self.tabWidget.setCurrentWidget(tabs.tabWidget)
                 DataSourceSimilarityTabFlag = True
@@ -770,16 +781,17 @@ class Window(QMainWindow):
                         self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
                         self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                         tabs.tabWidget = DataSourcesSimilarityTab
+                        tabs.setisActive(True)
                     else:
                         self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                         self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
                         self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                         tabs.tabWidget = DataSourcesSimilarityTab
+                        tabs.setisActive(True)
 
                 else:
                     # Adding Word Cloud Tab to QTabWidget
-                    myFile.TabList.append(
-                        Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
+                    myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
 
                     # Adding Word Frequency Query
                     ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
@@ -831,7 +843,7 @@ class Window(QMainWindow):
         DataSourceDocumentClusteringTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Document Clustering':
+            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Document Clustering'  and tabs.tabWidget != None:
                 if self.tabWidget.currentWidget() != tabs.tabWidget:
                     self.tabWidget.setCurrentWidget(tabs.tabWidget)
                 DataSourceDocumentClusteringTabFlag = True
@@ -897,16 +909,17 @@ class Window(QMainWindow):
                         self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
                         self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
                         tabs.tabWidget = DataSourceDocumentClusteringTab
+                        tabs.setisActive(True)
                     else:
                         self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
                         self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
                         self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
                         tabs.tabWidget = DataSourceDocumentClusteringTab
+                        tabs.setisActive(True)
 
                 else:
                     # Adding Word Cloud Tab to QTabWidget
-                    myFile.TabList.append(
-                        Tab("Document Clustering", DataSourceDocumentClusteringTab, len(myFile.DataSourceList)))
+                    myFile.TabList.append(Tab("Document Clustering", DataSourceDocumentClusteringTab, len(myFile.DataSourceList)))
 
                     # Adding Word Frequency Query
                     ItemsWidget = self.VisualizationTreeWidget.findItems("Document Clustering", Qt.MatchExactly, 0)
@@ -998,129 +1011,132 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Data Source
     def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
-        #Parent Data Source7
-        if DataSourceWidgetItemName.parent() == None:
-            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+        try:
+            #Parent Data Source
+            if DataSourceWidgetItemName.parent() == None:
+                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-            DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
-            DataSourceExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
+                DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
+                DataSourceExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
 
-            if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
-                DataSourceExpand.setDisabled(True)
+                if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
+                    DataSourceExpand.setDisabled(True)
+                else:
+                    DataSourceExpand.setDisabled(False)
+
+                DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
+                DataSourceCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
+
+                if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
+                    DataSourceCollapse.setDisabled(True)
+                else:
+                    DataSourceCollapse.setDisabled(False)
+
+                DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
+                DataSourceDetail.triggered.connect(lambda: self.DataSourceWidgetItemDetail(DataSourceWidgetItemName))
+
+                DataSourceRightClickMenu.addAction(DataSourceExpand)
+                DataSourceRightClickMenu.addAction(DataSourceCollapse)
+                DataSourceRightClickMenu.addAction(DataSourceDetail)
+                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+
+            #Child DataSource
             else:
-                DataSourceExpand.setDisabled(False)
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                        break
 
-            DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
-            DataSourceCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
+                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-            if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
-                DataSourceCollapse.setDisabled(True)
-            else:
-                DataSourceCollapse.setDisabled(False)
+                # Data Source Preview Web Page
+                if hasattr(DS, 'DataSourceHTML'):
+                    DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
+                    DataSourcePreviewWeb.triggered.connect(lambda: self.DataSourcePreviewWeb(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
-            DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
-            DataSourceDetail.triggered.connect(lambda: self.DataSourceWidgetItemDetail(DataSourceWidgetItemName))
+                # Data Source Show Tweet Data
+                if hasattr(DS, 'TweetData'):
+                    DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
+                    DataSourceShowTweetData.triggered.connect(lambda: self.DataSourceShowTweetData(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
 
-            DataSourceRightClickMenu.addAction(DataSourceExpand)
-            DataSourceRightClickMenu.addAction(DataSourceCollapse)
-            DataSourceRightClickMenu.addAction(DataSourceDetail)
-            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+                # Youtube Show Video
+                DataSourceYoutubeShowVideo = QAction('Show Video', self.DataSourceTreeWidget)
 
-        #Child DataSource
-        else:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    break
+                if DS.DataSourceext == "Youtube" and hasattr(DS, 'YoutubeURLFlag'):
+                    DataSourceYoutubeShowVideo.triggered.connect(lambda: self.DataSourceYoutubeShowVideo(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceYoutubeShowVideo)
 
-            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+                # Data Source Show Youtube Comments
+                DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
+                if hasattr(DS, 'YoutubeURLFlag'):
+                    DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsURL(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-            # Data Source Preview Web Page
-            if hasattr(DS, 'DataSourceHTML'):
-                DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
-                DataSourcePreviewWeb.triggered.connect(lambda: self.DataSourcePreviewWeb(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
+                if hasattr(DS, 'YoutubeKeyWordFlag'):
+                    DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsKeyWord(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-            # Data Source Show Tweet Data
-            if hasattr(DS, 'TweetData'):
-                DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
-                DataSourceShowTweetData.triggered.connect(lambda: self.DataSourceShowTweetData(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
+                # Data Source View Images
+                if hasattr(DS, 'DataSourceImage'):
+                    DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
+                    DataSourceViewImages.triggered.connect(lambda: self.DataSourceViewImage(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceViewImages)
 
-            # Youtube Show Video
-            DataSourceYoutubeShowVideo = QAction('Show Video', self.DataSourceTreeWidget)
+                # Data Source View CSV Data
+                if hasattr(DS, 'CSVData'):
+                    DataSourceViewCSVData = QAction('View Data', self.DataSourceTreeWidget)
+                    DataSourceViewCSVData.triggered.connect(lambda: self.DataSourceViewCSVData(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceViewCSVData)
 
-            if DS.DataSourceext == "Youtube" and hasattr(DS, 'YoutubeURLFlag'):
-                DataSourceYoutubeShowVideo.triggered.connect(lambda: self.DataSourceYoutubeShowVideo(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceYoutubeShowVideo)
+                # Data Sources Preview
+                DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
 
-            # Data Source Show Youtube Comments
-            DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
-            if hasattr(DS, 'YoutubeURLFlag'):
-                DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsURL(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+                if DS.DataSourceext == "Pdf files (*.pdf)":
+                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePDFPreview(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+                elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourceWordPreview(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+                elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
+                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePreview(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
 
-            if hasattr(DS, 'YoutubeKeyWordFlag'):
-                DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsKeyWord(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+                # Data Source Add Image
+                if hasattr(DS, 'DataSourceImage'):
+                    DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
+                    DataSourceAddImage.triggered.connect(lambda: self.DataSourceAddImage(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
-            # Data Source View Images
-            if hasattr(DS, 'DataSourceImage'):
-                DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
-                DataSourceViewImages.triggered.connect(lambda: self.DataSourceViewImage(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceViewImages)
+                if DS.DataSourceext != "URL" and DS.DataSourceext !=  'Tweet' and DS.DataSourceext !=  'Youtube' and DS.DataSourcetext != "CSV" :
+                    # Data Source Create Cases
+                    DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
+                    DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceCreateCases)
 
-            # Data Source View CSV Data
-            if hasattr(DS, 'CSVData'):
-                DataSourceViewCSVData = QAction('View Data', self.DataSourceTreeWidget)
-                DataSourceViewCSVData.triggered.connect(lambda: self.DataSourceViewCSVData(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceViewCSVData)
+                    # Data Source Create Sentiments
+                    DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
+                    DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
+                    DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
 
-            # Data Sources Preview
-            DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
+                # Data Source Rename
+                DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
+                DataSourceRename.triggered.connect(lambda: self.DataSourceRename(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceRename)
 
-            if DS.DataSourceext == "Pdf files (*.pdf)":
-                DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePDFPreview(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-            elif DS.DataSourceext == "Doc files (*.doc *.docx)":
-                DataSourcePreviewText.triggered.connect(lambda: self.DataSourceWordPreview(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-            elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
-                DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePreview(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+                # Data Source Remove
+                DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+                DataSourceRemove.triggered.connect(lambda: self.DataSourceRemove(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceRemove)
 
-            # Data Source Add Image
-            if hasattr(DS, 'DataSourceImage'):
-                DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
-                DataSourceAddImage.triggered.connect(lambda: self.DataSourceAddImage(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceAddImage)
+                # Data Source Child Detail
+                DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+                DataSourceChildDetail.triggered.connect(lambda: self.DataSourceChildDetail(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceChildDetail)
 
-            if DS.DataSourceext != "URL" and DS.DataSourceext !=  'Tweet' and DS.DataSourceext !=  'Youtube' and DS.DataSourcetext != "CSV" :
-                # Data Source Create Cases
-                DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
-                DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceCreateCases)
-
-                # Data Source Create Sentiments
-                DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
-                DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
-
-            # Data Source Rename
-            DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
-            DataSourceRename.triggered.connect(lambda: self.DataSourceRename(DataSourceWidgetItemName))
-            DataSourceRightClickMenu.addAction(DataSourceRename)
-
-            # Data Source Remove
-            DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
-            DataSourceRemove.triggered.connect(lambda: self.DataSourceRemove(DataSourceWidgetItemName))
-            DataSourceRightClickMenu.addAction(DataSourceRemove)
-
-            # Data Source Child Detail
-            DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
-            DataSourceChildDetail.triggered.connect(lambda: self.DataSourceChildDetail(DataSourceWidgetItemName))
-            DataSourceRightClickMenu.addAction(DataSourceChildDetail)
-
-            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
+        except Exception as e:
+            print(str(e))
 
     # Label Size Adjustment
     def LabelSizeAdjustment(self, label):
@@ -1224,7 +1240,7 @@ class Window(QMainWindow):
         DataSourcePreviewWebTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Web Preview':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Web Preview' and tabs.tabWidget != None:
                 DataSourcePreviewWebTabFlag = True
                 break
 
@@ -1265,13 +1281,14 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source Show Tweet Data
     def DataSourceShowTweetData(self, DataSourceWidgetItemName):
         DataSourceShowTweetDataTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data' and tabs.tabWidget != None:
                 DataSourceShowTweetDataTabFlag = True
                 break
 
@@ -1345,13 +1362,14 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+            tabs.setisActive(True)
 
     # Data Source Youtube Show Video
     def DataSourceYoutubeShowVideo(self, DataSourceWidgetItemName):
         DataSourceYoutubeShowVideoTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Video':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Video' and tabs.tabWidget != None:
                 DataSourceYoutubeShowVideoTabFlag = True
                 break
 
@@ -1386,13 +1404,14 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsURL(self, DataSourceWidgetItemName):
         DataSourceShowYoutubeCommentsTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data' and tabs.tabWidget != None:
                 DataSourceShowYoutubeCommentsTabFlag = True
                 break
 
@@ -1473,13 +1492,14 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            tabs.setisActive(True)
 
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsKeyWord(self, DataSourceWidgetItemName):
         DataSourceShowYoutubeCommentsTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data' and tabs.tabWidget != None:
                 DataSourceShowYoutubeCommentsTabFlag = True
                 break
 
@@ -1565,126 +1585,126 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
     
     # Data Source View Images
     def DataSourceViewImage(self, DataSourceWidgetItemName):
         DataSourceShowImagesTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'View Image':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'View Image' and tabs.tabWidget != None:
                 DataSourceShowImagesTabFlag = True
                 break
 
-        ViewImageTab = QWidget()
-        ViewImageTab.setGeometry(
-            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                         self.horizontalLayoutWidget.height()))
-        ViewImageTab.setSizePolicy(self.sizePolicy)
+        if not DataSourceShowImagesTabFlag:
+            ViewImageTab = QWidget()
+            ViewImageTab.setGeometry(
+                QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                             self.horizontalLayoutWidget.height()))
+            ViewImageTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For left Button within View Image Tab
-        ViewImageTabverticalLayoutWidget1 = QWidget(ViewImageTab)
-        ViewImageTabverticalLayoutWidget1.setGeometry(0, 0, self.tabWidget.width() * 0.1, self.tabWidget.height())
-        ViewImageTabverticalLayoutWidget1.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For left Button within View Image Tab
+            ViewImageTabverticalLayoutWidget1 = QWidget(ViewImageTab)
+            ViewImageTabverticalLayoutWidget1.setGeometry(0, 0, self.tabWidget.width() * 0.1, self.tabWidget.height())
+            ViewImageTabverticalLayoutWidget1.setSizePolicy(self.sizePolicy)
 
-        # Box Layout  For left Button within View Image Tab
-        ViewImageTabverticalLayout1 = QVBoxLayout(ViewImageTabverticalLayoutWidget1)
-        ViewImageTabverticalLayout1.setContentsMargins(0, 0, 0, 0)
+            # Box Layout  For left Button within View Image Tab
+            ViewImageTabverticalLayout1 = QVBoxLayout(ViewImageTabverticalLayoutWidget1)
+            ViewImageTabverticalLayout1.setContentsMargins(0, 0, 0, 0)
 
-        LeftButton = PicButton(QPixmap('Images/Previous Image.png'))
-        ViewImageTabverticalLayout1.addWidget(LeftButton)
-        LeftButton.hide()
+            LeftButton = PicButton(QPixmap('Images/Previous Image.png'))
+            ViewImageTabverticalLayout1.addWidget(LeftButton)
+            LeftButton.hide()
 
-        # LayoutWidget For within View Image Tab
-        ViewImageTabverticalLayoutWidget = QWidget(ViewImageTab)
-        ViewImageTabverticalLayoutWidget.setGeometry(self.tabWidget.width() * 0.1, 0, self.tabWidget.width() * 0.8,
-                                                     self.tabWidget.height())
-        ViewImageTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For within View Image Tab
+            ViewImageTabverticalLayoutWidget = QWidget(ViewImageTab)
+            ViewImageTabverticalLayoutWidget.setGeometry(self.tabWidget.width() * 0.1, 0, self.tabWidget.width() * 0.8,
+                                                         self.tabWidget.height())
+            ViewImageTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For Right Button within View Image Tab
-        ViewImageTabverticalLayoutWidget2 = QWidget(ViewImageTab)
-        ViewImageTabverticalLayoutWidget2.setGeometry(self.tabWidget.width() * 0.9, 0, self.tabWidget.width() * 0.1,
-                                                      self.tabWidget.height())
-        ViewImageTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For Right Button within View Image Tab
+            ViewImageTabverticalLayoutWidget2 = QWidget(ViewImageTab)
+            ViewImageTabverticalLayoutWidget2.setGeometry(self.tabWidget.width() * 0.9, 0, self.tabWidget.width() * 0.1,
+                                                          self.tabWidget.height())
+            ViewImageTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
 
-        # Box Layout  For left Button within View Image Tab
-        ViewImageTabverticalLayout2 = QVBoxLayout(ViewImageTabverticalLayoutWidget2)
-        ViewImageTabverticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # Box Layout  For left Button within View Image Tab
+            ViewImageTabverticalLayout2 = QVBoxLayout(ViewImageTabverticalLayoutWidget2)
+            ViewImageTabverticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        RightButton = PicButton(QPixmap('Images/Next Image.png'))
-        ViewImageTabverticalLayout2.addWidget(RightButton)
+            RightButton = PicButton(QPixmap('Images/Next Image.png'))
+            ViewImageTabverticalLayout2.addWidget(RightButton)
 
-        # Box Layout for Word Frequency Tab
-        ViewImageTabverticalLayout = QVBoxLayout(ViewImageTabverticalLayoutWidget)
-        ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Word Frequency Tab
+            ViewImageTabverticalLayout = QVBoxLayout(ViewImageTabverticalLayoutWidget)
+            ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                image_files = DS.DataSourceImage
-                break
-
-
-        qpixmap_file = []
-
-        for img in image_files:
-            if isinstance(img, np.ndarray):
-                dummyimage = QImage(img, img.shape[1], \
-                                          img.shape[0], img.shape[1] * 3,
-                                          QImage.Format_RGB888)
-
-                qpixmap_file.append(QPixmap(dummyimage))
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    image_files = DS.DataSourceImage
+                    break
 
 
-        if len(qpixmap_file) == 1:
-            RightButton.hide()
+            qpixmap_file = []
 
-        # Image Preview Label
-        ImagePreviewLabel = QLabel(ViewImageTabverticalLayoutWidget)
+            for img in image_files:
+                if isinstance(img, np.ndarray):
+                    dummyimage = QImage(img, img.shape[1], \
+                                              img.shape[0], img.shape[1] * 3,
+                                              QImage.Format_RGB888)
 
-        # Resizing label to Layout
-        ImagePreviewLabel.resize(ViewImageTabverticalLayoutWidget.width(), ViewImageTabverticalLayoutWidget.height())
+                    qpixmap_file.append(QPixmap(dummyimage))
 
-        self.ImagePreviewPixmap = qpixmap_file[0]
-        #            ImagePreviewPixmap.scaledToWidth()
 
-        # Scaling Pixmap image
-        dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
-                                                ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-        ImagePreviewLabel.setPixmap(dummypixmap)
-        ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                      (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                      dummypixmap.width(), dummypixmap.height())
+            if len(qpixmap_file) == 1:
+                RightButton.hide()
 
-        LeftButton.clicked.connect(lambda: self.PreviousImage(qpixmap_file, ImagePreviewLabel,
-                                                              ViewImageTabverticalLayoutWidget, RightButton))
-        RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel,
-                                                           ViewImageTabverticalLayoutWidget, LeftButton))
+            # Image Preview Label
+            ImagePreviewLabel = QLabel(ViewImageTabverticalLayoutWidget)
 
-        if DataSourceShowImagesTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(ViewImageTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(ViewImageTab)
-            tabs.tabWidget = ViewImageTab
-        else:
-            # Adding Word Frequency Tab to TabList
+            # Resizing label to Layout
+            ImagePreviewLabel.resize(ViewImageTabverticalLayoutWidget.width(), ViewImageTabverticalLayoutWidget.height())
+
+            self.ImagePreviewPixmap = qpixmap_file[0]
+            #            ImagePreviewPixmap.scaledToWidth()
+
+            # Scaling Pixmap image
+            dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
+                                                    ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+            ImagePreviewLabel.setPixmap(dummypixmap)
+            ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                          (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                          dummypixmap.width(), dummypixmap.height())
+
+            LeftButton.clicked.connect(lambda: self.PreviousImage(qpixmap_file, ImagePreviewLabel,
+                                                                  ViewImageTabverticalLayoutWidget, RightButton))
+            RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel,
+                                                               ViewImageTabverticalLayoutWidget, LeftButton))
+
+
             myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
 
             # Adding Word Frequency Tab to QTabWidget
             self.tabWidget.addTab(ViewImageTab, "View Image")
             self.tabWidget.setCurrentWidget(ViewImageTab)
+        else:
+            # updating tab
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source View CSV Data
     def DataSourceViewCSVData(self, DataSourceWidgetItemName):
         DataSourceViewCSVDataTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data' and tabs.tabWidget != None:
                 DataSourceViewCSVDataTabFlag = True
                 break
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                rowList = DS.CSVData
+                CSVdf = DS.CSVData
                 break
 
         if not DataSourceViewCSVDataTabFlag:
@@ -1721,19 +1741,23 @@ class Window(QMainWindow):
                 ViewCSVDataTable.horizontalHeaderItem(i).setFont(
                     QFont(ViewCSVDataTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            for row in rowList:
-                ViewCSVDataTable.insertRow(rowList.index(row))
-                for item in row:
-                    try:
-                        newitem = int(item)
-                    except ValueError:
-                        newitem = item
+            count = 0
+
+            for i in range(len(CSVdf.index)):
+                ViewCSVDataTable.insertRow(i)
+                for j in range(len(CSVdf.columns)):
+                    newitem = CSVdf.iloc[i, j]
+
+                    if isinstance(newitem, (int, np.integer)):
+                        newitem = int(newitem)
+                    elif isinstance(newitem, (float, np.float)):
+                        newitem = float(newitem)
 
                     intItem = QTableWidgetItem()
                     intItem.setData(Qt.EditRole, QVariant(newitem))
-                    ViewCSVDataTable.setItem(rowList.index(row), row.index(item), intItem)
-                    ViewCSVDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignVCenter)
-                    ViewCSVDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    ViewCSVDataTable.setItem(i, j, intItem)
+                    ViewCSVDataTable.item(i, j).setTextAlignment(Qt.AlignVCenter)
+                    ViewCSVDataTable.item(i, j).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             ViewCSVDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ViewCSVDataTable.resizeColumnsToContents()
@@ -1754,6 +1778,7 @@ class Window(QMainWindow):
             # Adding Word Frequency Tab to QTabWidget
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Previous Image Button
     def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
@@ -1811,7 +1836,7 @@ class Window(QMainWindow):
         DataSourcePreviewTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
                 DataSourcePreviewTabFlag = True
                 break
 
@@ -1847,13 +1872,14 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source Word Preview
     def DataSourceWordPreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
                 DataSourcePreviewTabFlag = True
                 break
 
@@ -1890,50 +1916,50 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
                 DataSourcePreviewTabFlag = True
                 break
 
-        DataSourcePreviewTab = QWidget()
+        if not DataSourcePreviewTabFlag:
+            DataSourcePreviewTab = QWidget()
 
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-        DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            # LayoutWidget For within DataSource Preview Tab
+            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
+            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        # Box Layout for Data SourceTab
-        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Data SourceTab
+            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-        DataSourcePreview.setReadOnly(True)
-        DataSourcePreview.setContextMenuPolicy(Qt.CustomContextMenu)
+            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview.setReadOnly(True)
+            DataSourcePreview.setContextMenuPolicy(Qt.CustomContextMenu)
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                DataSourcePreview.setText(DS.DataSourcetext)
-                break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    DataSourcePreview.setText(DS.DataSourcetext)
+                    break
 
-        if DataSourcePreviewTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(DataSourcePreviewTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-            tabs.tabWidget = DataSourcePreviewTab
-        else:
             # Adding Preview Tab to TabList
             myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
 
             # Adding Preview Tab to QTabWidget
             self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
             self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Data Source Add Image
     def DataSourceAddImage(self, DataSourceWidgetItemName):
@@ -2028,7 +2054,7 @@ class Window(QMainWindow):
         DataSourceShowFrequencyTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Frequency':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Frequency' and tabs.tabWidget != None:
                 DataSourceShowFrequencyTabFlag = True
                 break
 
@@ -2144,6 +2170,7 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(WordFrequencyTab)
                 tabs.tabWidget = WordFrequencyTab
+                tabs.setisActive(True)
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceName))
@@ -2240,7 +2267,7 @@ class Window(QMainWindow):
         GenerateQuestionsTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions' and tabs.tabWidget != None:
                 GenerateQuestionsTabFlag = True
                 break
 
@@ -2340,6 +2367,7 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
                 tabs.tabWidget = GenerateQuestionsTab
+                tabs.setisActive(True)
             else:
                 # Adding Generate Question Tab to TabList
                 myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
@@ -2492,7 +2520,7 @@ class Window(QMainWindow):
         DataSourceSentimentAnalysisFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis' and tabs.tabWidget != None:
                 DataSourceSentimentAnalysisFlag = True
                 break
 
@@ -2685,6 +2713,7 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
                 tabs.tabWidget = SentimentAnalysisTab
+                tabs.setisActive(True)
 
             else:
                 # Adding Word Frequency Tab to TabList
@@ -2822,8 +2851,6 @@ class Window(QMainWindow):
                     self.DataSourceDocumentClusteringUpdate()
                     break
 
-
-
             DataSourceWidgetItemName.setText(0, name)
             DataSourceWidgetItemName.setToolTip(0, DataSourceWidgetItemName.text(0))
 
@@ -2914,7 +2941,7 @@ class Window(QMainWindow):
         DataSourceStemWordTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word' and tabs.tabWidget != None:
                 DataSourceStemWordTabFlag = True
                 break
 
@@ -3017,6 +3044,7 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(StemWordTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(StemWordTab)
                 tabs.tabWidget = StemWordTab
+                tabs.setisActive(True)
 
             else:
                 # Adding Stem Word Tab to QTabWidget
@@ -3165,7 +3193,7 @@ class Window(QMainWindow):
         DataSourcePOSTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Parts of Speech':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Parts of Speech' and tabs.tabWidget != None:
                 DataSourcePOSTabFlag = True
                 break
 
@@ -3404,7 +3432,7 @@ class Window(QMainWindow):
         DataSourceERTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Entity Relationship':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Entity Relationship' and tabs.tabWidget != None:
                 DataSourceERTabFlag = True
                 break
 
@@ -3500,6 +3528,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(DSERTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(DSERTab)
             tabs.tabWidget = DSERTab
+            tabs.setisActive(True)
 
         else:
             # Adding Entity Relationship Tab to QTabWidget
@@ -3611,7 +3640,7 @@ class Window(QMainWindow):
         DataSourceTotalModellingTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Topic Modelling':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Topic Modelling' and tabs.tabWidget != None:
                 DataSourceTotalModellingTabFlag = True
                 break
 
@@ -4199,7 +4228,7 @@ class Window(QMainWindow):
         DataSourceSummaryPreviewTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary' and tabs.tabWidget != None:
                 DataSourceSummaryPreviewTabFlag = True
                 break
 
@@ -4255,6 +4284,7 @@ class Window(QMainWindow):
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # ****************************************************************************
     # ************************ Data Sources Translation **************************
@@ -4409,7 +4439,7 @@ class Window(QMainWindow):
             DataSourceShowTranslationTabFlag = False
 
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Translated Text':
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Translated Text' and tabs.tabWidget != None:
                     DataSourceShowTranslationTabFlag = True
                     break
 
@@ -4536,7 +4566,7 @@ class Window(QMainWindow):
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 break
 
-        if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "CSV files (*.csv)":
+        if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
             DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
                                                         self.height*2/5)
@@ -4716,6 +4746,262 @@ class Window(QMainWindow):
             self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
 
             DataSourceWidgetDetailDialogBox.exec_()
+
+        elif DS.DataSourceext == "CSV files (*.csv)":
+            if DS.CSVPathFlag:
+                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
+                                                            self.height*2/5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+                #************************************** Labels *************************************
+
+                # Data Source Name Label
+                DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLabel.setText("Name:")
+                DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.width()/4,
+                                                DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameLabel)
+
+                # Data Source Path Label
+                DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourcePathLabel.setText("Path:")
+                DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                DataSourceWidgetDetailDialogBox.width()/4,
+                                                DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourcePathLabel)
+
+                # Data Source Ext Label
+                DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceExtLabel.setText("Extension:")
+                DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                               DataSourceWidgetDetailDialogBox.width()/4,
+                                               DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceExtLabel)
+
+                # Data Source Size Label
+                DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceSize.setText("Size:")
+                DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                           DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                           DataSourceWidgetDetailDialogBox.width()/4,
+                                           DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceSize)
+
+
+                # Data Source Access Time Label
+                DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceAccessTime.setText("Last Access Time:")
+                DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                 DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                 DataSourceWidgetDetailDialogBox.width()/4,
+                                                 DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceAccessTime)
+
+                # Data Source Modified Time Label
+                DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceModifiedTime.setText("Last Modified Time:")
+                DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                   DataSourceWidgetDetailDialogBox.width()/4,
+                                                   DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceModifiedTime)
+
+                # Data Source Change Time Label
+                DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceChangeTime.setText("Created Time:")
+                DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                 DataSourceWidgetDetailDialogBox.height() * 0.7,
+                                                 DataSourceWidgetDetailDialogBox.width()/4,
+                                                 DataSourceWidgetDetailDialogBox.height()/20)
+                DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceChangeTime)
+
+                # Data Source Word Count Label
+                DataSourceRowsCount = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceRowsCount.setText("Total Rows:")
+                DataSourceRowsCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                DataSourceWidgetDetailDialogBox.height() * 0.8,
+                                                DataSourceWidgetDetailDialogBox.width() / 4,
+                                                DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceRowsCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceRowsCount)
+
+                # ************************************** LineEdit *************************************
+
+                # Data Source Name LineEdit
+                DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLineEdit.setText(DS.DataSourceName)
+                DataSourceNameLineEdit.setReadOnly(True)
+                DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                   DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+
+                # Data Source Path LineEdit
+                DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourcePathLineEdit.setText(DS.DataSourcePath)
+                DataSourcePathLineEdit.setReadOnly(True)
+                DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                   DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+
+                # Data Source Ext LineEdit
+                DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
+                DataSourceExtLineEdit.setReadOnly(True)
+                DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                  DataSourceWidgetDetailDialogBox.height() * 0.3,
+                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                  DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+
+                # Data Source Size LineEdit
+                DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize, binary=True))
+                DataSourceSizeLineEdit.setReadOnly(True)
+                DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                   DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
+
+                # Data Source Access Time LineEdit
+                DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
+                DataSourceAccessTimeLineEdit.setReadOnly(True)
+                DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.height() * 0.5,
+                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
+
+                # Data Source Modified Time LineEdit
+                DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
+                DataSourceModifiedTimeLineEdit.setReadOnly(True)
+                DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                           DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                           DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
+
+                # Data Source Change Time LineEdit
+                DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
+                DataSourceChangeTimeLineEdit.setReadOnly(True)
+                DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                         DataSourceWidgetDetailDialogBox.height() * 0.7,
+                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                         DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
+
+                # Data Source Word Count LineEdit
+                DataSourceRowCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceRowCountLineEdit.setText(str(len(DS.CSVData.index)))
+                DataSourceRowCountLineEdit.setReadOnly(True)
+                DataSourceRowCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.8,
+                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.height() / 20)
+                DataSourceRowCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceRowCountLineEdit)
+
+                DataSourceWidgetDetailDialogBox.exec_()
+
+            else:
+                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
+                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                            self.height / 5)
+                DataSourceWidgetDetailDialogBox.setWindowFlags(
+                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+                # Data Source Label
+                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceLabel.setText("Name:")
+                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                            DataSourceWidgetDetailDialogBox.width() / 4,
+                                            DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceLabel)
+
+                # Data Source URL Label
+                DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameURLLabel.setText("URL:")
+                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                   DataSourceWidgetDetailDialogBox.width() / 4,
+                                                   DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceNameURLLabel)
+
+                # Data Source Word Count Label
+                DataSourceRowCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceRowCountLabel.setText("Total Rows:")
+                DataSourceRowCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                    DataSourceWidgetDetailDialogBox.width() / 4,
+                                                    DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceRowCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LabelSizeAdjustment(DataSourceRowCountLabel)
+
+                # ************************************** LineEdit *************************************
+
+                # Data Source Name LineEdit
+                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceLineEdit.setText(DS.DataSourceName)
+                DataSourceLineEdit.setReadOnly(True)
+                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                               DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+                # Data Source URL LineEdit
+                DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceURLLineEdit.setText(DS.DataSourcePath)
+                DataSourceURLLineEdit.setReadOnly(True)
+                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                  DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+
+                # Data Source Word Count LineEdit
+                DataSourceRowCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceRowCountLineEdit.setText(str(len(DS.CSVData.index)))
+                DataSourceRowCountLineEdit.setReadOnly(True)
+                DataSourceRowCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.height() / 10)
+                DataSourceRowCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                self.LineEditSizeAdjustment(DataSourceRowCountLineEdit)
+
+                DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             if len(DS.DataSourceImage) == 1:
@@ -5136,83 +5422,83 @@ class Window(QMainWindow):
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Youtube":
-                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                            self.height / 5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
+            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
+                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setWindowFlags(
+                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-                # Data Source Label
-                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceLabel.setText("Type:")
-                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                            DataSourceWidgetDetailDialogBox.width() / 4,
-                                            DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceLabel)
+            # Data Source Label
+            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceLabel.setText("Type:")
+            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                        DataSourceWidgetDetailDialogBox.width() / 4,
+                                        DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceLabel)
 
-                # Data Source URL Label
-                DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            # Data Source URL Label
+            DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
 
-                if hasattr(DS, 'YoutubeURLFlag'):
-                    DataSourceNameURLLabel.setText("URL:")
-                else:
-                    DataSourceNameURLLabel.setText("Key Word:")
+            if hasattr(DS, 'YoutubeURLFlag'):
+                DataSourceNameURLLabel.setText("URL:")
+            else:
+                DataSourceNameURLLabel.setText("Key Word:")
 
-                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() / 4,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameURLLabel)
-
-                # Data Source No of Comments Label
-                DataSourceNoofCommentsLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofCommentsLabel.setText("No of Comments:")
-                DataSourceNoofCommentsLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                        DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                        DataSourceWidgetDetailDialogBox.width() / 4,
-                                                        DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofCommentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNoofCommentsLabel)
-
-                # ************************************** LineEdit *************************************
-
-                # Data Source Name LineEdit
-                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceLineEdit.setText("Youtube Comments")
-                DataSourceLineEdit.setReadOnly(True)
-                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
+            DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                               DataSourceWidgetDetailDialogBox.width() / 4,
                                                DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceLineEdit)
+            DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNameURLLabel)
 
-                # Data Source URL LineEdit
-                DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceURLLineEdit.setText(DS.DataSourcePath)
-                DataSourceURLLineEdit.setReadOnly(True)
-                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+            # Data Source No of Comments Label
+            DataSourceNoofCommentsLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofCommentsLabel.setText("No of Comments:")
+            DataSourceNoofCommentsLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
+                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                    DataSourceWidgetDetailDialogBox.width() / 4,
+                                                    DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNoofCommentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LabelSizeAdjustment(DataSourceNoofCommentsLabel)
 
-                # Data Source Word Count LineEdit
-                DataSourceNoofCommentsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofCommentsLineEdit.setText(str(len(DS.YoutubeData)))
-                DataSourceNoofCommentsLineEdit.setReadOnly(True)
-                DataSourceNoofCommentsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                           DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofCommentsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNoofCommentsLineEdit)
+            # ************************************** LineEdit *************************************
 
-                DataSourceWidgetDetailDialogBox.exec_()
+            # Data Source Name LineEdit
+            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceLineEdit.setText("Youtube Comments")
+            DataSourceLineEdit.setReadOnly(True)
+            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
+                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                           DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceLineEdit)
+
+            # Data Source URL LineEdit
+            DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceURLLineEdit.setText(DS.DataSourcePath)
+            DataSourceURLLineEdit.setReadOnly(True)
+            DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                              DataSourceWidgetDetailDialogBox.height() * 0.4,
+                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                              DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+
+            # Data Source Word Count LineEdit
+            DataSourceNoofCommentsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofCommentsLineEdit.setText(str(len(DS.YoutubeData)))
+            DataSourceNoofCommentsLineEdit.setReadOnly(True)
+            DataSourceNoofCommentsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
+                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
+                                                       DataSourceWidgetDetailDialogBox.height() / 10)
+            DataSourceNoofCommentsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            self.LineEditSizeAdjustment(DataSourceNoofCommentsLineEdit)
+
+            DataSourceWidgetDetailDialogBox.exec_()
 
     # Data Source Show Image Detail
     def DataSourceShowImagesDetails(self, DataSource, ParentWindow):
@@ -5557,7 +5843,7 @@ class Window(QMainWindow):
         DataSourceWordCloudTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud':
+            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud' and tabs.tabWidget != None:
                 DataSourceWordCloudTabFlag = True
                 break
 
@@ -5607,6 +5893,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(WordCloudTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(WordCloudTab)
             tabs.tabWidget = WordCloudTab
+            tabs.setisActive(True)
 
         else:
             # Adding Word Cloud Tab to QTabWidget
@@ -5716,7 +6003,7 @@ class Window(QMainWindow):
         DataSourceWordTreeTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Tree':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Tree' and tabs.tabWidget != None:
                 DataSourceWordTreeTabFlag = True
                 break
 
@@ -5844,7 +6131,7 @@ class Window(QMainWindow):
         DataSourceCoordinateMapTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map':
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map' and tabs.tabWidget != None:
                 DataSourceCoordinateMapTabFlag = True
                 break
 
@@ -5894,7 +6181,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
             tabs.tabWidget = DataSourceCoordinateMapTab
-
+            tabs.setisActive(True)
         else:
             # Adding Word Cloud Tab to QTabWidget
             myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
@@ -5986,6 +6273,8 @@ class Window(QMainWindow):
 
             if(len(FirstLineEdit.text()) > 0):
                 ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
         elif RadioButton.isChecked():
             FirstLineEdit.setEnabled(False)
@@ -5993,6 +6282,41 @@ class Window(QMainWindow):
 
             if (len(SecondLineEdit.text()) > 0):
                 ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+    # Ok Button Enable on Youtube Radio Button Toggling
+    def EnableOkonCSVRadioButtonToggle(self, RadioButton, FirstLineEdit, SecondLineEdit, BrowseButton, ButtonBox):
+        Button = self.sender()
+        if Button.isChecked():
+            if Button.text() == "Computer":
+                FirstLineEdit.setEnabled(True)
+                BrowseButton.setEnabled(True)
+                SecondLineEdit.setEnabled(False)
+            else:
+                FirstLineEdit.setEnabled(True)
+                BrowseButton.setEnabled(False)
+                SecondLineEdit.setEnabled(False)
+
+            if (len(FirstLineEdit.text()) > 0):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        elif RadioButton.isChecked():
+            if RadioButton.text() == "Computer":
+                FirstLineEdit.setEnabled(True)
+                BrowseButton.setEnabled(True)
+                SecondLineEdit.setEnabled(False)
+            else:
+                FirstLineEdit.setEnabled(True)
+                BrowseButton.setEnabled(False)
+                SecondLineEdit.setEnabled(False)
+
+            if (len(FirstLineEdit.text()) > 0):
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+            else:
+                ButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     # Save Table as CSV
     def SaveTableAsCSV(self, Table):
@@ -6207,6 +6531,7 @@ class Window(QMainWindow):
                     if self.tabWidget.currentWidget() != tabs.tabWidget:
                         self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        tabs.setisActive(True)
                     break
         else:
             for tabs in myFile.TabList:
@@ -6214,6 +6539,7 @@ class Window(QMainWindow):
                     if self.tabWidget.currentWidget() != tabs.tabWidget:
                         self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        tabs.setisActive(True)
                         break
 
     # ****************************************************************************
@@ -6507,7 +6833,7 @@ class Window(QMainWindow):
             CasesParentCoverageTabFlag = False
 
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage':
+                if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage' and tabs.tabWidget != None:
                     CasesParentCoverageTabFlag = True
                     break
 
@@ -6627,7 +6953,7 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
                 tabs.tabWidget = CasesParentCoverageTab
-
+                tabs.setisActive(True)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(
@@ -6750,7 +7076,7 @@ class Window(QMainWindow):
             dummyParent = dummyParent.parent()
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == tempParent.text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0):
+            if tabs.DataSourceName == tempParent.text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0)  and tabs.tabWidget != None:
                 CaseShowComponentTabFlag = True
                 break
 
@@ -6843,7 +7169,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(CaseShowComponentTab)
             tabs.tabWidget = CaseShowComponentTab
-
+            tabs.setisActive(True)
         else:
             # Adding Word Cloud Tab to QTabWidget
             dummyTab = Tab("Case Show Topic Component", CaseShowComponentTab, tempParent.text(0))
@@ -7191,7 +7517,7 @@ class Window(QMainWindow):
             SentimentsShowComponentTabFlag = False
 
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Show Topic Component':
+                if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Show Topic Component' and tabs.tabSentiment == SentimentsItemName.text(0) and tabs.tabWidget != None:
                     SentimentsShowComponentTabFlag = True
                     break
 
@@ -7296,11 +7622,12 @@ class Window(QMainWindow):
                 self.tabWidget.addTab(SentimentsShowComponentTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
                 tabs.tabWidget = SentimentsShowComponentTab
-
+                tabs.setisActive(True)
             else:
                 # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(
-                    Tab("Sentiments Show Topic Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0)))
+                dummyTab = Tab("Sentiments Show Topic Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0))
+                dummyTab.setTabSentiment(SentimentsItemName.text(0))
+                myFile.TabList.append(dummyTab)
 
                 self.tabWidget.addTab(SentimentsShowComponentTab, "Sentiments Show Topic Component")
                 self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
@@ -7725,6 +8052,7 @@ class Window(QMainWindow):
                     if self.tabWidget.currentWidget() != tabs.tabWidget:
                         self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        tabs.setisActive(True)
                     break
         else:
             for tabs in myFile.TabList:
@@ -7732,6 +8060,7 @@ class Window(QMainWindow):
                     if self.tabWidget.currentWidget() != tabs.tabWidget:
                         self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                        tabs.setisActive(True)
                         break
 
     # ****************************************************************************
@@ -7759,7 +8088,218 @@ class Window(QMainWindow):
 
     #Open File
     def OpenFileWindow(self):
-        self.dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 0)
+        try:
+            dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
+
+            if all(path):
+                global myFile
+                myFile = pickle.load(open(path[0], "rb"))
+
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+                    # Adding Node to Data Source Tree Widget
+
+                    # Word File
+                    if DS.DataSourceext == "Doc files (*.doc *.docx)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.wordTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                        if self.wordTreeWidget.isHidden():
+                            self.wordTreeWidget.setHidden(False)
+                            self.wordTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # PDF File
+                    elif DS.DataSourceext == "Pdf files (*.pdf)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                        if self.pdfTreeWidget.isHidden():
+                            self.pdfTreeWidget.setHidden(False)
+                            self.pdfTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Text File
+                    elif DS.DataSourceext == "Notepad files (*.txt)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.txtTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                        if self.txtTreeWidget.isHidden():
+                            self.txtTreeWidget.setHidden(False)
+                            self.txtTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # RTF File
+                    elif DS.DataSourceext == "Rich Text Format files (*.rtf)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+
+                        if self.rtfTreeWidget.isHidden():
+                            self.rtfTreeWidget.setHidden(False)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Audio File
+                    elif DS.DataSourceext == "Audio files (*.wav *.mp3)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+
+                        if self.audioSTreeWidget.isHidden():
+                            self.audioSTreeWidget.setHidden(False)
+                            self.audioSTreeWidget.setExpanded(True)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Image File
+                    elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.ImageSTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
+
+                        if self.ImageSTreeWidget.isHidden():
+                            self.ImageSTreeWidget.setHidden(False)
+                            self.ImageSTreeWidget.setExpanded(True)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Adding Cases
+                    if (len(DS.CasesList) > 0):
+                        DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
+                        DSCaseWidget.setText(0, DS.DataSourceName)
+                        DSCaseWidget.setExpanded(True)
+
+                        for cases in DS.CasesList:
+                            DSNewCaseNode = QTreeWidgetItem(DSCaseWidget)
+                            DSNewCaseNode.setText(0, cases.CaseTopic)
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                    # Adding Sentiments
+                    DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                    DSSentimentWidget.setText(0, DS.DataSourceName)
+                    DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
+                    DSSentimentWidget.setExpanded(True)
+
+                    for sentiments in DS.SentimentList:
+                        DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
+                        DSNewSentimentNode.setText(0, sentiments.SentimentType)
+
+
+                # CSV File
+                elif DS.DataSourceext == "CSV files (*.csv)":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.CSVTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
+
+                    if self.CSVTreeWidget.isHidden():
+                        self.CSVTreeWidget.setHidden(False)
+                        self.CSVTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # URL
+                elif DS.DataSourceext == "URL":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.WebTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+
+                    if self.WebTreeWidget.isHidden():
+                        self.WebTreeWidget.setHidden(False)
+                        self.WebTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # Tweet
+                elif DS.DataSourceext == "Tweet":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.TweetTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
+
+                    if self.TweetTreeWidget.isHidden():
+                        self.TweetTreeWidget.setHidden(False)
+                        self.TweetTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # Youtube
+                elif DS.DataSourceext == "Youtube":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
+
+                    if self.YoutubeTreeWidget.isHidden():
+                        self.YoutubeTreeWidget.setHidden(False)
+                        self.YoutubeTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+
+        except Exception as e:
+            print(str(e))
+
+    #SaveASWindow
+    def SaveASWindow(self):
+        try:
+            dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 1)
+            path = dummyWindow.filepath
+            dummyWindow.__del__()
+
+            if all(path):
+                # open the file for writing
+                fileObject = open(path[0], 'wb')
+
+                # for tabs in myFile.TabList:
+                #     print(tabs.tabWidget)
+
+                dummyTabList = []
+
+                for i in range(len(myFile.TabList)):
+                    dummyTabList.append(myFile.TabList[i].tabWidget)
+
+                for tabs in myFile.TabList:
+                    tabs.tabWidget = None
+
+                # for tabs in myFile.TabList:
+                #     print(tabs.tabWidget)
+                #
+                # for tabs in dummyTabList:
+                #     print(tabs)
+
+                pickle.dump(myFile, fileObject)
+
+                for i in range(len(myFile.TabList)):
+                    myFile.TabList[i].tabWidget = dummyTabList[i]
+
+                # for tabs in myFile.TabList:
+                #     print(tabs.tabWidget)
+
+
+        except Exception as e:
+            print(str(e))
 
     #Print Window
     def printWindow(self):
@@ -7790,14 +8330,9 @@ class Window(QMainWindow):
     # About Window Tab
     def AboutWindow(self):
         try:
-            # file_Name = "testfile.tas"
-            # # open the file for writing
-            # fileObject = open(file_Name, 'wb')
-            #
-            # # this writes the object a to the
-            # # file named 'testfile'
-            # pickle.dump(myFile, fileObject)
-
+            for tabs in myFile.TabList:
+                print(tabs.TabName + "  ,  " + str(tabs.isActive))
+            print()
             file = open('LICENSE', 'r')
             lic = file.read()
             QMessageBox().about(self, "About TextWiz", lic)
@@ -7818,7 +8353,7 @@ class Window(QMainWindow):
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1], self)
+                    dummyDataSource = DataSource(pth, path[1])
 
                     DataSourceNameCheck = False
 
@@ -7838,7 +8373,6 @@ class Window(QMainWindow):
                                 self.wordTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -7865,7 +8399,7 @@ class Window(QMainWindow):
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1], self)
+                    dummyDataSource = DataSource(pth, path[1])
 
                     DataSourceNameCheck = False
 
@@ -7886,7 +8420,6 @@ class Window(QMainWindow):
                                     self.pdfTreeWidget.setExpanded(True)
 
                                 newNode.setToolTip(0, newNode.text(0))
-                                #dummyDataSource.setNode(newNode)
 
                                 self.DataSourceSimilarityUpdate()
                                 self.DataSourceDocumentClusteringUpdate()
@@ -7915,7 +8448,7 @@ class Window(QMainWindow):
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1], self)
+                    dummyDataSource = DataSource(pth, path[1])
 
                     DataSourceNameCheck = False
 
@@ -7935,7 +8468,6 @@ class Window(QMainWindow):
                                 self.txtTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -7963,7 +8495,7 @@ class Window(QMainWindow):
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1], self)
+                    dummyDataSource = DataSource(pth, path[1])
 
                     DataSourceNameCheck = False
 
@@ -7982,7 +8514,6 @@ class Window(QMainWindow):
                                 self.rtfTreeWidget.setHidden(False)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8009,7 +8540,7 @@ class Window(QMainWindow):
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1], self)
+                    dummyDataSource = DataSource(pth, path[1])
 
                     DataSourceNameCheck = False
 
@@ -8029,7 +8560,6 @@ class Window(QMainWindow):
                                 self.audioSTreeWidget.setExpanded(True)
 
                             newNode.setToolTip(0, newNode.text(0))
-                            #dummyDataSource.setNode(newNode)
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8057,7 +8587,7 @@ class Window(QMainWindow):
             dummyWindow.__del__()
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1], self)
+                dummyDataSource = DataSource(path[0], path[1])
 
                 DataSourceNameCheck = False
 
@@ -8077,7 +8607,6 @@ class Window(QMainWindow):
                             self.ImageSTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
-                        #dummyDataSource.setNode(newNode)
 
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
@@ -8101,32 +8630,55 @@ class Window(QMainWindow):
     def ImportCSVWindowDialog(self):
         CSVDialog = QDialog()
         CSVDialog.setWindowTitle("Import CSV File")
-        CSVDialog.setGeometry(self.width * 0.375, self.height * 0.4, self.width / 3, self.height *0.2 )
+        CSVDialog.setGeometry(self.width * 0.375, self.height * 0.3, self.width / 3, self.height *0.4)
         CSVDialog.setParent(self)
         CSVDialog.setAttribute(Qt.WA_DeleteOnClose)
         CSVDialog.setWindowFlags(Qt.WindowCloseButtonHint)
         CSVDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-        #CSV Path LineEdit
+        # Summarization Default Radio Button
+        PathRadioButton = QRadioButton(CSVDialog)
+        PathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.1,
+                                    CSVDialog.width() / 5, CSVDialog.height() / 10)
+        PathRadioButton.setText("Computer")
+        PathRadioButton.adjustSize()
+
+        # CSV Path LineEdit
         CSVPathLineEdit = QLineEdit(CSVDialog)
-        CSVPathLineEdit.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.15,
-                                    CSVDialog.width() * 0.6, CSVDialog.height() / 10)
+        CSVPathLineEdit.setGeometry(CSVDialog.width() * 0.15, CSVDialog.height() * 0.2,
+                                    CSVDialog.width() * 0.5, CSVDialog.height() / 10)
         CSVPathLineEdit.setReadOnly(True)
+        CSVPathLineEdit.setEnabled(False)
         self.LineEditSizeAdjustment(CSVPathLineEdit)
 
         CSVBrowseButton = QPushButton(CSVDialog)
         CSVBrowseButton.setText("Browse")
-        CSVBrowseButton.setGeometry(CSVDialog.width() * 0.8, CSVDialog.height() * 0.15,
+        CSVBrowseButton.setGeometry(CSVDialog.width() * 0.8, CSVDialog.height() * 0.2,
                                     CSVDialog.width() / 10, CSVDialog.height() / 10)
+        CSVBrowseButton.setEnabled(False)
         self.LineEditSizeAdjustment(CSVBrowseButton)
 
+        # Summarization Total Word Count Radio Button
+        URLPathRadioButton = QRadioButton(CSVDialog)
+        URLPathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.3,
+                                       CSVDialog.width() / 5, CSVDialog.height() / 10)
+        URLPathRadioButton.setText("URL")
+        URLPathRadioButton.adjustSize()
+
+        # CSV Path LineEdit
+        CSVURLPathLineEdit = QLineEdit(CSVDialog)
+        CSVURLPathLineEdit.setGeometry(CSVDialog.width() * 0.15, CSVDialog.height() * 0.4,
+                                       CSVDialog.width() * 0.7, CSVDialog.height() / 10)
+        CSVURLPathLineEdit.setEnabled(False)
+        self.LineEditSizeAdjustment(CSVURLPathLineEdit)
+
         #Header Label Radio Button
-        CSVHeaderRadioButton = QRadioButton(CSVDialog)
-        CSVHeaderRadioButton.setChecked(True)
-        CSVHeaderRadioButton.setText("Contains Header")
-        CSVHeaderRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.4,
-                                         CSVDialog.width() / 10, CSVDialog.height() / 10)
-        CSVHeaderRadioButton.adjustSize()
+        CSVHeaderCheckBox = QCheckBox(CSVDialog)
+        CSVHeaderCheckBox.setChecked(True)
+        CSVHeaderCheckBox.setText("Contains Header")
+        CSVHeaderCheckBox.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.6,
+                                      CSVDialog.width() / 10, CSVDialog.height() / 10)
+        CSVHeaderCheckBox.adjustSize()
 
         # TweetDialog ButtonBox
         CSVbuttonBox = QDialogButtonBox(CSVDialog)
@@ -8139,11 +8691,15 @@ class Window(QMainWindow):
 
         CSVBrowseButton.clicked.connect(lambda: self.CSVBrowseButtonAction(CSVPathLineEdit))
         CSVPathLineEdit.textChanged.connect(lambda: self.OkButtonEnable(CSVbuttonBox, True))
+        CSVURLPathLineEdit.textChanged.connect(lambda: self.OkButtonEnable(CSVbuttonBox, True))
+
+        PathRadioButton.toggled.connect(lambda: self.EnableOkonCSVRadioButtonToggle(URLPathRadioButton, CSVPathLineEdit, CSVURLPathLineEdit, CSVBrowseButton, CSVbuttonBox))
+        URLPathRadioButton.toggled.connect(lambda: self.EnableOkonCSVRadioButtonToggle(PathRadioButton, CSVURLPathLineEdit, CSVPathLineEdit, CSVBrowseButton, CSVbuttonBox))
 
         CSVbuttonBox.accepted.connect(CSVDialog.accept)
         CSVbuttonBox.rejected.connect(CSVDialog.reject)
 
-        CSVbuttonBox.accepted.connect(lambda: self.ImportFromCSV(CSVPathLineEdit.text(), CSVHeaderRadioButton.isChecked()))
+        CSVbuttonBox.accepted.connect(lambda: self.ImportFromCSV(CSVPathLineEdit.text(), CSVURLPathLineEdit.text(), PathRadioButton.isChecked(), CSVHeaderCheckBox.isChecked()))
 
         CSVDialog.exec_()
 
@@ -8154,9 +8710,11 @@ class Window(QMainWindow):
         dummyWindow.__del__()
 
     # Import From CSV
-    def ImportFromCSV(self, CSVPath, CSVHeader):
-        dummyDataSource = DataSource(CSVPath, "CSV files (*.csv)", self)
-
+    def ImportFromCSV(self, CSVPath, CSVURLPath, CSVPathFlag, CSVHeader):
+        if CSVPathFlag:
+            dummyDataSource = DataSource(CSVPath, "CSV files (*.csv)")
+        else:
+            dummyDataSource = DataSource(CSVURLPath, "CSV files (*.csv)")
         DataSourceNameCheck = False
 
         for DS in myFile.DataSourceList:
@@ -8164,12 +8722,15 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            dummyDataSource.CSVDataSource(CSVHeader)
+            dummyDataSource.CSVDataSource(CSVHeader, CSVPathFlag)
 
             if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
                 myFile.setDataSources(dummyDataSource)
                 newNode = QTreeWidgetItem(self.CSVTreeWidget)
-                newNode.setText(0, ntpath.basename(CSVPath))
+                if CSVPathFlag:
+                    newNode.setText(0, ntpath.basename(CSVPath))
+                else:
+                    newNode.setText(0, ntpath.basename(CSVURLPath))
                 self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
 
                 if self.CSVTreeWidget.isHidden():
@@ -8177,7 +8738,6 @@ class Window(QMainWindow):
                     self.CSVTreeWidget.setExpanded(True)
 
                 newNode.setToolTip(0, newNode.text(0))
-                #dummyDataSource.setNode(newNode)
 
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
@@ -8186,10 +8746,17 @@ class Window(QMainWindow):
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                         dummyDataSource.DataSourceName + " doesnot contains any text",
                                                                         QMessageBox.Ok)
+                elif dummyDataSource.DataSourceHTTPError:
+                    QMessageBox.critical(self, "Load Error",
+                                         "Error 404: \n CSV URL Not found!",
+                                         QMessageBox.Ok)
+
                 elif dummyDataSource.DataSourceLoadError:
                     QMessageBox.critical(self, "Load Error",
                                          "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                          QMessageBox.Ok)
+
+
                 dummyDataSource.__del__()
         else:
             dummyDataSource.__del__()
@@ -8301,7 +8868,6 @@ class Window(QMainWindow):
                         self.TweetTreeWidget.setExpanded(True)
 
                     newNode.setToolTip(0, newNode.text(0))
-                    #dummyDataSource.setNode(newNode)
                     self.DataSourceSimilarityUpdate()
                 else:
                     dummyDataSource.__del__()
@@ -8393,7 +8959,7 @@ class Window(QMainWindow):
                             self.WebTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
-                        #dummyDataSource.setNode(newNode)
+
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
                     else:
@@ -8516,7 +9082,7 @@ class Window(QMainWindow):
                     self.YoutubeTreeWidget.setExpanded(True)
 
                 newNode.setToolTip(0, newNode.text(0))
-                #dummyDataSource.setNode(newNode)
+
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
 

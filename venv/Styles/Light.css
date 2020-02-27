@@ -363,15 +363,16 @@ QRadioButton::indicator:checked
     );
 }
 
+QRadioButton::indicator
+{
+    border-radius: 6px;
+}
+
+/*
 QCheckBox::indicator{
     border: 1px solid #b1b1b1;
     width: 9px;
     height: 9px;
-}
-
-QRadioButton::indicator
-{
-    border-radius: 6px;
 }
 
 QRadioButton::indicator:hover, QCheckBox::indicator:hover
@@ -384,12 +385,12 @@ QCheckBox::indicator:checked
     image:url(:/dark_orange/img/checkbox.png);
 }
 
+
 QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
 {
     border: 1px solid #444;
 }
-
-
+*/
 QSlider::groove:horizontal {
     border: 1px solid #3A3939;
     height: 8px;

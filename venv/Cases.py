@@ -19,3 +19,6 @@ class Cases:
 
     def removefromCase(self, TopicText):
         self.TopicCases.remove(TopicText)
+
+    def __del__(self):
+        self.CaseDelete = True

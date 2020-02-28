@@ -10,8 +10,7 @@ from PyQt5.QtWebEngineWidgets import *
 from PIL import  Image
 from File import *
 import humanfriendly, platform
-import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime, copy
-
+import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime, graphviz
 
 class MarkerModel(QAbstractListModel):
     PositionRole, SourceRole = range(Qt.UserRole, Qt.UserRole + 2)
@@ -6607,6 +6606,11 @@ class Window(QMainWindow):
                 CasesCollapse.setDisabled(False)
             CasesRightClickMenu.addAction(CasesCollapse)
 
+            # Cases Structure
+            CasesStructure = QAction('Show Structure', self.CasesTreeWidget)
+            CasesStructure.triggered.connect(lambda: self.CasesStructure(CasesItemName))
+            CasesRightClickMenu.addAction(CasesStructure)
+
             # Cases Coverage
             CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
             CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
@@ -6650,10 +6654,20 @@ class Window(QMainWindow):
             if MergeCaseFlag:
                 CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
+                # Case UnMerge
+                CasesUnMerge = QAction('Unmerge', self.CasesTreeWidget)
+                CasesUnMerge.triggered.connect(lambda: self.CasesUnMerge(CasesItemName))
+                CasesRightClickMenu.addAction(CasesUnMerge)
+
                 # Case Rename
                 CasesRename = QAction('Rename', self.CasesTreeWidget)
                 CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
                 CasesRightClickMenu.addAction(CasesRename)
+                # Case Rename
+
+                CasesDetail = QAction('Detail', self.CasesTreeWidget)
+                CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
+                CasesRightClickMenu.addAction(CasesDetail)
 
                 CasesRightClickMenu.popup(CasesWidgetPos)
 
@@ -6681,6 +6695,46 @@ class Window(QMainWindow):
                 CasesRightClickMenu.addAction(CasesDetail)
 
                 CasesRightClickMenu.popup(CasesWidgetPos)
+
+    # Cases Structure
+    def CasesStructure(self, CasesItemName):
+        try:
+            os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    d = graphviz.Digraph(name="Cases")
+                    d.edge_attr.update(arrowhead="vee", arrowsize="1")
+                    d.node_attr.update(shape="box")
+                    d.graph_attr['rankdir'] = 'LR'
+
+                    cases_list = []
+
+                    for cases in DS.CasesList:
+                        for widget in self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0):
+                            if cases.ParentCase == None:
+                                cases_list.append([widget, CasesItemName])
+                            else:
+                                cases_list.append([widget, widget.parent()])
+
+                    parent_child_list = []
+
+                    for i in range(len(cases_list)):
+                        d.node(cases_list[i][0].text(0))
+                        if cases_list[i][1] != None:
+                            parent_child_list.append([cases_list[i][1].text(0), cases_list[i][0].text(0)])
+
+                    for i in range(len(parent_child_list)):
+                        d.edge(parent_child_list[i][0], parent_child_list[i][1])
+
+                    # d.view()
+                    # d.format = 'png'
+                    # d.render()
+                    d.render('cases.pdf', view=True)
+                    # print(cases_list[2][0].text(0))
+
+        except Exception as e:
+            print(str(e))
 
     # Merge Cases Dailog
     def MergeCasesDialog(self, CasesItemName):
@@ -6895,6 +6949,36 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+    # UnMerge Cases
+    def CasesUnMerge(self, CasesItemName):
+        try:
+            tempWidget = CasesItemName
+            while tempWidget.parent() != None:
+                tempWidget = tempWidget.parent()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == tempWidget.text(0):
+                    for cases in DS.CasesList:
+                        if cases.ParentCase != None:
+                            if cases.ParentCase.CaseTopic == CasesItemName.text(0):
+                                for cases2 in DS.CasesList:
+                                    if cases2.CaseTopic == cases.ParentCase.CaseTopic:
+                                        cases.ParentCase = cases2.ParentCase
+
+                                for widgets in self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0):
+                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widgets))
+                                    CasesItemName.parent().addChild(tempChild)
+
+
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            DS.CasesList.remove(cases)
+                            cases.__del__()
+
+                    CasesItemName.parent().removeChild(CasesItemName)
+
+        except Exception as e:
+            print(str(e))
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
@@ -7068,6 +7152,9 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.text(0):
                 self.CasesTreeWidget.invisibleRootItem().removeChild(CasesItemName)
+                for cases in DS.CasesList:
+                    cases.__del__()
+
                 DS.CasesList.clear()
                 break
 
@@ -7374,22 +7461,23 @@ class Window(QMainWindow):
 
     # Cases Remove Dialog
     def CasesChildRemove(self, CasesItemName):
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == CasesItemName.parent().text(0):
-                try:
-                    if CasesItemName.parent().childCount() == 1:
-                        tempParent = CasesItemName.parent()
-                        tempParent.removeChild(CasesItemName)
-                        self.CasesTreeWidget.invisibleRootItem().removeChild(tempParent)
-                    else:
-                        CasesItemName.parent().removeChild(CasesItemName)
+        tempWidget = CasesItemName
+        while tempWidget.parent() != None:
+            tempWidget = tempWidget.parent()
 
-                except Exception as e:
-                    print(str(e))
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == tempWidget.text(0):
+
+                if tempWidget.childCount() == 1:
+                    tempWidget.removeChild(CasesItemName)
+                    self.CasesTreeWidget.invisibleRootItem().removeChild(tempWidget)
+                else:
+                    CasesItemName.parent().removeChild(CasesItemName)
 
                 for cases in DS.CasesList:
                     if cases.CaseTopic == CasesItemName.text(0):
                         DS.CasesList.remove(cases)
+                        cases.__del__()
                         break
 
     # Cases Child Detail
@@ -7467,7 +7555,14 @@ class Window(QMainWindow):
 
         # No of Cases LineEdit
         NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
-        NoofCasesLineEdit.setText(str(len(case.TopicCases)))
+        if case.MergedCase:
+            TotalComponent = 0
+            for cases2 in DS.CasesList:
+                if cases2.ParentCase == case:
+                    TotalComponent += len(cases2.TopicCases)
+            NoofCasesLineEdit.setText(str(TotalComponent))
+        else:
+            NoofCasesLineEdit.setText(str(len(case.TopicCases)))
         NoofCasesLineEdit.setReadOnly(True)
         NoofCasesLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
                                       CasesChildDetailDialogBox.height() * 0.6,

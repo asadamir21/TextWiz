@@ -848,7 +848,6 @@ class DataSource():
         for cases in self.CasesList:
             if not cases.MergedCase:
                 totalweightage = 0
-
                 for casetext in cases.TopicCases:
                     totalweightage += casetext[3]
                 objects.append(cases.CaseTopic)
@@ -856,7 +855,7 @@ class DataSource():
             else:
                 totalweightage = 0
                 for cases2 in self.CasesList:
-                    if cases in cases2.ParentCaseList:
+                    if cases == cases2.ParentCase:
                         for casetext in cases2.TopicCases:
                             totalweightage += casetext[3]
                 objects.append(cases.CaseTopic)

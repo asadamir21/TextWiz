@@ -6772,10 +6772,12 @@ class Window(QMainWindow):
 
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceName == CasesItemName.text(0):
-                        for cases in DS.CasesList:
-                            if cases.CaseTopic == MergeCaseName:
-                                MergeCaseNameDuplicateError = True
-                                break
+                        break
+
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == MergeCaseName:
+                        MergeCaseNameDuplicateError = True
+                        break
 
                 if not MergeCaseNameDuplicateError:
                     if  MergeCaseName != CasesItemName.text(0):
@@ -6784,7 +6786,6 @@ class Window(QMainWindow):
                         NewCase.setMergeCaseFlag()
 
                         DS.CasesList.append(NewCase)
-
                         # Setting Parent of Cases
                         for CheckedCases in CheckedCasesList:
                             for cases in DS.CasesList:
@@ -6798,7 +6799,6 @@ class Window(QMainWindow):
 
                         # Setting All Child
                         counter = 0
-
                         while(counter < len(DS.CasesList)):
                             for cases in DS.CasesList:
                                 if cases.ParentCase == None:
@@ -6809,6 +6809,24 @@ class Window(QMainWindow):
                                         DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
                                         DSMergeCaseWidget.setExpanded(True)
                                         counter += 1
+
+                                    elif len(ItemWidget) > 0:
+                                        ItemPresentFlag = False
+                                        for items in ItemWidget:
+                                            tempWidget = items
+                                            while tempWidget.parent() != None:
+                                                tempWidget = tempWidget.parent()
+
+                                            if tempWidget.text(0) == CasesItemName.text(0):
+                                                ItemPresentFlag = True
+                                                break
+
+                                        if not ItemPresentFlag:
+                                            DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
+                                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                            DSMergeCaseWidget.setExpanded(True)
+                                            counter += 1
 
                                 else:
                                     SelfItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
@@ -6828,6 +6846,36 @@ class Window(QMainWindow):
                                                     DSMergeCaseWidget.setExpanded(True)
 
                                                     counter += 1
+
+                                    elif len(SelfItemWidget) > 0:
+                                        ItemPresentFlag = False
+                                        for items in SelfItemWidget:
+                                            tempWidget2 = items
+                                            while tempWidget2.parent() != None:
+                                                tempWidget2 = tempWidget2.parent()
+
+                                            if tempWidget2.text(0) == CasesItemName.text(0):
+                                                ItemPresentFlag = True
+                                                break
+
+                                        if not ItemPresentFlag:
+
+                                            for items in SelfItemWidget:
+                                                ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic,
+                                                                                            Qt.MatchRecursive, 0)
+                                                if len(ItemWidget) > 0:
+                                                    for items in ItemWidget:
+                                                        tempWidget = items
+                                                        while tempWidget.parent() != None:
+                                                            tempWidget = tempWidget.parent()
+
+                                                        if tempWidget.text(0) == CasesItemName.text(0):
+                                                            DSMergeCaseWidget = QTreeWidgetItem(items)
+                                                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                                            DSMergeCaseWidget.setExpanded(True)
+
+                                                            counter += 1
 
                         self.CasesParentCoverageUpdate(CasesItemName)
 

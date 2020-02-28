@@ -25,6 +25,9 @@ class File():
     def setCreatedDate(self, date):
         self.CreatedDate = date
 
+    def setCreatedBy(self, name):
+        self.CreatedBy = name
+
     def setModifiedDate(self, date):
         self.ModifiedDate = date
 

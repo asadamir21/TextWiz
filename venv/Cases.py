@@ -4,7 +4,7 @@ class Cases:
         self.CaseTopic = CaseTopic
         self.TopicCases = []
         self.ParentTextlen = ParentTextlen
-        self.ParentCaseList = []
+        self.ParentCase = None
         self.MergedCase = False
 
     def addtoCase(self, TopicText):
@@ -12,7 +12,7 @@ class Cases:
         self.TopicCases.append([TopicText, len(TopicText.split()), len(TopicText), len(TopicText)/self.ParentTextlen])
 
     def setParentCase(self, ParentCaseName):
-        self.ParentCaseList.append(ParentCaseName)
+        self.ParentCase = ParentCaseName
 
     def setMergeCaseFlag(self):
         self.MergedCase = True

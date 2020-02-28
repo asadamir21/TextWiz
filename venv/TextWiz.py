@@ -208,6 +208,7 @@ class Window(QMainWindow):
         SaveButton = QAction(QIcon("Images/Save.png"), 'Save', self)
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
+        SaveButton.triggered.connect(self.SaveWindow)
 
         SaveASButton = QAction(QIcon("Images/Save.png"), 'Save As', self)
         SaveASButton.setShortcut('Ctrl+S')
@@ -1011,132 +1012,129 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Data Source
     def DataSourceTreeWidgetContextMenu(self, DataSourceWidgetItemName, DataSourceWidgetPos):
-        try:
-            #Parent Data Source
-            if DataSourceWidgetItemName.parent() == None:
-                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+        #Parent Data Source
+        if DataSourceWidgetItemName.parent() == None:
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-                DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
-                DataSourceExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
+            DataSourceExpand = QAction('Expand', self.DataSourceTreeWidget)
+            DataSourceExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
 
-                if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
-                    DataSourceExpand.setDisabled(True)
-                else:
-                    DataSourceExpand.setDisabled(False)
-
-                DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
-                DataSourceCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
-
-                if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
-                    DataSourceCollapse.setDisabled(True)
-                else:
-                    DataSourceCollapse.setDisabled(False)
-
-                DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
-                DataSourceDetail.triggered.connect(lambda: self.DataSourceWidgetItemDetail(DataSourceWidgetItemName))
-
-                DataSourceRightClickMenu.addAction(DataSourceExpand)
-                DataSourceRightClickMenu.addAction(DataSourceCollapse)
-                DataSourceRightClickMenu.addAction(DataSourceDetail)
-                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
-
-            #Child DataSource
+            if(DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == True):
+                DataSourceExpand.setDisabled(True)
             else:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                        break
+                DataSourceExpand.setDisabled(False)
 
-                DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
+            DataSourceCollapse = QAction('Collapse', self.DataSourceTreeWidget)
+            DataSourceCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(DataSourceWidgetItemName))
 
-                # Data Source Preview Web Page
-                if hasattr(DS, 'DataSourceHTML'):
-                    DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
-                    DataSourcePreviewWeb.triggered.connect(lambda: self.DataSourcePreviewWeb(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
+            if (DataSourceWidgetItemName.childCount() == 0 or DataSourceWidgetItemName.isExpanded() == False):
+                DataSourceCollapse.setDisabled(True)
+            else:
+                DataSourceCollapse.setDisabled(False)
 
-                # Data Source Show Tweet Data
-                if hasattr(DS, 'TweetData'):
-                    DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
-                    DataSourceShowTweetData.triggered.connect(lambda: self.DataSourceShowTweetData(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
+            DataSourceDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceDetail.triggered.connect(lambda: self.DataSourceWidgetItemDetail(DataSourceWidgetItemName))
 
-                # Youtube Show Video
-                DataSourceYoutubeShowVideo = QAction('Show Video', self.DataSourceTreeWidget)
+            DataSourceRightClickMenu.addAction(DataSourceExpand)
+            DataSourceRightClickMenu.addAction(DataSourceCollapse)
+            DataSourceRightClickMenu.addAction(DataSourceDetail)
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
-                if DS.DataSourceext == "Youtube" and hasattr(DS, 'YoutubeURLFlag'):
-                    DataSourceYoutubeShowVideo.triggered.connect(lambda: self.DataSourceYoutubeShowVideo(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceYoutubeShowVideo)
+        #Child DataSource
+        else:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    break
 
-                # Data Source Show Youtube Comments
-                DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
-                if hasattr(DS, 'YoutubeURLFlag'):
-                    DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsURL(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+            DataSourceRightClickMenu = QMenu(self.DataSourceTreeWidget)
 
-                if hasattr(DS, 'YoutubeKeyWordFlag'):
-                    DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsKeyWord(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
+            # Data Source Preview Web Page
+            if hasattr(DS, 'DataSourceHTML'):
+                DataSourcePreviewWeb = QAction('Preview Web', self.DataSourceTreeWidget)
+                DataSourcePreviewWeb.triggered.connect(lambda: self.DataSourcePreviewWeb(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewWeb)
 
-                # Data Source View Images
-                if hasattr(DS, 'DataSourceImage'):
-                    DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
-                    DataSourceViewImages.triggered.connect(lambda: self.DataSourceViewImage(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceViewImages)
+            # Data Source Show Tweet Data
+            if hasattr(DS, 'TweetData'):
+                DataSourceShowTweetData = QAction('Show Tweet Data', self.DataSourceTreeWidget)
+                DataSourceShowTweetData.triggered.connect(lambda: self.DataSourceShowTweetData(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceShowTweetData)
 
-                # Data Source View CSV Data
-                if hasattr(DS, 'CSVData'):
-                    DataSourceViewCSVData = QAction('View Data', self.DataSourceTreeWidget)
-                    DataSourceViewCSVData.triggered.connect(lambda: self.DataSourceViewCSVData(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceViewCSVData)
+            # Youtube Show Video
+            DataSourceYoutubeShowVideo = QAction('Show Video', self.DataSourceTreeWidget)
 
-                # Data Sources Preview
-                DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
+            if DS.DataSourceext == "Youtube" and hasattr(DS, 'YoutubeURLFlag'):
+                DataSourceYoutubeShowVideo.triggered.connect(lambda: self.DataSourceYoutubeShowVideo(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceYoutubeShowVideo)
 
-                if DS.DataSourceext == "Pdf files (*.pdf)":
-                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePDFPreview(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-                elif DS.DataSourceext == "Doc files (*.doc *.docx)":
-                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourceWordPreview(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
-                elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
-                    DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePreview(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+            # Data Source Show Youtube Comments
+            DataSourceShowYoutubeComments = QAction('Show Youtube Data', self.DataSourceTreeWidget)
+            if hasattr(DS, 'YoutubeURLFlag'):
+                DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsURL(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-                # Data Source Add Image
-                if hasattr(DS, 'DataSourceImage'):
-                    DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
-                    DataSourceAddImage.triggered.connect(lambda: self.DataSourceAddImage(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceAddImage)
+            if hasattr(DS, 'YoutubeKeyWordFlag'):
+                DataSourceShowYoutubeComments.triggered.connect(lambda: self.DataSourceShowYoutubeCommentsKeyWord(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceShowYoutubeComments)
 
-                if DS.DataSourceext != "URL" and DS.DataSourceext !=  'Tweet' and DS.DataSourceext !=  'Youtube' and DS.DataSourcetext != "CSV" :
-                    # Data Source Create Cases
-                    DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
-                    DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceCreateCases)
+            # Data Source View Images
+            if hasattr(DS, 'DataSourceImage'):
+                DataSourceViewImages = QAction('View Image', self.DataSourceTreeWidget)
+                DataSourceViewImages.triggered.connect(lambda: self.DataSourceViewImage(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceViewImages)
 
-                    # Data Source Create Sentiments
-                    DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
-                    DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
-                    DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
+            # Data Source View CSV Data
+            if hasattr(DS, 'CSVData'):
+                DataSourceViewCSVData = QAction('View Data', self.DataSourceTreeWidget)
+                DataSourceViewCSVData.triggered.connect(lambda: self.DataSourceViewCSVData(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceViewCSVData)
 
-                # Data Source Rename
-                DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
-                DataSourceRename.triggered.connect(lambda: self.DataSourceRename(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceRename)
+            # Data Sources Preview
+            DataSourcePreviewText = QAction('Preview Text', self.DataSourceTreeWidget)
 
-                # Data Source Remove
-                DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
-                DataSourceRemove.triggered.connect(lambda: self.DataSourceRemove(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceRemove)
+            if DS.DataSourceext == "Pdf files (*.pdf)":
+                DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePDFPreview(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+            elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                DataSourcePreviewText.triggered.connect(lambda: self.DataSourceWordPreview(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
+            elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
+                DataSourcePreviewText.triggered.connect(lambda: self.DataSourcePreview(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourcePreviewText)
 
-                # Data Source Child Detail
-                DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
-                DataSourceChildDetail.triggered.connect(lambda: self.DataSourceChildDetail(DataSourceWidgetItemName))
-                DataSourceRightClickMenu.addAction(DataSourceChildDetail)
+            # Data Source Add Image
+            if hasattr(DS, 'DataSourceImage'):
+                DataSourceAddImage = QAction('Add Image', self.DataSourceTreeWidget)
+                DataSourceAddImage.triggered.connect(lambda: self.DataSourceAddImage(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceAddImage)
 
-                DataSourceRightClickMenu.popup(DataSourceWidgetPos)
-        except Exception as e:
-            print(str(e))
+            if DS.DataSourceext != "URL" and DS.DataSourceext !=  'Tweet' and DS.DataSourceext !=  'Youtube' and DS.DataSourcetext != "CSV" :
+                # Data Source Create Cases
+                DataSourceCreateCases = QAction('Create Cases...', self.DataSourceTreeWidget)
+                DataSourceCreateCases.triggered.connect(lambda: self.DataSourceCreateCases(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceCreateCases)
+
+                # Data Source Create Sentiments
+                DataSourceCreateSentiments = QAction('Create Sentiments...', self.DataSourceTreeWidget)
+                DataSourceCreateSentiments.triggered.connect(lambda: self.DataSourceCreateSentiments(DataSourceWidgetItemName))
+                DataSourceRightClickMenu.addAction(DataSourceCreateSentiments)
+
+            # Data Source Rename
+            DataSourceRename = QAction('Rename', self.DataSourceTreeWidget)
+            DataSourceRename.triggered.connect(lambda: self.DataSourceRename(DataSourceWidgetItemName))
+            DataSourceRightClickMenu.addAction(DataSourceRename)
+
+            # Data Source Remove
+            DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
+            DataSourceRemove.triggered.connect(lambda: self.DataSourceRemove(DataSourceWidgetItemName))
+            DataSourceRightClickMenu.addAction(DataSourceRemove)
+
+            # Data Source Child Detail
+            DataSourceChildDetail = QAction('Details', self.DataSourceTreeWidget)
+            DataSourceChildDetail.triggered.connect(lambda: self.DataSourceChildDetail(DataSourceWidgetItemName))
+            DataSourceRightClickMenu.addAction(DataSourceChildDetail)
+
+            DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
     # Label Size Adjustment
     def LabelSizeAdjustment(self, label):
@@ -1335,10 +1333,16 @@ class Window(QMainWindow):
             for row in rowList:
                 ShowTweetDataTable.insertRow(rowList.index(row))
                 for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
+                    if row.index(item) == 6 or row.index(item) == 9:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(int(item)))
+                    else:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+
                     ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
-                    ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    if row.index(item) != 3:
+                        ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             ShowTweetDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -6581,106 +6585,102 @@ class Window(QMainWindow):
 
     # Setting ContextMenu on Clicked Query
     def CasesTreeWidgetContextMenu(self, CasesItemName, CasesWidgetPos):
-        try:
-            # Parent Data Source
-            if CasesItemName.parent() == None:
+        # Parent Data Source
+        if CasesItemName.parent() == None:
+            CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+
+            # Cases Expand
+            CasesExpand = QAction('Expand', self.CasesTreeWidget)
+            CasesExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
+            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
+                CasesExpand.setDisabled(True)
+            else:
+                CasesExpand.setDisabled(False)
+            CasesRightClickMenu.addAction(CasesExpand)
+
+            # Cases Collapse
+            CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
+            CasesCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
+            if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
+                CasesCollapse.setDisabled(True)
+            else:
+                CasesCollapse.setDisabled(False)
+            CasesRightClickMenu.addAction(CasesCollapse)
+
+            # Cases Coverage
+            CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
+            CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
+            CasesRightClickMenu.addAction(CasesCoverage)
+
+            # Merge Cases
+            MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
+            MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
+
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    if len(DS.CasesList) > 1:
+                        MergeCases.setDisabled(False)
+                    else:
+                        MergeCases.setDisabled(True)
+
+            CasesRightClickMenu.addAction(MergeCases)
+
+            # Case Remove
+            CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
+            CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
+            CasesRightClickMenu.addAction(CasesParentRemove)
+
+            # Cases Detail
+            CasesDetail = QAction('Details', self.CasesTreeWidget)
+            CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
+            CasesRightClickMenu.addAction(CasesDetail)
+            CasesRightClickMenu.popup(CasesWidgetPos)
+
+        # Child DataSource
+        else:
+            MergeCaseFlag = False
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.parent().text(0):
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            if cases.MergedCase:
+                                MergeCaseFlag = True
+
+            if MergeCaseFlag:
                 CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-                # Cases Expand
-                CasesExpand = QAction('Expand', self.CasesTreeWidget)
-                CasesExpand.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
-                if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == True):
-                    CasesExpand.setDisabled(True)
-                else:
-                    CasesExpand.setDisabled(False)
-                CasesRightClickMenu.addAction(CasesExpand)
+                # Case Rename
+                CasesRename = QAction('Rename', self.CasesTreeWidget)
+                CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
+                CasesRightClickMenu.addAction(CasesRename)
 
-                # Cases Collapse
-                CasesCollapse = QAction('Collapse', self.CasesTreeWidget)
-                CasesCollapse.triggered.connect(lambda: self.DataSourceWidgetItemExpandCollapse(CasesItemName))
-                if (CasesItemName.childCount() == 0 or CasesItemName.isExpanded() == False):
-                    CasesCollapse.setDisabled(True)
-                else:
-                    CasesCollapse.setDisabled(False)
-                CasesRightClickMenu.addAction(CasesCollapse)
-
-                # Cases Coverage
-                CasesCoverage = QAction('Show Cases Coverage', self.CasesTreeWidget)
-                CasesCoverage.triggered.connect(lambda: self.CasesParentCoverage(CasesItemName))
-                CasesRightClickMenu.addAction(CasesCoverage)
-
-                # Merge Cases
-                MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
-                MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
-
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == CasesItemName.text(0):
-                        if len(DS.CasesList) > 1:
-                            MergeCases.setDisabled(False)
-                        else:
-                            MergeCases.setDisabled(True)
-
-                CasesRightClickMenu.addAction(MergeCases)
-
-                # Case Remove
-                CasesParentRemove = QAction('Remove', self.CasesTreeWidget)
-                CasesParentRemove.triggered.connect(lambda: self.CasesParentRemoveDialog(CasesItemName))
-                CasesRightClickMenu.addAction(CasesParentRemove)
-
-                # Cases Detail
-                CasesDetail = QAction('Details', self.CasesTreeWidget)
-                CasesDetail.triggered.connect(lambda: self.CasesParentDetail(CasesItemName))
-                CasesRightClickMenu.addAction(CasesDetail)
                 CasesRightClickMenu.popup(CasesWidgetPos)
 
-            # Child DataSource
             else:
-                MergeCaseFlag = False
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == CasesItemName.parent().text(0):
-                        for cases in DS.CasesList:
-                            if cases.CaseTopic == CasesItemName.text(0):
-                                if cases.MergedCase:
-                                    MergeCaseFlag = True
+                CasesRightClickMenu = QMenu(self.CasesTreeWidget)
 
-                if MergeCaseFlag:
-                    CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+                # Case Show components
+                CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
+                CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
+                CasesRightClickMenu.addAction(CasesShowTopicText)
 
-                    # Case Rename
-                    CasesRename = QAction('Rename', self.CasesTreeWidget)
-                    CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
-                    CasesRightClickMenu.addAction(CasesRename)
+                # Case Rename
+                CasesRename = QAction('Rename', self.CasesTreeWidget)
+                CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
+                CasesRightClickMenu.addAction(CasesRename)
 
-                    CasesRightClickMenu.popup(CasesWidgetPos)
+                # Case Remove
+                CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
+                CasesChildRemove.triggered.connect(lambda: self.CasesChildRemoveDialog(CasesItemName))
+                CasesRightClickMenu.addAction(CasesChildRemove)
 
-                else:
-                    CasesRightClickMenu = QMenu(self.CasesTreeWidget)
+                # Case Child Detail
+                CasesDetail = QAction('Details', self.CasesTreeWidget)
+                CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
+                CasesRightClickMenu.addAction(CasesDetail)
 
-                    # Case Show components
-                    CasesShowTopicText = QAction('Show Topic Components', self.CasesTreeWidget)
-                    CasesShowTopicText.triggered.connect(lambda: self.CasesShowTopicComponent(CasesItemName))
-                    CasesRightClickMenu.addAction(CasesShowTopicText)
-
-                    # Case Rename
-                    CasesRename = QAction('Rename', self.CasesTreeWidget)
-                    CasesRename.triggered.connect(lambda: self.CasesRename(CasesItemName))
-                    CasesRightClickMenu.addAction(CasesRename)
-
-                    # Case Remove
-                    CasesChildRemove = QAction('Remove', self.CasesTreeWidget)
-                    CasesChildRemove.triggered.connect(lambda: self.CasesChildRemoveDialog(CasesItemName))
-                    CasesRightClickMenu.addAction(CasesChildRemove)
-
-                    # Case Child Detail
-                    CasesDetail = QAction('Details', self.CasesTreeWidget)
-                    CasesDetail.triggered.connect(lambda: self.CasesChildDetail(CasesItemName))
-                    CasesRightClickMenu.addAction(CasesDetail)
-
-                    CasesRightClickMenu.popup(CasesWidgetPos)
-
-        except Exception as e:
-            print(str(e))
+                CasesRightClickMenu.popup(CasesWidgetPos)
 
     # Merge Cases Dailog
     def MergeCasesDialog(self, CasesItemName):
@@ -6715,7 +6715,7 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.text(0):
                 for cases in DS.CasesList:
-                    if not cases.MergedCase:
+                    if cases.ParentCase == None:
                         item = QStandardItem(cases.CaseTopic)
                         item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                         item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
@@ -6750,82 +6750,103 @@ class Window(QMainWindow):
 
     # Merge Cases
     def MergeCases(self, CasesItemName, MergeCaseName, ListModel):
-        # Check Selection in List
-        SingleSelectionInListError = False
+        try:
+            # Check Selection in List
+            SingleSelectionInListError = False
 
-        CheckedCasesList = []
+            CheckedCasesList = []
 
-        for listRow in range(ListModel.rowCount()):
-            dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
+            for listRow in range(ListModel.rowCount()):
+                dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
 
-            for object in dummyList:
-                if object.checkState() == 2:
-                    CheckedCasesList.append(object.text())
+                for object in dummyList:
+                    if object.checkState() == 2:
+                        CheckedCasesList.append(object.text())
 
-        if len(CheckedCasesList) < 2:
-            SingleSelectionInListError = True
+            if len(CheckedCasesList) < 2:
+                SingleSelectionInListError = True
 
-        if not SingleSelectionInListError:
-            # Check Merge Case Name
-            MergeCaseNameDuplicateError = False
+            if not SingleSelectionInListError:
+                # Check Merge Case Name
+                MergeCaseNameDuplicateError = False
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.text(0):
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == MergeCaseName:
-                            MergeCaseNameDuplicateError = True
-                            break
-
-            if not MergeCaseNameDuplicateError:
-                if  MergeCaseName != CasesItemName.text(0):
-                    # Creating New Case (MergeCase)
-                    NewCase = Cases(MergeCaseName, 0)
-                    NewCase.setMergeCaseFlag()
-
-                    DS.CasesList.append(NewCase)
-
-                    # Setting Parent of Cases
-                    for CheckedCases in CheckedCasesList:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
                         for cases in DS.CasesList:
-                            if cases.CaseTopic == CheckedCases:
-                                cases.setParentCase(NewCase)
+                            if cases.CaseTopic == MergeCaseName:
+                                MergeCaseNameDuplicateError = True
+                                break
 
-                    # Removing All Child
-                    while CasesItemName.childCount() != 0:
-                        CasesItemName.removeChild(CasesItemName.child(0))
+                if not MergeCaseNameDuplicateError:
+                    if  MergeCaseName != CasesItemName.text(0):
+                        # Creating New Case (MergeCase)
+                        NewCase = Cases(MergeCaseName, 0)
+                        NewCase.setMergeCaseFlag()
 
-                    # Setting All Child
-                    for cases in DS.CasesList:
-                        if cases.MergedCase:
-                            DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
-                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
-                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
-                            DSMergeCaseWidget.setExpanded(True)
+                        DS.CasesList.append(NewCase)
 
-                            for childCases in DS.CasesList:
-                                if cases in childCases.ParentCaseList:
-                                    DSChildCaseNode = QTreeWidgetItem(DSMergeCaseWidget)
-                                    DSChildCaseNode.setText(0, childCases.CaseTopic)
-                                    DSChildCaseNode.setToolTip(0, DSChildCaseNode.text(0))
+                        # Setting Parent of Cases
+                        for CheckedCases in CheckedCasesList:
+                            for cases in DS.CasesList:
+                                if cases.CaseTopic == CheckedCases:
+                                    cases.setParentCase(NewCase)
+                                    break
 
-                        elif len(cases.ParentCaseList) == 0:
-                            DSCaseWidget = QTreeWidgetItem(CasesItemName)
-                            DSCaseWidget.setText(0, cases.CaseTopic)
-                            DSCaseWidget.setToolTip(0, DSCaseWidget.text(0))
+                        # Removing All Child
+                        while CasesItemName.childCount() != 0:
+                            CasesItemName.removeChild(CasesItemName.child(0))
+
+                        # Setting All Child
+                        counter = 0
+
+                        while(counter < len(DS.CasesList)):
+                            for cases in DS.CasesList:
+                                if cases.ParentCase == None:
+                                    ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                                    if len(ItemWidget) == 0:
+                                        DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
+                                        DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                        DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                        DSMergeCaseWidget.setExpanded(True)
+                                        counter += 1
+
+                                else:
+                                    SelfItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+
+                                    if len(SelfItemWidget) == 0:
+                                        ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic, Qt.MatchRecursive, 0)
+                                        if len(ItemWidget) > 0:
+                                            for items in ItemWidget:
+                                                tempWidget = items
+                                                while tempWidget.parent() != None:
+                                                    tempWidget = tempWidget.parent()
+
+                                                if tempWidget.text(0) == CasesItemName.text(0):
+                                                    DSMergeCaseWidget = QTreeWidgetItem(items)
+                                                    DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                                    DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                                    DSMergeCaseWidget.setExpanded(True)
+
+                                                    counter += 1
+
+                        self.CasesParentCoverageUpdate(CasesItemName)
+
+                    else:
+                        QMessageBox.critical(self, "Case Name Error",
+                                             "Case cannot have the same Name as its Data Source",
+                                             QMessageBox.Ok)
 
                 else:
                     QMessageBox.critical(self, "Case Name Error",
-                                         "Case cannot have the same Name as its Data Source",
+                                         "A Case with a similar Name Exists! Please Try a different Name",
                                          QMessageBox.Ok)
-
             else:
-                QMessageBox.critical(self, "Case Name Error",
-                                     "A Case with a similar Name Exists! Please Try a different Name",
+                QMessageBox.critical(self, "Selection Error",
+                                     "Please Select More than one cases from the list to merge",
                                      QMessageBox.Ok)
-        else:
-            QMessageBox.critical(self, "Selection Error",
-                                 "Please Select More than one cases from the list to merge",
-                                 QMessageBox.Ok)
+        except Exception as e:
+            print(str(e))
+
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
@@ -8067,7 +8088,7 @@ class Window(QMainWindow):
     # *********************** Application Basic Features *************************
     # ****************************************************************************
 
-    #Close Application / Exit
+    # Close Application / Exit
     def close_application(self):
         choice = QMessageBox.question(self, 'Quit', "Are You Sure?", QMessageBox.Yes | QMessageBox.No)
         if choice == QMessageBox.Yes:
@@ -8075,7 +8096,7 @@ class Window(QMainWindow):
         else:
             pass
 
-    #Open New File
+    # Open New File
     def NewFileWindow(self):
         myDialog = QDialog()
         myDialog.setModal(True)
@@ -8086,7 +8107,7 @@ class Window(QMainWindow):
 
         myDialog.show()
 
-    #Open File
+    # Open File
     def OpenFileWindow(self):
         try:
             dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
@@ -8097,209 +8118,224 @@ class Window(QMainWindow):
                 global myFile
                 myFile = pickle.load(open(path[0], "rb"))
 
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+                        # Adding Node to Data Source Tree Widget
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
-                    # Adding Node to Data Source Tree Widget
+                        # Word File
+                        if DS.DataSourceext == "Doc files (*.doc *.docx)":
 
-                    # Word File
-                    if DS.DataSourceext == "Doc files (*.doc *.docx)":
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.wordTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                            if self.wordTreeWidget.isHidden():
+                                self.wordTreeWidget.setHidden(False)
+                                self.wordTreeWidget.setExpanded(True)
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # PDF File
+                        elif DS.DataSourceext == "Pdf files (*.pdf)":
+
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                            if self.pdfTreeWidget.isHidden():
+                                self.pdfTreeWidget.setHidden(False)
+                                self.pdfTreeWidget.setExpanded(True)
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # Text File
+                        elif DS.DataSourceext == "Notepad files (*.txt)":
+
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.txtTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                            if self.txtTreeWidget.isHidden():
+                                self.txtTreeWidget.setHidden(False)
+                                self.txtTreeWidget.setExpanded(True)
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # RTF File
+                        elif DS.DataSourceext == "Rich Text Format files (*.rtf)":
+
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+
+                            if self.rtfTreeWidget.isHidden():
+                                self.rtfTreeWidget.setHidden(False)
+
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # Audio File
+                        elif DS.DataSourceext == "Audio files (*.wav *.mp3)":
+
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+
+                            if self.audioSTreeWidget.isHidden():
+                                self.audioSTreeWidget.setHidden(False)
+                                self.audioSTreeWidget.setExpanded(True)
+
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # Image File
+                        elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+
+                            # Adding Node to Data Source Tree Widget
+                            newNode = QTreeWidgetItem(self.ImageSTreeWidget)
+                            newNode.setText(0, DS.DataSourceName)
+                            self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
+
+                            if self.ImageSTreeWidget.isHidden():
+                                self.ImageSTreeWidget.setHidden(False)
+                                self.ImageSTreeWidget.setExpanded(True)
+
+                            newNode.setToolTip(0, newNode.text(0))
+
+                        # Adding Cases
+                        if (len(DS.CasesList) > 0):
+                            DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
+                            DSCaseWidget.setText(0, DS.DataSourceName)
+                            DSCaseWidget.setExpanded(True)
+
+                            for cases in DS.CasesList:
+                                if cases.MergedCase or cases.ParentCase == None:
+                                    DSNewCaseNode = QTreeWidgetItem(DSCaseWidget)
+                                    DSNewCaseNode.setText(0, cases.CaseTopic)
+                                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                                    if cases.MergedCase:
+                                        for cases2 in DS.CasesList:
+                                            if cases2.ParentCase == cases:
+                                                DSCase2Node = QTreeWidgetItem(DSNewCaseNode)
+                                                DSCase2Node.setText(0, cases2.CaseTopic)
+                                                DSCase2Node.setToolTip(0, DSCase2Node.text(0))
+
+
+                        # Adding Sentiments
+                        DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                        DSSentimentWidget.setText(0, DS.DataSourceName)
+                        DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
+                        DSSentimentWidget.setExpanded(True)
+
+                        for sentiments in DS.SentimentList:
+                            DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
+                            DSNewSentimentNode.setText(0, sentiments.SentimentType)
+
+
+                    # CSV File
+                    elif DS.DataSourceext == "CSV files (*.csv)":
 
                         # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.wordTreeWidget)
+                        newNode = QTreeWidgetItem(self.CSVTreeWidget)
                         newNode.setText(0, DS.DataSourceName)
-                        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
-                        if self.wordTreeWidget.isHidden():
-                            self.wordTreeWidget.setHidden(False)
-                            self.wordTreeWidget.setExpanded(True)
+                        self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
+
+                        if self.CSVTreeWidget.isHidden():
+                            self.CSVTreeWidget.setHidden(False)
+                            self.CSVTreeWidget.setExpanded(True)
+
                         newNode.setToolTip(0, newNode.text(0))
 
-                    # PDF File
-                    elif DS.DataSourceext == "Pdf files (*.pdf)":
+                    # URL
+                    elif DS.DataSourceext == "URL":
 
                         # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                        newNode = QTreeWidgetItem(self.WebTreeWidget)
                         newNode.setText(0, DS.DataSourceName)
-                        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
-                        if self.pdfTreeWidget.isHidden():
-                            self.pdfTreeWidget.setHidden(False)
-                            self.pdfTreeWidget.setExpanded(True)
+                        self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+
+                        if self.WebTreeWidget.isHidden():
+                            self.WebTreeWidget.setHidden(False)
+                            self.WebTreeWidget.setExpanded(True)
+
                         newNode.setToolTip(0, newNode.text(0))
 
-                    # Text File
-                    elif DS.DataSourceext == "Notepad files (*.txt)":
+                    # Tweet
+                    elif DS.DataSourceext == "Tweet":
 
                         # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.txtTreeWidget)
+                        newNode = QTreeWidgetItem(self.TweetTreeWidget)
                         newNode.setText(0, DS.DataSourceName)
-                        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
-                        if self.txtTreeWidget.isHidden():
-                            self.txtTreeWidget.setHidden(False)
-                            self.txtTreeWidget.setExpanded(True)
+                        self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
+
+                        if self.TweetTreeWidget.isHidden():
+                            self.TweetTreeWidget.setHidden(False)
+                            self.TweetTreeWidget.setExpanded(True)
+
                         newNode.setToolTip(0, newNode.text(0))
 
-                    # RTF File
-                    elif DS.DataSourceext == "Rich Text Format files (*.rtf)":
+                    # Youtube
+                    elif DS.DataSourceext == "Youtube":
 
                         # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                        newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
                         newNode.setText(0, DS.DataSourceName)
-                        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+                        self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
 
-                        if self.rtfTreeWidget.isHidden():
-                            self.rtfTreeWidget.setHidden(False)
+                        if self.YoutubeTreeWidget.isHidden():
+                            self.YoutubeTreeWidget.setHidden(False)
+                            self.YoutubeTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
-
-                    # Audio File
-                    elif DS.DataSourceext == "Audio files (*.wav *.mp3)":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.audioSTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
-
-                        if self.audioSTreeWidget.isHidden():
-                            self.audioSTreeWidget.setHidden(False)
-                            self.audioSTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                    # Image File
-                    elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.ImageSTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
-
-                        if self.ImageSTreeWidget.isHidden():
-                            self.ImageSTreeWidget.setHidden(False)
-                            self.ImageSTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                    # Adding Cases
-                    if (len(DS.CasesList) > 0):
-                        DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
-                        DSCaseWidget.setText(0, DS.DataSourceName)
-                        DSCaseWidget.setExpanded(True)
-
-                        for cases in DS.CasesList:
-                            DSNewCaseNode = QTreeWidgetItem(DSCaseWidget)
-                            DSNewCaseNode.setText(0, cases.CaseTopic)
-                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                    # Adding Sentiments
-                    DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                    DSSentimentWidget.setText(0, DS.DataSourceName)
-                    DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
-                    DSSentimentWidget.setExpanded(True)
-
-                    for sentiments in DS.SentimentList:
-                        DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
-                        DSNewSentimentNode.setText(0, sentiments.SentimentType)
-
-
-                # CSV File
-                elif DS.DataSourceext == "CSV files (*.csv)":
-
-                    # Adding Node to Data Source Tree Widget
-                    newNode = QTreeWidgetItem(self.CSVTreeWidget)
-                    newNode.setText(0, DS.DataSourceName)
-                    self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
-
-                    if self.CSVTreeWidget.isHidden():
-                        self.CSVTreeWidget.setHidden(False)
-                        self.CSVTreeWidget.setExpanded(True)
-
-                    newNode.setToolTip(0, newNode.text(0))
-
-                # URL
-                elif DS.DataSourceext == "URL":
-
-                    # Adding Node to Data Source Tree Widget
-                    newNode = QTreeWidgetItem(self.WebTreeWidget)
-                    newNode.setText(0, DS.DataSourceName)
-                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
-
-                    if self.WebTreeWidget.isHidden():
-                        self.WebTreeWidget.setHidden(False)
-                        self.WebTreeWidget.setExpanded(True)
-
-                    newNode.setToolTip(0, newNode.text(0))
-
-                # Tweet
-                elif DS.DataSourceext == "Tweet":
-
-                    # Adding Node to Data Source Tree Widget
-                    newNode = QTreeWidgetItem(self.TweetTreeWidget)
-                    newNode.setText(0, DS.DataSourceName)
-                    self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
-
-                    if self.TweetTreeWidget.isHidden():
-                        self.TweetTreeWidget.setHidden(False)
-                        self.TweetTreeWidget.setExpanded(True)
-
-                    newNode.setToolTip(0, newNode.text(0))
-
-                # Youtube
-                elif DS.DataSourceext == "Youtube":
-
-                    # Adding Node to Data Source Tree Widget
-                    newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
-                    newNode.setText(0, DS.DataSourceName)
-                    self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
-
-                    if self.YoutubeTreeWidget.isHidden():
-                        self.YoutubeTreeWidget.setHidden(False)
-                        self.YoutubeTreeWidget.setExpanded(True)
-
-                    newNode.setToolTip(0, newNode.text(0))
 
 
         except Exception as e:
             print(str(e))
 
-    #SaveASWindow
+    # Save File Window
+    def SaveWindow(self):
+        if hasattr(myFile, "FileLocation") and hasattr(myFile, "FileName"):
+            self.Save()
+        else:
+            self.SaveASWindow()
+
+    # SaveASWindow
     def SaveASWindow(self):
-        try:
-            dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 1)
-            path = dummyWindow.filepath
-            dummyWindow.__del__()
+        dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 1)
+        path = dummyWindow.filepath
+        dummyWindow.__del__()
 
-            if all(path):
-                # open the file for writing
-                fileObject = open(path[0], 'wb')
+        if all(path):
+            myFile.setFileLocation(path[0])
+            myFile.setFileName(ntpath.basename(path[0]))
+            self.Save()
 
-                # for tabs in myFile.TabList:
-                #     print(tabs.tabWidget)
+    # Save
+    def Save(self):
+        # for tabs in myFile.TabList:
+        #     print(tabs.tabWidget)
+        myFile.setModifiedDate(datetime.datetime.now())
+        myFile.setModifiedBy(getpass.getuser())
+        SaveFile = open(myFile.FileLocation, 'wb')
+        dummyTabList = []
 
-                dummyTabList = []
+        for i in range(len(myFile.TabList)):
+            dummyTabList.append(myFile.TabList[i].tabWidget)
 
-                for i in range(len(myFile.TabList)):
-                    dummyTabList.append(myFile.TabList[i].tabWidget)
+        for tabs in myFile.TabList:
+            tabs.tabWidget = None
 
-                for tabs in myFile.TabList:
-                    tabs.tabWidget = None
+        # for tabs in myFile.TabList:
+        #     print(tabs.tabWidget)
+        #
+        # for tabs in dummyTabList:
+        #     print(tabs)
 
-                # for tabs in myFile.TabList:
-                #     print(tabs.tabWidget)
-                #
-                # for tabs in dummyTabList:
-                #     print(tabs)
+        pickle.dump(myFile, SaveFile)
 
-                pickle.dump(myFile, fileObject)
+        for i in range(len(myFile.TabList)):
+            myFile.TabList[i].tabWidget = dummyTabList[i]
 
-                for i in range(len(myFile.TabList)):
-                    myFile.TabList[i].tabWidget = dummyTabList[i]
-
-                # for tabs in myFile.TabList:
-                #     print(tabs.tabWidget)
-
-
-        except Exception as e:
-            print(str(e))
+        # for tabs in myFile.TabList:
+        #     print(tabs.tabWidget)
 
     #Print Window
     def printWindow(self):
@@ -8846,7 +8882,7 @@ class Window(QMainWindow):
 
     # Import From Tweet
     def ImportFromTweet(self, Hashtag, Since, NoOfTweet):
-        dummyDataSource = DataSource(Hashtag, "Tweet", self)
+        dummyDataSource = DataSource(Hashtag, "Tweet")
         DataSourceNameCheck = False
 
         for DS in myFile.DataSourceList:
@@ -8938,54 +8974,51 @@ class Window(QMainWindow):
 
     # Import From URL
     def ImportFromURL(self, URL):
-        try:
-            dummyDataSource = DataSource(URL, "URL", self)
-            DataSourceNameCheck = False
+        dummyDataSource = DataSource(URL, "URL", self)
+        DataSourceNameCheck = False
 
-            for DS in myFile.DataSourceList:
-                if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                    DataSourceNameCheck = True
+        for DS in myFile.DataSourceList:
+            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                DataSourceNameCheck = True
 
-            if not DataSourceNameCheck:
-                if not dummyDataSource.DataSourceLoadError:
-                    if not dummyDataSource.DataSourceForbiddenLoadError and not len(dummyDataSource.DataSourcetext) == 0:
-                        myFile.setDataSources(dummyDataSource)
-                        newNode = QTreeWidgetItem(self.WebTreeWidget)
-                        newNode.setText(0, URL)
-                        self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+        if not DataSourceNameCheck:
+            if not dummyDataSource.DataSourceLoadError:
+                if not dummyDataSource.DataSourceForbiddenLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+                    myFile.setDataSources(dummyDataSource)
+                    newNode = QTreeWidgetItem(self.WebTreeWidget)
+                    newNode.setText(0, URL)
+                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
 
-                        if self.WebTreeWidget.isHidden():
-                            self.WebTreeWidget.setHidden(False)
-                            self.WebTreeWidget.setExpanded(True)
+                    if self.WebTreeWidget.isHidden():
+                        self.WebTreeWidget.setHidden(False)
+                        self.WebTreeWidget.setExpanded(True)
 
-                        newNode.setToolTip(0, newNode.text(0))
+                    newNode.setToolTip(0, newNode.text(0))
 
-                        self.DataSourceSimilarityUpdate()
-                        self.DataSourceDocumentClusteringUpdate()
-                    else:
-                        if dummyDataSource.DataSourceForbiddenLoadError:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                                "HTTP Error 403: Forbidden\n" +
-                                                                                dummyDataSource.DataSourceName + " is not accessible",
-                                                                                QMessageBox.Ok)
+                    self.DataSourceSimilarityUpdate()
+                    self.DataSourceDocumentClusteringUpdate()
+                else:
+                    if dummyDataSource.DataSourceForbiddenLoadError:
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            "HTTP Error 403: Forbidden\n" +
+                                                                            dummyDataSource.DataSourceName + " is not accessible",
+                                                                            QMessageBox.Ok)
 
-                        elif dummyDataSource.DataSourcetext == 0:
-                            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                                dummyDataSource.DataSourceName + " doesnot contains any text",
-                                                                                QMessageBox.Ok)
-                elif dummyDataSource.DataSourceLoadError:
-                    if hasattr(dummyDataSource, "DataSourceURLHTTPError") or hasattr(dummyDataSource, "DataSourceURLConnectionError") or hasattr(dummyDataSource, "DataSourceURLMissingSchema"):
-                        QMessageBox.critical(self, "URL Error",
-                                             dummyDataSource.DataSoureURLErrorMessage,
-                                             QMessageBox.Ok)
-                    dummyDataSource.__del__()
-            else:
+                    elif dummyDataSource.DataSourcetext == 0:
+                        DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                            dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                            QMessageBox.Ok)
+            elif dummyDataSource.DataSourceLoadError:
+                if hasattr(dummyDataSource, "DataSourceURLHTTPError") or hasattr(dummyDataSource, "DataSourceURLConnectionError") or hasattr(dummyDataSource, "DataSourceURLMissingSchema"):
+                    QMessageBox.critical(self, "URL Error",
+                                         dummyDataSource.DataSoureURLErrorMessage,
+                                         QMessageBox.Ok)
                 dummyDataSource.__del__()
-                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                       "A Web Source with Similar URL Exist!",
-                                                                       QMessageBox.Ok)
-        except Exception as e:
-            print(str(e))
+        else:
+            dummyDataSource.__del__()
+            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
+                                                                   "A Web Source with Similar URL Exist!",
+                                                                   QMessageBox.Ok)
 
     # Import From Youtube Window
     def ImportYoutubeWindow(self):
@@ -9121,11 +9154,9 @@ class Window(QMainWindow):
 
 if __name__ == "__main__":
     WindowTitleLogo = "Images/TextWizLogo.png"
-    isSaveAs = True
     myFile = File()
     myFile.setCreatedDate(datetime.datetime.now())
-    myFile.setCreatedDate(datetime.datetime.now())
-    myFile.setCreatedDate(getpass.getuser())
+    myFile.setCreatedBy(getpass.getuser())
 
     App = QApplication(sys.argv)
 

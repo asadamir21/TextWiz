@@ -838,30 +838,34 @@ class DataSource():
 
     # Cases Coverage Graph
     def allCasesCoverage(self):
-
         # Bar Chart
         self.BarCasesCoverageFigure = plt.figure(figsize=(10, 5))
         ax2 = self.BarCasesCoverageFigure.add_subplot(111)
 
-        objects = tuple(cases.CaseTopic for cases in self.CasesList)
+        #objects = tuple(cases.CaseTopic for cases in self.CasesList)
+        objects = []
         performance = []
         for cases in self.CasesList:
-            totalweightage = 0
-            for casetext in cases.TopicCases:
-                totalweightage += casetext[3]
-            performance.append(totalweightage)
+            if not cases.MergedCase:
+                totalweightage = 0
 
-        AllColors = []
-        for colorname, colorhex in matplotlib.colors.cnames.items():
-            AllColors.append(colorname)
-
-        colors = [random.choice(AllColors) for i in range(len(self.CasesList))]
+                for casetext in cases.TopicCases:
+                    totalweightage += casetext[3]
+                objects.append(cases.CaseTopic)
+                performance.append(totalweightage)
+            else:
+                totalweightage = 0
+                for cases2 in self.CasesList:
+                    if cases in cases2.ParentCaseList:
+                        for casetext in cases2.TopicCases:
+                            totalweightage += casetext[3]
+                objects.append(cases.CaseTopic)
+                performance.append(totalweightage)
 
         y_pos = np.arange(len(objects))
-
-        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=colors)
+        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=np.random.rand(3, 3))
         ax2.set_xticks(y_pos)
-        ax2.set_xticklabels(objects)
+        ax2.set_xticklabels(tuple(objects))
         ax2.set_ylabel('Case Weigthage')
 
     # # Set Animation

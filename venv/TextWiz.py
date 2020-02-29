@@ -3904,7 +3904,8 @@ class Window(QMainWindow):
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for cases in DS.CasesList:
-                    AddtoCaseComboBox.addItem(cases.CaseTopic)
+                    if not cases.MergedCase:
+                        AddtoCaseComboBox.addItem(cases.CaseTopic)
                 break
 
         self.LineEditSizeAdjustment(AddtoCaseComboBox)

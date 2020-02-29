@@ -28,18 +28,27 @@ from operator import itemgetter
 import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
 
 #PDF, Word, Twitter
-import docx2txt, PyPDF2, tweepy
+import docx2txt, PyPDF2, tweepy, httplib2
+
+#Youtube
+from Youtube.URL import *
+import google.auth.exceptions
+try:
+    YoutubeServerNotFoundError = False
+    from Youtube.KeyWord import *
+except httplib2.ServerNotFoundError:
+    YoutubeServerNotFoundError = True
+except google.auth.exceptions.RefreshError:
+    print("Done")
+except Exception as e:
+    print(str(e))
 
 #Audio
 import wave
-#from pydub import AudioSegment
+from pydub import AudioSegment
 #from pydub.silence import split_on_silence
 from ffmpeg import *
 import speech_recognition as sr
-
-#Youtube
-from Youtube.KeyWord import *
-from Youtube.URL import *
 
 class DataSource():
     def __init__(self, path, ext):
@@ -550,17 +559,21 @@ class DataSource():
 
     # Yotube Comments From KeyWord
     def YoutubeKeyWord(self):
-        self.YoutubeKeyWordFlag = True
-        try:
-            self.YoutubeData = retreiveComments(self.DataSourcePath)
+        if not YoutubeServerNotFoundError:
+            self.YoutubeServerNotFoundError = False
+            self.YoutubeKeyWordFlag = True
+            try:
+                self.YoutubeData = retreiveComments(self.DataSourcePath)
 
-            self.DataSourcetext = ""
-            for row in range(len(self.YoutubeData)):
-                self.DataSourcetext = self.DataSourcetext + self.YoutubeData[row][4]
-            self.DataSourceLoadError = False
+                self.DataSourcetext = ""
+                for row in range(len(self.YoutubeData)):
+                    self.DataSourcetext = self.DataSourcetext + self.YoutubeData[row][4]
+                self.DataSourceLoadError = False
 
-        except Exception as e:
-            self.DataSourceLoadError = True
+            except Exception as e:
+                self.DataSourceLoadError = True
+        else:
+            self.YoutubeServerNotFoundError = True
 
     # Summary
     def Summarize(self, Default, Criteria, Value):
@@ -842,7 +855,6 @@ class DataSource():
         self.BarCasesCoverageFigure = plt.figure(figsize=(10, 5))
         ax2 = self.BarCasesCoverageFigure.add_subplot(111)
 
-        #objects = tuple(cases.CaseTopic for cases in self.CasesList)
         objects = []
         performance = []
         for cases in self.CasesList:
@@ -852,22 +864,26 @@ class DataSource():
                     totalweightage += casetext[3]
                 objects.append(cases.CaseTopic)
                 performance.append(totalweightage)
-            else:
-                totalweightage = 0
-                for cases2 in self.CasesList:
-                    if cases == cases2.ParentCase:
-                        for casetext in cases2.TopicCases:
-                            totalweightage += casetext[3]
-                objects.append(cases.CaseTopic)
-                performance.append(totalweightage)
+            # else:
+            #     totalweightage = 0
+            #     for cases2 in self.CasesList:
+            #         if cases == cases2.ParentCase:
+            #             for casetext in cases2.TopicCases:
+            #                 totalweightage += casetext[3]
+            #     objects.append(cases.CaseTopic)
+            #     performance.append(totalweightage)
 
         y_pos = np.arange(len(objects))
-        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=np.random.rand(3, 3))
+        ax2.bar(y_pos, performance, align='center', alpha=0.5, color=np.random.rand(len(objects), 3))
         ax2.set_xticks(y_pos)
         ax2.set_xticklabels(tuple(objects))
         ax2.set_ylabel('Case Weigthage')
 
-    # # Set Animation
+    def __del__(self):
+        self.DataSourceDelete = True
+
+
+# # Set Animation
     # def Animation(self, name):
     #     try:
     #         loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
@@ -914,6 +930,3 @@ class DataSource():
     #         print(str(e))
 
     # Delete Object
-
-    def __del__(self):
-        self.DataSourceDelete = True

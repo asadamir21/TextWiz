@@ -3843,10 +3843,12 @@ class Window(QMainWindow):
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == CaseTopic:
-                            CasesNameConflict = True
-                            break
+                    break
+
+            for cases in DS.CasesList:
+                if cases.CaseTopic == CaseTopic:
+                    CasesNameConflict = True
+                    break
 
             if not CasesNameConflict:
                 DS.CreateCase(CaseTopic, selectedText)
@@ -3863,6 +3865,7 @@ class Window(QMainWindow):
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
                 self.CasesParentCoverageUpdate(DSNewCaseNode.parent())
+                self.CasesStructureUpdate(DSNewCaseNode.parent())
             else:
                 QMessageBox.information(self, "Creation Error",
                                         "A Case with that Topic is already created",
@@ -3933,6 +3936,7 @@ class Window(QMainWindow):
                         ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
                         for widgets in ItemsWidget:
                             self.CasesParentCoverageUpdate(widgets)
+                            self.CasesStructureUpdate(widgets)
 
                         # Updating Show Component Table
                         for childCount in range(widgets.childCount()):
@@ -6369,6 +6373,25 @@ class Window(QMainWindow):
         except Exception as e:
             print(str(e))
 
+    # Save Structure as PDF
+    def SaveStructureAsPDF(self, graph):
+        try:
+            path = QFileDialog.getSaveFileName(
+                self, 'Save File', '', 'PDF Files(*.pdf)')
+
+            if all(path):
+                graph.format = "pdf"
+                SaveSuccessBox = QMessageBox(self)
+                SaveSuccessBox.setIcon(QMessageBox.Information)
+                SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
+                SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
+                SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: graph.render(ntpath.basename(path[0]), os.path.dirname(path[0]), view=True, cleanup=True))
+                SaveSuccessBox.button(QMessageBox.Ok).clicked.connect(lambda: graph.render(ntpath.basename(path[0]), os.path.dirname(path[0]), view=False, cleanup=True))
+                SaveSuccessBox.show()
+
+        except PermissionError:
+            QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
     # ****************************************************************************
     # *************************** Query Context Menu *****************************
     # ****************************************************************************
@@ -6698,43 +6721,152 @@ class Window(QMainWindow):
 
     # Cases Structure
     def CasesStructure(self, CasesItemName):
-        try:
-            os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
+        CasesStructureTabFlag = False
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.text(0):
-                    d = graphviz.Digraph(name="Cases")
-                    d.edge_attr.update(arrowhead="vee", arrowsize="1")
-                    d.node_attr.update(shape="box")
-                    d.graph_attr['rankdir'] = 'LR'
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Structure' and tabs.tabWidget != None:
+                CasesStructureTabFlag = True
+                break
 
-                    cases_list = []
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == CasesItemName.text(0):
+                break
 
-                    for cases in DS.CasesList:
-                        for widget in self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0):
-                            if cases.ParentCase == None:
-                                cases_list.append([widget, CasesItemName])
-                            else:
-                                cases_list.append([widget, widget.parent()])
+        # Creating New Tab for Stem Word
+        CasesStructureTab = QWidget()
 
-                    parent_child_list = []
+        # ******************************* LayoutWidget For within Stem Word Tab ************************************
+        CasesStructureTabVerticalLayoutWidget = QWidget(CasesStructureTab)
+        CasesStructureTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
+                                                                self.tabWidget.height() / 10)
 
-                    for i in range(len(cases_list)):
-                        d.node(cases_list[i][0].text(0))
-                        if cases_list[i][1] != None:
-                            parent_child_list.append([cases_list[i][1].text(0), cases_list[i][0].text(0)])
+        # Box Layout for Stem Word Tab
+        CasesStructureTabVerticalLayout = QHBoxLayout(CasesStructureTabVerticalLayoutWidget)
+        CasesStructureTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-                    for i in range(len(parent_child_list)):
-                        d.edge(parent_child_list[i][0], parent_child_list[i][1])
+        DownloadAsPDFButton = QPushButton(CasesStructureTabVerticalLayoutWidget)
+        DownloadAsPDFButton.setText("Download")
+        DownloadAsPDFButton.setGeometry(CasesStructureTabVerticalLayoutWidget.width() * 0.8,
+                                        CasesStructureTabVerticalLayoutWidget.height() * 0.4,
+                                        CasesStructureTabVerticalLayoutWidget.width() * 0.1,
+                                        CasesStructureTabVerticalLayoutWidget.height() * 0.2)
+        DownloadAsPDFButton.setIcon(QIcon("Images/Download Button.png"))
+        DownloadAsPDFButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-                    # d.view()
-                    # d.format = 'png'
-                    # d.render()
-                    d.render('cases.pdf', view=True)
-                    # print(cases_list[2][0].text(0))
+        DownloadAsPDFButtonFont = QFont("sans-serif")
+        DownloadAsPDFButtonFont.setPixelSize(14)
+        DownloadAsPDFButtonFont.setBold(True)
+        DownloadAsPDFButton.setFont(DownloadAsPDFButtonFont)
+        self.LineEditSizeAdjustment(DownloadAsPDFButton)
 
-        except Exception as e:
-            print(str(e))
+
+        # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
+        CasesStructureTabVerticalLayoutWidget2 = QWidget(CasesStructureTab)
+        CasesStructureTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
+                                                           self.tabWidget.width(),
+                                                           self.tabWidget.height() - self.tabWidget.height() / 10)
+
+        # 2nd Box Layout for Stem Word Tab
+        CasesStructureTabVerticalLayout2 = QVBoxLayout(CasesStructureTabVerticalLayoutWidget2)
+
+        os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
+
+
+        graph = graphviz.Digraph(name="Cases")
+        graph.edge_attr.update(arrowhead="vee", arrowsize="1")
+        graph.node_attr.update(shape="box")
+        graph.graph_attr['rankdir'] = 'LR'
+
+        cases_list = []
+
+        for cases in DS.CasesList:
+            ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+            if len(ItemWidget) > 1:
+                ItemPresentFlag = False
+                for widget in ItemWidget:
+                    tempWidget = widget
+                    while tempWidget.parent() != None:
+                        tempWidget = tempWidget.parent()
+
+                    if tempWidget.text(0) == CasesItemName.text(0):
+                        ItemPresentFlag = True
+                        break
+
+                if ItemPresentFlag:
+                    cases_list.append([widget, widget.parent()])
+
+            elif len(ItemWidget) > 0:
+                for widget in ItemWidget:
+                    cases_list.append([widget, widget.parent()])
+
+        parent_child_list = []
+
+        for i in range(len(cases_list)):
+            graph.node(cases_list[i][0].text(0))
+            if cases_list[i][1] != None:
+                parent_child_list.append([cases_list[i][1].text(0), cases_list[i][0].text(0)])
+
+        for i in range(len(parent_child_list)):
+            graph.edge(parent_child_list[i][0], parent_child_list[i][1])
+
+        graph.format = "png"
+        graph.render("Cases", cleanup=True)
+        CasesStructureImage = Image.open("Cases.png")
+        ImageArray = np.array(CasesStructureImage)
+        CasesStructureImage = Image.fromarray(ImageArray)
+        os.remove("Cases.png")
+
+        # Label for Word Cloud Image
+        CasesStructureLabel = QLabel(CasesStructureTabVerticalLayoutWidget2)
+
+        # Resizing label to Layout
+        CasesStructureLabel.resize(CasesStructureTabVerticalLayoutWidget2.width(), CasesStructureTabVerticalLayoutWidget2.height())
+
+        # Converting WordCloud Image to Pixmap
+        CasesStructurePixmap = CasesStructureImage.toqpixmap()
+
+        # Scaling Pixmap image
+        dummypixmap = CasesStructurePixmap.scaled(CasesStructureTabVerticalLayoutWidget2.width(),
+                                                  CasesStructureTabVerticalLayoutWidget2.height(),
+                                                  Qt.KeepAspectRatio)
+        CasesStructureLabel.setPixmap(dummypixmap)
+        CasesStructureLabel.setGeometry((CasesStructureTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
+                                        (CasesStructureTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
+                                        dummypixmap.width(), dummypixmap.height())
+
+        DownloadAsPDFButton.clicked.connect(lambda: self.SaveStructureAsPDF(graph))
+
+        if CasesStructureTabFlag:
+            # updating tab
+            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+            self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
+            self.tabWidget.setCurrentWidget(CasesStructureTab)
+            tabs.tabWidget = CasesStructureTab
+            tabs.setisActive(True)
+        else:
+            # Adding Word Cloud Tab to QTabWidget
+            myFile.TabList.append(Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0)))
+
+            self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
+            self.tabWidget.setCurrentWidget(CasesStructureTab)
+
+    # Cases Structure Update
+    def CasesStructureUpdate(self, CasesItemName):
+        for tabs in myFile.TabList:
+            if tabs.TabName == "Cases Structure" and tabs.DataSourceName == CasesItemName.text(0) :
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == CasesItemName.text(0):
+                        break
+
+                if self.tabWidget.indexOf(tabs.tabWidget) >= 0:
+                    currentTab = self.tabWidget.currentWidget()
+                    if len(DS.CasesList) > 0:
+                        self.CasesStructure(CasesItemName)
+                        self.tabWidget.setCurrentWidget(currentTab)
+                    else:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        myFile.TabList.remove(tabs)
+                    break
 
     # Merge Cases Dailog
     def MergeCasesDialog(self, CasesItemName):
@@ -6932,6 +7064,7 @@ class Window(QMainWindow):
                                                             counter += 1
 
                         self.CasesParentCoverageUpdate(CasesItemName)
+                        self.CasesStructureUpdate(CasesItemName)
 
                     else:
                         QMessageBox.critical(self, "Case Name Error",
@@ -6951,34 +7084,50 @@ class Window(QMainWindow):
 
     # UnMerge Cases
     def CasesUnMerge(self, CasesItemName):
-        try:
-            tempWidget = CasesItemName
-            while tempWidget.parent() != None:
-                tempWidget = tempWidget.parent()
+        tempWidget = CasesItemName
+        while tempWidget.parent() != None:
+            tempWidget = tempWidget.parent()
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == tempWidget.text(0):
-                    for cases in DS.CasesList:
-                        if cases.ParentCase != None:
-                            if cases.ParentCase.CaseTopic == CasesItemName.text(0):
-                                for cases2 in DS.CasesList:
-                                    if cases2.CaseTopic == cases.ParentCase.CaseTopic:
-                                        cases.ParentCase = cases2.ParentCase
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == tempWidget.text(0):
+                for cases in DS.CasesList:
+                    if cases.ParentCase != None:
+                        if cases.ParentCase.CaseTopic == CasesItemName.text(0):
+                            for cases2 in DS.CasesList:
+                                if cases2.CaseTopic == cases.ParentCase.CaseTopic:
+                                    cases.ParentCase = cases2.ParentCase
 
-                                for widgets in self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0):
-                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widgets))
+                            ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                            if len(ItemWidget) > 1:
+                                ItemPresentFlag = False
+                                for widget in ItemWidget:
+                                    tempWidget2 = widget
+                                    while tempWidget2.parent() != None:
+                                        tempWidget2 = tempWidget2.parent()
+
+                                    if tempWidget2.text(0) == tempWidget2.text(0):
+                                        ItemPresentFlag = True
+                                        break
+
+                                if ItemPresentFlag:
+                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
+                                    CasesItemName.parent().addChild(tempChild)
+
+                            elif len(ItemWidget) == 1:
+                                for widget in ItemWidget:
+                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
                                     CasesItemName.parent().addChild(tempChild)
 
 
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == CasesItemName.text(0):
-                            DS.CasesList.remove(cases)
-                            cases.__del__()
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CasesItemName.text(0):
+                        DS.CasesList.remove(cases)
+                        cases.__del__()
 
-                    CasesItemName.parent().removeChild(CasesItemName)
+                CasesItemName.parent().removeChild(CasesItemName)
 
-        except Exception as e:
-            print(str(e))
+        self.CasesParentCoverageUpdate(tempWidget)
+        self.CasesStructureUpdate(tempWidget)
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
@@ -7372,6 +7521,7 @@ class Window(QMainWindow):
             Table.removeRow(row)
 
         self.CasesParentCoverageUpdate(CasesItemName)
+        self.CasesStructureUpdate(CasesItemName)
 
     # Cases Rename
     def CasesRename(self, CasesItemName):
@@ -7456,6 +7606,7 @@ class Window(QMainWindow):
             TempParent = CasesItemName.parent()
             self.CasesChildRemove(CasesItemName)
             self.CasesParentCoverageUpdate(TempParent)
+            self.CasesStructureUpdate(TempParent)
         else:
             pass
 
@@ -9228,72 +9379,80 @@ class Window(QMainWindow):
     def ImportFromYoutube(self, VideoURLCheck, KeyWordCheck, URL, KeyWord):
         if VideoURLCheck:
             URL = URL.replace('https://youtu.be/', 'https://www.youtube.com/watch?v=')
-            dummyDataSource = DataSource(URL, "Youtube", self)
+            dummyDataSource = DataSource(URL, "Youtube")
             dummyDataSource.YoutubeURL()
             DataSourceNameCheck = False
         elif KeyWordCheck:
-            dummyDataSource = DataSource(KeyWord, "Youtube", self)
+            dummyDataSource = DataSource(KeyWord, "Youtube")
             dummyDataSource.YoutubeKeyWord()
             DataSourceNameCheck = False
 
+        if VideoURLCheck or (KeyWordCheck and not dummyDataSource.YoutubeServerNotFoundError):
 
-        for DS in myFile.DataSourceList:
-            if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
-                DataSourceNameCheck = True
+            for DS in myFile.DataSourceList:
+                if DS != dummyDataSource and DS.DataSourceName == dummyDataSource.DataSourceName:
+                    DataSourceNameCheck = True
 
-        if not DataSourceNameCheck:
-            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.YoutubeData) == 0:
-                myFile.setDataSources(dummyDataSource)
-                newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
+            if not DataSourceNameCheck:
+                if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.YoutubeData) == 0:
+                    myFile.setDataSources(dummyDataSource)
+                    newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
 
-                if VideoURLCheck:
-                    newNode.setText(0, URL)
-                else:
-                    newNode.setText(0, KeyWord)
+                    if VideoURLCheck:
+                        newNode.setText(0, URL)
+                    else:
+                        newNode.setText(0, KeyWord)
 
-                self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
+                    self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
 
-                if self.YoutubeTreeWidget.isHidden():
-                    self.YoutubeTreeWidget.setHidden(False)
-                    self.YoutubeTreeWidget.setExpanded(True)
+                    if self.YoutubeTreeWidget.isHidden():
+                        self.YoutubeTreeWidget.setHidden(False)
+                        self.YoutubeTreeWidget.setExpanded(True)
 
-                newNode.setToolTip(0, newNode.text(0))
+                    newNode.setToolTip(0, newNode.text(0))
 
-                self.DataSourceSimilarityUpdate()
-                self.DataSourceDocumentClusteringUpdate()
+                    self.DataSourceSimilarityUpdate()
+                    self.DataSourceDocumentClusteringUpdate()
 
-            elif len(dummyDataSource.YoutubeData) == 0:
-                if VideoURLCheck:
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "No Youtube comment Retreive From the URL: " + URL,
-                                                                        QMessageBox.Ok)
-                else:
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        "No comment Retreive of Key Word: " + KeyWord,
-                                                                        QMessageBox.Ok)
+                elif dummyDataSource.DataSourceLoadError:
+                    if VideoURLCheck:
+                        QMessageBox.critical(self, "Youtube Error",
+                                            "Unable to Retrieve Comments from URL: " + dummyDataSource.DataSourcePath,
+                                             QMessageBox.Ok)
+                    else:
+                        QMessageBox.critical(self, "Youtube Error",
+                                             "Unable to Retrieve Comments of Key Word: " + dummyDataSource.DataSourcePath,
+                                             QMessageBox.Ok)
+
+                elif len(dummyDataSource.YoutubeData) == 0:
+                    if VideoURLCheck:
+                        QMessageBox.critical(self, "Import Error",
+                                             "No Youtube comment Retreive From the URL: " + URL,
+                                             QMessageBox.Ok)
+                    else:
+                        QMessageBox.critical(self, "Import Error",
+                                             "No comment Retreive of Key Word: " + KeyWord,
+                                             QMessageBox.Ok)
+                    dummyDataSource.__del__()
+
+
+            else:
                 dummyDataSource.__del__()
 
-            elif dummyDataSource.DataSourceLoadError:
                 if VideoURLCheck:
-                    QMessageBox.critical(self, "Youtube Error",
-                                        "Unable to Retrieve Comments from URL: " + dummyDataSource.DataSourcePath,
+                    QMessageBox.critical(self, "Import Error",
+                                         "A Youtube Source with Similar URL Exist!",
                                          QMessageBox.Ok)
                 else:
-                    QMessageBox.critical(self, "Youtube Error",
-                                         "Unable to Retrieve Comments of Key Word: " + dummyDataSource.DataSourcePath,
+                    QMessageBox.critical(self, "Import Error",
+                                         "A Youtube Source with Similar KeyWord Exist!",
                                          QMessageBox.Ok)
 
         else:
-            dummyDataSource.__del__()
+            QMessageBox.critical(self, "Import Error",
+                                 "When the application started you were not connected to the internet. Please Restart the application and make sure you are connected to the internet",
+                                 QMessageBox.Ok)
 
-            if VideoURLCheck:
-                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                    "A Youtube Source with Similar URL Exist!",
-                                                                    QMessageBox.Ok)
-            else:
-                DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                    "A Youtube Source with Similar KeyWord Exist!",
-                                                                    QMessageBox.Ok)
 
 if __name__ == "__main__":
     WindowTitleLogo = "Images/TextWizLogo.png"

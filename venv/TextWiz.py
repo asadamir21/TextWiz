@@ -5,12 +5,15 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5 import QtPrintSupport, QAxContainer, QtQuickWidgets, QtPositioning
+from PyQt5 import QtPrintSupport, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
 from PIL import  Image
 from File import *
 import humanfriendly, platform
 import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime, graphviz
+
+if platform.system() == "Windows":
+    from PyQt5 import QAxContainer
 
 class MarkerModel(QAbstractListModel):
     PositionRole, SourceRole = range(Qt.UserRole, Qt.UserRole + 2)
@@ -86,10 +89,10 @@ class Window(QMainWindow):
             Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
             self.width = Monitor_Resolution_Info.get("Work")[2]
             self.height = Monitor_Resolution_Info.get("Work")[3]
+
         elif platform.system() == "Linux":
-            import gtk
-            self.width = gtk.gdk.screen_width()
-            self.height = gtk.gdk.screen_height()
+            self.width = QApplication.desktop().width()
+            self.height = QApplication.desktop().height()
 
         self.settings = QSettings('TextWiz', 'TextWiz')
 
@@ -104,9 +107,6 @@ class Window(QMainWindow):
 
            self.settings.setValue('theme', 'DarkOrange')
 
-        self.left = 0;
-        self.top = 0;
-
         self.languages = open('Languages.txt', 'r').read().split("\n")
 
         for fileRow in self.languages:
@@ -119,14 +119,12 @@ class Window(QMainWindow):
         for row in coordinatecsvreader:
             self.Coordinates.append([row[0], row[1], row[2]])
 
-
-
         self.initWindows()
 
     def initWindows(self):
         self.setWindowIcon(QIcon(WindowTitleLogo))
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left,self.top, self.width, self.height)
+        self.setGeometry(0, 0, self.width, self.height)
         self.setMinimumSize(self.width/2, self.height/2)
         self.showMaximized()
 
@@ -573,7 +571,9 @@ class Window(QMainWindow):
         else:
             titleOffset = 0
 
-        self.verticalLayoutWidget.setGeometry(self.left, self.top, self.width / 8, self.height - titleOffset - self.toolbar.height())
+        self.verticalLayoutWidget.setGeometry(0, 0,
+                                              self.width / 8,
+                                              self.height - titleOffset - self.menuBar().height() - self.toolbar.height() - self.statusBar().height())
 
         self.horizontalLayoutWidget = QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setSizePolicy(self.sizePolicy)
@@ -581,7 +581,7 @@ class Window(QMainWindow):
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.tabWidget = QTabWidget(self.horizontalLayoutWidget)
+        self.tabWidget = QTabWidget()
         self.tabWidget.setSizePolicy(self.sizePolicy)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setMovable(True)
@@ -590,8 +590,23 @@ class Window(QMainWindow):
         self.tabWidget.setUsesScrollButtons(True)
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
 
-        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.height - titleOffset - self.menuBar().height() - self.toolbar.height())
+        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(),
+                                                0,
+                                                self.width - self.verticalLayoutWidget.width(),
+                                                self.verticalLayoutWidget.height())
+
+        # print(self.height - self.verticalLayoutWidget.height())
+        # print("Title Offset: " + str(titleOffset))
+        # print("Menu: " + str(self.menuBar().height()))
+        # print("Toolbar: " + str(self.toolbar.height()))
+        # print("Status Bar: " + str(self.statusBar().height()))
+        # print("Tabbar: " + str(self.tabWidget.tabBar().height()))
+        # print(self.tabWidget.tabBar().geometry().height())
+        #print(self.height - titleOffset - self.menuBar().height() - self.toolbar.height() - self.tabWidget.tabBar().height())
+
+
         self.horizontalLayout.addWidget(self.tabWidget)
+
 
         self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
 
@@ -1292,7 +1307,7 @@ class Window(QMainWindow):
         if not DataSourceShowTweetDataTabFlag:
             ShowTweetDataTab = QWidget()
             ShowTweetDataTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                              self.horizontalLayoutWidget.height()))
             ShowTweetDataTab.setSizePolicy(self.sizePolicy)
 
@@ -1420,7 +1435,7 @@ class Window(QMainWindow):
 
         if not DataSourceShowYoutubeCommentsTabFlag:
             ShowYoutubeCommentsTab = QWidget()
-            ShowYoutubeCommentsTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            ShowYoutubeCommentsTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                              self.horizontalLayoutWidget.height()))
             ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
@@ -1509,7 +1524,7 @@ class Window(QMainWindow):
         if not DataSourceShowYoutubeCommentsTabFlag:
             ShowYoutubeCommentsTab = QWidget()
             ShowYoutubeCommentsTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                              self.horizontalLayoutWidget.height()))
             ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
@@ -1602,7 +1617,7 @@ class Window(QMainWindow):
         if not DataSourceShowImagesTabFlag:
             ViewImageTab = QWidget()
             ViewImageTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                              self.horizontalLayoutWidget.height()))
             ViewImageTab.setSizePolicy(self.sizePolicy)
 
@@ -1712,7 +1727,7 @@ class Window(QMainWindow):
 
         if not DataSourceViewCSVDataTabFlag:
             ViewCSVDataTab = QWidget()
-            ViewCSVDataTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top,
+            ViewCSVDataTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0,
                                                      self.width - self.verticalLayoutWidget.width(),self.horizontalLayoutWidget.height()))
             ViewCSVDataTab.setSizePolicy(self.sizePolicy)
 
@@ -2063,14 +2078,18 @@ class Window(QMainWindow):
 
         WordFrequencyTab = QWidget()
         WordFrequencyTab.setGeometry(
-            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
-                         self.horizontalLayoutWidget.height()-self.tabWidget.tabBar().geometry().height()))
+                         QRect(self.verticalLayoutWidget.width(),
+                               self.tabWidget.tabBar().geometry().height(),
+                               self.width - self.verticalLayoutWidget.width(),
+                               self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
         WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
         # LayoutWidget For within Stem Word Tab
         WordFrequencyTabVerticalLayoutWidget2 = QWidget(WordFrequencyTab)
-        WordFrequencyTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                          self.tabWidget.height() / 10)
+        WordFrequencyTabVerticalLayoutWidget2.setGeometry(WordFrequencyTab.width() / 4,
+                                                          0,
+                                                          WordFrequencyTab.width() / 2,
+                                                          WordFrequencyTab.height() / 10)
 
         # Box Layout for Stem Word Tab
         WordFrequencyTabVerticalLayout2 = QHBoxLayout(WordFrequencyTabVerticalLayoutWidget2)
@@ -2101,8 +2120,8 @@ class Window(QMainWindow):
 
         # LayoutWidget For within Word Frequency Tab
         WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
-        WordFrequencyTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+        WordFrequencyTabverticalLayoutWidget.setGeometry(0, WordFrequencyTab.height() / 10, WordFrequencyTab.width(),
+                                                         WordFrequencyTab.height() - WordFrequencyTab.height() / 10)
         WordFrequencyTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
         # Box Layout for Word Frequency Tab
@@ -2277,7 +2296,7 @@ class Window(QMainWindow):
         #Generate Question Tab
         GenerateQuestionsTab = QWidget()
         GenerateQuestionsTab.setGeometry(
-            QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+            QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
         GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
 
@@ -2535,7 +2554,7 @@ class Window(QMainWindow):
                 break
 
         SentimentAnalysisTab = QWidget()
-        SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(),
+        SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
                                                       self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
         SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
@@ -3648,7 +3667,7 @@ class Window(QMainWindow):
                 break
 
         TopicModellingTab = QWidget()
-        TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+        TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
         TopicModellingTab.setSizePolicy(self.sizePolicy)
 
         # LayoutWidget For within Topic Modelling Tab
@@ -3734,33 +3753,50 @@ class Window(QMainWindow):
 
     # Data Source Create Cases
     def DataSourceCreateCases(self, DataSourceWidgetItemName):
-        DataSourceCreateCasesTab = QWidget()
+        try:
+            DataSourceCreateCasesTabFlag = False
 
-        # LayoutWidget For within DataSource Preview Tab
-        CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
-        CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Create Cases' and tabs.tabWidget != None:
+                    DataSourceCreateCasesTabFlag = True
+                    break
 
-        # Box Layout for Data SourceTab
-        CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
-        CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
+            if not DataSourceCreateCasesTabFlag:
+                DataSourceCreateCasesTab = QWidget()
 
-        CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
-        CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-        CreateCasesPreview.setReadOnly(True)
+                # LayoutWidget For within DataSource Preview Tab
+                CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
+                CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+                CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
-        CreateCasesPreview.customContextMenuRequested.connect(
-            lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+                # Box Layout for Data SourceTab
+                CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
+                CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                CreateCasesPreview.setText(DS.DataSourcetext)
-                break
+                CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
+                CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                CreateCasesPreview.setReadOnly(True)
 
-               
-        self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
-        self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+                CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
+                CreateCasesPreview.customContextMenuRequested.connect(
+                    lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                        CreateCasesPreview.setText(DS.DataSourcetext)
+                        break
+
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Create Cases", DataSourceCreateCasesTab, DataSourceWidgetItemName.text(0)))
+                self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
+                self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+
+            else:
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+
+        except Exception as e:
+            print(str(e))
 
     # Data Source Create Cases Context Menu
     def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
@@ -3864,6 +3900,7 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, CaseTopic)
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
+                self.statusBar().showMessage('New Case Added')
                 self.CasesParentCoverageUpdate(DSNewCaseNode.parent())
                 self.CasesStructureUpdate(DSNewCaseNode.parent())
             else:
@@ -3936,6 +3973,7 @@ class Window(QMainWindow):
                         # Updating Cases Parent Coverage
                         ItemsWidget = self.CasesTreeWidget.findItems(DataSourceWidgetItemName.text(0), Qt.MatchExactly,0)
                         for widgets in ItemsWidget:
+                            self.statusBar().showMessage('Component Added to Case')
                             self.CasesParentCoverageUpdate(widgets)
                             self.CasesStructureUpdate(widgets)
 
@@ -4452,7 +4490,7 @@ class Window(QMainWindow):
                     break
 
             DataSourceShowTranslationTab = QWidget()
-            DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), self.top, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+            DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
             DataSourceShowTranslationTab.setSizePolicy(self.sizePolicy)
 
             # LayoutWidget For within Translation Tab
@@ -6355,6 +6393,8 @@ class Window(QMainWindow):
                                 rowdata.append('')
                         writer.writerow(rowdata)
 
+                    self.statusBar().showMessage('Table successfully Saved')
+
                     SaveSuccessBox = QMessageBox(self)
                     SaveSuccessBox.setIcon(QMessageBox.Information)
                     SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
@@ -6382,6 +6422,7 @@ class Window(QMainWindow):
 
             if all(path):
                 graph.format = "pdf"
+                self.statusBar().showMessage('Structure successfully Saved')
                 SaveSuccessBox = QMessageBox(self)
                 SaveSuccessBox.setIcon(QMessageBox.Information)
                 SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
@@ -6937,151 +6978,70 @@ class Window(QMainWindow):
 
     # Merge Cases
     def MergeCases(self, CasesItemName, MergeCaseName, ListModel):
-        try:
-            # Check Selection in List
-            SingleSelectionInListError = False
+        # Check Selection in List
+        SingleSelectionInListError = False
 
-            CheckedCasesList = []
+        CheckedCasesList = []
 
-            for listRow in range(ListModel.rowCount()):
-                dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
+        for listRow in range(ListModel.rowCount()):
+            dummyList = ListModel.findItems(ListModel.data(ListModel.index(listRow, 0)), Qt.MatchExactly)
 
-                for object in dummyList:
-                    if object.checkState() == 2:
-                        CheckedCasesList.append(object.text())
+            for object in dummyList:
+                if object.checkState() == 2:
+                    CheckedCasesList.append(object.text())
 
-            if len(CheckedCasesList) < 2:
-                SingleSelectionInListError = True
+        if len(CheckedCasesList) < 2:
+            SingleSelectionInListError = True
 
-            if not SingleSelectionInListError:
-                # Check Merge Case Name
-                MergeCaseNameDuplicateError = False
+        if not SingleSelectionInListError:
+            # Check Merge Case Name
+            MergeCaseNameDuplicateError = False
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == CasesItemName.text(0):
-                        break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    break
 
-                for cases in DS.CasesList:
-                    if cases.CaseTopic == MergeCaseName:
-                        MergeCaseNameDuplicateError = True
-                        break
+            for cases in DS.CasesList:
+                if cases.CaseTopic == MergeCaseName:
+                    MergeCaseNameDuplicateError = True
+                    break
 
-                if not MergeCaseNameDuplicateError:
-                    if  MergeCaseName != CasesItemName.text(0):
-                        # Creating New Case (MergeCase)
-                        NewCase = Cases(MergeCaseName, 0)
-                        NewCase.setMergeCaseFlag()
+            if not MergeCaseNameDuplicateError:
+                if  MergeCaseName != CasesItemName.text(0):
+                    # Creating New Case (MergeCase)
+                    NewCase = Cases(MergeCaseName, 0)
+                    NewCase.setMergeCaseFlag()
 
-                        DS.CasesList.append(NewCase)
-                        # Setting Parent of Cases
-                        for CheckedCases in CheckedCasesList:
-                            for cases in DS.CasesList:
-                                if cases.CaseTopic == CheckedCases:
-                                    cases.setParentCase(NewCase)
-                                    break
+                    DS.CasesList.append(NewCase)
+                    # Setting Parent of Cases
+                    for CheckedCases in CheckedCasesList:
+                        for cases in DS.CasesList:
+                            if cases.CaseTopic == CheckedCases:
+                                cases.setParentCase(NewCase)
+                                break
 
-                        # Removing All Child
-                        while CasesItemName.childCount() != 0:
-                            CasesItemName.removeChild(CasesItemName.child(0))
+                    # Removing All Child
+                    while CasesItemName.childCount() != 0:
+                        CasesItemName.removeChild(CasesItemName.child(0))
 
-                        # Setting All Child
-                        counter = 0
-                        while(counter < len(DS.CasesList)):
-                            for cases in DS.CasesList:
-                                if cases.ParentCase == None:
-                                    ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
-                                    if len(ItemWidget) == 0:
-                                        DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
-                                        DSMergeCaseWidget.setText(0, cases.CaseTopic)
-                                        DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
-                                        DSMergeCaseWidget.setExpanded(True)
-                                        counter += 1
+                    self.statusBar().showMessage('Cases successfully Merged')
 
-                                    elif len(ItemWidget) > 0:
-                                        ItemPresentFlag = False
-                                        for items in ItemWidget:
-                                            tempWidget = items
-                                            while tempWidget.parent() != None:
-                                                tempWidget = tempWidget.parent()
-
-                                            if tempWidget.text(0) == CasesItemName.text(0):
-                                                ItemPresentFlag = True
-                                                break
-
-                                        if not ItemPresentFlag:
-                                            DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
-                                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
-                                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
-                                            DSMergeCaseWidget.setExpanded(True)
-                                            counter += 1
-
-                                else:
-                                    SelfItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
-
-                                    if len(SelfItemWidget) == 0:
-                                        ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic, Qt.MatchRecursive, 0)
-                                        if len(ItemWidget) > 0:
-                                            for items in ItemWidget:
-                                                tempWidget = items
-                                                while tempWidget.parent() != None:
-                                                    tempWidget = tempWidget.parent()
-
-                                                if tempWidget.text(0) == CasesItemName.text(0):
-                                                    DSMergeCaseWidget = QTreeWidgetItem(items)
-                                                    DSMergeCaseWidget.setText(0, cases.CaseTopic)
-                                                    DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
-                                                    DSMergeCaseWidget.setExpanded(True)
-
-                                                    counter += 1
-
-                                    elif len(SelfItemWidget) > 0:
-                                        ItemPresentFlag = False
-                                        for items in SelfItemWidget:
-                                            tempWidget2 = items
-                                            while tempWidget2.parent() != None:
-                                                tempWidget2 = tempWidget2.parent()
-
-                                            if tempWidget2.text(0) == CasesItemName.text(0):
-                                                ItemPresentFlag = True
-                                                break
-
-                                        if not ItemPresentFlag:
-
-                                            for items in SelfItemWidget:
-                                                ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic,
-                                                                                            Qt.MatchRecursive, 0)
-                                                if len(ItemWidget) > 0:
-                                                    for items in ItemWidget:
-                                                        tempWidget = items
-                                                        while tempWidget.parent() != None:
-                                                            tempWidget = tempWidget.parent()
-
-                                                        if tempWidget.text(0) == CasesItemName.text(0):
-                                                            DSMergeCaseWidget = QTreeWidgetItem(items)
-                                                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
-                                                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
-                                                            DSMergeCaseWidget.setExpanded(True)
-
-                                                            counter += 1
-
-                        self.CasesParentCoverageUpdate(CasesItemName)
-                        self.CasesStructureUpdate(CasesItemName)
-
-                    else:
-                        QMessageBox.critical(self, "Case Name Error",
-                                             "Case cannot have the same Name as its Data Source",
-                                             QMessageBox.Ok)
+                    # Setting All Child
+                    self.SetCasesWidget(DS, CasesItemName)
 
                 else:
                     QMessageBox.critical(self, "Case Name Error",
-                                         "A Case with a similar Name Exists! Please Try a different Name",
+                                         "Case cannot have the same Name as its Data Source",
                                          QMessageBox.Ok)
+
             else:
-                QMessageBox.critical(self, "Selection Error",
-                                     "Please Select More than one cases from the list to merge",
+                QMessageBox.critical(self, "Case Name Error",
+                                     "A Case with a similar Name Exists! Please Try a different Name",
                                      QMessageBox.Ok)
-        except Exception as e:
-            print(str(e))
+        else:
+            QMessageBox.critical(self, "Selection Error",
+                                 "Please Select More than one cases from the list to merge",
+                                 QMessageBox.Ok)
 
     # UnMerge Cases
     def CasesUnMerge(self, CasesItemName):
@@ -7127,8 +7087,93 @@ class Window(QMainWindow):
 
                 CasesItemName.parent().removeChild(CasesItemName)
 
+        self.statusBar().showMessage('Case Unmerg Successfully')
         self.CasesParentCoverageUpdate(tempWidget)
         self.CasesStructureUpdate(tempWidget)
+
+    # Set Cases Widget
+    def SetCasesWidget(self, DS, CasesItemName):
+        counter = 0
+        while (counter < len(DS.CasesList)):
+            for cases in DS.CasesList:
+                if cases.ParentCase == None:
+                    ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                    if len(ItemWidget) == 0:
+                        DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
+                        DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                        DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                        DSMergeCaseWidget.setExpanded(True)
+                        counter += 1
+
+                    elif len(ItemWidget) > 0:
+                        ItemPresentFlag = False
+                        for items in ItemWidget:
+                            tempWidget = items
+                            while tempWidget.parent() != None:
+                                tempWidget = tempWidget.parent()
+
+                            if tempWidget.text(0) == CasesItemName.text(0):
+                                ItemPresentFlag = True
+                                break
+
+                        if not ItemPresentFlag:
+                            DSMergeCaseWidget = QTreeWidgetItem(CasesItemName)
+                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                            DSMergeCaseWidget.setExpanded(True)
+                            counter += 1
+
+                else:
+                    SelfItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+
+                    if len(SelfItemWidget) == 0:
+                        ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic, Qt.MatchRecursive, 0)
+                        if len(ItemWidget) > 0:
+                            for items in ItemWidget:
+                                tempWidget = items
+                                while tempWidget.parent() != None:
+                                    tempWidget = tempWidget.parent()
+
+                                if tempWidget.text(0) == CasesItemName.text(0):
+                                    DSMergeCaseWidget = QTreeWidgetItem(items)
+                                    DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                    DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                    DSMergeCaseWidget.setExpanded(True)
+
+                                    counter += 1
+
+                    elif len(SelfItemWidget) > 0:
+                        ItemPresentFlag = False
+                        for items in SelfItemWidget:
+                            tempWidget2 = items
+                            while tempWidget2.parent() != None:
+                                tempWidget2 = tempWidget2.parent()
+
+                            if tempWidget2.text(0) == CasesItemName.text(0):
+                                ItemPresentFlag = True
+                                break
+
+                        if not ItemPresentFlag:
+
+                            for items in SelfItemWidget:
+                                ItemWidget = self.CasesTreeWidget.findItems(cases.ParentCase.CaseTopic,
+                                                                            Qt.MatchRecursive, 0)
+                                if len(ItemWidget) > 0:
+                                    for items in ItemWidget:
+                                        tempWidget = items
+                                        while tempWidget.parent() != None:
+                                            tempWidget = tempWidget.parent()
+
+                                        if tempWidget.text(0) == CasesItemName.text(0):
+                                            DSMergeCaseWidget = QTreeWidgetItem(items)
+                                            DSMergeCaseWidget.setText(0, cases.CaseTopic)
+                                            DSMergeCaseWidget.setToolTip(0, DSMergeCaseWidget.text(0))
+                                            DSMergeCaseWidget.setExpanded(True)
+
+                                            counter += 1
+
+        self.CasesParentCoverageUpdate(CasesItemName)
+        self.CasesStructureUpdate(CasesItemName)
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
@@ -7182,8 +7227,8 @@ class Window(QMainWindow):
 
 
             for cases in DS.CasesList:
-                CasesList.addItem(cases.CaseTopic)
-
+                if not cases.MergedCase:
+                    CasesList.addItem(cases.CaseTopic)
 
             # *************************** 3rd LayoutWidget For within Stem Word Tab *************************************
             CasesParentCoverageTabVerticalLayoutWidget3 = QWidget(CasesParentCoverageTab)
@@ -7306,6 +7351,7 @@ class Window(QMainWindow):
                     cases.__del__()
 
                 DS.CasesList.clear()
+                self.statusBar().showMessage('Data Source Cases Removed Successfully')
                 break
 
     # Cases Parent Detail
@@ -7445,19 +7491,25 @@ class Window(QMainWindow):
             for row in Case_List:
                 CaseShowComponentTable.insertRow(Case_List.index(row))
                 for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
-                    CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    if row.index(item) == 0:
+                        ptext = QPlainTextEdit()
+                        ptext.setReadOnly(True)
+                        ptext.setPlainText(item);
+                        ptext.setFixedHeight(self.tabWidget.height() / 10)
+                        CaseShowComponentTable.setCellWidget(Case_List.index(row), row.index(item), ptext)
+                    else:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
+                        CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
-                    deleteButton = QPushButton("Remove")
-                    deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
-                    self.LabelSizeAdjustment(deleteButton)
-                    CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
-
+                        deleteButton = QPushButton("Remove")
+                        deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
+                        self.LabelSizeAdjustment(deleteButton)
+                        CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
 
             CaseShowComponentTable.resizeColumnsToContents()
             CaseShowComponentTable.resizeRowsToContents()
@@ -7508,14 +7560,19 @@ class Window(QMainWindow):
         button = self.sender()
         if button:
             row = Table.indexAt(button.pos()).row()
-            temp = Table.item(row, 0)
+            temp = Table.cellWidget(row, 0)
+
+            tempWidget = CasesItemName
+            while tempWidget.parent() != None:
+                tempWidget = tempWidget.parent()
 
             for DS in myFile.DataSourceList:
-                if DS.DataSourceName == CasesItemName.parent().text(0):
+                if DS.DataSourceName == tempWidget.text(0):
                     for case in DS.CasesList:
                         if case.CaseTopic == CasesItemName.text(0):
+                            regex = re.compile(r'[\n\r\t]')
                             for topicComponents in case.TopicCases:
-                                if temp.text() == topicComponents[0] and row == case.TopicCases.index(topicComponents):
+                                if (regex.sub("", temp.toPlainText()) == topicComponents[0] or len(temp.toPlainText()) == len(topicComponents[0])) and row == case.TopicCases.index(topicComponents):
                                     case.TopicCases.remove(topicComponents)
                                     break
 
@@ -7632,6 +7689,9 @@ class Window(QMainWindow):
                         cases.__del__()
                         break
 
+                self.statusBar().showMessage('Case Removed Successfully')
+                break
+
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
         CasesChildDetailDialogBox = QDialog()
@@ -7643,11 +7703,18 @@ class Window(QMainWindow):
                                                self.height / 5)
         CasesChildDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
+        tempWidget = CasesItemName
+
+        while tempWidget.parent() != None:
+            tempWidget = tempWidget.parent()
+
         for DS in myFile.DataSourceList:
-            if DS.DataSourceName == CasesItemName.parent().text(0):
-                for case in DS.CasesList:
-                    if case.CaseTopic == CasesItemName.text(0):
-                        break
+            if DS.DataSourceName == tempWidget.text(0):
+                break
+
+        for case in DS.CasesList:
+            if case.CaseTopic == CasesItemName.text(0):
+                break
 
         # ************************************** Labels *************************************
 
@@ -7707,14 +7774,19 @@ class Window(QMainWindow):
 
         # No of Cases LineEdit
         NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
-        if case.MergedCase:
-            TotalComponent = 0
-            for cases2 in DS.CasesList:
-                if cases2.ParentCase == case:
-                    TotalComponent += len(cases2.TopicCases)
-            NoofCasesLineEdit.setText(str(TotalComponent))
-        else:
-            NoofCasesLineEdit.setText(str(len(case.TopicCases)))
+        try:
+            if case.MergedCase:
+                TotalComponent = 0
+                for cases2 in DS.CasesList:
+                    if cases2.ParentCase == case:
+                        TotalComponent += len(cases2.TopicCases)
+                NoofCasesLineEdit.setText(str(TotalComponent))
+            else:
+                NoofCasesLineEdit.setText(str(len(case.TopicCases)))
+        except Exception as e2:
+            print(str(e2))
+            print("Hello")
+
         NoofCasesLineEdit.setReadOnly(True)
         NoofCasesLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
                                       CasesChildDetailDialogBox.height() * 0.6,
@@ -8500,18 +8572,8 @@ class Window(QMainWindow):
                             DSCaseWidget.setText(0, DS.DataSourceName)
                             DSCaseWidget.setExpanded(True)
 
-                            for cases in DS.CasesList:
-                                if cases.MergedCase or cases.ParentCase == None:
-                                    DSNewCaseNode = QTreeWidgetItem(DSCaseWidget)
-                                    DSNewCaseNode.setText(0, cases.CaseTopic)
-                                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                            self.SetCasesWidget(DS, DSCaseWidget)
 
-                                    if cases.MergedCase:
-                                        for cases2 in DS.CasesList:
-                                            if cases2.ParentCase == cases:
-                                                DSCase2Node = QTreeWidgetItem(DSNewCaseNode)
-                                                DSCase2Node.setText(0, cases2.CaseTopic)
-                                                DSCase2Node.setToolTip(0, DSCase2Node.text(0))
 
 
                         # Adding Sentiments
@@ -8705,6 +8767,8 @@ class Window(QMainWindow):
 
                             newNode.setToolTip(0, newNode.text(0))
 
+                            self.statusBar().showMessage('Word File Uploaded')
+
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
                         else:
@@ -8751,7 +8815,7 @@ class Window(QMainWindow):
                                     self.pdfTreeWidget.setExpanded(True)
 
                                 newNode.setToolTip(0, newNode.text(0))
-
+                                self.statusBar().showMessage('PDF File Uploaded')
                                 self.DataSourceSimilarityUpdate()
                                 self.DataSourceDocumentClusteringUpdate()
                             else:
@@ -8800,6 +8864,8 @@ class Window(QMainWindow):
 
                             newNode.setToolTip(0, newNode.text(0))
 
+                            self.statusBar().showMessage('Text File Uploaded')
+
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
 
@@ -8845,6 +8911,8 @@ class Window(QMainWindow):
                                 self.rtfTreeWidget.setHidden(False)
 
                             newNode.setToolTip(0, newNode.text(0))
+
+                            self.statusBar().showMessage('RTF File Uploaded')
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
@@ -8892,6 +8960,8 @@ class Window(QMainWindow):
 
                             newNode.setToolTip(0, newNode.text(0))
 
+                            self.statusBar().showMessage('Audio File Uploaded')
+
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
                         else:
@@ -8938,6 +9008,7 @@ class Window(QMainWindow):
                             self.ImageSTreeWidget.setExpanded(True)
 
                         newNode.setToolTip(0, newNode.text(0))
+                        self.statusBar().showMessage('Image File Uploaded')
 
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
@@ -9062,6 +9133,8 @@ class Window(QMainWindow):
                     newNode.setText(0, ntpath.basename(CSVPath))
                 else:
                     newNode.setText(0, ntpath.basename(CSVURLPath))
+
+                self.statusBar().showMessage('CSV File Uploaded')
                 self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
 
                 if self.CSVTreeWidget.isHidden():
@@ -9192,6 +9265,7 @@ class Window(QMainWindow):
                     myFile.setDataSources(dummyDataSource)
                     newNode = QTreeWidgetItem(self.TweetTreeWidget)
                     newNode.setText(0, Hashtag)
+                    self.statusBar().showMessage('Tweet with Hashtag Imported')
                     self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
 
                     if self.TweetTreeWidget.isHidden():
@@ -9403,6 +9477,8 @@ class Window(QMainWindow):
                         newNode.setText(0, URL)
                     else:
                         newNode.setText(0, KeyWord)
+
+                    self.statusBar().showMessage('Youtube Comments Imported')
 
                     self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
 

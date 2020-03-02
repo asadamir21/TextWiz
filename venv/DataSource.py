@@ -119,11 +119,11 @@ class DataSource():
                     os.remove(new_file_abs)
 
                 elif platform.system() == "Linux":
-                    pass
+                    import textract
+                    self.DataSourcetext = textract.process(self.DataSourcePath).decode("utf-8")
 
         except Exception as e:
             self.DataSourceLoadError = True
-
 
         if not self.DataSourceLoadError:
             st = os.stat(self.DataSourcePath)

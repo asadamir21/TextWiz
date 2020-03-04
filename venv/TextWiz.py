@@ -1,5 +1,5 @@
 from distutils.errors import PreprocessError
-#from idlelib.idle_test.test_configdialog import GenPageTest
+from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
@@ -12,7 +12,18 @@ from File import *
 import humanfriendly, platform
 import glob, sys, os, getpass, ntpath, math, csv, datetime, graphviz
 
+WindowPlatform = False
+LinuxPlatform = False
+MacPlatform = False
+
 if platform.system() == "Windows":
+    WindowPlatform = True
+elif platform.system() == "Linux":
+    LinuxPlatform = True
+elif platform.system() == "Darwin":
+    MacPlatform = True
+
+if WindowPlatform:
     from PyQt5 import QAxContainer
 
 class MarkerModel(QAbstractListModel):
@@ -84,23 +95,23 @@ class Window(QMainWindow):
         super().__init__()
         self.title = "TextWiz"
 
-        if platform.system() == "Windows":
+        if WindowPlatform:
             from win32api import GetMonitorInfo, MonitorFromPoint
             Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
             self.width = Monitor_Resolution_Info.get("Work")[2]
             self.height = Monitor_Resolution_Info.get("Work")[3]
 
-        elif platform.system() == "Linux":
+        elif LinuxPlatform:
             import gi
             gi.require_version('Gtk', '3.0')
-            gi.require_version('Gdk', '3.0')
+            gi.require_version('Gtk', '3.0')
+
             from gi.repository import Gdk, Gtk, GdkX11
 
-            display = Gdk.Display().get_default()
-            for i in range(display.get_n_monitors()):
+            display = Gdk.Display().get_default
+            for i in range(display.get_n_monitor):
                 monitor = display.get_monitor(i)
                 w_area = monitor.get_workarea()
-                #print(w_area.x, w_area.y, w_area.width, w_area.height)
 
                 self.width = w_area.width
                 self.height = w_area.height
@@ -2172,8 +2183,9 @@ class Window(QMainWindow):
         DataSourceShowFrequencyTableDialog.setWindowTitle("Show Word Frequency Table")
         DataSourceShowFrequencyTableDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4, self.height / 10)
         DataSourceShowFrequencyTableDialog.setParent(self)
-        DataSourceShowFrequencyTableDialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
-        DataSourceShowFrequencyTableDialog.setFixedSize(DataSourceShowFrequencyTableDialog.width(), DataSourceShowFrequencyTableDialog.height());
+
+        self.QDialogAddProperties(DataSourceShowFrequencyTableDialog)
+
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourceShowFrequencyTableDialog)
@@ -2386,8 +2398,7 @@ class Window(QMainWindow):
         GenerateQuestionsDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                        self.height / 10)
         GenerateQuestionsDialog.setParent(self)
-        GenerateQuestionsDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        GenerateQuestionsDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(GenerateQuestionsDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(GenerateQuestionsDialog)
@@ -2587,8 +2598,7 @@ class Window(QMainWindow):
         SentimentAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                             self.height / 5)
         SentimentAnalysisDialog.setParent(self)
-        SentimentAnalysisDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        SentimentAnalysisDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(SentimentAnalysisDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(SentimentAnalysisDialog)
@@ -2965,8 +2975,7 @@ class Window(QMainWindow):
         DataSourceRename.setWindowTitle("Rename")
         DataSourceRename.setGeometry(self.width * 0.375, self.height * 0.425, self.width/4, self.height*0.15)
         DataSourceRename.setParent(self)
-        DataSourceRename.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceRename.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceRename)
 
         RenameLabel = QLabel(DataSourceRename)
         RenameLabel.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.3, DataSourceRename.width()/4, DataSourceRename.height()*0.15)
@@ -3059,8 +3068,7 @@ class Window(QMainWindow):
         DataSourceStemWord.setWindowTitle("Find Stem Words")
         DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.4, self.width / 4, self.height / 5)
         DataSourceStemWord.setParent(self)
-        DataSourceStemWord.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceStemWord.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceStemWord)
 
         # Data Source Label
         WordStemDSlabel = QLabel(DataSourceStemWord)
@@ -3332,8 +3340,7 @@ class Window(QMainWindow):
         PartOfSpeechDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                             self.height / 10)
         PartOfSpeechDialog.setParent(self)
-        PartOfSpeechDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        PartOfSpeechDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(PartOfSpeechDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(PartOfSpeechDialog)
@@ -3579,8 +3586,8 @@ class Window(QMainWindow):
         EntityRelationShipDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                        self.height / 10)
         EntityRelationShipDialog.setParent(self)
-        EntityRelationShipDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        EntityRelationShipDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        self.QDialogAddProperties(EntityRelationShipDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(EntityRelationShipDialog)
@@ -3793,8 +3800,8 @@ class Window(QMainWindow):
         TopicModellingDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                              self.height / 10)
         TopicModellingDialog.setParent(self)
-        TopicModellingDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        TopicModellingDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        self.QDialogAddProperties(TopicModellingDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(TopicModellingDialog)
@@ -4034,7 +4041,7 @@ class Window(QMainWindow):
         CreateCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CreateCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3,
                                                     self.height / 10)
-        CreateCaseDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CreateCaseDialogBox)
 
         CaseNameLabel = QLabel(CreateCaseDialogBox)
         CaseNameLabel.setText("Case Name")
@@ -4119,7 +4126,7 @@ class Window(QMainWindow):
         AddtoCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         AddtoCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
                                        self.height / 10)
-        AddtoCaseDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(AddtoCaseDialogBox)
 
         AddtoCaseLabel = QLabel(AddtoCaseDialogBox)
         AddtoCaseLabel.setText("Case Name")
@@ -4269,7 +4276,7 @@ class Window(QMainWindow):
         AddtoSentimentsDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         AddtoSentimentsDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
                                        self.height / 10)
-        AddtoSentimentsDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(AddtoSentimentsDialogBox)
 
         AddtoSentimentsLabel = QLabel(AddtoSentimentsDialogBox)
         AddtoSentimentsLabel.setText("Sentiment")
@@ -4357,8 +4364,7 @@ class Window(QMainWindow):
         SummarizeDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
         SummarizeDialog.setParent(self)
         SummarizeDialog.setAttribute(Qt.WA_DeleteOnClose)
-        SummarizeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        SummarizeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(SummarizeDialog)
 
         # Summarization Data Source Label
         SummarizeDSLabel = QLabel(SummarizeDialog)
@@ -4576,8 +4582,7 @@ class Window(QMainWindow):
         DataSourceTranslateDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
         DataSourceTranslateDialog.setParent(self)
         DataSourceTranslateDialog.setAttribute(Qt.WA_DeleteOnClose)
-        DataSourceTranslateDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceTranslateDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceTranslateDialog)
 
         # Data Source Label
         TranslateDSLabel = QLabel(DataSourceTranslateDialog)
@@ -4850,16 +4855,15 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setModal(True)
         DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
         DataSourceWidgetDetailDialogBox.setParent(self)
+        self.QDialogAddProperties(DataSourceWidgetDetailDialogBox)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 break
 
         if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
                                                         self.height*2/5)
-            DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             #************************************** Labels *************************************
 
@@ -5038,10 +5042,8 @@ class Window(QMainWindow):
 
         elif DS.DataSourceext == "CSV files (*.csv)":
             if DS.CSVPathFlag:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
                                                             self.height*2/5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 #************************************** Labels *************************************
 
@@ -5219,11 +5221,8 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.exec_()
 
             else:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # Data Source Label
                 DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -5294,11 +5293,8 @@ class Window(QMainWindow):
 
         elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             if len(DS.DataSourceImage) == 1:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
                                                             self.height * 2 / 5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # ************************************** Labels *************************************
 
@@ -5475,11 +5471,8 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.exec_()
 
             else:
-                DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
                 DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                             self.height / 5)
-                DataSourceWidgetDetailDialogBox.setWindowFlags(
-                    self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
                 # ************************************** Labels *************************************
 
@@ -5562,11 +5555,8 @@ class Window(QMainWindow):
                 DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "URL":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                         self.height / 5)
-            DataSourceWidgetDetailDialogBox.setWindowFlags(
-                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             # Data Source Label
             DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -5636,11 +5626,8 @@ class Window(QMainWindow):
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Tweet":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                         self.height / 5)
-            DataSourceWidgetDetailDialogBox.setWindowFlags(
-                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             # Data Source  Label
             DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -5711,11 +5698,8 @@ class Window(QMainWindow):
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Youtube":
-            DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
             DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                         self.height / 5)
-            DataSourceWidgetDetailDialogBox.setWindowFlags(
-                self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             # Data Source Label
             DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
@@ -5796,10 +5780,9 @@ class Window(QMainWindow):
         DataSourceShowImagesDetailsBox.setWindowTitle("Images Details")
         DataSourceShowImagesDetailsBox.setParent(ParentWindow)
 
-        DataSourceShowImagesDetailsBox.setWindowFlags(Qt.WindowCloseButtonHint)
         DataSourceShowImagesDetailsBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
                                                     self.height * 2 / 5)
-        DataSourceShowImagesDetailsBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceShowImagesDetailsBox)
 
         # ************************************** Labels *************************************
 
@@ -5984,8 +5967,7 @@ class Window(QMainWindow):
         DataSourcesCreateDashboardDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                        self.height / 10)
         DataSourcesCreateDashboardDialog.setParent(self)
-        DataSourcesCreateDashboardDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourcesCreateDashboardDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourcesCreateDashboardDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourcesCreateDashboardDialog)
@@ -6050,8 +6032,7 @@ class Window(QMainWindow):
         CreateWordCloudDialog.setGeometry(self.width * 0.35, self.height*0.35, self.width/3, self.height/3)
         CreateWordCloudDialog.setParent(self)
         CreateWordCloudDialog.setAttribute(Qt.WA_DeleteOnClose)
-        CreateWordCloudDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        CreateWordCloudDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CreateWordCloudDialog)
 
         WordCloudDSLabel = QLabel(CreateWordCloudDialog)
         WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
@@ -6246,8 +6227,7 @@ class Window(QMainWindow):
         DataSourceWordTreeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                   self.height / 10)
         DataSourceWordTreeDialog.setParent(self)
-        DataSourceWordTreeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceWordTreeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceWordTreeDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourceWordTreeDialog)
@@ -6381,8 +6361,7 @@ class Window(QMainWindow):
         DataSourceCoordinateMapDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                      self.height / 10)
         DataSourceCoordinateMapDialog.setParent(self)
-        DataSourceCoordinateMapDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceCoordinateMapDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(DataSourceCoordinateMapDialog)
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourceCoordinateMapDialog)
@@ -7190,8 +7169,7 @@ class Window(QMainWindow):
         MergeCasesDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
         MergeCasesDialog.setParent(self)
         MergeCasesDialog.setAttribute(Qt.WA_DeleteOnClose)
-        MergeCasesDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        MergeCasesDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(MergeCasesDialog)
 
         # Case Name Label
         CaseNameLabel = QLabel(MergeCasesDialog)
@@ -7634,10 +7612,9 @@ class Window(QMainWindow):
         CasesParentDetailDialogBox.setModal(True)
         CasesParentDetailDialogBox.setWindowTitle("Details")
         CasesParentDetailDialogBox.setParent(self)
-        CasesParentDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CasesParentDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
                                                     self.height / 10)
-        CasesParentDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CasesParentDetailDialogBox)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.text(0):
@@ -7868,8 +7845,7 @@ class Window(QMainWindow):
         CaseRenameDialog.setWindowTitle("Rename")
         CaseRenameDialog.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
         CaseRenameDialog.setParent(self)
-        CaseRenameDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        CaseRenameDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CaseRenameDialog)
 
         RenameLabel = QLabel(CaseRenameDialog)
         RenameLabel.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.3,
@@ -7979,10 +7955,9 @@ class Window(QMainWindow):
         CasesChildDetailDialogBox.setModal(True)
         CasesChildDetailDialogBox.setWindowTitle("Details")
         CasesChildDetailDialogBox.setParent(self)
-        CasesChildDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         CasesChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                                self.height / 5)
-        CasesChildDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CasesChildDetailDialogBox)
 
         tempWidget = CasesItemName
 
@@ -8395,10 +8370,9 @@ class Window(QMainWindow):
         SentimentsChildDetailDialogBox.setModal(True)
         SentimentsChildDetailDialogBox.setWindowTitle("Details")
         SentimentsChildDetailDialogBox.setParent(self)
-        SentimentsChildDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         SentimentsChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
                                               self.height / 5)
-        SentimentsChildDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(SentimentsChildDetailDialogBox)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == SentimentsItemName.parent().text(0):
@@ -8631,10 +8605,9 @@ class Window(QMainWindow):
         VisualizationDetailDialogBox.setModal(True)
         VisualizationDetailDialogBox.setWindowTitle("Details")
         VisualizationDetailDialogBox.setParent(self)
-        VisualizationDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
         VisualizationDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
                                                self.height / 10)
-        VisualizationDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(VisualizationDetailDialogBox)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == VisualizationItemName.text(0):
@@ -8755,7 +8728,9 @@ class Window(QMainWindow):
         myDialog.setModal(True)
         myDialog.setWindowTitle("New File")
         myDialog.setParent(self)
-        myDialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
+
+        self.QDialogAddProperties(myDialog)
+
         myDialog.show()
 
     # Open File
@@ -9174,6 +9149,14 @@ class Window(QMainWindow):
             label.hide()
             TreeWidget.hide()
 
+    # QDialogAddProperties
+    def QDialogAddProperties(self, Dialog):
+        if WindowPlatform:
+            Dialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.MSWindowsFixedSizeDialogHint)
+        elif LinuxPlatform:
+            Dialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
+            Dialog.setFixedSize(Dialog.width(), Dialog.height())
+
     # About Window Tab
     def AboutWindow(self):
         try:
@@ -9489,8 +9472,7 @@ class Window(QMainWindow):
         CSVDialog.setGeometry(self.width * 0.375, self.height * 0.3, self.width / 3, self.height *0.4)
         CSVDialog.setParent(self)
         CSVDialog.setAttribute(Qt.WA_DeleteOnClose)
-        CSVDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        CSVDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(CSVDialog)
 
         # Summarization Default Radio Button
         PathRadioButton = QRadioButton(CSVDialog)
@@ -9629,8 +9611,7 @@ class Window(QMainWindow):
         TweetDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width * 0.3, self.height * 0.3)
         TweetDialog.setParent(self)
         TweetDialog.setAttribute(Qt.WA_DeleteOnClose)
-        TweetDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        TweetDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(TweetDialog)
 
         # Tweet HashTag Label
         TweetHashtagLabel = QLabel(TweetDialog)
@@ -9761,8 +9742,7 @@ class Window(QMainWindow):
         URLDialog.setGeometry(self.width * 0.3, self.height * 0.425, self.width*2/5 , self.height*0.15)
         URLDialog.setParent(self)
         URLDialog.setAttribute(Qt.WA_DeleteOnClose)
-        URLDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        URLDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(URLDialog)
 
         # Tweet HashTag Label
         URLLabel = QLabel(URLDialog)
@@ -9850,8 +9830,7 @@ class Window(QMainWindow):
         YoutubeDialog.setGeometry(self.width * 0.3, self.height * 0.4, self.width * 2 / 5, self.height * 0.20)
         YoutubeDialog.setParent(self)
         YoutubeDialog.setAttribute(Qt.WA_DeleteOnClose)
-        YoutubeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        YoutubeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        self.QDialogAddProperties(YoutubeDialog)
 
         # Summarization Default Radio Button
         VideoURLRadioButton = QRadioButton(YoutubeDialog)

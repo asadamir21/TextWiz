@@ -2172,9 +2172,8 @@ class Window(QMainWindow):
         DataSourceShowFrequencyTableDialog.setWindowTitle("Show Word Frequency Table")
         DataSourceShowFrequencyTableDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4, self.height / 10)
         DataSourceShowFrequencyTableDialog.setParent(self)
-        DataSourceShowFrequencyTableDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceShowFrequencyTableDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
+        DataSourceShowFrequencyTableDialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
+        DataSourceShowFrequencyTableDialog.setFixedSize(DataSourceShowFrequencyTableDialog.width(), DataSourceShowFrequencyTableDialog.height());
 
         # Data Source Label
         DataSourcelabel = QLabel(DataSourceShowFrequencyTableDialog)
@@ -8757,8 +8756,6 @@ class Window(QMainWindow):
         myDialog.setWindowTitle("New File")
         myDialog.setParent(self)
         myDialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
-        #myDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
         myDialog.show()
 
     # Open File

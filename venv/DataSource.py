@@ -644,8 +644,8 @@ class DataSource():
                     index = self.CSVHeaderLabel.index(Header)
                     break
 
-            for data in self.CSVData:
-                Temp = self.deEmojify(self.tweet_cleaner(data[index]))
+            for i in range(len(self.CSVData.index)):
+                Temp = self.deEmojify(self.tweet_cleaner(str(self.CSVData.iloc[i, index])))
                 if len(Temp) > 0:
                     DataSourceTextTokenize.append(Temp)
 
@@ -793,47 +793,47 @@ class DataSource():
         ax1.legend(labels, loc="upper left")
         ax1.axis('equal')
 
-        data = {
-            "Positive": (self.PositiveSentimentCount, QColor("green")),
-            "Neutral": (self.NeutralSentimentCount, QColor("yellow")),
-            "Negative": (self.NegativeSentimentCount, QColor("red")),
-        }
-
-        series = QPieSeries()
-
-        series.setLabelsVisible(True)
-        series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
-        series.setLabelsVisible(True)
-
-        _sliceList = []
-
-        for name, (value, color) in data.items():
-            _slice = series.append(name, value)
-            _slice.setBrush(color)
-            _slice.setLabelVisible(False)
-            _slice.setLabelPosition(QPieSlice.LabelInsideHorizontal)
-            _slice.setLabelFont(QFont("Times", 8, QFont.Bold))
-            _sliceList.append(_slice)
-
-        for _slice in _sliceList:
-            _slice.setLabel(_slice.label() + " " + str(round(100 * _slice.percentage(), 2)) + "%")
-
-        chart = QChart()
-        chart.setAnimationOptions(QChart.AllAnimations)
-
-        # chart.setTheme(QChart.ChartThemeBlueNcs)
-        # chart.setTheme(QChart.ChartThemeHighContrast)
-        # chart.setTheme(QChart.ChartThemeBlueIcy)
-        chart.setTheme(QChart.ChartThemeQt)
-
-        chart.addSeries(series)
-
-        chart.legend().setVisible(True)
-        chart.legend().setAlignment(Qt.AlignRight)
-        chart.legend().setFont(QFont("Times", 10))
-
-        self.chartview = QChartView(chart)
-        self.chartview.setRenderHint(QPainter.Antialiasing)
+        # data = {
+        #     "Positive": (self.PositiveSentimentCount, QColor("green")),
+        #     "Neutral": (self.NeutralSentimentCount, QColor("yellow")),
+        #     "Negative": (self.NegativeSentimentCount, QColor("red")),
+        # }
+        #
+        # series = QPieSeries()
+        #
+        # series.setLabelsVisible(True)
+        # series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
+        # series.setLabelsVisible(True)
+        #
+        # _sliceList = []
+        #
+        # for name, (value, color) in data.items():
+        #     _slice = series.append(name, value)
+        #     _slice.setBrush(color)
+        #     _slice.setLabelVisible(False)
+        #     _slice.setLabelPosition(QPieSlice.LabelInsideHorizontal)
+        #     _slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+        #     _sliceList.append(_slice)
+        #
+        # for _slice in _sliceList:
+        #     _slice.setLabel(_slice.label() + " " + str(round(100 * _slice.percentage(), 2)) + "%")
+        #
+        # chart = QChart()
+        # chart.setAnimationOptions(QChart.AllAnimations)
+        #
+        # # chart.setTheme(QChart.ChartThemeBlueNcs)
+        # # chart.setTheme(QChart.ChartThemeHighContrast)
+        # # chart.setTheme(QChart.ChartThemeBlueIcy)
+        # chart.setTheme(QChart.ChartThemeQt)
+        #
+        # chart.addSeries(series)
+        #
+        # chart.legend().setVisible(True)
+        # chart.legend().setAlignment(Qt.AlignRight)
+        # chart.legend().setFont(QFont("Times", 10))
+        #
+        # self.chartview = QChartView(chart)
+        # self.chartview.setRenderHint(QPainter.Antialiasing)
 
         # Bar Chart
         self.BarSentimentFigure = plt.figure(figsize=(10, 5))

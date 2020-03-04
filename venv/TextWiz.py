@@ -91,8 +91,19 @@ class Window(QMainWindow):
             self.height = Monitor_Resolution_Info.get("Work")[3]
 
         elif platform.system() == "Linux":
-            self.width = QApplication.desktop().width()
-            self.height = QApplication.desktop().height()
+            import gi
+            gi.require_version('Gtk', '3.0')
+            gi.require_version('Gtk', '3.0')
+
+            from gi.repository import Gdk, Gtk, GdkX11
+
+            display = Gdk.Display().get_default
+            for i in range(display.get_n_monitor):
+                monitor = display.get_monitor(i)
+                w_area = monitor.get_workarea()
+
+                self.width = w_area.width
+                self.height = w_area.height
 
         self.settings = QSettings('TextWiz', 'TextWiz')
 
@@ -302,12 +313,12 @@ class Window(QMainWindow):
         ImageFileButton.triggered.connect(lambda: self.ImportFileWindow("Image"))
         importMenu.addAction(ImageFileButton)
 
-        CSVFileButton = QAction(QIcon("Images\CSV.png"), 'csv', self)
+        CSVFileButton = QAction(QIcon("Images\CSV.png"), 'CSV File', self)
         CSVFileButton.setStatusTip('CSV File')
-        CSVFileButton.triggered.connect(lambda: self.ImportCSVWindow())
+        CSVFileButton.triggered.connect(lambda: self.ImportCSVWindowDialog())
         importMenu.addAction(CSVFileButton)
 
-        TwitterButton = QAction(QIcon("Images\Twitter.png"), 'Twitter', self)
+        TwitterButton = QAction(QIcon("Images\Twitter.png"), 'Twitter Tweets', self)
         TwitterButton.setStatusTip('Tweets')
         TwitterButton.triggered.connect(lambda checked: self.ImportTweetWindow())
         importMenu.addAction(TwitterButton)
@@ -317,7 +328,7 @@ class Window(QMainWindow):
         URLButton.triggered.connect(lambda checked: self.ImportURLWindow())
         importMenu.addAction(URLButton)
 
-        YoutubeButton = QAction(QIcon("Images\Youtube.png"), 'Youtube', self)
+        YoutubeButton = QAction(QIcon("Images\Youtube.png"), 'Youtube Comments', self)
         YoutubeButton.setStatusTip('Youtube Comments')
         YoutubeButton.triggered.connect(lambda checked: self.ImportYoutubeWindow())
         importMenu.addAction(YoutubeButton)
@@ -721,6 +732,7 @@ class Window(QMainWindow):
     def DataSourcesSimilarity(self):
         DataSourceSimilarityTabFlag = False
         DataSourceSimilarityTabFlag2 = False
+        DataSourceSimilarityTabFlag3 = False
 
         for tabs in myFile.TabList:
             if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Data Sources Similarity' and tabs.tabWidget != None:
@@ -728,9 +740,11 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(tabs.tabWidget)
                 DataSourceSimilarityTabFlag = True
                 break
-            elif tabs.TabName == 'Data Sources Similarity':
+            elif tabs.TabName == 'Data Sources Similarity' and tabs.tabWidget != None:
                 DataSourceSimilarityTabFlag2 = True
                 break
+            elif tabs.TabName == 'Data Sources Similarity' and tabs.tabWidget == None:
+                DataSourceSimilarityTabFlag3 = True
 
         if not DataSourceSimilarityTabFlag:
             # Creating New Tab for Data Sources Similarity
@@ -804,6 +818,11 @@ class Window(QMainWindow):
                         tabs.tabWidget = DataSourcesSimilarityTab
                         tabs.setisActive(True)
 
+                elif DataSourceSimilarityTabFlag3:
+                    tabs.tabWidget = DataSourcesSimilarityTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
@@ -819,10 +838,15 @@ class Window(QMainWindow):
                     self.tabWidget.addTab(DataSourcesSimilarityTab, "Data Sources Similarity")
                     self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
 
+
             else:
                 DataSourceLoadErrorBox = QMessageBox.critical(self, "Data Sources Similarity Error",
                                                               "An Error Occured! Similarity can only be found if Data Sources are more than one",
                                                               QMessageBox.Ok)
+
+        elif tabs.tabWidget != None:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Update Similarity Between Data Sources
     def DataSourceSimilarityUpdate(self):
@@ -856,16 +880,19 @@ class Window(QMainWindow):
     def DataSourceDocumentClustering(self):
         DataSourceDocumentClusteringTabFlag = False
         DataSourceDocumentClusteringTabFlag2 = False
+        DataSourceDocumentClusteringTabFlag3 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Document Clustering'  and tabs.tabWidget != None:
+            if tabs.DataSourceName == len(myFile.DataSourceList) and tabs.TabName == 'Document Clustering' and tabs.tabWidget != None:
                 if self.tabWidget.currentWidget() != tabs.tabWidget:
                     self.tabWidget.setCurrentWidget(tabs.tabWidget)
                 DataSourceDocumentClusteringTabFlag = True
                 break
-            elif tabs.TabName == 'Document Clustering':
+            elif tabs.TabName == 'Document Clustering' and tabs.tabWidget != None:
                 DataSourceDocumentClusteringTabFlag2 = True
                 break
+            elif tabs.TabName == 'Document Clustering' and tabs.tabWidget == None:
+                DataSourceDocumentClusteringTabFlag3 = True
 
         myFile.DocumnetClustering()
 
@@ -932,6 +959,12 @@ class Window(QMainWindow):
                         tabs.tabWidget = DataSourceDocumentClusteringTab
                         tabs.setisActive(True)
 
+                elif DataSourceDocumentClusteringTabFlag3:
+                    tabs.tabWidget = DataSourceDocumentClusteringTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     myFile.TabList.append(Tab("Document Clustering", DataSourceDocumentClusteringTab, len(myFile.DataSourceList)))
@@ -951,6 +984,9 @@ class Window(QMainWindow):
                 DataSourceDocumnetClusteringErrorBox = QMessageBox.critical(self, "Data Sources Documnet Clustering",
                                                                            "An Error Occured! Clustering can only be done if Data Sources are more than three",
                                                                             QMessageBox.Ok)
+        elif tabs.tabWidget != None:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Update Similarity Between Data Sources
     def DataSourceDocumentClusteringUpdate(self):
@@ -1250,11 +1286,16 @@ class Window(QMainWindow):
     # Data Source Web Preview
     def DataSourcePreviewWeb(self, DataSourceWidgetItemName):
         DataSourcePreviewWebTabFlag = False
+        DataSourcePreviewWebTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Web Preview' and tabs.tabWidget != None:
-                DataSourcePreviewWebTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Web Preview':
+                if tabs.tabWidget != None:
+                    DataSourcePreviewWebTabFlag = True
+                    break
+                else:
+                    DataSourcePreviewWebTabFlag2 = True
+                    break
 
         if not DataSourcePreviewWebTabFlag:
             # Creating New Tab for Stem Word
@@ -1283,12 +1324,18 @@ class Window(QMainWindow):
                             PreviewHTMLWebPage.setHtml(DS.DataSourceHTML.decode("ISO-8859-4"))
                     break
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Preview", PreviewWebTab, DataSourceWidgetItemName.text(0)))
+            if DataSourcePreviewWebTabFlag2:
+                tabs.tabWidget = PreviewWebTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(PreviewWebTab, "Web Preview")
+                    self.tabWidget.setCurrentWidget(PreviewWebTab)
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Web Preview", PreviewWebTab, DataSourceWidgetItemName.text(0)))
 
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(PreviewWebTab, "Preview")
-            self.tabWidget.setCurrentWidget(PreviewWebTab)
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(PreviewWebTab, "Web Preview")
+                self.tabWidget.setCurrentWidget(PreviewWebTab)
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -1298,11 +1345,16 @@ class Window(QMainWindow):
     # Data Source Show Tweet Data
     def DataSourceShowTweetData(self, DataSourceWidgetItemName):
         DataSourceShowTweetDataTabFlag = False
+        DataSourceShowTweetDataTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data' and tabs.tabWidget != None:
-                DataSourceShowTweetDataTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Tweet Data':
+                if tabs.tabWidget != None:
+                    DataSourceShowTweetDataTabFlag = True
+                    break
+                else:
+                    DataSourceShowTweetDataTabFlag2 = True
+                    break
 
         if not DataSourceShowTweetDataTabFlag:
             ShowTweetDataTab = QWidget()
@@ -1370,12 +1422,18 @@ class Window(QMainWindow):
             # for i in range(ShowTweetDataTable.columnCount()):
             #     ShowTweetDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            # Adding Word Frequency Tab to TabList
-            myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
+            if DataSourceShowTweetDataTabFlag2:
+                tabs.tabWidget = ShowTweetDataTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
+                    self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
 
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
-            self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
+                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
         else:
             # updating tab
             self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
@@ -1385,11 +1443,16 @@ class Window(QMainWindow):
     # Data Source Youtube Show Video
     def DataSourceYoutubeShowVideo(self, DataSourceWidgetItemName):
         DataSourceYoutubeShowVideoTabFlag = False
+        DataSourceYoutubeShowVideoTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Video' and tabs.tabWidget != None:
-                DataSourceYoutubeShowVideoTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Video':
+                if tabs.tabWidget != None:
+                    DataSourceYoutubeShowVideoTabFlag = True
+                    break
+                else:
+                    DataSourceYoutubeShowVideoTabFlag2 = True
+                    break
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -1412,12 +1475,19 @@ class Window(QMainWindow):
             VideoTabWebPage.setUrl(QUrl(DS.DataSourcePath))
             VideoTabVerticalLayout.addWidget(VideoTabWebPage)
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Show Video", VideoTab, DataSourceWidgetItemName.text(0)))
+            if DataSourceYoutubeShowVideoTabFlag2:
+                tabs.tabWidget = VideoTabWebPage
+                if tabs.isActive:
+                    self.tabWidget.addTab(VideoTab, "Show Video")
+                    self.tabWidget.setCurrentWidget(VideoTab)
 
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(VideoTab, "Show Video")
-            self.tabWidget.setCurrentWidget(VideoTab)
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Show Video", VideoTab, DataSourceWidgetItemName.text(0)))
+
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(VideoTab, "Show Video")
+                self.tabWidget.setCurrentWidget(VideoTab)
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -1427,11 +1497,16 @@ class Window(QMainWindow):
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsURL(self, DataSourceWidgetItemName):
         DataSourceShowYoutubeCommentsTabFlag = False
-
+        DataSourceShowYoutubeCommentsTabFlag2 = False
+        
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data' and tabs.tabWidget != None:
-                DataSourceShowYoutubeCommentsTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+                if tabs.tabWidget != None:
+                    DataSourceShowYoutubeCommentsTabFlag = True
+                    break
+                else:
+                    DataSourceShowYoutubeCommentsTabFlag2 = True
+                    break
 
         if not DataSourceShowYoutubeCommentsTabFlag:
             ShowYoutubeCommentsTab = QWidget()
@@ -1498,13 +1573,19 @@ class Window(QMainWindow):
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                  ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-            # Adding Word Frequency Tab to TabList
-            myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
-
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            
+            if DataSourceShowYoutubeCommentsTabFlag2:
+                tabs.tabWidget = ShowYoutubeCommentsTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                    self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+    
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
 
         else:
             # updating tab
@@ -1515,12 +1596,17 @@ class Window(QMainWindow):
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsKeyWord(self, DataSourceWidgetItemName):
         DataSourceShowYoutubeCommentsTabFlag = False
-
+        DataSourceShowYoutubeCommentsTabFlag2 = False
+        
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data' and tabs.tabWidget != None:
-                DataSourceShowYoutubeCommentsTabFlag = True
-                break
-
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Show Youtube Data':
+                if tabs.tabWidget != None:
+                    DataSourceShowYoutubeCommentsTabFlag = True
+                    break
+                else:
+                    DataSourceShowYoutubeCommentsTabFlag2 = True
+                    break
+                    
         if not DataSourceShowYoutubeCommentsTabFlag:
             ShowYoutubeCommentsTab = QWidget()
             ShowYoutubeCommentsTab.setGeometry(
@@ -1592,12 +1678,19 @@ class Window(QMainWindow):
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                 ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+            
+            if DataSourceShowYoutubeCommentsTabFlag2:
+                tabs.tabWidget = ShowYoutubeCommentsTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                    self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            else:
                 # Adding Word Frequency Tab to TabList
-            myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
-
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+    
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
 
         else:
             # updating tab
@@ -1608,12 +1701,17 @@ class Window(QMainWindow):
     # Data Source View Images
     def DataSourceViewImage(self, DataSourceWidgetItemName):
         DataSourceShowImagesTabFlag = False
+        DataSourceShowImagesTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'View Image' and tabs.tabWidget != None:
-                DataSourceShowImagesTabFlag = True
-                break
-
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'View Image':
+                if tabs.tabWidget != None:
+                    DataSourceShowImagesTabFlag = True
+                    break
+                else:
+                    DataSourceShowImagesTabFlag2 = True
+                    break
+                    
         if not DataSourceShowImagesTabFlag:
             ViewImageTab = QWidget()
             ViewImageTab.setGeometry(
@@ -1699,12 +1797,17 @@ class Window(QMainWindow):
             RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel,
                                                                ViewImageTabverticalLayoutWidget, LeftButton))
 
-
-            myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
-
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(ViewImageTab, "View Image")
-            self.tabWidget.setCurrentWidget(ViewImageTab)
+            if DataSourceShowImagesTabFlag2:
+                tabs.tabWidget = ViewImageTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(ViewImageTab, "View Image")
+                    self.tabWidget.setCurrentWidget(ViewImageTab)
+            else:
+                myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
+    
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ViewImageTab, "View Image")
+                self.tabWidget.setCurrentWidget(ViewImageTab)
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -1714,11 +1817,16 @@ class Window(QMainWindow):
     # Data Source View CSV Data
     def DataSourceViewCSVData(self, DataSourceWidgetItemName):
         DataSourceViewCSVDataTabFlag = False
+        DataSourceViewCSVDataTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data' and tabs.tabWidget != None:
-                DataSourceViewCSVDataTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'CSV Data':
+                if tabs.tabWidget != None:
+                    DataSourceViewCSVDataTabFlag = True
+                    break
+                else:
+                    DataSourceViewCSVDataTabFlag2 = True
+                    break
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -1785,12 +1893,18 @@ class Window(QMainWindow):
             # for i in range(ViewCSVDataTable.columnCount()):
             #     ViewCSVDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            # Adding Word Frequency Tab to TabList
-            myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
-
-            # Adding Word Frequency Tab to QTabWidget
-            self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
-            self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+            if DataSourceViewCSVDataTabFlag2:
+                tabs.tabWidget = ViewCSVDataTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
+                    self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+            else:
+                # Adding Word Frequency Tab to TabList
+                myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
+    
+                # Adding Word Frequency Tab to QTabWidget
+                self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
+                self.tabWidget.setCurrentWidget(ViewCSVDataTab)
 
         else:
             # Adding Word Frequency Tab to QTabWidget
@@ -1852,12 +1966,17 @@ class Window(QMainWindow):
     # Data Source PDF Preview
     def DataSourcePDFPreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTabFlag = False
+        DataSourcePreviewTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
-                DataSourcePreviewTabFlag = True
-                break
-
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+                if tabs.tabWidget != None:
+                    DataSourcePreviewTabFlag = True
+                    break
+                else:
+                    DataSourcePreviewTabFlag2 = True
+                    break
+                    
         if not DataSourcePreviewTabFlag:
             DataSourcePreviewTab = QWidget()
 
@@ -1878,14 +1997,19 @@ class Window(QMainWindow):
                     PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
                     PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
                     break
+            
+            if DataSourcePreviewTabFlag2:
+                tabs.tabWidget = DataSourcePreviewTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
-
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -1895,11 +2019,16 @@ class Window(QMainWindow):
     # Data Source Word Preview
     def DataSourceWordPreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTabFlag = False
+        DataSourcePreviewTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
-                DataSourcePreviewTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+                if tabs.tabWidget != None:
+                    DataSourcePreviewTabFlag = True
+                    break
+                else:
+                    DataSourcePreviewTabFlag2 = True
+                    break
 
         if not DataSourcePreviewTabFlag:
             DataSourcePreviewTab = QWidget()
@@ -1923,12 +2052,18 @@ class Window(QMainWindow):
 
                     DataSourceverticalLayout.addWidget(WordActivex)
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+            if DataSourcePreviewTabFlag:
+                tabs.tabWidget = DataSourcePreviewTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
 
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
         else:
             # updating tab
@@ -1939,11 +2074,16 @@ class Window(QMainWindow):
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
         DataSourcePreviewTabFlag = False
+        DataSourcePreviewTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview' and tabs.tabWidget != None:
-                DataSourcePreviewTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Preview':
+                if tabs.tabWidget != None:
+                    DataSourcePreviewTabFlag = True
+                    break
+                else:
+                    DataSourcePreviewTabFlag2 = True
+                    break
 
         if not DataSourcePreviewTabFlag:
             DataSourcePreviewTab = QWidget()
@@ -1967,12 +2107,18 @@ class Window(QMainWindow):
                     DataSourcePreview.setText(DS.DataSourcetext)
                     break
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+            if DataSourcePreviewTabFlag2:
+                tabs.tabWidget = DataSourcePreviewTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
 
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-            self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
 
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -2070,92 +2216,98 @@ class Window(QMainWindow):
     # Data Source Show Frequency Table
     def DataSourceShowFrequencyTable(self, DataSourceName):
         DataSourceShowFrequencyTabFlag = False
+        DataSourceShowFrequencyTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Frequency' and tabs.tabWidget != None:
-                DataSourceShowFrequencyTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Frequency':
+                if tabs.tabWidget != None:
+                    DataSourceShowFrequencyTabFlag = True
+                    break
+                else:
+                    DataSourceShowFrequencyTabFlag2 = True
+                    break
 
-        WordFrequencyTab = QWidget()
-        WordFrequencyTab.setGeometry(
-                         QRect(self.verticalLayoutWidget.width(),
-                               self.tabWidget.tabBar().geometry().height(),
-                               self.width - self.verticalLayoutWidget.width(),
-                               self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-        WordFrequencyTab.setSizePolicy(self.sizePolicy)
+        if not DataSourceShowFrequencyTabFlag:
+            WordFrequencyTab = QWidget()
+            WordFrequencyTab.setGeometry(
+                             QRect(self.verticalLayoutWidget.width(),
+                                   self.tabWidget.tabBar().geometry().height(),
+                                   self.width - self.verticalLayoutWidget.width(),
+                                   self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+            WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Stem Word Tab
-        WordFrequencyTabVerticalLayoutWidget2 = QWidget(WordFrequencyTab)
-        WordFrequencyTabVerticalLayoutWidget2.setGeometry(WordFrequencyTab.width() / 4,
-                                                          0,
-                                                          WordFrequencyTab.width() / 2,
-                                                          WordFrequencyTab.height() / 10)
+            # LayoutWidget For within Stem Word Tab
+            WordFrequencyTabVerticalLayoutWidget2 = QWidget(WordFrequencyTab)
+            WordFrequencyTabVerticalLayoutWidget2.setGeometry(WordFrequencyTab.width() / 4,
+                                                              0,
+                                                              WordFrequencyTab.width() / 2,
+                                                              WordFrequencyTab.height() / 10)
 
-        # Box Layout for Stem Word Tab
-        WordFrequencyTabVerticalLayout2 = QHBoxLayout(WordFrequencyTabVerticalLayoutWidget2)
-        WordFrequencyTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Stem Word Tab
+            WordFrequencyTabVerticalLayout2 = QHBoxLayout(WordFrequencyTabVerticalLayoutWidget2)
+            WordFrequencyTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        # filter proxy model
-        WordFrequencyTableModel = QSortFilterProxyModel()
-        # WordFrequencyTableModel.setSourceModel(model)
-        WordFrequencyTableModel.setFilterKeyColumn(0)  # First column
+            # filter proxy model
+            WordFrequencyTableModel = QSortFilterProxyModel()
+            # WordFrequencyTableModel.setSourceModel(model)
+            WordFrequencyTableModel.setFilterKeyColumn(0)  # First column
 
-        # line edit for filtering
-        WordFrequencyTabSearchLineEdit = QLineEdit()
-        WordFrequencyTabSearchLineEdit.textChanged.connect(WordFrequencyTableModel.setFilterRegExp)
-        WordFrequencyTabVerticalLayout2.addWidget(WordFrequencyTabSearchLineEdit)
+            # line edit for filtering
+            WordFrequencyTabSearchLineEdit = QLineEdit()
+            WordFrequencyTabSearchLineEdit.textChanged.connect(WordFrequencyTableModel.setFilterRegExp)
+            WordFrequencyTabVerticalLayout2.addWidget(WordFrequencyTabSearchLineEdit)
 
-        # Download Button For Frequency Table
-        DownloadAsCSVButton = QPushButton('Download')
-        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            # Download Button For Frequency Table
+            DownloadAsCSVButton = QPushButton('Download')
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-        DownloadAsCSVButtonFont = QFont("sans-serif")
-        DownloadAsCSVButtonFont.setPixelSize(14)
-        DownloadAsCSVButtonFont.setBold(True)
+            DownloadAsCSVButtonFont = QFont("sans-serif")
+            DownloadAsCSVButtonFont.setPixelSize(14)
+            DownloadAsCSVButtonFont.setBold(True)
 
-        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-        WordFrequencyTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+            WordFrequencyTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-        # LayoutWidget For within Word Frequency Tab
-        WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
-        WordFrequencyTabverticalLayoutWidget.setGeometry(0, WordFrequencyTab.height() / 10, WordFrequencyTab.width(),
-                                                         WordFrequencyTab.height() - WordFrequencyTab.height() / 10)
-        WordFrequencyTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For within Word Frequency Tab
+            WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
+            WordFrequencyTabverticalLayoutWidget.setGeometry(0, WordFrequencyTab.height() / 10, WordFrequencyTab.width(),
+                                                             WordFrequencyTab.height() - WordFrequencyTab.height() / 10)
+            WordFrequencyTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-        # Box Layout for Word Frequency Tab
-        WordFrequencyverticalLayout = QVBoxLayout(WordFrequencyTabverticalLayoutWidget)
-        WordFrequencyverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Word Frequency Tab
+            WordFrequencyverticalLayout = QVBoxLayout(WordFrequencyTabverticalLayoutWidget)
+            WordFrequencyverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Table for Word Frequency
-        WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
-        WordFrequencyTable.setColumnCount(7)
-        WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(),
-                                       WordFrequencyTabverticalLayoutWidget.height())
+            # Table for Word Frequency
+            WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
+            WordFrequencyTable.setColumnCount(7)
+            WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(),
+                                           WordFrequencyTabverticalLayoutWidget.height())
 
-        WordFrequencyTable.setSizePolicy(self.sizePolicy)
+            WordFrequencyTable.setSizePolicy(self.sizePolicy)
 
-        WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-        WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage", "Definition", "Synonyms", "Antonyms"])
-        WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage", "Definition", "Synonyms", "Antonyms"])
+            WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
-        for i in range(WordFrequencyTable.columnCount()):
-            WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            WordFrequencyTable.horizontalHeaderItem(i).setFont(
-                QFont(WordFrequencyTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+            for i in range(WordFrequencyTable.columnCount()):
+                WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                WordFrequencyTable.horizontalHeaderItem(i).setFont(
+                    QFont(WordFrequencyTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-        dummyQuery = Query()
+            dummyQuery = Query()
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
-                break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
+                    break
 
-        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(WordFrequencyTable))
+            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(WordFrequencyTable))
 
-        if len(rowList) != 0:
+
             for row in rowList:
                 WordFrequencyTable.insertRow(rowList.index(row))
                 for item in row:
@@ -2186,44 +2338,42 @@ class Window(QMainWindow):
             for i in range(WordFrequencyTable.columnCount()):
                 WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            if DataSourceShowFrequencyTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(WordFrequencyTab)
+            if DataSourceShowFrequencyTabFlag2:
                 tabs.tabWidget = WordFrequencyTab
-                tabs.setisActive(True)
+                if tabs.isActive:
+                    self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(WordFrequencyTab)
+
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("Word Frequency", WordFrequencyTab, DataSourceName))
-
-                # Adding Word Frequency Query
-                ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                if len(ItemsWidget) == 0:
-                    DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                    DSVisualWidget.setText(0, DataSourceName)
-                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                    DSVisualWidget.setExpanded(True)
-
-                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
-                    DSNewCaseNode.setText(0, 'Word Frequency')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                else:
-                    for widgets in ItemsWidget:
-                        DSNewCaseNode = QTreeWidgetItem(widgets)
-                        DSNewCaseNode.setText(0, 'Word Frequency')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
                 self.tabWidget.setCurrentWidget(WordFrequencyTab)
 
+            # Adding Word Frequency Query
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSVisualWidget.setText(0, DataSourceName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
+
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Word Frequency')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Word Frequency')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
         else:
-            QMessageBox.critical(self, "Word Frequency Error",
-                                 "An Error Occurred! No Text Found in " + DataSourceName,
-                                 QMessageBox.Ok)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # ****************************************************************************
     # *************************** Question Generator *****************************
@@ -2287,115 +2437,121 @@ class Window(QMainWindow):
     # Generate Questions Table
     def GenerateQuestionsTable(self, DataSourceName):
         GenerateQuestionsTabFlag = False
+        GenerateQuestionsTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions' and tabs.tabWidget != None:
-                GenerateQuestionsTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Generate Questions':
+                if tabs.tabWidget != None:
+                    GenerateQuestionsTabFlag = True
+                    break
+                else:
+                    GenerateQuestionsTabFlag2 = True
+                    break
 
-        #Generate Question Tab
-        GenerateQuestionsTab = QWidget()
-        GenerateQuestionsTab.setGeometry(
-            QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                         self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-        GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
+        if GenerateQuestionsTabFlag:
+            #Generate Question Tab
+            GenerateQuestionsTab = QWidget()
+            GenerateQuestionsTab.setGeometry(
+                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
+                             self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+            GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Generate Question Tab
-        GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
-        GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                          self.tabWidget.height() / 10)
+            # LayoutWidget For within Generate Question Tab
+            GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
+            GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                              self.tabWidget.height() / 10)
 
-        # Box Layout for Generate Question Tab
-        GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
-        GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Generate Question Tab
+            GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
+            GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
 
-        # Download Button For Generate Question Table
-        DownloadAsCSVButton = QPushButton('Download')
-        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            # Download Button For Generate Question Table
+            DownloadAsCSVButton = QPushButton('Download')
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-        DownloadAsCSVButtonFont = QFont("sans-serif")
-        DownloadAsCSVButtonFont.setPixelSize(14)
-        DownloadAsCSVButtonFont.setBold(True)
+            DownloadAsCSVButtonFont = QFont("sans-serif")
+            DownloadAsCSVButtonFont.setPixelSize(14)
+            DownloadAsCSVButtonFont.setBold(True)
 
-        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-        GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
+            GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
 
-        # LayoutWidget For within Generate Question Tab
-        GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
-        GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
-        GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For within Generate Question Tab
+            GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
+            GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
+            GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-        # Box Layout for Generate Question Tab
-        GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
-        GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Generate Question Tab
+            GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
+            GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Table for Generate Question
-        GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
-        GenerateQuestionsTable.setColumnCount(1)
-        GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
-                                       GenerateQuestionsTabverticalLayoutWidget.height())
+            # Table for Generate Question
+            GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+            GenerateQuestionsTable.setColumnCount(1)
+            GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
+                                           GenerateQuestionsTabverticalLayoutWidget.height())
 
-        GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
+            GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
 
-        GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-        GenerateQuestionsTable.setHorizontalHeaderLabels(
-            ["Questions"])
-        GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-        for i in range(GenerateQuestionsTable.columnCount()):
-            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
-                QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-        dummyQuery = Query()
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
-                break
-
-        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
-
-        if len(rowList) != 0:
-            for row in rowList:
-                GenerateQuestionsTable.insertRow(rowList.index(row))
-
-                ptext = QPlainTextEdit()
-                ptext.setReadOnly(True)
-                ptext.setPlainText(row)
-                ptext.adjustSize()
-                ptext.setFixedHeight(self.tabWidget.height() / 15)
-                GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
-
-            GenerateQuestionsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            GenerateQuestionsTable.resizeColumnsToContents()
-            GenerateQuestionsTable.resizeRowsToContents()
-
-            GenerateQuestionsTable.setSortingEnabled(True)
-            GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            GenerateQuestionsTable.setHorizontalHeaderLabels(
+                ["Questions"])
+            GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(GenerateQuestionsTable.columnCount()):
-                GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
+                    QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            if GenerateQuestionsTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-                tabs.tabWidget = GenerateQuestionsTab
-                tabs.setisActive(True)
-            else:
-                # Adding Generate Question Tab to TabList
-                myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+            dummyQuery = Query()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+                    break
+
+            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    GenerateQuestionsTable.insertRow(rowList.index(row))
+
+                    ptext = QPlainTextEdit()
+                    ptext.setReadOnly(True)
+                    ptext.setPlainText(row)
+                    ptext.adjustSize()
+                    ptext.setFixedHeight(self.tabWidget.height() / 15)
+                    GenerateQuestionsTable.setCellWidget(rowList.index(row), 0, ptext)
+
+                GenerateQuestionsTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                GenerateQuestionsTable.resizeColumnsToContents()
+                GenerateQuestionsTable.resizeRowsToContents()
+
+                GenerateQuestionsTable.setSortingEnabled(True)
+                GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(GenerateQuestionsTable.columnCount()):
+                    GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                if GenerateQuestionsTabFlag2:
+                    tabs.tabWidget = GenerateQuestionsTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                else:
+                    # Adding Generate Question Tab to TabList
+                    myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+                    # Adding Generate Questions Tab to QTabWidget
+                    self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
+                    self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
                 if len(ItemsWidget) == 0:                                   # if no Parent Widget
                     # Adding Parent Query
                     DSQueryWidget = QTreeWidgetItem(self.QueryTreeWidget)
@@ -2415,13 +2571,10 @@ class Window(QMainWindow):
                         DSNewCaseNode.setText(0, 'Generate Questions')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                # Adding Generate Questions Tab to QTabWidget
-                self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
-                self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
-
         else:
-            QMessageBox.information(self, "Questions Generation Error",
-                                    "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # ****************************************************************************
     # ********************* Data Sources Sentiment Analysis **********************
@@ -2539,234 +2692,245 @@ class Window(QMainWindow):
 
     # Sentiment Analysis Table
     def SentimentAnalysisTable(self, DataSourceName, ColumnName):
-        DataSourceSentimentAnalysisFlag = False
+        try:
+            DataSourceSentimentAnalysisFlag = False
+            DataSourceSentimentAnalysisFlag2 = False
 
-        for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis' and tabs.tabWidget != None:
-                DataSourceSentimentAnalysisFlag = True
-                break
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
+                    if tabs.tabWidget != None:
+                        DataSourceSentimentAnalysisFlag = True
+                        break
+                    else:
+                        DataSourceSentimentAnalysisFlag2 = True
+                        break
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                DS.SentimentAnalysis(ColumnName)
-                DS.SentimentAnalysisVisualization()
-                rowList = DS.AutomaticSentimentList
-                break
+            if not DataSourceSentimentAnalysisFlag:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        DS.SentimentAnalysis(ColumnName)
+                        DS.SentimentAnalysisVisualization()
+                        rowList = DS.AutomaticSentimentList
+                        break
 
-        SentimentAnalysisTab = QWidget()
-        SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                                                      self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-        SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
+                SentimentAnalysisTab = QWidget()
+                SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
+                                                              self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+                SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Stem Word Tab
-        SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
-        SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                              self.tabWidget.height() / 10)
-        # Box Layout for Stem Word Tab
-        SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
-        SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+                # LayoutWidget For within Stem Word Tab
+                SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
+                SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
+                                                                      self.tabWidget.height() / 10)
+                # Box Layout for Stem Word Tab
+                SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
+                SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Positive_Count Label
-        PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-        PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                       SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
-                                       SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                       SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-        PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
-        PositiveCountLabel.setAlignment(Qt.AlignVCenter)
-        PositiveCountLabel.adjustSize()
+                # Positive_Count Label
+                PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+                PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                               SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
+                                               SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                               SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+                PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
+                PositiveCountLabel.setAlignment(Qt.AlignVCenter)
+                PositiveCountLabel.adjustSize()
 
-        # Neutral_Count Label
-        NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-        NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                      SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
-                                      SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                      SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-        NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
-        NeutralCountLabel.setAlignment(Qt.AlignVCenter)
-        NeutralCountLabel.adjustSize()
+                # Neutral_Count Label
+                NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+                NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                              SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
+                                              SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                              SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+                NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
+                NeutralCountLabel.setAlignment(Qt.AlignVCenter)
+                NeutralCountLabel.adjustSize()
 
-        # Negative_Count Label
-        NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-        NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                       SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
-                                       SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                       SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-        NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
-        NegativeCountLabel.setAlignment(Qt.AlignVCenter)
-        NegativeCountLabel.adjustSize()
+                # Negative_Count Label
+                NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+                NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                               SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
+                                               SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                               SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+                NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
+                NegativeCountLabel.setAlignment(Qt.AlignVCenter)
+                NegativeCountLabel.adjustSize()
 
-        # Download Button For Sentiment Analysis Table
-        DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
-        DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
-                                        SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                        SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                        SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
-        DownloadAsCSVButton.setText("Download")
-        DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-        DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+                # Download Button For Sentiment Analysis Table
+                DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
+                DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
+                                                SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                                SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                                SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+                DownloadAsCSVButton.setText("Download")
+                DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+                DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-        DownloadAsCSVButtonFont = QFont("sans-serif")
-        DownloadAsCSVButtonFont.setPixelSize(14)
-        DownloadAsCSVButtonFont.setBold(True)
-        DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+                DownloadAsCSVButtonFont = QFont("sans-serif")
+                DownloadAsCSVButtonFont.setPixelSize(14)
+                DownloadAsCSVButtonFont.setBold(True)
+                DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-        self.LineEditSizeAdjustment(DownloadAsCSVButton)
+                self.LineEditSizeAdjustment(DownloadAsCSVButton)
 
-        # Data Source Label
-        DataSourceLabel = QLabel()
-        DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
-        DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
-        DataSourceLabel.setAlignment(Qt.AlignVCenter)
-        DataSourceLabel.hide()
-        SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
+                # Data Source Label
+                DataSourceLabel = QLabel()
+                DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
+                DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
+                DataSourceLabel.setAlignment(Qt.AlignVCenter)
+                DataSourceLabel.hide()
+                SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
 
-        # Data Source Sentiment Analysis  ComboBox
-        DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
-        DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
-                                 SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                 SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                 SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
-        DSSAComboBox.addItem("Show Table")
-        DSSAComboBox.addItem("Show Chart")
-        self.LineEditSizeAdjustment(DSSAComboBox)
+                # Data Source Sentiment Analysis  ComboBox
+                DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
+                DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
+                                         SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                         SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                         SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+                DSSAComboBox.addItem("Show Table")
+                DSSAComboBox.addItem("Show Chart")
+                self.LineEditSizeAdjustment(DSSAComboBox)
 
-        # LayoutWidget For within Sentiment Analysis Tab
-        SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
-        SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                self.tabWidget.height() - self.tabWidget.height() / 10)
-        SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
+                # LayoutWidget For within Sentiment Analysis Tab
+                SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
+                SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                        self.tabWidget.height() - self.tabWidget.height() / 10)
+                SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
 
-        # Box Layout for Sentiment Analysis Tab
-        SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
-        SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
+                # Box Layout for Sentiment Analysis Tab
+                SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
+                SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        # Table for Word Frequency
-        SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
-        SentimentAnalysisTable.setColumnCount(2)
-        SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
-                                                 SentimentAnalysisTabverticalLayoutWidget2.height())
-        SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
-        SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-        SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
-        SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+                # Table for Word Frequency
+                SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
+                SentimentAnalysisTable.setColumnCount(2)
+                SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
+                                                         SentimentAnalysisTabverticalLayoutWidget2.height())
+                SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
+                SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+                SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
+                SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
-        for i in range(SentimentAnalysisTable.columnCount()):
-            SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                for i in range(SentimentAnalysisTable.columnCount()):
+                    SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                    SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-        DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+                DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
 
 
-        if len(rowList) != 0:
-            for row in rowList:
-                SentimentAnalysisTable.insertRow(rowList.index(row))
-                for item in row:
-                    if row.index(item) == 0:
-                        ptext = QPlainTextEdit()
-                        ptext.setReadOnly(True)
-                        ptext.setPlainText(item);
-                        ptext.setFixedHeight(self.tabWidget.height()/15)
-                        SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+                if len(rowList) != 0:
+                    for row in rowList:
+                        SentimentAnalysisTable.insertRow(rowList.index(row))
+                        for item in row:
+                            if row.index(item) == 0:
+                                ptext = QPlainTextEdit()
+                                ptext.setReadOnly(True)
+                                ptext.setPlainText(item);
+                                ptext.setFixedHeight(self.tabWidget.height()/15)
+                                SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                            else:
+                                intItem = QTableWidgetItem()
+                                intItem.setData(Qt.EditRole, QVariant(item))
+                                SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
+                                SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                                    Qt.AlignHCenter | Qt.AlignVCenter)
+                                SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
+                                    Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                    SentimentAnalysisTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                    SentimentAnalysisTable.resizeColumnsToContents()
+                    SentimentAnalysisTable.resizeRowsToContents()
+
+                    SentimentAnalysisTable.setSortingEnabled(True)
+                    SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+
+                    for i in range(SentimentAnalysisTable.columnCount()):
+                        SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                    # Sentiment Analysis Chart
+
+                    # LayoutWidget For within Sentiment Analysis Tab
+                    SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
+                    SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
+                                                                          self.tabWidget.width()/2,
+                                                                          self.tabWidget.height() - self.tabWidget.height() / 10)
+                    SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
+
+                    # Box Layout for Sentiment Analysis Tab
+                    SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
+                    SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
+
+                    canvas = FigureCanvas(DS.BarSentimentFigure)
+                    SentimentAnalysisverticalLayout3.addWidget(canvas)
+                    SentimentAnalysisTabverticalLayoutWidget3.hide()
+
+
+                    SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
+                    SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
+                                                                          self.tabWidget.width()/2,
+                                                                          self.tabWidget.height() - self.tabWidget.height() / 10)
+                    SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
+
+                    # Box Layout for Sentiment Analysis Tab
+                    SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
+                    SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
+
+                    canvas2 = FigureCanvas(DS.PieSentimentFigure)
+                    SentimentAnalysisverticalLayout4.addWidget(canvas2)
+                    SentimentAnalysisTabverticalLayoutWidget4.hide()
+
+                    DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
+                                                                                                   PositiveCountLabel,
+                                                                                                   NegativeCountLabel,
+                                                                                                   NeutralCountLabel,
+                                                                                                   DownloadAsCSVButton,
+                                                                                                   SentimentAnalysisTabverticalLayoutWidget2,
+                                                                                                   SentimentAnalysisTabverticalLayoutWidget3,
+                                                                                                   SentimentAnalysisTabverticalLayoutWidget4))
+
+                    if DataSourceSentimentAnalysisFlag2:
+                        tabs.tabWidget = SentimentAnalysisTab
+                        if tabs.isActive:
+                            self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
+                            self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
                     else:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
-                        SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
-                        SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
-                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                        # Adding Word Frequency Tab to TabList
+                        dummyTab = Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName)
+                        dummyTab.setAutomaticSentimentAnalysis(ColumnName)
+                        myFile.TabList.append(dummyTab)
 
-            SentimentAnalysisTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            SentimentAnalysisTable.resizeColumnsToContents()
-            SentimentAnalysisTable.resizeRowsToContents()
+                        # Adding Word Frequency Tab to QTabWidget
+                        self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
+                        self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
-            SentimentAnalysisTable.setSortingEnabled(True)
-            SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                    # Adding Word Frequency Query
+                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-            for i in range(SentimentAnalysisTable.columnCount()):
-                SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                    if len(ItemsWidget) == 0:
+                        DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                        DSVisualWidget.setText(0, DataSourceName)
+                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                        DSVisualWidget.setExpanded(True)
 
-            # Sentiment Analysis Chart
-
-            # LayoutWidget For within Sentiment Analysis Tab
-            SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
-                                                                  self.tabWidget.width()/2,
-                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
-            SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Sentiment Analysis Tab
-            SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
-            SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
-
-            canvas = FigureCanvas(DS.BarSentimentFigure)
-            SentimentAnalysisverticalLayout3.addWidget(canvas)
-            SentimentAnalysisTabverticalLayoutWidget3.hide()
-
-
-            SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
-                                                                  self.tabWidget.width()/2,
-                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
-            SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Sentiment Analysis Tab
-            SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
-            SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
-
-            canvas2 = FigureCanvas(DS.PieSentimentFigure)
-            SentimentAnalysisverticalLayout4.addWidget(canvas2)
-            SentimentAnalysisTabverticalLayoutWidget4.hide()
-
-            DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
-                                                                                           PositiveCountLabel,
-                                                                                           NegativeCountLabel,
-                                                                                           NeutralCountLabel,
-                                                                                           DownloadAsCSVButton,
-                                                                                           SentimentAnalysisTabverticalLayoutWidget2,
-                                                                                           SentimentAnalysisTabverticalLayoutWidget3,
-                                                                                           SentimentAnalysisTabverticalLayoutWidget4))
-
-            if DataSourceSentimentAnalysisFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
-                tabs.tabWidget = SentimentAnalysisTab
-                tabs.setisActive(True)
-
-            else:
-                # Adding Word Frequency Tab to TabList
-                myFile.TabList.append(Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName))
-
-                # Adding Word Frequency Query
-                ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                if len(ItemsWidget) == 0:
-                    DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                    DSVisualWidget.setText(0, DataSourceName)
-                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                    DSVisualWidget.setExpanded(True)
-
-                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
-                    DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-                else:
-                    for widgets in ItemsWidget:
-                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
                         DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                # Adding Word Frequency Tab to QTabWidget
-                self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
-                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                    else:
+                        for widgets in ItemsWidget:
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-        else:
-            QMessageBox.information(self, "Word Frequency Error",
-                                    "An Error Occurred! No Text Found in " + DataSourceName, QMessageBox.Ok)
+            else:
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                tabs.setisActive(True)
+
+        except Exception as e:
+            print(str(e))
 
     # Sentiment Analysis ComboBox
     def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
@@ -2961,116 +3125,126 @@ class Window(QMainWindow):
     # Show StemWords on Tab
     def mapStemWordonTab(self, word, DataSourceName):
         DataSourceStemWordTabFlag = False
+        DataSourceStemWordTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word' and tabs.tabWidget != None:
-                DataSourceStemWordTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Stem Word':
+                if tabs.tabWidget != None:
+                    DataSourceStemWordTabFlag = True
+                    break
+                else:
+                    DataSourceStemWordTabFlag2 = True
+                    break
 
-        # Creating New Tab for Stem Word
-        StemWordTab = QWidget()
+        if not DataSourceStemWordTabFlag:
+            # Creating New Tab for Stem Word
+            StemWordTab = QWidget()
 
-        # LayoutWidget For within Stem Word Tab
-        StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
-        StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                    self.tabWidget.height() / 10)
+            # LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
+                                                        self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
-        StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
-        StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
+            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # StemWord Text Edit
-        StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
-        StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
-                                     StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                     StemWordTabVerticalLayoutWidget.width() / 4,
-                                     StemWordTabVerticalLayoutWidget.height() / 4)
-        StemWordCompleter = QCompleter()
-        StemWordLineEdit.setCompleter(StemWordCompleter)
-        StemWordModel = QStringListModel()
-        StemWordCompleter.setModel(StemWordModel)
-
-        StemWordLineEdit.textChanged.connect(
-            lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
-
-        # StemWord Submit Button
-        StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
-        StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
+            # StemWord Text Edit
+            StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
+            StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
                                          StemWordTabVerticalLayoutWidget.height() * 0.375,
                                          StemWordTabVerticalLayoutWidget.width() / 4,
                                          StemWordTabVerticalLayoutWidget.height() / 4)
-        StemWordSubmitButton.setText("Find Stem Words")
-        StemWordSubmitButton.setEnabled(False)
+            StemWordCompleter = QCompleter()
+            StemWordLineEdit.setCompleter(StemWordCompleter)
+            StemWordModel = QStringListModel()
+            StemWordCompleter.setModel(StemWordModel)
 
-        StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
+            StemWordLineEdit.textChanged.connect(
+                lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
 
-        # 2nd LayoutWidget For within Stem Word Tab
-        StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
-        StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
+            # StemWord Submit Button
+            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
+            StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
+                                             StemWordTabVerticalLayoutWidget.height() * 0.375,
+                                             StemWordTabVerticalLayoutWidget.width() / 4,
+                                             StemWordTabVerticalLayoutWidget.height() / 4)
+            StemWordSubmitButton.setText("Find Stem Words")
+            StemWordSubmitButton.setEnabled(False)
 
-        # 2nd Box Layout for Stem Word Tab
-        StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
-        StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
 
-        StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
-        StemWordTable.setColumnCount(2)
-        StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
-                                  StemWordTabVerticalLayoutWidget2.height())
+            # 2nd LayoutWidget For within Stem Word Tab
+            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
+            StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        StemWordTable.setSizePolicy(self.sizePolicy)
-        StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-        StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
-        StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            # 2nd Box Layout for Stem Word Tab
+            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
+            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        for i in range(StemWordTable.columnCount()):
-            StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            StemWordTable.horizontalHeaderItem(i).setFont(
-                QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+            StemWordTable.setColumnCount(2)
+            StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
+                                      StemWordTabVerticalLayoutWidget2.height())
 
-        StemWordSubmitButton.clicked.connect(
-            lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceName, StemWordTable))
-
-        dummyQuery = Query()
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
-                break
-
-        if len(rowList) != 0:
-            for row in rowList:
-                StemWordTable.insertRow(rowList.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
-                    StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-            StemWordTable.resizeColumnsToContents()
-            StemWordTable.resizeRowsToContents()
-
-            StemWordTable.setSortingEnabled(True)
-            StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            StemWordTable.setSizePolicy(self.sizePolicy)
+            StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
+            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(StemWordTable.columnCount()):
-                StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                StemWordTable.horizontalHeaderItem(i).setFont(
+                    QFont(StemWordTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            if DataSourceStemWordTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(StemWordTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(StemWordTab)
-                tabs.tabWidget = StemWordTab
-                tabs.setisActive(True)
+            StemWordSubmitButton.clicked.connect(
+                lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceName, StemWordTable))
 
-            else:
-                # Adding Stem Word Tab to QTabWidget
-                myFile.TabList.append(Tab("Stem Word", StemWordTab, DataSourceName))
+            dummyQuery = Query()
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    rowList = dummyQuery.FindStemmedWords(word, DS.DataSourcetext)
+                    break
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    StemWordTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
+                        StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                StemWordTable.resizeColumnsToContents()
+                StemWordTable.resizeRowsToContents()
+
+                StemWordTable.setSortingEnabled(True)
+                StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(StemWordTable.columnCount()):
+                    StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                if DataSourceStemWordTabFlag2:
+                    tabs.tabWidget = StemWordTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(StemWordTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(StemWordTab)
+
+                else:
+                    # Adding Stem Word Tab to QTabWidget
+                    dummyTab = Tab("Stem Word", StemWordTab, DataSourceName)
+                    dummyTab.setStemWords(word)
+                    myFile.TabList.append(dummyTab)
+
+                    # Adding Stem Word Tab to QTabWidget
+                    self.tabWidget.addTab(StemWordTab, "Stem Word")
+                    self.tabWidget.setCurrentWidget(StemWordTab)
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3093,14 +3267,10 @@ class Window(QMainWindow):
                         DSNewCaseNode.setText(0, 'Stem Word')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                # Adding Stem Word Tab to QTabWidget
-                self.tabWidget.addTab(StemWordTab, "Stem Word")
-                self.tabWidget.setCurrentWidget(StemWordTab)
-
         else:
-            QMessageBox(self, "Stem Word Error",
-                        "An Error Occurred! No Stem Word Found of the Word \"" + word + "\"",
-                        QMessageBox.Ok)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):
@@ -3213,146 +3383,153 @@ class Window(QMainWindow):
     # Data Source Part of Speech
     def DataSourcePOS(self, DataSourceName):
         DataSourcePOSTabFlag = False
+        DataSourcePOSTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Parts of Speech' and tabs.tabWidget != None:
-                DataSourcePOSTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Parts of Speech':
+                if tabs.tabWidget != None:
+                    DataSourcePOSTabFlag = True
+                    break
+                else:
+                    DataSourcePOSTabFlag2 = True
+                    break
 
-        dummyQuery = Query()
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName,
-                                                                                               DS.DataSourcetext, 3)
-                break
+        if not DataSourcePOSTabFlag:
+            dummyQuery = Query()
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName,
+                                                                                                   DS.DataSourcetext, 3)
+                    break
 
-        # Creating New Tab for Part of Speech
-        POSTab = QWidget()
+            # Creating New Tab for Part of Speech
+            POSTab = QWidget()
 
-        # LayoutWidget For within Part of Speech Tab
-        POSTabVerticalLayoutWidget = QWidget(POSTab)
-        POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+            # LayoutWidget For within Part of Speech Tab
+            POSTabVerticalLayoutWidget = QWidget(POSTab)
+            POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-        # Box Layout for Part of Speech Tab
-        POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
-        POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Part of Speech Tab
+            POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
+            POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Noun_Count Label
-        POSNounCountLabel = QLabel(POSTabVerticalLayoutWidget)
-        POSNounCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                      POSTabVerticalLayoutWidget.height() * 0.142,
-                                      POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
-        POSNounCountLabel.setText("Noun Count: " + str(noun_count))
-        POSNounCountLabel.setAlignment(Qt.AlignVCenter)
-        POSNounCountLabel.adjustSize()
+            # Noun_Count Label
+            POSNounCountLabel = QLabel(POSTabVerticalLayoutWidget)
+            POSNounCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                          POSTabVerticalLayoutWidget.height() * 0.142,
+                                          POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSNounCountLabel.setText("Noun Count: " + str(noun_count))
+            POSNounCountLabel.setAlignment(Qt.AlignVCenter)
+            POSNounCountLabel.adjustSize()
 
-        # Verb_Count Label
-        POSVerbCountLabel = QLabel(POSTabVerticalLayoutWidget)
-        POSVerbCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                      POSTabVerticalLayoutWidget.height() * 0.428,
-                                      POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
-        POSVerbCountLabel.setText("Verb Count: " + str(verb_count))
-        POSVerbCountLabel.setAlignment(Qt.AlignVCenter)
-        POSVerbCountLabel.adjustSize()
+            # Verb_Count Label
+            POSVerbCountLabel = QLabel(POSTabVerticalLayoutWidget)
+            POSVerbCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                          POSTabVerticalLayoutWidget.height() * 0.428,
+                                          POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSVerbCountLabel.setText("Verb Count: " + str(verb_count))
+            POSVerbCountLabel.setAlignment(Qt.AlignVCenter)
+            POSVerbCountLabel.adjustSize()
 
-        # Adjective_Count Label
-        POSAdjCountLabel = QLabel(POSTabVerticalLayoutWidget)
-        POSAdjCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                     POSTabVerticalLayoutWidget.height() * 0.714,
-                                     POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
-        POSAdjCountLabel.setText("Adjective Count: " + str(adj_count))
-        POSAdjCountLabel.setAlignment(Qt.AlignVCenter)
-        POSAdjCountLabel.adjustSize()
+            # Adjective_Count Label
+            POSAdjCountLabel = QLabel(POSTabVerticalLayoutWidget)
+            POSAdjCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
+                                         POSTabVerticalLayoutWidget.height() * 0.714,
+                                         POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSAdjCountLabel.setText("Adjective Count: " + str(adj_count))
+            POSAdjCountLabel.setAlignment(Qt.AlignVCenter)
+            POSAdjCountLabel.adjustSize()
 
-        # Part of speech ComboBox
-        POSComboBox = QComboBox(POSTabVerticalLayoutWidget)
-        POSComboBox.setGeometry(POSTabVerticalLayoutWidget.width() * 0.8, POSTabVerticalLayoutWidget.height() * 0.4,
-                                POSTabVerticalLayoutWidget.width() / 10, POSTabVerticalLayoutWidget.height() / 5)
-        POSComboBox.addItem("Show Table")
-        POSComboBox.addItem("Show Graph")
-        self.LineEditSizeAdjustment(POSComboBox)
+            # Part of speech ComboBox
+            POSComboBox = QComboBox(POSTabVerticalLayoutWidget)
+            POSComboBox.setGeometry(POSTabVerticalLayoutWidget.width() * 0.8, POSTabVerticalLayoutWidget.height() * 0.4,
+                                    POSTabVerticalLayoutWidget.width() / 10, POSTabVerticalLayoutWidget.height() / 5)
+            POSComboBox.addItem("Show Table")
+            POSComboBox.addItem("Show Graph")
+            self.LineEditSizeAdjustment(POSComboBox)
 
-        # 2nd LayoutWidget For within Stem Word Tab
-        POSTabVerticalLayoutWidget2 = QWidget(POSTab)
-        POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                self.tabWidget.height() - self.tabWidget.height() / 10)
+            # 2nd LayoutWidget For within Stem Word Tab
+            POSTabVerticalLayoutWidget2 = QWidget(POSTab)
+            POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        # 2nd Box Layout for Stem Word Tab
-        POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
-        POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # 2nd Box Layout for Stem Word Tab
+            POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
+            POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        POSTable = QTableWidget(POSTabVerticalLayoutWidget2)
-        POSTable.setColumnCount(3)
-        POSTable.setGeometry(0, 0, POSTabVerticalLayoutWidget2.width(),
-                             POSTabVerticalLayoutWidget2.height())
+            POSTable = QTableWidget(POSTabVerticalLayoutWidget2)
+            POSTable.setColumnCount(3)
+            POSTable.setGeometry(0, 0, POSTabVerticalLayoutWidget2.width(),
+                                 POSTabVerticalLayoutWidget2.height())
 
-        POSTable.setSizePolicy(self.sizePolicy)
-        POSTable.setWindowFlags(POSTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-        POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
-        POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-        for i in range(POSTable.columnCount()):
-            POSTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            POSTable.horizontalHeaderItem(i).setFont(QFont(POSTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-        # StemWordSubmitButton.clicked.connect(lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceWidgetItemName, POSTable))
-
-        if len(rowList) != 0:
-            for row in rowList:
-                POSTable.insertRow(rowList.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    POSTable.setItem(rowList.index(row), row.index(item), intItem)
-                    POSTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-            POSTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            POSTable.resizeColumnsToContents()
-            POSTable.resizeRowsToContents()
-
-            POSTable.setSortingEnabled(True)
-            POSTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            POSTable.setSizePolicy(self.sizePolicy)
+            POSTable.setWindowFlags(POSTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
+            POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(POSTable.columnCount()):
-                POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                POSTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                POSTable.horizontalHeaderItem(i).setFont(QFont(POSTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-        # Label for Word Cloud Image
-        POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
-        # Resizing label to Layout
-        POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
+            # StemWordSubmitButton.clicked.connect(lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceWidgetItemName, POSTable))
 
-        # Converting WordCloud Image to Pixmap
-        POSGraphPixmap = POSGraph.toqpixmap()
+            if len(rowList) != 0:
+                for row in rowList:
+                    POSTable.insertRow(rowList.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        POSTable.setItem(rowList.index(row), row.index(item), intItem)
+                        POSTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
-        # Scaling Pixmap image
-        dummypixmap = POSGraphPixmap.scaled(POSTabVerticalLayoutWidget2.width(),
-                                            POSTabVerticalLayoutWidget2.height(), Qt.KeepAspectRatio)
+                POSTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                POSTable.resizeColumnsToContents()
+                POSTable.resizeRowsToContents()
 
-        POSGraphLabel.setPixmap(dummypixmap)
-        POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
-                                  (POSTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
-                                  dummypixmap.width(), dummypixmap.height())
-        POSGraphLabel.hide()
+                POSTable.setSortingEnabled(True)
+                POSTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
 
-        # Setting ContextMenu Policies on Label
-        # POSGraphLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        # POSGraphLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
+                for i in range(POSTable.columnCount()):
+                    POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-        POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
+            # Label for Word Cloud Image
+            POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
+            # Resizing label to Layout
+            POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
 
-        if DataSourcePOSTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(POSTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(POSTab)
-            tabs.tabWidget = POSTab
+            # Converting WordCloud Image to Pixmap
+            POSGraphPixmap = POSGraph.toqpixmap()
 
-        else:
-            # Adding Part of Speech Tab to QTabWidget
-            myFile.TabList.append(Tab("Parts of Speech", POSTab, DataSourceName))
+            # Scaling Pixmap image
+            dummypixmap = POSGraphPixmap.scaled(POSTabVerticalLayoutWidget2.width(),
+                                                POSTabVerticalLayoutWidget2.height(), Qt.KeepAspectRatio)
+
+            POSGraphLabel.setPixmap(dummypixmap)
+            POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
+                                      (POSTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
+                                      dummypixmap.width(), dummypixmap.height())
+            POSGraphLabel.hide()
+
+            # Setting ContextMenu Policies on Label
+            # POSGraphLabel.setContextMenuPolicy(Qt.CustomContextMenu)
+            # POSGraphLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
+
+            POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
+
+            if DataSourcePOSTabFlag2:
+                tabs.tabWidget = POSTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(POSTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(POSTab)
+            else:
+                # Adding Part of Speech Tab to QTabWidget
+                myFile.TabList.append(Tab("Parts of Speech", POSTab, DataSourceName))
+                # Adding Part of Speech Tab to QTabWidget
+                self.tabWidget.addTab(POSTab, "Parts of Speech")
+                self.tabWidget.setCurrentWidget(POSTab)
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3375,9 +3552,10 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Parts of Speech')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            # Adding Part of Speech Tab to QTabWidget
-            self.tabWidget.addTab(POSTab, "Parts of Speech")
-            self.tabWidget.setCurrentWidget(POSTab)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Toggle POS View
     def togglePOSView(self, Table, Label):
@@ -3452,109 +3630,115 @@ class Window(QMainWindow):
     # Data Source Entity Relationship
     def DataSourceEntityRelationShip(self, DataSourceName):
         DataSourceERTabFlag = False
+        DataSourceERTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Entity Relationship' and tabs.tabWidget != None:
-                DataSourceERTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Entity Relationship':
+                if tabs.tabWidget != None:
+                    DataSourceERTabFlag = True
+                    break
+                else:
+                    DataSourceERTabFlag2 = True
+                    break
 
-        dummyQuery = Query()
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                Entity_List, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
-                    DS.DataSourcetext)
-                break
+        if not DataSourceERTabFlag:
+            dummyQuery = Query()
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    Entity_List, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
+                        DS.DataSourcetext)
+                    break
 
-        # Creating New Tab for Entity Relationship
-        DSERTab = QWidget()
+            # Creating New Tab for Entity Relationship
+            DSERTab = QWidget()
 
-        # LayoutWidget For within Entity Relationship Tab
-        DSERTabVerticalLayoutWidget = QWidget(DSERTab)
-        DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+            # LayoutWidget For within Entity Relationship Tab
+            DSERTabVerticalLayoutWidget = QWidget(DSERTab)
+            DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
-        DSERTabVerticalLayout = QHBoxLayout(DSERTabVerticalLayoutWidget)
-        DSERTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Stem Word Tab
+            DSERTabVerticalLayout = QHBoxLayout(DSERTabVerticalLayoutWidget)
+            DSERTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Part of speech ComboBox
-        DSERComboBox = QComboBox(DSERTabVerticalLayoutWidget)
-        DSERComboBox.setGeometry(DSERTabVerticalLayoutWidget.width() * 0.8, DSERTabVerticalLayoutWidget.height() * 0.4,
-                                 DSERTabVerticalLayoutWidget.width() / 10, DSERTabVerticalLayoutWidget.height() / 5)
-        DSERComboBox.addItem("Show Table")
-        DSERComboBox.addItem("Show Dependency")
-        DSERComboBox.addItem("Show Entities")
+            # Part of speech ComboBox
+            DSERComboBox = QComboBox(DSERTabVerticalLayoutWidget)
+            DSERComboBox.setGeometry(DSERTabVerticalLayoutWidget.width() * 0.8, DSERTabVerticalLayoutWidget.height() * 0.4,
+                                     DSERTabVerticalLayoutWidget.width() / 10, DSERTabVerticalLayoutWidget.height() / 5)
+            DSERComboBox.addItem("Show Table")
+            DSERComboBox.addItem("Show Dependency")
+            DSERComboBox.addItem("Show Entities")
 
-        self.LineEditSizeAdjustment(DSERComboBox)
+            self.LineEditSizeAdjustment(DSERComboBox)
 
-        # 2nd LayoutWidget For within Entity Relationship Tab
-        DSERTabVerticalLayoutWidget2 = QWidget(DSERTab)
-        DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                 self.tabWidget.height() - self.tabWidget.height() / 10)
+            # 2nd LayoutWidget For within Entity Relationship Tab
+            DSERTabVerticalLayoutWidget2 = QWidget(DSERTab)
+            DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        # 2nd Box Layout for Stem Word Tab
-        DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
+            # 2nd Box Layout for Stem Word Tab
+            DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
 
-        DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
-        DSERTable.setColumnCount(3)
-        DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
+            DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
+            DSERTable.setColumnCount(3)
+            DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
 
-        DSERTable.setSizePolicy(self.sizePolicy)
-        DSERTable.setWindowFlags(DSERTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-        DSERTable.setHorizontalHeaderLabels(["Word", "Frequency", "Entity"])
-        DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-        for i in range(DSERTable.columnCount()):
-            DSERTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            DSERTable.horizontalHeaderItem(i).setFont(
-                QFont(DSERTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-        if len(Entity_List) != 0:
-            for row in Entity_List:
-                DSERTable.insertRow(Entity_List.index(row))
-                for item in row:
-                    intItem = QTableWidgetItem()
-                    intItem.setData(Qt.EditRole, QVariant(item))
-                    DSERTable.setItem(Entity_List.index(row), row.index(item), intItem)
-                    DSERTable.item(Entity_List.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
-                    DSERTable.item(Entity_List.index(row), row.index(item)).setFlags(
-                        Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-            DSERTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            DSERTable.resizeColumnsToContents()
-            DSERTable.resizeRowsToContents()
-
-            DSERTable.setSortingEnabled(True)
-            DSERTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            DSERTable.setSizePolicy(self.sizePolicy)
+            DSERTable.setWindowFlags(DSERTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            DSERTable.setHorizontalHeaderLabels(["Word", "Frequency", "Entity"])
+            DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(DSERTable.columnCount()):
-                DSERTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                DSERTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                DSERTable.horizontalHeaderItem(i).setFont(
+                    QFont(DSERTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-        EntityHTMLWeb = QWebEngineView()
-        EntityHTMLWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-        DSERTabVerticalLayout2.addWidget(EntityHTMLWeb)
-        EntityHTMLWeb.setHtml(EntityHTML)
-        EntityHTMLWeb.hide()
+            if len(Entity_List) != 0:
+                for row in Entity_List:
+                    DSERTable.insertRow(Entity_List.index(row))
+                    for item in row:
+                        intItem = QTableWidgetItem()
+                        intItem.setData(Qt.EditRole, QVariant(item))
+                        DSERTable.setItem(Entity_List.index(row), row.index(item), intItem)
+                        DSERTable.item(Entity_List.index(row), row.index(item)).setTextAlignment(
+                            Qt.AlignHCenter | Qt.AlignVCenter)
+                        DSERTable.item(Entity_List.index(row), row.index(item)).setFlags(
+                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
-        DependencyHTMLWeb = QWebEngineView()
-        DSERTabVerticalLayout2.addWidget(DependencyHTMLWeb)
-        DependencyHTMLWeb.setHtml(DependencyHTML)
-        DependencyHTMLWeb.hide()
+                DSERTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                DSERTable.resizeColumnsToContents()
+                DSERTable.resizeRowsToContents()
 
-        DSERComboBox.currentTextChanged.connect(lambda: self.toggleERView(DSERTable, EntityHTMLWeb, DependencyHTMLWeb))
+                DSERTable.setSortingEnabled(True)
+                DSERTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
 
-        if DataSourceERTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(DSERTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(DSERTab)
-            tabs.tabWidget = DSERTab
-            tabs.setisActive(True)
+                for i in range(DSERTable.columnCount()):
+                    DSERTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-        else:
-            # Adding Entity Relationship Tab to QTabWidget
-            myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceName))
+            EntityHTMLWeb = QWebEngineView()
+            EntityHTMLWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+            DSERTabVerticalLayout2.addWidget(EntityHTMLWeb)
+            EntityHTMLWeb.setHtml(EntityHTML)
+            EntityHTMLWeb.hide()
+
+            DependencyHTMLWeb = QWebEngineView()
+            DSERTabVerticalLayout2.addWidget(DependencyHTMLWeb)
+            DependencyHTMLWeb.setHtml(DependencyHTML)
+            DependencyHTMLWeb.hide()
+
+            DSERComboBox.currentTextChanged.connect(lambda: self.toggleERView(DSERTable, EntityHTMLWeb, DependencyHTMLWeb))
+
+            if DataSourceERTabFlag2:
+                tabs.tabWidget = DSERTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DSERTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DSERTab)
+            else:
+                # Adding Entity Relationship Tab to QTabWidget
+                myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceName))
+                # Adding Entity Relationship Tab to QTabWidget
+                self.tabWidget.addTab(DSERTab, "Entity Relationship")
+                self.tabWidget.setCurrentWidget(DSERTab)
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3576,10 +3760,10 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Entity Relationship')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
+        else:
             # Adding Entity Relationship Tab to QTabWidget
-            self.tabWidget.addTab(DSERTab, "Entity Relationship")
-            self.tabWidget.setCurrentWidget(DSERTab)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Toggle POS View
     def toggleERView(self, Table, HTMLViewer1, HTMLViewer2):
@@ -3660,67 +3844,74 @@ class Window(QMainWindow):
     # Data Source Topic Modelling
     def DataSourceTopicModelling(self, DataSourceName):
         DataSourceTotalModellingTabFlag = False
+        DataSourceTotalModellingTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Topic Modelling' and tabs.tabWidget != None:
-                DataSourceTotalModellingTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Topic Modelling':
+                if tabs.tabWidget != None:
+                    DataSourceTotalModellingTabFlag = True
+                    break
+                else:
+                    DataSourceTotalModellingTabFlag = True
+                    break
 
-        TopicModellingTab = QWidget()
-        TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
-        TopicModellingTab.setSizePolicy(self.sizePolicy)
+        if not DataSourceTotalModellingTabFlag:
+            TopicModellingTab = QWidget()
+            TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+            TopicModellingTab.setSizePolicy(self.sizePolicy)
 
-        # LayoutWidget For within Topic Modelling Tab
-        TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
-        TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height()/10)
+            # LayoutWidget For within Topic Modelling Tab
+            TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
+            TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height()/10)
 
-        # Box Layout for Topic Modelling Tab
-        TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
-        TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Topic Modelling Tab
+            TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
+            TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # ComboBox for Topic Modelling Tab
-        TopicModellingComboBox = QComboBox(TopicModellingTabVerticalLayoutWidget)
-        TopicModellingComboBox.setGeometry(TopicModellingTabVerticalLayoutWidget.width() * 0.8,
-                                           TopicModellingTabVerticalLayoutWidget.height() * 0.4,
-                                           TopicModellingTabVerticalLayoutWidget.width() / 10,
-                                           TopicModellingTabVerticalLayoutWidget.height() / 5)
+            # ComboBox for Topic Modelling Tab
+            TopicModellingComboBox = QComboBox(TopicModellingTabVerticalLayoutWidget)
+            TopicModellingComboBox.setGeometry(TopicModellingTabVerticalLayoutWidget.width() * 0.8,
+                                               TopicModellingTabVerticalLayoutWidget.height() * 0.4,
+                                               TopicModellingTabVerticalLayoutWidget.width() / 10,
+                                               TopicModellingTabVerticalLayoutWidget.height() / 5)
 
-        TopicModellingComboBox.addItem("Show Word CLoud")
-        TopicModellingComboBox.addItem("Show Table")
-        TopicModellingComboBox.addItem("Show Word CLoud")
-        self.LineEditSizeAdjustment(TopicModellingComboBox)
+            TopicModellingComboBox.addItem("Show Word CLoud")
+            TopicModellingComboBox.addItem("Show Table")
+            TopicModellingComboBox.addItem("Show Word CLoud")
+            self.LineEditSizeAdjustment(TopicModellingComboBox)
 
 
-        # LayoutWidget For within Topic Modelling Tab
-        TopicModellingTabVerticalLayoutWidget2 = QWidget(TopicModellingTab)
-        TopicModellingTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/10, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
+            # LayoutWidget For within Topic Modelling Tab
+            TopicModellingTabVerticalLayoutWidget2 = QWidget(TopicModellingTab)
+            TopicModellingTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/10, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
 
-        # Box Layout for Topic Modelling Tab
-        TopicModellingTabVerticalLayout2 = QHBoxLayout(TopicModellingTabVerticalLayoutWidget2)
-        TopicModellingTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Topic Modelling Tab
+            TopicModellingTabVerticalLayout2 = QHBoxLayout(TopicModellingTabVerticalLayoutWidget2)
+            TopicModellingTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-        # Data Source Topic Modelling HTML
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                dummyQuery = Query()
-                TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
-                break
+            # Data Source Topic Modelling HTML
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    dummyQuery = Query()
+                    TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
+                    break
 
-        # Topic Modelling HTML Viewer
-        TopicModellingHTMLWeb = QWebEngineView()
-        TopicModellingTabVerticalLayout2.addWidget(TopicModellingHTMLWeb)
-        TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
+            # Topic Modelling HTML Viewer
+            TopicModellingHTMLWeb = QWebEngineView()
+            TopicModellingTabVerticalLayout2.addWidget(TopicModellingHTMLWeb)
+            TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
 
-        if DataSourceTotalModellingTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(TopicModellingTab)
-            tabs.tabWidget = TopicModellingTab
-        else:
-            # Adding Topic Modelling Tab to TabList
-            myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
-
+            if DataSourceTotalModellingTabFlag2:
+                tabs.tabWidget = TopicModellingTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(TopicModellingTab)
+            else:
+                # Adding Topic Modelling Tab to TabList
+                myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
+                # Adding Topic Modelling Tab to QTabWidget
+                self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
+                self.tabWidget.setCurrentWidget(TopicModellingTab)
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3743,9 +3934,10 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Topic Modelling')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
+        else:
             # Adding Topic Modelling Tab to QTabWidget
-            self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
-            self.tabWidget.setCurrentWidget(TopicModellingTab)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # ****************************************************************************
     # ************************ Data Sources Create Cases *************************
@@ -3753,50 +3945,56 @@ class Window(QMainWindow):
 
     # Data Source Create Cases
     def DataSourceCreateCases(self, DataSourceWidgetItemName):
-        try:
-            DataSourceCreateCasesTabFlag = False
+        DataSourceCreateCasesTabFlag = False
+        DataSourceCreateCasesTabFlag2 = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Create Cases' and tabs.tabWidget != None:
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == 'Create Cases':
+                if tabs.tabWidget != None:
                     DataSourceCreateCasesTabFlag = True
                     break
+                else:
+                    DataSourceCreateCasesTabFlag2 = True
+                    break
 
-            if not DataSourceCreateCasesTabFlag:
-                DataSourceCreateCasesTab = QWidget()
+        if not DataSourceCreateCasesTabFlag:
+            DataSourceCreateCasesTab = QWidget()
 
-                # LayoutWidget For within DataSource Preview Tab
-                CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
-                CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-                CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            # LayoutWidget For within DataSource Preview Tab
+            CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
+            CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+            CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-                # Box Layout for Data SourceTab
-                CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
-                CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Data SourceTab
+            CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
+            CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-                CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
-                CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-                CreateCasesPreview.setReadOnly(True)
+            CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
+            CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            CreateCasesPreview.setReadOnly(True)
 
-                CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
-                CreateCasesPreview.customContextMenuRequested.connect(
-                    lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+            CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
+            CreateCasesPreview.customContextMenuRequested.connect(
+                lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
 
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                        CreateCasesPreview.setText(DS.DataSourcetext)
-                        break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    CreateCasesPreview.setText(DS.DataSourcetext)
+                    break
 
+            if DataSourceCreateCasesTabFlag2:
+                tabs.tabWidget = DataSourceCreateCasesTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
+                    self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+            else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Create Cases", DataSourceCreateCasesTab, DataSourceWidgetItemName.text(0)))
                 self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
                 self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
-
-            else:
-                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                self.tabWidget.setCurrentWidget(tabs.tabWidget)
-
-        except Exception as e:
-            print(str(e))
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Data Source Create Cases Context Menu
     def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
@@ -3993,32 +4191,56 @@ class Window(QMainWindow):
 
     # Data Source Create Sentiments
     def DataSourceCreateSentiments(self, DataSourceWidgetItemName):
-        DataSourceCreateSentimentsTab = QWidget()
+        DataSourceCreateSentimentsTabFlag = False
+        DataSourceCreateSentimentsTabFlag2 = False
 
-        # LayoutWidget For within DataSource Preview Tab
-        CreateSentimentsPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateSentimentsTab)
-        CreateSentimentsPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        CreateSentimentsPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceWidgetItemName.text(0) and tabs.TabName == "Create Sentiments":
+                if tabs.tabWidget != None:
+                    DataSourceCreateSentimentsTabFlag = True
+                    break
+                else:
+                    DataSourceCreateSentimentsTabFlag2 = True
+                    break
 
-        # Box Layout for Data SourceTab
-        CreateSentimentsverticalLayout = QVBoxLayout(CreateSentimentsPreviewTabverticalLayoutWidget)
-        CreateSentimentsverticalLayout.setContentsMargins(0, 0, 0, 0)
+        if not DataSourceCreateSentimentsTabFlag:
+            DataSourceCreateSentimentsTab = QWidget()
 
-        CreateSentimentsPreview = QTextEdit(CreateSentimentsPreviewTabverticalLayoutWidget)
-        CreateSentimentsPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-        CreateSentimentsPreview.setReadOnly(True)
+            # LayoutWidget For within DataSource Preview Tab
+            CreateSentimentsPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateSentimentsTab)
+            CreateSentimentsPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+            CreateSentimentsPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        CreateSentimentsPreview.setContextMenuPolicy(Qt.CustomContextMenu)
-        CreateSentimentsPreview.customContextMenuRequested.connect(
-            lambda checked, index=QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
+            # Box Layout for Data SourceTab
+            CreateSentimentsverticalLayout = QVBoxLayout(CreateSentimentsPreviewTabverticalLayoutWidget)
+            CreateSentimentsverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                CreateSentimentsPreview.setText(DS.DataSourcetext)
-                break
+            CreateSentimentsPreview = QTextEdit(CreateSentimentsPreviewTabverticalLayoutWidget)
+            CreateSentimentsPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            CreateSentimentsPreview.setReadOnly(True)
 
-        self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
-        self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+            CreateSentimentsPreview.setContextMenuPolicy(Qt.CustomContextMenu)
+            CreateSentimentsPreview.customContextMenuRequested.connect(
+                lambda checked, index=QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
+
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                    CreateSentimentsPreview.setText(DS.DataSourcetext)
+                    break
+
+            if DataSourceCreateSentimentsTabFlag2:
+                tabs.tabWidget = DataSourceCreateSentimentsTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
+                    self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Create Sentiments", DataSourceCreateSentimentsTab, DataSourceWidgetItemName.text(0)))
+                self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
+                self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     # Data Source Create Sentiments Context Menu
     def CreateSentimentsContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
@@ -4274,9 +4496,13 @@ class Window(QMainWindow):
         DataSourceSummaryPreviewTabFlag = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary' and tabs.tabWidget != None:
-                DataSourceSummaryPreviewTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary':
+                if tabs.tabWidget != None:
+                    DataSourceSummaryPreviewTabFlag = True
+                    break
+                else:
+                    DataSourceSummaryPreviewTabFlag2 = True
+                    break
 
         if not DataSourceSummaryPreviewTabFlag:
             DataSourceSummaryPreviewTab = QWidget()
@@ -4300,8 +4526,20 @@ class Window(QMainWindow):
                     DataSourceSummaryPreview.setText(DS.DataSourceTextSummary)
                     break
 
-            # Adding Preview Tab to TabList
-            myFile.TabList.append(Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName))
+            if DataSourceSummaryPreviewTabFlag2:
+                tabs.tabWidget = DataSourceSummaryPreviewTab
+                if tabs.isActive:
+                    # Adding Preview Tab to QTabWidget
+                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
+                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+
+            else:
+                # Adding Preview Tab to TabList
+                myFile.TabList.append(Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName))
+
+                # Adding Preview Tab to QTabWidget
+                self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
+                self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
 
             # Adding Word Frequency Query
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -4321,11 +4559,6 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Summary')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            # Adding Preview Tab to QTabWidget
-            self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
-            self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
-
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -4483,39 +4716,49 @@ class Window(QMainWindow):
 
         if not DS.TranslationError:
             DataSourceShowTranslationTabFlag = False
+            DataSourceShowTranslationTabFlag2 = False
 
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Translated Text' and tabs.tabWidget != None:
-                    DataSourceShowTranslationTabFlag = True
-                    break
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Translated Text':
+                    if tabs.tabWidget != None:
+                        DataSourceShowTranslationTabFlag = True
+                        break
+                    else:
+                        DataSourceShowTranslationTabFlag2 = True
+                        break
 
-            DataSourceShowTranslationTab = QWidget()
-            DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
-            DataSourceShowTranslationTab.setSizePolicy(self.sizePolicy)
+            if not DataSourceShowTranslationTabFlag:
+                DataSourceShowTranslationTab = QWidget()
+                DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
+                DataSourceShowTranslationTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Translation Tab
-            DataSourceShowTranslationTabVerticalLayoutWidget = QWidget(DataSourceShowTranslationTab)
-            DataSourceShowTranslationTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                # LayoutWidget For within Translation Tab
+                DataSourceShowTranslationTabVerticalLayoutWidget = QWidget(DataSourceShowTranslationTab)
+                DataSourceShowTranslationTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Translation Tab
-            DataSourceShowTranslationTabVerticalLayout = QHBoxLayout(DataSourceShowTranslationTabVerticalLayoutWidget)
-            DataSourceShowTranslationTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+                # Box Layout for Translation Tab
+                DataSourceShowTranslationTabVerticalLayout = QHBoxLayout(DataSourceShowTranslationTabVerticalLayoutWidget)
+                DataSourceShowTranslationTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Data Source Translation Text Edit
-            DataSourceTranslationPreview = QTextEdit(DataSourceShowTranslationTabVerticalLayoutWidget)
-            DataSourceTranslationPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            DataSourceTranslationPreview.setReadOnly(True)
-            DataSourceTranslationPreview.setText(str(DS.DataSourceTranslatedText))
+                # Data Source Translation Text Edit
+                DataSourceTranslationPreview = QTextEdit(DataSourceShowTranslationTabVerticalLayoutWidget)
+                DataSourceTranslationPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                DataSourceTranslationPreview.setReadOnly(True)
+                DataSourceTranslationPreview.setText(str(DS.DataSourceTranslatedText))
 
-            if DataSourceShowTranslationTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
-                tabs.tabWidget = DataSourceShowTranslationTab
-            else:
-                # Adding Translation Tab to TabList
-                myFile.TabList.append(Tab("Translated Text", DataSourceShowTranslationTab, DataSourceName))
+                if DataSourceShowTranslationTabFlag2:
+                    tabs.tabWidget = DataSourceShowTranslationTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                else:
+                    # Adding Translation Tab to TabList
+                    dummyTab = Tab("Translated Text", DataSourceShowTranslationTab, DataSourceName)
+                    dummyTab.setTranslateLanguage(TranslateTo)
+                    myFile.TabList.append(dummyTab)
+                    # Adding Translation Tab to QTabWidget
+                    self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
+                    self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -4538,9 +4781,9 @@ class Window(QMainWindow):
                         DSNewCaseNode.setText(0, 'Translated Text')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                # Adding Translation Tab to QTabWidget
-                self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
-                self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+            else:
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.TabName)
 
     # ****************************************************************************
     # *************************** Data Source Remove *****************************
@@ -4556,7 +4799,6 @@ class Window(QMainWindow):
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     if DataSourceWidgetItemName.parent().childCount() == 1:
                         DataSourceWidgetItemName.parent().setHidden(True)
-
 
                     DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
                         ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
@@ -4585,7 +4827,8 @@ class Window(QMainWindow):
                     for tabs in myFile.TabList:
                         if DS.DataSourceName == tabs.DataSourceName:
                             self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                            myFile.TabList.remove(tabs)
+
+                    myFile.TabList = [tabs for tabs in myFile.TabList if not tabs.DataSourceName == DS.DataSourceName]
 
                     myFile.DataSourceList.remove(DS)
                     DS.__del__()
@@ -5887,63 +6130,70 @@ class Window(QMainWindow):
     #map WordCloud on Tab
     def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
         DataSourceWordCloudTabFlag = False
+        DataSourceWordCloudTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud' and tabs.tabWidget != None:
-                DataSourceWordCloudTabFlag = True
-                break
+            if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud':
+                if tabs.tabWidget != None:
+                    DataSourceWordCloudTabFlag = True
+                    break
+                else:
+                    DataSourceWordCloudTabFlag2 = True
+                    break
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == WCDSName:
-                dummyQuery = Query()
-                WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
-                break
+        if not DataSourceWordCloudTabFlag:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == WCDSName:
+                    dummyQuery = Query()
+                    WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+                    break
 
-        # Creating New Tab for WordCloud
-        WordCloudTab = QWidget()
+            # Creating New Tab for WordCloud
+            WordCloudTab = QWidget()
 
-        # LayoutWidget For within Word Cloud Tab
-        WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
-        WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            # LayoutWidget For within Word Cloud Tab
+            WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
+            WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        # Box Layout for Word Cloud Tab
-        WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
-        WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Word Cloud Tab
+            WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
+            WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Label for Word Cloud Image
-        WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
+            # Label for Word Cloud Image
+            WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
 
-        # Resizing label to Layout
-        WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
+            # Resizing label to Layout
+            WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
 
-        # Converting WordCloud Image to Pixmap
-        WordCloudPixmap = WordCloudImage.toqpixmap()
+            # Converting WordCloud Image to Pixmap
+            WordCloudPixmap = WordCloudImage.toqpixmap()
 
-        # Scaling Pixmap image
-        dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(),
-                                             WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-        WordCloudLabel.setPixmap(dummypixmap)
-        WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                   (WordCloudTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                   dummypixmap.width(), dummypixmap.height())
+            # Scaling Pixmap image
+            dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(),
+                                                 WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+            WordCloudLabel.setPixmap(dummypixmap)
+            WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                       (WordCloudTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                       dummypixmap.width(), dummypixmap.height())
 
-        # Setting ContextMenu Policies on Label
-        WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        WordCloudLabel.customContextMenuRequested.connect(
-            lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
-                                                                                                                 index2,
-                                                                                                                 index3))
-        if DataSourceWordCloudTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(WordCloudTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(WordCloudTab)
-            tabs.tabWidget = WordCloudTab
-            tabs.setisActive(True)
-
-        else:
-            # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Word Cloud", WordCloudTab, WCDSName))
+            # Setting ContextMenu Policies on Label
+            WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
+            WordCloudLabel.customContextMenuRequested.connect(
+                lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
+                                                                                                                     index2,
+                                                                                                                     index3))
+            if DataSourceWordCloudTabFlag2:
+                tabs.tabWidget = WordCloudTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+                    self.tabWidget.setCurrentWidget(WordCloudTab)
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                dummyTab = Tab("Word Cloud", WordCloudTab, WCDSName)
+                dummyTab.setWordCloud(WCBGColor, maxword, maskname)
+                myFile.TabList.append(dummyTab)
+                self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+                self.tabWidget.setCurrentWidget(WordCloudTab)
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(WCDSName, Qt.MatchExactly, 0)
 
@@ -5962,9 +6212,10 @@ class Window(QMainWindow):
                     DSNewCaseNode = QTreeWidgetItem(widgets)
                     DSNewCaseNode.setText(0, 'Word Cloud')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            self.tabWidget.addTab(WordCloudTab, "Word Cloud")
-            self.tabWidget.setCurrentWidget(WordCloudTab)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     #Word Cloud ContextMenu
     def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
@@ -6047,45 +6298,52 @@ class Window(QMainWindow):
     # Data Source Word Tree
     def DataSourceWordTree(self, DataSourceName):
         DataSourceWordTreeTabFlag = False
+        DataSourceWordTreeTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Tree' and tabs.tabWidget != None:
-                DataSourceWordTreeTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Word Tree':
+                if tabs.tabWidget != None:
+                    DataSourceWordTreeTabFlag = True
+                    break
+                else:
+                    DataSourceWordTreeTabFlag2 = True
+                    break
 
+        if not DataSourceWordTreeTabFlag:
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                WordTreeHTML = DS.CreateWordTree(self.tabWidget.width(), self.tabWidget.height())
-                break
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    WordTreeHTML = DS.CreateWordTree(self.tabWidget.width(), self.tabWidget.height())
+                    break
 
-        # Creating New Tab for Word Tree
-        DataSourceWordTreeTab = QWidget()
+            # Creating New Tab for Word Tree
+            DataSourceWordTreeTab = QWidget()
 
-        # LayoutWidget For within Word Tree Tab
-        DataSourceWordTreeTabVerticalLayoutWidget = QWidget(DataSourceWordTreeTab)
-        DataSourceWordTreeTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            # LayoutWidget For within Word Tree Tab
+            DataSourceWordTreeTabVerticalLayoutWidget = QWidget(DataSourceWordTreeTab)
+            DataSourceWordTreeTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-        # Box Layout for Word Tree Tab
-        DataSourceWordTreeTabVerticalLayout = QHBoxLayout(DataSourceWordTreeTabVerticalLayoutWidget)
-        DataSourceWordTreeTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Word Tree Tab
+            DataSourceWordTreeTabVerticalLayout = QHBoxLayout(DataSourceWordTreeTabVerticalLayoutWidget)
+            DataSourceWordTreeTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        WordTreeWeb = QWebEngineView()
-        WordTreeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-        DataSourceWordTreeTabVerticalLayout.addWidget(WordTreeWeb)
-        WordTreeWeb.setHtml(WordTreeHTML)
+            WordTreeWeb = QWebEngineView()
+            WordTreeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+            DataSourceWordTreeTabVerticalLayout.addWidget(WordTreeWeb)
+            WordTreeWeb.setHtml(WordTreeHTML)
 
-        if DataSourceWordTreeTabFlag:
+            if DataSourceWordTreeTabFlag2:
+                tabs.tabWidget = DataSourceWordTreeTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourceWordTreeTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+            else:
+                # Adding Word Tree Tab to QTabWidget
+                myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
+                # Adding Word Tree Tab to QTabWidget
+                self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
+                self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
 
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(DataSourceWordTreeTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
-            tabs.tabWidget = DataSourceWordTreeTab
-
-        else:
-            # Adding Word Tree Tab to QTabWidget
-            myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
             if len(ItemsWidget) == 0:  # if no Parent Widget
@@ -6107,9 +6365,10 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Word Tree')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            # Adding Word Tree Tab to QTabWidget
-            self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
-            self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************
@@ -6175,62 +6434,67 @@ class Window(QMainWindow):
     # Create Coordinate Map
     def DataSourceCoordinateMap(self, DataSourceName):
         DataSourceCoordinateMapTabFlag = False
+        DataSourceCoordinateMapTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map' and tabs.tabWidget != None:
-                DataSourceCoordinateMapTabFlag = True
-                break
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Coordinate Map':
+                if tabs.tabWidget != None:
+                    DataSourceCoordinateMapTabFlag = True
+                    break
+                else:
+                    DataSourceCoordinateMapTabFlag2 = True
+                    break
 
+        if not DataSourceCoordinateMapTabFlag:
+            DataSourceCoordinateMapTab = QWidget()
 
-        DataSourceCoordinateMapTab = QWidget()
+            # LayoutWidget For within DataSource Preview Tab
+            DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
+            DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
 
-        # LayoutWidget For within DataSource Preview Tab
-        DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
-        DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
+            if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
+                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
+            else:
+                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
 
-        if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
-            DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
-        else:
-            DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
+            DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
+            model = MarkerModel(DataSourceCoordinateMap)
+            DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
 
-        DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
-        model = MarkerModel(DataSourceCoordinateMap)
-        DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
+            qml_path = os.path.join(os.path.dirname(__file__), "map.qml")
+            DataSourceCoordinateMap.setSource(QUrl.fromLocalFile(qml_path))
 
-        qml_path = os.path.join(os.path.dirname(__file__), "map.qml")
-        DataSourceCoordinateMap.setSource(QUrl.fromLocalFile(qml_path))
+            positions = []
 
-        positions = []
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    break
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName:
-                break
+            for data in DS.TweetData:
+                for coordinates in self.Coordinates:
+                    if data[4].split(',')[0].strip() == coordinates[0]:
+                        positions.append((float(coordinates[1]), float(coordinates[2])))
 
-        for data in DS.TweetData:
-            for coordinates in self.Coordinates:
-                if data[4].split(',')[0].strip() == coordinates[0]:
-                    positions.append((float(coordinates[1]), float(coordinates[2])))
+            urls = []
 
-        urls = []
+            for items in positions:
+                urls.append("Images/Marker.png")
 
-        for items in positions:
-            urls.append("Images/Marker.png")
+            for c, u in zip(positions, urls):
+                coord = QtPositioning.QGeoCoordinate(*c)
+                source = QUrl(u)
+                model.appendMarker({"position": coord, "source": source})
 
-        for c, u in zip(positions, urls):
-            coord = QtPositioning.QGeoCoordinate(*c)
-            source = QUrl(u)
-            model.appendMarker({"position": coord, "source": source})
-
-        if DataSourceCoordinateMapTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
-            tabs.tabWidget = DataSourceCoordinateMapTab
-            tabs.setisActive(True)
-        else:
-            # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
+            if DataSourceCoordinateMapTabFlag:
+                tabs.tabWidget = DataSourceCoordinateMapTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
+                self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
+                self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -6250,8 +6514,10 @@ class Window(QMainWindow):
                     DSNewCaseNode.setText(0, 'Coordinate Map')
                     DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
-            self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # ****************************************************************************
     # ********************** Enable/Disable/Reusable Function ********************
@@ -6764,133 +7030,140 @@ class Window(QMainWindow):
     # Cases Structure
     def CasesStructure(self, CasesItemName):
         CasesStructureTabFlag = False
+        CasesStructureTabFlag2 = False
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Structure' and tabs.tabWidget != None:
-                CasesStructureTabFlag = True
-                break
+            if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Structure':
+                if tabs.tabWidget != None:
+                    CasesStructureTabFlag = True
+                    break
+                else:
+                    CasesStructureTabFlag2 = True
+                    break
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == CasesItemName.text(0):
-                break
+        if not CasesStructureTabFlag:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == CasesItemName.text(0):
+                    break
 
-        # Creating New Tab for Stem Word
-        CasesStructureTab = QWidget()
+            # Creating New Tab for Stem Word
+            CasesStructureTab = QWidget()
 
-        # ******************************* LayoutWidget For within Stem Word Tab ************************************
-        CasesStructureTabVerticalLayoutWidget = QWidget(CasesStructureTab)
-        CasesStructureTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                self.tabWidget.height() / 10)
+            # ******************************* LayoutWidget For within Stem Word Tab ************************************
+            CasesStructureTabVerticalLayoutWidget = QWidget(CasesStructureTab)
+            CasesStructureTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
+                                                                    self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
-        CasesStructureTabVerticalLayout = QHBoxLayout(CasesStructureTabVerticalLayoutWidget)
-        CasesStructureTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Stem Word Tab
+            CasesStructureTabVerticalLayout = QHBoxLayout(CasesStructureTabVerticalLayoutWidget)
+            CasesStructureTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        DownloadAsPDFButton = QPushButton(CasesStructureTabVerticalLayoutWidget)
-        DownloadAsPDFButton.setText("Download")
-        DownloadAsPDFButton.setGeometry(CasesStructureTabVerticalLayoutWidget.width() * 0.8,
-                                        CasesStructureTabVerticalLayoutWidget.height() * 0.4,
-                                        CasesStructureTabVerticalLayoutWidget.width() * 0.1,
-                                        CasesStructureTabVerticalLayoutWidget.height() * 0.2)
-        DownloadAsPDFButton.setIcon(QIcon("Images/Download Button.png"))
-        DownloadAsPDFButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            DownloadAsPDFButton = QPushButton(CasesStructureTabVerticalLayoutWidget)
+            DownloadAsPDFButton.setText("Download")
+            DownloadAsPDFButton.setGeometry(CasesStructureTabVerticalLayoutWidget.width() * 0.8,
+                                            CasesStructureTabVerticalLayoutWidget.height() * 0.4,
+                                            CasesStructureTabVerticalLayoutWidget.width() * 0.1,
+                                            CasesStructureTabVerticalLayoutWidget.height() * 0.2)
+            DownloadAsPDFButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsPDFButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-        DownloadAsPDFButtonFont = QFont("sans-serif")
-        DownloadAsPDFButtonFont.setPixelSize(14)
-        DownloadAsPDFButtonFont.setBold(True)
-        DownloadAsPDFButton.setFont(DownloadAsPDFButtonFont)
-        self.LineEditSizeAdjustment(DownloadAsPDFButton)
-
-
-        # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
-        CasesStructureTabVerticalLayoutWidget2 = QWidget(CasesStructureTab)
-        CasesStructureTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
-                                                           self.tabWidget.width(),
-                                                           self.tabWidget.height() - self.tabWidget.height() / 10)
-
-        # 2nd Box Layout for Stem Word Tab
-        CasesStructureTabVerticalLayout2 = QVBoxLayout(CasesStructureTabVerticalLayoutWidget2)
-
-        os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
+            DownloadAsPDFButtonFont = QFont("sans-serif")
+            DownloadAsPDFButtonFont.setPixelSize(14)
+            DownloadAsPDFButtonFont.setBold(True)
+            DownloadAsPDFButton.setFont(DownloadAsPDFButtonFont)
+            self.LineEditSizeAdjustment(DownloadAsPDFButton)
 
 
-        graph = graphviz.Digraph(name="Cases")
-        graph.edge_attr.update(arrowhead="vee", arrowsize="1")
-        graph.node_attr.update(shape="box")
-        graph.graph_attr['rankdir'] = 'LR'
+            # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
+            CasesStructureTabVerticalLayoutWidget2 = QWidget(CasesStructureTab)
+            CasesStructureTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
+                                                               self.tabWidget.width(),
+                                                               self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        cases_list = []
+            # 2nd Box Layout for Stem Word Tab
+            CasesStructureTabVerticalLayout2 = QVBoxLayout(CasesStructureTabVerticalLayoutWidget2)
 
-        for cases in DS.CasesList:
-            ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
-            if len(ItemWidget) > 1:
-                ItemPresentFlag = False
-                for widget in ItemWidget:
-                    tempWidget = widget
-                    while tempWidget.parent() != None:
-                        tempWidget = tempWidget.parent()
+            os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
 
-                    if tempWidget.text(0) == CasesItemName.text(0):
-                        ItemPresentFlag = True
-                        break
 
-                if ItemPresentFlag:
-                    cases_list.append([widget, widget.parent()])
+            graph = graphviz.Digraph(name="Cases")
+            graph.edge_attr.update(arrowhead="vee", arrowsize="1")
+            graph.node_attr.update(shape="box")
+            graph.graph_attr['rankdir'] = 'LR'
 
-            elif len(ItemWidget) > 0:
-                for widget in ItemWidget:
-                    cases_list.append([widget, widget.parent()])
+            cases_list = []
 
-        parent_child_list = []
+            for cases in DS.CasesList:
+                ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                if len(ItemWidget) > 1:
+                    ItemPresentFlag = False
+                    for widget in ItemWidget:
+                        tempWidget = widget
+                        while tempWidget.parent() != None:
+                            tempWidget = tempWidget.parent()
 
-        for i in range(len(cases_list)):
-            graph.node(cases_list[i][0].text(0))
-            if cases_list[i][1] != None:
-                parent_child_list.append([cases_list[i][1].text(0), cases_list[i][0].text(0)])
+                        if tempWidget.text(0) == CasesItemName.text(0):
+                            ItemPresentFlag = True
+                            break
 
-        for i in range(len(parent_child_list)):
-            graph.edge(parent_child_list[i][0], parent_child_list[i][1])
+                    if ItemPresentFlag:
+                        cases_list.append([widget, widget.parent()])
 
-        graph.format = "png"
-        graph.render("Cases", cleanup=True)
-        CasesStructureImage = Image.open("Cases.png")
-        ImageArray = np.array(CasesStructureImage)
-        CasesStructureImage = Image.fromarray(ImageArray)
-        os.remove("Cases.png")
+                elif len(ItemWidget) > 0:
+                    for widget in ItemWidget:
+                        cases_list.append([widget, widget.parent()])
 
-        # Label for Word Cloud Image
-        CasesStructureLabel = QLabel(CasesStructureTabVerticalLayoutWidget2)
+            parent_child_list = []
 
-        # Resizing label to Layout
-        CasesStructureLabel.resize(CasesStructureTabVerticalLayoutWidget2.width(), CasesStructureTabVerticalLayoutWidget2.height())
+            for i in range(len(cases_list)):
+                graph.node(cases_list[i][0].text(0))
+                if cases_list[i][1] != None:
+                    parent_child_list.append([cases_list[i][1].text(0), cases_list[i][0].text(0)])
 
-        # Converting WordCloud Image to Pixmap
-        CasesStructurePixmap = CasesStructureImage.toqpixmap()
+            for i in range(len(parent_child_list)):
+                graph.edge(parent_child_list[i][0], parent_child_list[i][1])
 
-        # Scaling Pixmap image
-        dummypixmap = CasesStructurePixmap.scaled(CasesStructureTabVerticalLayoutWidget2.width(),
-                                                  CasesStructureTabVerticalLayoutWidget2.height(),
-                                                  Qt.KeepAspectRatio)
-        CasesStructureLabel.setPixmap(dummypixmap)
-        CasesStructureLabel.setGeometry((CasesStructureTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
-                                        (CasesStructureTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
-                                        dummypixmap.width(), dummypixmap.height())
+            graph.format = "png"
+            graph.render("Cases", cleanup=True)
+            CasesStructureImage = Image.open("Cases.png")
+            ImageArray = np.array(CasesStructureImage)
+            CasesStructureImage = Image.fromarray(ImageArray)
+            os.remove("Cases.png")
 
-        DownloadAsPDFButton.clicked.connect(lambda: self.SaveStructureAsPDF(graph))
+            # Label for Word Cloud Image
+            CasesStructureLabel = QLabel(CasesStructureTabVerticalLayoutWidget2)
 
-        if CasesStructureTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(CasesStructureTab)
-            tabs.tabWidget = CasesStructureTab
-            tabs.setisActive(True)
+            # Resizing label to Layout
+            CasesStructureLabel.resize(CasesStructureTabVerticalLayoutWidget2.width(), CasesStructureTabVerticalLayoutWidget2.height())
+
+            # Converting WordCloud Image to Pixmap
+            CasesStructurePixmap = CasesStructureImage.toqpixmap()
+
+            # Scaling Pixmap image
+            dummypixmap = CasesStructurePixmap.scaled(CasesStructureTabVerticalLayoutWidget2.width(),
+                                                      CasesStructureTabVerticalLayoutWidget2.height(),
+                                                      Qt.KeepAspectRatio)
+            CasesStructureLabel.setPixmap(dummypixmap)
+            CasesStructureLabel.setGeometry((CasesStructureTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
+                                            (CasesStructureTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
+                                            dummypixmap.width(), dummypixmap.height())
+
+            DownloadAsPDFButton.clicked.connect(lambda: self.SaveStructureAsPDF(graph))
+
+            if CasesStructureTabFlag:
+                tabs.tabWidget = CasesStructureTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(CasesStructureTab)
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                myFile.TabList.append(Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0)))
+                self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
+                self.tabWidget.setCurrentWidget(CasesStructureTab)
         else:
-            # Adding Word Cloud Tab to QTabWidget
-            myFile.TabList.append(Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0)))
-
-            self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
-            self.tabWidget.setCurrentWidget(CasesStructureTab)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Cases Structure Update
     def CasesStructureUpdate(self, CasesItemName):
@@ -7177,14 +7450,19 @@ class Window(QMainWindow):
 
     # Cases Coverage
     def CasesParentCoverage(self, CasesItemName):
-        try:
-            CasesParentCoverageTabFlag = False
+        CasesParentCoverageTabFlag = False
+        CasesParentCoverageTabFlag2 = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage' and tabs.tabWidget != None:
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage':
+                if tabs.tabWidget != None:
                     CasesParentCoverageTabFlag = True
                     break
+                else:
+                    CasesParentCoverageTabFlag2 = True
+                    break
 
+        if CasesParentCoverageTabFlag:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.text(0):
                     DS.allCasesCoverage()
@@ -7296,22 +7574,18 @@ class Window(QMainWindow):
             CasesParentCoverageTabVerticalLayout4.addWidget(canvas)
 
             if CasesParentCoverageTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                tabs.tabWidget = CasesParentCoverageTab
                 self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
-                tabs.tabWidget = CasesParentCoverageTab
-                tabs.setisActive(True)
             else:
                 # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(
-                    Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0)))
-
+                myFile.TabList.append(Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0)))
                 self.tabWidget.addTab(CasesParentCoverageTab, "Cases Coverage")
                 self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
-
-        except Exception as e:
-            print(str(e))
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Cases Coverage Update
     def CasesParentCoverageUpdate(self, CasesItemName):
@@ -7420,6 +7694,7 @@ class Window(QMainWindow):
     # Cases Show Topic Component
     def CasesShowTopicComponent(self, CasesItemName):
         CaseShowComponentTabFlag = False
+        CaseShowComponentTabFlag2 = False
 
         dummyParent = CasesItemName.parent()
 
@@ -7428,114 +7703,120 @@ class Window(QMainWindow):
             dummyParent = dummyParent.parent()
 
         for tabs in myFile.TabList:
-            if tabs.DataSourceName == tempParent.text(0) and tabs.TabName == 'Case Show Topic Component' and tabs.tabCase == CasesItemName.text(0)  and tabs.tabWidget != None:
-                CaseShowComponentTabFlag = True
-                break
+            if tabs.DataSourceName == tempParent.text(0) and tabs.TabName == 'Case Component' and tabs.tabCase == CasesItemName.text(0):
+                if tabs.tabWidget != None:
+                    CaseShowComponentTabFlag = True
+                    break
+                else:
+                    CaseShowComponentTabFlag2 = True
+                    break
 
-        # Creating New Tab for Stem Word
-        CaseShowComponentTab = QWidget()
+        if not CaseShowComponentTabFlag:
+            # Creating New Tab for Stem Word
+            CaseShowComponentTab = QWidget()
 
-        # LayoutWidget For within Stem Word Tab
-        CaseShowComponentTabVerticalLayoutWidget = QWidget(CaseShowComponentTab)
-        CaseShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+            # LayoutWidget For within Stem Word Tab
+            CaseShowComponentTabVerticalLayoutWidget = QWidget(CaseShowComponentTab)
+            CaseShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-        # Box Layout for Stem Word Tab
-        CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
-        CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Stem Word Tab
+            CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
+            CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # Case Name label
-        CaseNameLabel = QLabel(CaseShowComponentTabVerticalLayoutWidget)
-        CaseNameLabel.setGeometry(0, 0,
-                                  CaseShowComponentTabVerticalLayoutWidget.width(),
-                                  CaseShowComponentTabVerticalLayoutWidget.height())
-        CaseNameLabel.setText(CasesItemName.text(0))
-        CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
-        CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+            # Case Name label
+            CaseNameLabel = QLabel(CaseShowComponentTabVerticalLayoutWidget)
+            CaseNameLabel.setGeometry(0, 0,
+                                      CaseShowComponentTabVerticalLayoutWidget.width(),
+                                      CaseShowComponentTabVerticalLayoutWidget.height())
+            CaseNameLabel.setText(CasesItemName.text(0))
+            CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
+            CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
 
-        # 2nd LayoutWidget For within Stem Word Tab
-        CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
-        CaseShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                              self.tabWidget.height() - self.tabWidget.height() / 10)
+            # 2nd LayoutWidget For within Stem Word Tab
+            CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
+            CaseShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
 
-        # 2nd Box Layout for Stem Word Tab
-        CaseShowComponentTabVerticalLayout2 = QVBoxLayout(CaseShowComponentTabVerticalLayoutWidget2)
+            # 2nd Box Layout for Stem Word Tab
+            CaseShowComponentTabVerticalLayout2 = QVBoxLayout(CaseShowComponentTabVerticalLayoutWidget2)
 
-        CaseShowComponentTable = QTableWidget(CaseShowComponentTabVerticalLayoutWidget2)
-        CaseShowComponentTable.setColumnCount(5)
-        CaseShowComponentTable.setGeometry(0, 0, CaseShowComponentTabVerticalLayoutWidget2.width(),
-                                           CaseShowComponentTabVerticalLayoutWidget2.height())
-        CaseShowComponentTable.setUpdatesEnabled(True)
-        CaseShowComponentTable.setDragEnabled(True)
-        CaseShowComponentTable.setMouseTracking(True)
+            CaseShowComponentTable = QTableWidget(CaseShowComponentTabVerticalLayoutWidget2)
+            CaseShowComponentTable.setColumnCount(5)
+            CaseShowComponentTable.setGeometry(0, 0, CaseShowComponentTabVerticalLayoutWidget2.width(),
+                                               CaseShowComponentTabVerticalLayoutWidget2.height())
+            CaseShowComponentTable.setUpdatesEnabled(True)
+            CaseShowComponentTable.setDragEnabled(True)
+            CaseShowComponentTable.setMouseTracking(True)
 
-        CaseShowComponentTable.setSizePolicy(self.sizePolicy)
-        CaseShowComponentTable.setWindowFlags(
-            CaseShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-        CaseShowComponentTable.setHorizontalHeaderLabels(
-            ["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
-        CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-        for i in range(CaseShowComponentTable.columnCount()):
-            CaseShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-            CaseShowComponentTable.horizontalHeaderItem(i).setFont(
-                QFont(CaseShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == tempParent.text(0):
-                for cases in DS.CasesList:
-                    if cases.CaseTopic == CasesItemName.text(0):
-                        Case_List = cases.TopicCases
-                        break
-
-        if len(Case_List) != 0:
-            for row in Case_List:
-                CaseShowComponentTable.insertRow(Case_List.index(row))
-                for item in row:
-                    if row.index(item) == 0:
-                        ptext = QPlainTextEdit()
-                        ptext.setReadOnly(True)
-                        ptext.setPlainText(item);
-                        ptext.setFixedHeight(self.tabWidget.height() / 10)
-                        CaseShowComponentTable.setCellWidget(Case_List.index(row), row.index(item), ptext)
-                    else:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
-                        CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
-                        CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
-                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-                        deleteButton = QPushButton("Remove")
-                        deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
-                        self.LabelSizeAdjustment(deleteButton)
-                        CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
-
-            CaseShowComponentTable.resizeColumnsToContents()
-            CaseShowComponentTable.resizeRowsToContents()
-
-            CaseShowComponentTable.setSortingEnabled(True)
-            CaseShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
+            CaseShowComponentTable.setSizePolicy(self.sizePolicy)
+            CaseShowComponentTable.setWindowFlags(
+                CaseShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            CaseShowComponentTable.setHorizontalHeaderLabels(
+                ["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
+            CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
             for i in range(CaseShowComponentTable.columnCount()):
-                CaseShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                CaseShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                CaseShowComponentTable.horizontalHeaderItem(i).setFont(
+                    QFont(CaseShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-        if CaseShowComponentTabFlag:
-            # updating tab
-            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-            self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(CaseShowComponentTab)
-            tabs.tabWidget = CaseShowComponentTab
-            tabs.setisActive(True)
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == tempParent.text(0):
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            Case_List = cases.TopicCases
+                            break
+
+            if len(Case_List) != 0:
+                for row in Case_List:
+                    CaseShowComponentTable.insertRow(Case_List.index(row))
+                    for item in row:
+                        if row.index(item) == 0:
+                            ptext = QPlainTextEdit()
+                            ptext.setReadOnly(True)
+                            ptext.setPlainText(item);
+                            ptext.setFixedHeight(self.tabWidget.height() / 10)
+                            CaseShowComponentTable.setCellWidget(Case_List.index(row), row.index(item), ptext)
+                        else:
+                            intItem = QTableWidgetItem()
+                            intItem.setData(Qt.EditRole, QVariant(item))
+                            CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
+                            CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
+                                Qt.AlignHCenter | Qt.AlignVCenter)
+                            CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
+                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                            deleteButton = QPushButton("Remove")
+                            deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
+                            self.LabelSizeAdjustment(deleteButton)
+                            CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
+
+                CaseShowComponentTable.resizeColumnsToContents()
+                CaseShowComponentTable.resizeRowsToContents()
+
+                CaseShowComponentTable.setSortingEnabled(True)
+                CaseShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                row_width = 0
+
+                for i in range(CaseShowComponentTable.columnCount()):
+                    CaseShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+            if CaseShowComponentTabFlag2:
+                tabs.tabWidget = CaseShowComponentTab
+                self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
+                self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+            else:
+                # Adding Word Cloud Tab to QTabWidget
+                dummyTab = Tab("Case Component", CaseShowComponentTab, tempParent.text(0))
+                dummyTab.setTabCase(CasesItemName.text(0))
+                myFile.TabList.append(dummyTab)
+
+                self.tabWidget.addTab(CaseShowComponentTab, "Case Component")
+                self.tabWidget.setCurrentWidget(CaseShowComponentTab)
         else:
-            # Adding Word Cloud Tab to QTabWidget
-            dummyTab = Tab("Case Show Topic Component", CaseShowComponentTab, tempParent.text(0))
-            dummyTab.setTabCase(CasesItemName.text(0))
-            myFile.TabList.append(dummyTab)
-
-            self.tabWidget.addTab(CaseShowComponentTab, "Case Show Topic Component")
-            self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
 
     # Cases Show Topic Component Update
     def CasesShowTopicComponentUpdate(self, CasesItemName):
@@ -7903,122 +8184,127 @@ class Window(QMainWindow):
                                                                 QMessageBox.Ok)
         else:
             SentimentsShowComponentTabFlag = False
+            SentimentsShowComponentTabFlag = False
 
             for tabs in myFile.TabList:
-                if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Show Topic Component' and tabs.tabSentiment == SentimentsItemName.text(0) and tabs.tabWidget != None:
-                    SentimentsShowComponentTabFlag = True
-                    break
+                if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Component' and tabs.tabSentiment == SentimentsItemName.text(0):
+                    if tabs.tabWidget != None:
+                        SentimentsShowComponentTabFlag = True
+                        break
+                    else:
+                        SentimentsShowComponentTabFlag2 = True
+                        break
 
+            if not SentimentsShowComponentTabFlag2:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                        for sentiments in DS.SentimentList:
+                            if sentiments.SentimentType == SentimentsItemName.text(0):
+                                Sentiments_List = sentiments.SentimentTextList
+                                break
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == SentimentsItemName.parent().text(0):
-                    for sentiments in DS.SentimentList:
-                        if sentiments.SentimentType == SentimentsItemName.text(0):
-                            Sentiments_List = sentiments.SentimentTextList
-                            break
+                # Creating New Tab for Sentiment Show Component
+                SentimentsShowComponentTab = QWidget()
 
-            # Creating New Tab for Sentiment Show Component
-            SentimentsShowComponentTab = QWidget()
+                # LayoutWidget For within Stem Word Tab
+                SentimentsShowComponentTabVerticalLayoutWidget = QWidget(SentimentsShowComponentTab)
+                SentimentsShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # LayoutWidget For within Stem Word Tab
-            SentimentsShowComponentTabVerticalLayoutWidget = QWidget(SentimentsShowComponentTab)
-            SentimentsShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+                # Box Layout for Stem Word Tab
+                SentimentsShowComponentTabVerticalLayout = QHBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget)
+                SentimentsShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Box Layout for Stem Word Tab
-            SentimentsShowComponentTabVerticalLayout = QHBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget)
-            SentimentsShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+                # Sentiments ComboBox
 
-            # Sentiments ComboBox
+                SentimentsComboBox = QComboBox(SentimentsShowComponentTabVerticalLayoutWidget)
+                SentimentsComboBox.setGeometry(SentimentsShowComponentTabVerticalLayoutWidget.width() * 0.8,
+                                               SentimentsShowComponentTabVerticalLayoutWidget.height() * 0.4,
+                                               SentimentsShowComponentTabVerticalLayoutWidget.width() / 10,
+                                               SentimentsShowComponentTabVerticalLayoutWidget.height() / 5)
+                SentimentsComboBox.addItem(SentimentsItemName.text(0))
+                SentimentsComboBox.setCurrentText(SentimentsItemName.text(0))
 
-            SentimentsComboBox = QComboBox(SentimentsShowComponentTabVerticalLayoutWidget)
-            SentimentsComboBox.setGeometry(SentimentsShowComponentTabVerticalLayoutWidget.width() * 0.8,
-                                           SentimentsShowComponentTabVerticalLayoutWidget.height() * 0.4,
-                                           SentimentsShowComponentTabVerticalLayoutWidget.width() / 10,
-                                           SentimentsShowComponentTabVerticalLayoutWidget.height() / 5)
-            SentimentsComboBox.addItem(SentimentsItemName.text(0))
-            SentimentsComboBox.setCurrentText(SentimentsItemName.text(0))
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == SentimentsItemName.parent().text(0):
+                        for sentiments in DS.SentimentList:
+                            if not sentiments.SentimentType == SentimentsItemName.text(0):
+                                SentimentsComboBox.addItem(sentiments.SentimentType)
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == SentimentsItemName.parent().text(0):
-                    for sentiments in DS.SentimentList:
-                        if not sentiments.SentimentType == SentimentsItemName.text(0):
-                            SentimentsComboBox.addItem(sentiments.SentimentType)
+                self.LineEditSizeAdjustment(SentimentsComboBox)
 
-            self.LineEditSizeAdjustment(SentimentsComboBox)
+                # 2nd LayoutWidget For within Stem Word Tab
+                SentimentsShowComponentTabVerticalLayoutWidget2 = QWidget(SentimentsShowComponentTab)
+                SentimentsShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd LayoutWidget For within Stem Word Tab
-            SentimentsShowComponentTabVerticalLayoutWidget2 = QWidget(SentimentsShowComponentTab)
-            SentimentsShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
+                # 2nd Box Layout for Stem Word Tab
+                SentimentsShowComponentTabVerticalLayout2 = QVBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget2)
 
-            # 2nd Box Layout for Stem Word Tab
-            SentimentsShowComponentTabVerticalLayout2 = QVBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget2)
+                SentimentsShowComponentTable = QTableWidget(SentimentsShowComponentTabVerticalLayoutWidget2)
+                SentimentsShowComponentTable.setColumnCount(5)
+                SentimentsShowComponentTable.setGeometry(0, 0, SentimentsShowComponentTabVerticalLayoutWidget2.width(),
+                                                               SentimentsShowComponentTabVerticalLayoutWidget2.height())
+                SentimentsShowComponentTable.setUpdatesEnabled(True)
+                SentimentsShowComponentTable.setDragEnabled(True)
+                SentimentsShowComponentTable.setMouseTracking(True)
 
-            SentimentsShowComponentTable = QTableWidget(SentimentsShowComponentTabVerticalLayoutWidget2)
-            SentimentsShowComponentTable.setColumnCount(5)
-            SentimentsShowComponentTable.setGeometry(0, 0, SentimentsShowComponentTabVerticalLayoutWidget2.width(),
-                                                           SentimentsShowComponentTabVerticalLayoutWidget2.height())
-            SentimentsShowComponentTable.setUpdatesEnabled(True)
-            SentimentsShowComponentTable.setDragEnabled(True)
-            SentimentsShowComponentTable.setMouseTracking(True)
-
-            SentimentsShowComponentTable.setSizePolicy(self.sizePolicy)
-            SentimentsShowComponentTable.setWindowFlags(
-                SentimentsShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-            SentimentsShowComponentTable.setHorizontalHeaderLabels(
-                ["Sentiment", "Word Count", "Character Count", "Weighted Average", "Action"])
-            SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
-
-            for i in range(SentimentsShowComponentTable.columnCount()):
-                SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(
-                    QFont(SentimentsShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-
-            if len(Sentiments_List) != 0:
-                for row in Sentiments_List:
-                    SentimentsShowComponentTable.insertRow(Sentiments_List.index(row))
-                    for item in row:
-                        intItem = QTableWidgetItem()
-                        intItem.setData(Qt.EditRole, QVariant(item))
-                        SentimentsShowComponentTable.setItem(Sentiments_List.index(row), row.index(item), intItem)
-                        SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
-                        SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setFlags(
-                            Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-                        deleteButton = QPushButton("Remove")
-                        deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, SentimentsShowComponentTable, None))
-                        self.LabelSizeAdjustment(deleteButton)
-                        SentimentsShowComponentTable.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
-
-                SentimentsShowComponentTable.resizeColumnsToContents()
-                SentimentsShowComponentTable.resizeRowsToContents()
-
-                SentimentsShowComponentTable.setSortingEnabled(True)
-                SentimentsShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
+                SentimentsShowComponentTable.setSizePolicy(self.sizePolicy)
+                SentimentsShowComponentTable.setWindowFlags(
+                    SentimentsShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+                SentimentsShowComponentTable.setHorizontalHeaderLabels(
+                    ["Sentiment", "Word Count", "Character Count", "Weighted Average", "Action"])
+                SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
 
                 for i in range(SentimentsShowComponentTable.columnCount()):
-                    SentimentsShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+                    SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                    SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(
+                        QFont(SentimentsShowComponentTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            SentimentsComboBox.currentTextChanged.connect(lambda: self.ToggleSentimentsComponent(SentimentsShowComponentTable, SentimentsItemName))
 
-            if SentimentsShowComponentTabFlag:
-                # updating tab
-                self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                self.tabWidget.addTab(SentimentsShowComponentTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
-                tabs.tabWidget = SentimentsShowComponentTab
-                tabs.setisActive(True)
+                if len(Sentiments_List) != 0:
+                    for row in Sentiments_List:
+                        SentimentsShowComponentTable.insertRow(Sentiments_List.index(row))
+                        for item in row:
+                            intItem = QTableWidgetItem()
+                            intItem.setData(Qt.EditRole, QVariant(item))
+                            SentimentsShowComponentTable.setItem(Sentiments_List.index(row), row.index(item), intItem)
+                            SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(
+                                Qt.AlignHCenter | Qt.AlignVCenter)
+                            SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setFlags(
+                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                            deleteButton = QPushButton("Remove")
+                            deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, SentimentsShowComponentTable, None))
+                            self.LabelSizeAdjustment(deleteButton)
+                            SentimentsShowComponentTable.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
+
+                    SentimentsShowComponentTable.resizeColumnsToContents()
+                    SentimentsShowComponentTable.resizeRowsToContents()
+
+                    SentimentsShowComponentTable.setSortingEnabled(True)
+                    SentimentsShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+                    row_width = 0
+
+                    for i in range(SentimentsShowComponentTable.columnCount()):
+                        SentimentsShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
+
+                SentimentsComboBox.currentTextChanged.connect(lambda: self.ToggleSentimentsComponent(SentimentsShowComponentTable, SentimentsItemName))
+
+                if SentimentsShowComponentTabFlag2:
+                    tabs.tabWidget = SentimentsShowComponentTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(SentimentsShowComponentTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+                else:
+                    # Adding Word Cloud Tab to QTabWidget
+                    dummyTab = Tab("Sentiments Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0))
+                    dummyTab.setTabSentiment(SentimentsItemName.text(0))
+                    myFile.TabList.append(dummyTab)
+                    self.tabWidget.addTab(SentimentsShowComponentTab, "Sentiments Component")
+                    self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
             else:
-                # Adding Word Cloud Tab to QTabWidget
-                dummyTab = Tab("Sentiments Show Topic Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0))
-                dummyTab.setTabSentiment(SentimentsItemName.text(0))
-                myFile.TabList.append(dummyTab)
-
-                self.tabWidget.addTab(SentimentsShowComponentTab, "Sentiments Show Topic Component")
-                self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
 
     #Toggle Sentiments Components
     def ToggleSentimentsComponent(self, Table, SentimentsItemName):
@@ -8574,18 +8860,25 @@ class Window(QMainWindow):
 
                             self.SetCasesWidget(DS, DSCaseWidget)
 
-
-
                         # Adding Sentiments
-                        DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                        DSSentimentWidget.setText(0, DS.DataSourceName)
-                        DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
-                        DSSentimentWidget.setExpanded(True)
+                        NewWidgetAddFlagList = []
 
                         for sentiments in DS.SentimentList:
-                            DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
-                            DSNewSentimentNode.setText(0, sentiments.SentimentType)
+                            if len(sentiments.SentimentTextList) == 0:
+                                NewWidgetAddFlagList.append(True)
+                            else:
+                                NewWidgetAddFlagList.append(False)
 
+                        if not all([v for v in NewWidgetAddFlagList]):
+                            # Adding Sentiments
+                            DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                            DSSentimentWidget.setText(0, DS.DataSourceName)
+                            DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
+                            DSSentimentWidget.setExpanded(True)
+
+                            for sentiments in DS.SentimentList:
+                                DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
+                                DSNewSentimentNode.setText(0, sentiments.SentimentType)
 
                     # CSV File
                     elif DS.DataSourceext == "CSV files (*.csv)":
@@ -8643,6 +8936,169 @@ class Window(QMainWindow):
 
                         newNode.setToolTip(0, newNode.text(0))
 
+                for tabs in myFile.TabList:
+                    # Data Sources Similarity
+                    if tabs.TabName == "Data Sources Similarity":
+                        self.DataSourcesSimilarity()
+
+                    # Document Clustering
+                    elif tabs.TabName == "Document Clustering":
+                        self.DataSourceDocumentClustering()
+
+                    # Web Preview
+                    elif tabs.TabName == "Web Preview":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourcePreviewWeb(widgets)
+
+                    # Show Tweet Data
+                    elif tabs.TabName == "Show Tweet Data":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourceShowTweetData(widgets)
+
+                    # Show Video
+                    elif tabs.TabName == "Show Video":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            for DS in myFile.DataSourceList:
+                                if DS.DataSourceName == tabs.DataSourceName:
+                                    if DS.YoutubeURLFlag:
+                                        self.DataSourceYoutubeShowVideo(widgets)
+
+                    # Show Youtube Data
+                    elif tabs.TabName == "Show Youtube Data":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            for DS in myFile.DataSourceList:
+                                if DS.DataSourceName == tabs.DataSourceName:
+                                    if DS.YoutubeURLFlag:
+                                        self.DataSourceShowYoutubeCommentsURL(widgets)
+                                    else:
+                                        self.DataSourceShowYoutubeCommentsKeyWord(widgets)
+                                    break
+
+                    # View Image
+                    elif tabs.TabName == "View Image":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourceViewImage(widgets)
+
+                    # CSV Data
+                    elif tabs.TabName == "CSV Data":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourceViewCSVData(widgets)
+
+                    # Preview
+                    elif tabs.TabName == "Preview":
+                        for DS in myFile.DataSourceList:
+                            if DS.DataSourceName == tabs.DataSourceName:
+                                break
+
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            if DS.DataSourceext == "Pdf files (*.pdf)":
+                                self.DataSourcePDFPreview(widgets)
+
+                            elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                                self.DataSourceWordPreview(widgets)
+
+                            elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
+                                self.DataSourcePreview(widgets)
+
+                    # Word Frequency
+                    elif tabs.TabName == "Word Frequency":
+                        self.DataSourceShowFrequencyTable(tabs.DataSourceName)
+
+                    # Generate Questions
+                    elif tabs.TabName == "Generate Questions":
+                        self.DataSourcesGenerateQuestions(tabs.DataSourceName)
+
+                    # Automatic Sentiment Analysis
+                    elif tabs.TabName == "Automatic Sentiment Analysis":
+                        self.SentimentAnalysisTable(tabs.DataSourceName, tabs.AutomaticSentimentAnalysisColumnName)
+
+                    # Stem Word
+                    elif tabs.TabName == "Stem Word":
+                        self.mapStemWordonTab(tabs.DataSourceName, tabs.StemWord)
+
+                    # Parts of Speech
+                    elif tabs.TabName == "Parts of Speech":
+                        self.DataSourcePOS(tabs.DataSourceName)
+
+                    # Entity Relationship
+                    elif tabs.TabName == "Entity Relationship":
+                        self.DataSourceEntityRelationShip(tabs.DataSourceName)
+
+                    # Topic Modelling
+                    elif tabs.TabName == "Topic Modelling":
+                        self.DataSourceTopicModelling(tabs.DataSourceName)
+
+                    # Create Cases
+                    elif tabs.TabName == "Create Cases":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourceCreateCases(widgets)
+
+                    # Create Sentiments
+                    elif tabs.TabName == "Create Sentiments":
+                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.DataSourceCreateSentiments(widgets)
+
+                    # Translated Text
+                    elif tabs.TabName == "Translated Text":
+                        self.DataSourceTranslate(tabs.DataSourceName, tabs.TranslatedLanguage)
+
+                    # Word Cloud
+                    elif tabs.TabName == "Word Cloud":
+                        self.mapWordCloudonTab(tabs.DataSourceName, tabs.WordCloudBGColor, tabs.WordCloudMaxWords, tabs.WordCloudMask)
+
+                    # Word Tree
+                    elif tabs.TabName == "Word Tree":
+                        self.DataSourceWordTree(tabs.DataSourceName)
+
+                    # Coordinate Map
+                    elif tabs.TabName == "Coordinate Map":
+                        self.DataSourceCoordinateMap(tabs.DataSourceName)
+
+                    # Cases Structure
+                    elif tabs.TabName == "Cases Structure":
+                        for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.CasesStructure(widgets)
+
+                    # Cases Coverage
+                    elif tabs.TabName == "Cases Coverage":
+                        for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                            self.CasesParentCoverage(widgets)
+
+                    # Case Component
+                    elif tabs.TabName == "Case Component":
+                        CasesItemWidgets = self.CasesTreeWidget.findItems(tabs.tabCase, Qt.MatchRecursive, 0)
+
+                        if len(CasesItemWidgets) > 0:
+                            ItemPresentFlag = False
+                            for items in CasesItemWidgets:
+                                tempWidget = items
+                                while tempWidget.parent() != None:
+                                    tempWidget = tempWidget.parent()
+
+                                if tempWidget.text(0) == tabs.DataSourceName:
+                                    ItemPresetFlag = True
+                                    break
+
+                            if ItemPresentFlag:
+                                self.CasesShowTopicComponent(items)
+
+                    # Sentiments Component
+                    elif tabs.TabName == "Sentiments Component":
+                        SentimentItemWidgets = self.SentimentTreeWidget.findItems(tabs.tabSentiment, Qt.MatchRecursive, 0)
+
+                        if len(SentimentItemWidgets) > 0:
+                            ItemPresentFlag = False
+                            for items in SentimentItemWidgets:
+                                tempWidget = items
+                                while tempWidget.parent() != None:
+                                    tempWidget = tempWidget.parent()
+
+                                if tempWidget.text(0) == tabs.DataSourceName:
+                                    ItemPresetFlag = True
+                                    break
+
+                            if ItemPresentFlag:
+                                self.SentimentsShowComponent(items)
 
         except Exception as e:
             print(str(e))
@@ -8724,7 +9180,7 @@ class Window(QMainWindow):
     def AboutWindow(self):
         try:
             for tabs in myFile.TabList:
-                print(tabs.TabName + "  ,  " + str(tabs.isActive))
+                print(tabs.DataSourceName + "  ,  " + tabs.TabName + "  ,  " + str(tabs.isActive))
             print()
             file = open('LICENSE', 'r')
             lic = file.read()
@@ -9343,7 +9799,7 @@ class Window(QMainWindow):
 
     # Import From URL
     def ImportFromURL(self, URL):
-        dummyDataSource = DataSource(URL, "URL", self)
+        dummyDataSource = DataSource(URL, "URL")
         DataSourceNameCheck = False
 
         for DS in myFile.DataSourceList:

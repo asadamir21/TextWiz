@@ -1,5 +1,5 @@
 from distutils.errors import PreprocessError
-from idlelib.idle_test.test_configdialog import GenPageTest
+#from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
@@ -93,14 +93,14 @@ class Window(QMainWindow):
         elif platform.system() == "Linux":
             import gi
             gi.require_version('Gtk', '3.0')
-            gi.require_version('Gtk', '3.0')
-
+            gi.require_version('Gdk', '3.0')
             from gi.repository import Gdk, Gtk, GdkX11
 
-            display = Gdk.Display().get_default
-            for i in range(display.get_n_monitor):
+            display = Gdk.Display().get_default()
+            for i in range(display.get_n_monitors()):
                 monitor = display.get_monitor(i)
                 w_area = monitor.get_workarea()
+                #print(w_area.x, w_area.y, w_area.width, w_area.height)
 
                 self.width = w_area.width
                 self.height = w_area.height
@@ -8756,8 +8756,8 @@ class Window(QMainWindow):
         myDialog.setModal(True)
         myDialog.setWindowTitle("New File")
         myDialog.setParent(self)
-        myDialog.setWindowFlags(Qt.WindowCloseButtonHint)
-        myDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+        myDialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
+        #myDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
         myDialog.show()
 

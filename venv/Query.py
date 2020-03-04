@@ -22,7 +22,7 @@ from spacy.lang.en import English
 from nltk.corpus import wordnet as wn
 
 import pyLDAvis.gensim
-import en_core_web_sm
+#import en_core_web_sm
 import numpy as np
 import pandas as pd
 import pickle

@@ -10,7 +10,7 @@ from PyQt5.QtWebEngineWidgets import *
 from PIL import  Image
 from File import *
 import humanfriendly, platform
-import glob, sys, os, getpass, ntpath, win32gui, math, csv, datetime, graphviz
+import glob, sys, os, getpass, ntpath, math, csv, datetime, graphviz
 
 if platform.system() == "Windows":
     from PyQt5 import QAxContainer
@@ -575,6 +575,7 @@ class Window(QMainWindow):
 
         # Windows Title Bar Size
         if platform.system() == "Windows":
+            import win32gui
             rect = win32gui.GetWindowRect(self.winId())
             clientRect = win32gui.GetClientRect(self.winId())
             windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)

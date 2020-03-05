@@ -7480,7 +7480,7 @@ class Window(QMainWindow):
                     CasesParentCoverageTabFlag2 = True
                     break
 
-        if CasesParentCoverageTabFlag:
+        if not CasesParentCoverageTabFlag:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.text(0):
                     DS.allCasesCoverage()

@@ -194,6 +194,7 @@ class Window(QMainWindow):
 
         YoutubeAct = QAction(QIcon('Images/Youtube.png'), 'Youtube', self)
         YoutubeAct.triggered.connect(lambda: self.ImportYoutubeWindow())
+        YoutubeAct.setDisabled(True)
         self.toolbar.addAction(YoutubeAct)
 
         self.toolbar.addSeparator()
@@ -237,6 +238,7 @@ class Window(QMainWindow):
         printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
+        printButton.setDisabled(True)
         printButton.triggered.connect(self.printWindow)
 
         exitButton = QAction('Exit', self)
@@ -342,6 +344,7 @@ class Window(QMainWindow):
         YoutubeButton = QAction(QIcon("Images\Youtube.png"), 'Youtube Comments', self)
         YoutubeButton.setStatusTip('Youtube Comments')
         YoutubeButton.triggered.connect(lambda checked: self.ImportYoutubeWindow())
+        YoutubeButton.setDisabled(True)
         importMenu.addAction(YoutubeButton)
 
         # *****************************  ToolsMenuItem **************************************
@@ -381,6 +384,7 @@ class Window(QMainWindow):
         EntityRelationship = QAction('Entity Relationship', self)
         EntityRelationship.setToolTip('Entity Relationship')
         EntityRelationship.triggered.connect(lambda: self.DataSourceEntityRelationShipDialog())
+        EntityRelationship.setDisabled(True)
         ToolMenu.addAction(EntityRelationship)
 
         # Sentiment Analysis
@@ -393,12 +397,14 @@ class Window(QMainWindow):
         TopicModelling = QAction('Topic Modelling', self)
         TopicModelling.setToolTip('Topic Modelling')
         TopicModelling.triggered.connect(lambda: self.DataSourceTopicModellingDialog())
+        TopicModelling.setDisabled(True)
         ToolMenu.addAction(TopicModelling)
 
         # Generate Question
         GenerateQuestion = QAction('Generate Questions', self)
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
+        GenerateQuestion.setDisabled(True)
         ToolMenu.addAction(GenerateQuestion)
 
         # Find Similarity

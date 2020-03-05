@@ -9,6 +9,9 @@ class Tab():
     def setisActive(self, Flag):
         self.isActive = Flag
 
+    def setCurrentWidget(self, Flag):
+        self.isCurrentWidget = Flag
+
     def setTabCase(self, TabCase):
         self.tabCase = TabCase
 

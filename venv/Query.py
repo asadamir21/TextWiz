@@ -14,11 +14,11 @@ from stat import *
 from PIL import *
 from pyglet import *
 from Sentiments import *
-from spacy import displacy
+#from spacy import displacy
 from urllib.parse import urlparse
 from collections import Counter
 from nltk.stem.wordnet import WordNetLemmatizer
-from spacy.lang.en import English
+#from spacy.lang.en import English
 from nltk.corpus import wordnet as wn
 
 import pyLDAvis.gensim
@@ -27,17 +27,16 @@ import numpy as np
 import pandas as pd
 import pickle
 
-from QuestionGenerator.identification import *
-from QuestionGenerator.questionValidation import *
-from QuestionGenerator.nlpNER import *
-from QuestionGenerator.nonClause import *
-from QuestionGenerator.clause import *
-from QuestionGenerator.aqgFunction import *
+# from QuestionGenerator.identification import *
+# from QuestionGenerator.questionValidation import *
+# from QuestionGenerator.nlpNER import *
+# from QuestionGenerator.nonClause import *
+# from QuestionGenerator.clause import *
+# from QuestionGenerator.aqgFunction import *
 
+import matplotlib, re, nltk, os#, spacy
 
-import matplotlib, re, nltk, os, spacy
-
-nlp = spacy.load('en_core_web_sm')
+#nlp = spacy.load('en_core_web_sm')
 
 import pyautogui, qstylizer.style
 

@@ -31,17 +31,17 @@ import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet,
 import docx2txt, PyPDF2, tweepy, httplib2
 
 #Youtube
-from Youtube.URL import *
-import google.auth.exceptions
-try:
-    YoutubeServerNotFoundError = False
-    from Youtube.KeyWord import *
-except httplib2.ServerNotFoundError:
-    YoutubeServerNotFoundError = True
-except google.auth.exceptions.RefreshError:
-    print("Done")
-except Exception as e:
-    print(str(e))
+# from Youtube.URL import *
+# import google.auth.exceptions
+# try:
+#     YoutubeServerNotFoundError = False
+#     from Youtube.KeyWord import *
+# except httplib2.ServerNotFoundError:
+#     YoutubeServerNotFoundError = True
+# except google.auth.exceptions.RefreshError:
+#     print("Done")
+# except Exception as e:
+#     print(str(e))
 
 #Audio
 import wave

@@ -1,5 +1,5 @@
 from distutils.errors import PreprocessError
-from idlelib.idle_test.test_configdialog import GenPageTest
+#from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
@@ -108,8 +108,8 @@ class Window(QMainWindow):
 
             from gi.repository import Gdk, Gtk, GdkX11
 
-            display = Gdk.Display().get_default
-            for i in range(display.get_n_monitor):
+            display = Gdk.Display().get_default()
+            for i in range(display.get_n_monitors()):
                 monitor = display.get_monitor(i)
                 w_area = monitor.get_workarea()
 

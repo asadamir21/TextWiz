@@ -585,13 +585,16 @@ class Window(QMainWindow):
         # ********************************** Right Tab Widget *******************************
 
         # Windows Title Bar Size
-        if platform.system() == "Windows":
+        if WindowPlatform:
             import win32gui
             rect = win32gui.GetWindowRect(self.winId())
             clientRect = win32gui.GetClientRect(self.winId())
             windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)
             titleOffset = ((rect[3] - rect[1]) - clientRect[3]) - windowOffset
-        else:
+        elif LinuxPlatform:
+            titleOffset = 0
+        elif MacPlatform:
+            self.setUnifiedTitleAndToolBarOnMac(True)
             titleOffset = 0
 
         self.verticalLayoutWidget.setGeometry(0, 0,
@@ -834,7 +837,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = DataSourcesSimilarityTab
                     if tabs.isActive:
                         self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
@@ -975,7 +979,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = DataSourceDocumentClusteringTab
                     if tabs.isActive:
                         self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
 
                 else:
                     # Adding Word Cloud Tab to QTabWidget
@@ -1340,7 +1345,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = PreviewWebTab
                 if tabs.isActive:
                     self.tabWidget.addTab(PreviewWebTab, "Web Preview")
-                    self.tabWidget.setCurrentWidget(PreviewWebTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(PreviewWebTab)
             else:
                 # Adding Preview Tab to TabList
                 myFile.TabList.append(Tab("Web Preview", PreviewWebTab, DataSourceWidgetItemName.text(0)))
@@ -1438,7 +1444,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = ShowTweetDataTab
                 if tabs.isActive:
                     self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
-                    self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(ShowTweetDataTab)
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
@@ -1491,7 +1498,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = VideoTabWebPage
                 if tabs.isActive:
                     self.tabWidget.addTab(VideoTab, "Show Video")
-                    self.tabWidget.setCurrentWidget(VideoTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(VideoTab)
 
             else:
                 # Adding Preview Tab to TabList
@@ -1590,7 +1598,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = ShowYoutubeCommentsTab
                 if tabs.isActive:
                     self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-                    self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
@@ -1695,7 +1704,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = ShowYoutubeCommentsTab
                 if tabs.isActive:
                     self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-                    self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
@@ -1813,7 +1823,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = ViewImageTab
                 if tabs.isActive:
                     self.tabWidget.addTab(ViewImageTab, "View Image")
-                    self.tabWidget.setCurrentWidget(ViewImageTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(ViewImageTab)
             else:
                 myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
     
@@ -1909,7 +1920,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = ViewCSVDataTab
                 if tabs.isActive:
                     self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
-                    self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(ViewCSVDataTab)
             else:
                 # Adding Word Frequency Tab to TabList
                 myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
@@ -2014,7 +2026,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourcePreviewTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
             else:
                 # Adding Preview Tab to TabList
                 myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
@@ -2068,7 +2081,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourcePreviewTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
             else:
                 # Adding Preview Tab to TabList
                 myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
@@ -2123,7 +2137,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourcePreviewTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                    self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
             else:
                 # Adding Preview Tab to TabList
                 myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
@@ -2354,7 +2369,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = WordFrequencyTab
                 if tabs.isActive:
                     self.tabWidget.addTab(WordFrequencyTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(WordFrequencyTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(WordFrequencyTab)
 
             else:
                 # Adding Word Frequency Tab to TabList
@@ -2554,7 +2570,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = GenerateQuestionsTab
                     if tabs.isActive:
                         self.tabWidget.addTab(GenerateQuestionsTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
                 else:
                     # Adding Generate Question Tab to TabList
                     myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
@@ -2903,7 +2920,8 @@ class Window(QMainWindow):
                         tabs.tabWidget = SentimentAnalysisTab
                         if tabs.isActive:
                             self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
-                            self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                            if tabs.isCurrentWidget:
+                                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
                     else:
                         # Adding Word Frequency Tab to TabList
@@ -3242,7 +3260,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = StemWordTab
                     if tabs.isActive:
                         self.tabWidget.addTab(StemWordTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(StemWordTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(StemWordTab)
 
                 else:
                     # Adding Stem Word Tab to QTabWidget
@@ -3530,7 +3549,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = POSTab
                 if tabs.isActive:
                     self.tabWidget.addTab(POSTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(POSTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(POSTab)
             else:
                 # Adding Part of Speech Tab to QTabWidget
                 myFile.TabList.append(Tab("Parts of Speech", POSTab, DataSourceName))
@@ -3739,7 +3759,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DSERTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DSERTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(DSERTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DSERTab)
             else:
                 # Adding Entity Relationship Tab to QTabWidget
                 myFile.TabList.append(Tab("Entity Relationship", DSERTab, DataSourceName))
@@ -3912,7 +3933,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = TopicModellingTab
                 if tabs.isActive:
                     self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(TopicModellingTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(TopicModellingTab)
             else:
                 # Adding Topic Modelling Tab to TabList
                 myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
@@ -3993,7 +4015,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourceCreateCasesTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
-                    self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Create Cases", DataSourceCreateCasesTab, DataSourceWidgetItemName.text(0)))
@@ -4239,7 +4262,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourceCreateSentimentsTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
-                    self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Create Sentiments", DataSourceCreateSentimentsTab, DataSourceWidgetItemName.text(0)))
@@ -4537,7 +4561,8 @@ class Window(QMainWindow):
                 if tabs.isActive:
                     # Adding Preview Tab to QTabWidget
                     self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
-                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
 
             else:
                 # Adding Preview Tab to TabList
@@ -4755,7 +4780,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = DataSourceShowTranslationTab
                     if tabs.isActive:
                         self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
                 else:
                     # Adding Translation Tab to TabList
                     dummyTab = Tab("Translated Text", DataSourceShowTranslationTab, DataSourceName)
@@ -6167,7 +6193,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = WordCloudTab
                 if tabs.isActive:
                     self.tabWidget.addTab(WordCloudTab, "Word Cloud")
-                    self.tabWidget.setCurrentWidget(WordCloudTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(WordCloudTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 dummyTab = Tab("Word Cloud", WordCloudTab, WCDSName)
@@ -6316,7 +6343,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourceWordTreeTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourceWordTreeTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
             else:
                 # Adding Word Tree Tab to QTabWidget
                 myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
@@ -6468,7 +6496,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = DataSourceCoordinateMapTab
                 if tabs.isActive:
                     self.tabWidget.addTab(DataSourceCoordinateMapTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
@@ -7133,7 +7162,8 @@ class Window(QMainWindow):
                 tabs.tabWidget = CasesStructureTab
                 if tabs.isActive:
                     self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(CasesStructureTab)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(CasesStructureTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 myFile.TabList.append(Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0)))
@@ -7296,51 +7326,55 @@ class Window(QMainWindow):
 
     # UnMerge Cases
     def CasesUnMerge(self, CasesItemName):
-        tempWidget = CasesItemName
-        while tempWidget.parent() != None:
-            tempWidget = tempWidget.parent()
+        try:
+            tempWidget = CasesItemName
+            while tempWidget.parent() != None:
+                tempWidget = tempWidget.parent()
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == tempWidget.text(0):
-                for cases in DS.CasesList:
-                    if cases.ParentCase != None:
-                        if cases.ParentCase.CaseTopic == CasesItemName.text(0):
-                            for cases2 in DS.CasesList:
-                                if cases2.CaseTopic == cases.ParentCase.CaseTopic:
-                                    cases.ParentCase = cases2.ParentCase
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == tempWidget.text(0):
+                    for cases in DS.CasesList:
+                        if cases.ParentCase != None:
+                            if cases.ParentCase.CaseTopic == CasesItemName.text(0):
+                                for cases2 in DS.CasesList:
+                                    if cases2.CaseTopic == cases.ParentCase.CaseTopic:
+                                        cases.ParentCase = cases2.ParentCase
 
-                            ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
-                            if len(ItemWidget) > 1:
-                                ItemPresentFlag = False
-                                for widget in ItemWidget:
-                                    tempWidget2 = widget
-                                    while tempWidget2.parent() != None:
-                                        tempWidget2 = tempWidget2.parent()
+                                ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                                if len(ItemWidget) > 1:
+                                    ItemPresentFlag = False
+                                    for widget in ItemWidget:
+                                        tempWidget2 = widget
+                                        while tempWidget2.parent() != None:
+                                            tempWidget2 = tempWidget2.parent()
 
-                                    if tempWidget2.text(0) == tempWidget2.text(0):
-                                        ItemPresentFlag = True
-                                        break
+                                        if tempWidget2.text(0) == tempWidget2.text(0):
+                                            ItemPresentFlag = True
+                                            break
 
-                                if ItemPresentFlag:
-                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
-                                    CasesItemName.parent().addChild(tempChild)
+                                    if ItemPresentFlag:
+                                        tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
+                                        CasesItemName.parent().addChild(tempChild)
 
-                            elif len(ItemWidget) == 1:
-                                for widget in ItemWidget:
-                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
-                                    CasesItemName.parent().addChild(tempChild)
+                                elif len(ItemWidget) == 1:
+                                    for widget in ItemWidget:
+                                        tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
+                                        CasesItemName.parent().addChild(tempChild)
 
 
-                for cases in DS.CasesList:
-                    if cases.CaseTopic == CasesItemName.text(0):
-                        DS.CasesList.remove(cases)
-                        cases.__del__()
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            DS.CasesList.remove(cases)
+                            cases.__del__()
 
-                CasesItemName.parent().removeChild(CasesItemName)
+                    CasesItemName.parent().removeChild(CasesItemName)
 
-        self.statusBar().showMessage('Case Unmerg Successfully')
-        self.CasesParentCoverageUpdate(tempWidget)
-        self.CasesStructureUpdate(tempWidget)
+            self.statusBar().showMessage('Case Unmerg Successfully')
+            self.CasesParentCoverageUpdate(tempWidget)
+            self.CasesStructureUpdate(tempWidget)
+
+        except Exception as e:
+            print(str(e))
 
     # Set Cases Widget
     def SetCasesWidget(self, DS, CasesItemName):
@@ -7927,27 +7961,68 @@ class Window(QMainWindow):
 
     # Cases Remove Dialog
     def CasesChildRemove(self, CasesItemName):
-        tempWidget = CasesItemName
-        while tempWidget.parent() != None:
-            tempWidget = tempWidget.parent()
+        try:
+            tempWidget = CasesItemName
+            while tempWidget.parent() != None:
+                tempWidget = tempWidget.parent()
 
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == tempWidget.text(0):
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == tempWidget.text(0):
+                    # tempWidget2 = CasesItemName
+                    # tempParent2 = CasesItemName
+                    # CasesList = []
+                    # CasesList.append(CasesItemName.text(0))
 
-                if tempWidget.childCount() == 1:
-                    tempWidget.removeChild(CasesItemName)
-                    self.CasesTreeWidget.invisibleRootItem().removeChild(tempWidget)
-                else:
-                    CasesItemName.parent().removeChild(CasesItemName)
+                    if CasesItemName.parent().childCount() == 1:
+                        TempParent = CasesItemName.parent()
+                        TempParent.removeChild(CasesItemName)
+                        if TempParent == tempWidget:
+                            self.CasesTreeWidget.invisibleRootItem().removeChild(TempParent)
+                        else:
+                            TempParent.parent().removeChild(TempParent)
+                    else:
+                        CasesItemName.parent().removeChild(CasesItemName)
 
-                for cases in DS.CasesList:
-                    if cases.CaseTopic == CasesItemName.text(0):
-                        DS.CasesList.remove(cases)
-                        cases.__del__()
-                        break
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic == CasesItemName.text(0):
+                            DS.CasesList.remove(cases)
+                            cases.__del__()
+                            break
 
-                self.statusBar().showMessage('Case Removed Successfully')
-                break
+                    # while tempParent2.parent() != None and tempWidget2.parent().childCount() == 1:
+                    #     print(tempParent2.text(0))
+                    #     tempParent2 = tempWidget2.parent()
+                    #     print(tempParent2.text(0))
+                    #     if tempWidget2.parent().childCount() == 1:
+                    #         TempParent = tempWidget2.parent()
+                    #         TempParent.removeChild(tempWidget2)
+                    #         if TempParent == tempWidget:
+                    #             print(TempParent.text(0))
+                    #             print(tempWidget2.text(0))
+                    #             self.CasesTreeWidget.invisibleRootItem().removeChild(TempParent)
+                    #         else:
+                    #             CasesList.append(TempParent.text(0))
+                    #             print(TempParent.text(0))
+                    #             TempParent.parent().removeChild(TempParent)
+                    #     else:
+                    #         CasesList.append(tempWidget2.text(0))
+                    #         tempWidget2.parent().removeChild(tempWidget2)
+                    #
+                    #     tempWidget2 = tempParent2
+
+                    for cases in DS.CasesList:
+                        if cases.CaseTopic in CasesItemName.text(0):
+                            DS.CasesList.remove(cases)
+                            cases.__del__()
+                            break
+
+                    self.statusBar().showMessage('Case Removed Successfully')
+                    break
+
+        except Exception as e:
+            print(str(e))
+
+
 
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
@@ -8269,7 +8344,8 @@ class Window(QMainWindow):
                     tabs.tabWidget = SentimentsShowComponentTab
                     if tabs.isActive:
                         self.tabWidget.addTab(SentimentsShowComponentTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     dummyTab = Tab("Sentiments Component", SentimentsShowComponentTab, SentimentsItemName.parent().text(0))
@@ -9096,11 +9172,17 @@ class Window(QMainWindow):
 
     # Save
     def Save(self):
-        # for tabs in myFile.TabList:
-        #     print(tabs.tabWidget)
         myFile.setModifiedDate(datetime.datetime.now())
         myFile.setModifiedBy(getpass.getuser())
+
         SaveFile = open(myFile.FileLocation, 'wb')
+
+        for tabs in myFile.TabList:
+            if self.tabWidget.currentWidget() == tabs.tabWidget:
+                tabs.setCurrentWidget(True)
+            else:
+                tabs.setCurrentWidget(False)
+
         dummyTabList = []
 
         for i in range(len(myFile.TabList)):
@@ -9109,19 +9191,10 @@ class Window(QMainWindow):
         for tabs in myFile.TabList:
             tabs.tabWidget = None
 
-        # for tabs in myFile.TabList:
-        #     print(tabs.tabWidget)
-        #
-        # for tabs in dummyTabList:
-        #     print(tabs)
-
         pickle.dump(myFile, SaveFile)
 
         for i in range(len(myFile.TabList)):
             myFile.TabList[i].tabWidget = dummyTabList[i]
-
-        # for tabs in myFile.TabList:
-        #     print(tabs.tabWidget)
 
     #Print Window
     def printWindow(self):

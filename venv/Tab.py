@@ -15,6 +15,9 @@ class Tab():
     def setTabCase(self, TabCase):
         self.tabCase = TabCase
 
+    def setCasesLength(self, length):
+        self.CasesLength = length
+
     def setTabSentiment(self, TabSentiment):
         self.tabSentiment = TabSentiment
 

@@ -825,19 +825,11 @@ class Window(QMainWindow):
 
                 if DataSourceSimilarityTabFlag2:
                     tabs.DataSourceName = len(myFile.DataSourceList)
-
-                    if tabs.tabWidget.isHidden():
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
-                        tabs.tabWidget = DataSourcesSimilarityTab
-                        tabs.setisActive(True)
-                    else:
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
-                        tabs.tabWidget = DataSourcesSimilarityTab
-                        tabs.setisActive(True)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
+                    tabs.tabWidget = DataSourcesSimilarityTab
+                    tabs.setisActive(True)
 
                 elif DataSourceSimilarityTabFlag3:
                     tabs.tabWidget = DataSourcesSimilarityTab
@@ -967,19 +959,11 @@ class Window(QMainWindow):
 
                 if DataSourceDocumentClusteringTabFlag2:
                     tabs.DataSourceName = len(myFile.DataSourceList)
-
-                    if tabs.tabWidget.isHidden():
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
-                        tabs.tabWidget = DataSourceDocumentClusteringTab
-                        tabs.setisActive(True)
-                    else:
-                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                        self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
-                        self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
-                        tabs.tabWidget = DataSourceDocumentClusteringTab
-                        tabs.setisActive(True)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(DataSourceDocumentClusteringTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
+                    tabs.tabWidget = DataSourceDocumentClusteringTab
+                    tabs.setisActive(True)
 
                 elif DataSourceDocumentClusteringTabFlag3:
                     tabs.tabWidget = DataSourceDocumentClusteringTab
@@ -7045,17 +7029,23 @@ class Window(QMainWindow):
     def CasesStructure(self, CasesItemName):
         CasesStructureTabFlag = False
         CasesStructureTabFlag2 = False
+        CasesStructureTabFlag3 = False
 
         for tabs in myFile.TabList:
             if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Structure':
                 if tabs.tabWidget != None:
-                    CasesStructureTabFlag = True
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == CasesItemName.text(0):
+                            if len(DS.CasesList) == tabs.CasesLength:
+                                CasesStructureTabFlag = True
+                            else:
+                                CasesStructureTabFlag2 = True
                     break
                 else:
-                    CasesStructureTabFlag2 = True
+                    CasesStructureTabFlag3 = True
                     break
 
-        if not CasesStructureTabFlag:
+        if not CasesStructureTabFlag or CasesStructureTabFlag2:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.text(0):
                     break
@@ -7164,17 +7154,28 @@ class Window(QMainWindow):
 
             DownloadAsPDFButton.clicked.connect(lambda: self.SaveStructureAsPDF(graph))
 
-            if CasesStructureTabFlag:
+            if CasesStructureTabFlag3:
                 tabs.tabWidget = CasesStructureTab
                 if tabs.isActive:
                     self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(CasesStructureTab)
+
             else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0)))
-                self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
-                self.tabWidget.setCurrentWidget(CasesStructureTab)
+                if CasesStructureTabFlag2:
+                    tabs.setCasesLength(len(DS.CasesList))
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(CasesStructureTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(CasesStructureTab)
+                    tabs.tabWidget = CasesStructureTab
+                    tabs.setisActive(True)
+                else:
+                    # Adding Word Cloud Tab to QTabWidget
+                    dummyTab = Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0))
+                    dummyTab.setCasesLength(len(DS.CasesList))
+                    myFile.TabList.append(dummyTab)
+                    self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
+                    self.tabWidget.setCurrentWidget(CasesStructureTab)
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
@@ -7470,17 +7471,23 @@ class Window(QMainWindow):
     def CasesParentCoverage(self, CasesItemName):
         CasesParentCoverageTabFlag = False
         CasesParentCoverageTabFlag2 = False
+        CasesParentCoverageTabFlag3 = False
 
         for tabs in myFile.TabList:
             if tabs.DataSourceName == CasesItemName.text(0) and tabs.TabName == 'Cases Coverage':
                 if tabs.tabWidget != None:
-                    CasesParentCoverageTabFlag = True
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == CasesItemName.text(0):
+                            if len(DS.CasesList) == tabs.CasesLength:
+                                CasesParentCoverageTabFlag = True
+                            else:
+                                CasesParentCoverageTabFlag2 = True
                     break
                 else:
-                    CasesParentCoverageTabFlag2 = True
+                    CasesParentCoverageTabFlag3 = True
                     break
 
-        if not CasesParentCoverageTabFlag:
+        if not CasesParentCoverageTabFlag or CasesParentCoverageTabFlag2:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.text(0):
                     DS.allCasesCoverage()
@@ -7591,15 +7598,26 @@ class Window(QMainWindow):
             canvas = FigureCanvas(DS.BarCasesCoverageFigure)
             CasesParentCoverageTabVerticalLayout4.addWidget(canvas)
 
-            if CasesParentCoverageTabFlag:
+            if CasesParentCoverageTabFlag3:
                 tabs.tabWidget = CasesParentCoverageTab
                 self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
                 self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
             else:
-                # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0)))
-                self.tabWidget.addTab(CasesParentCoverageTab, "Cases Coverage")
-                self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
+                if CasesParentCoverageTabFlag2:
+                    tabs.setCasesLength(len(DS.CasesList))
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
+                    tabs.tabWidget = CasesParentCoverageTab
+                    tabs.setisActive(True)
+
+                else:
+                    # Adding Word Cloud Tab to QTabWidget
+                    dummyTab = Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0))
+                    dummyTab.setCasesLength(len(DS.CasesList))
+                    myFile.TabList.append(dummyTab)
+                    self.tabWidget.addTab(CasesParentCoverageTab, "Cases Coverage")
+                    self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
@@ -8027,8 +8045,6 @@ class Window(QMainWindow):
 
         except Exception as e:
             print(str(e))
-
-
 
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):

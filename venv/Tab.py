@@ -21,6 +21,9 @@ class Tab():
     def setTabSentiment(self, TabSentiment):
         self.tabSentiment = TabSentiment
 
+    def setSummarizeTextLength(self, length):
+        self.SummarizeLengthText = length
+
     def setWordCloud(self, BGColor, MaxWords, Mask):
         self.WordCloudBGColor = BGColor
         self.WordCloudMaxWords = MaxWords

@@ -4514,17 +4514,25 @@ class Window(QMainWindow):
     #Data Source Summary Preview
     def DataSourceSummaryPreview(self, DataSourceName):
         DataSourceSummaryPreviewTabFlag = False
+        DataSourceSummaryPreviewTabFlag2 = False
+        DataSourceSummaryPreviewTabFlag3 = False
 
         for tabs in myFile.TabList:
             if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Summary':
                 if tabs.tabWidget != None:
-                    DataSourceSummaryPreviewTabFlag = True
-                    break
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == DataSourceName:
+                            if tabs.SummarizeLengthText == len(DS.DataSourceTextSummary.split()):
+                                DataSourceSummaryPreviewTabFlag = True
+                                break
+                            else:
+                                DataSourceSummaryPreviewTabFlag2 = True
+                                break
                 else:
-                    DataSourceSummaryPreviewTabFlag2 = True
+                    DataSourceSummaryPreviewTabFlag3 = True
                     break
 
-        if not DataSourceSummaryPreviewTabFlag:
+        if not DataSourceSummaryPreviewTabFlag or DataSourceSummaryPreviewTabFlag2:
             DataSourceSummaryPreviewTab = QWidget()
 
             # LayoutWidget For within DataSource Preview Tab
@@ -4546,7 +4554,7 @@ class Window(QMainWindow):
                     DataSourceSummaryPreview.setText(DS.DataSourceTextSummary)
                     break
 
-            if DataSourceSummaryPreviewTabFlag2:
+            if DataSourceSummaryPreviewTabFlag3:
                 tabs.tabWidget = DataSourceSummaryPreviewTab
                 if tabs.isActive:
                     # Adding Preview Tab to QTabWidget
@@ -4555,12 +4563,21 @@ class Window(QMainWindow):
                         self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
 
             else:
-                # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName))
-
-                # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
-                self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                if DataSourceSummaryPreviewTabFlag2:
+                    tabs.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                    tabs.tabWidget = DataSourceSummaryPreviewTab
+                    tabs.setisActive(True)
+                else:                        
+                    # Adding Preview Tab to TabList
+                    dummyTab = Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName)
+                    dummyTab.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
+                    myFile.TabList.append(dummyTab)
+                    # Adding Preview Tab to QTabWidget
+                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
+                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
 
             # Adding Word Frequency Query
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -7610,7 +7627,6 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
                     tabs.tabWidget = CasesParentCoverageTab
                     tabs.setisActive(True)
-
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     dummyTab = Tab("Cases Coverage", CasesParentCoverageTab, CasesItemName.text(0))
@@ -9657,7 +9673,7 @@ class Window(QMainWindow):
         if not DataSourceNameCheck:
             dummyDataSource.CSVDataSource(CSVHeader, CSVPathFlag)
 
-            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.DataSourcetext) == 0:
+            if not dummyDataSource.DataSourceLoadError: #and not len(dummyDataSource.DataSourcetext) == 0:
                 myFile.setDataSources(dummyDataSource)
                 newNode = QTreeWidgetItem(self.CSVTreeWidget)
                 if CSVPathFlag:

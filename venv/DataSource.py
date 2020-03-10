@@ -367,7 +367,6 @@ class DataSource():
         except Exception as e:
             self.DataSourceLoadError = True
 
-
         if not self.DataSourceLoadError:
             self.DataSourceSize = []
             self.DataSourceAccessTime = []

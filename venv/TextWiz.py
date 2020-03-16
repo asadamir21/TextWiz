@@ -2948,7 +2948,9 @@ class Window(QMainWindow):
                 tabs.setisActive(True)
 
         except Exception as e:
-            print(str(e))
+            QMessageBox.critical(self, "Rename Error",
+                                 str(e),
+                                 QMessageBox.Ok)
 
     # Sentiment Analysis ComboBox
     def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
@@ -4579,24 +4581,24 @@ class Window(QMainWindow):
                     self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
                     self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
 
-            # Adding Word Frequency Query
-            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+                    # Adding Word Frequency Query
+                    ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-            if len(ItemsWidget) == 0:
-                DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                DSVisualWidget.setText(0, DataSourceName)
-                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                DSVisualWidget.setExpanded(True)
+                    if len(ItemsWidget) == 0:
+                        DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                        DSVisualWidget.setText(0, DataSourceName)
+                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                        DSVisualWidget.setExpanded(True)
 
-                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
-                DSNewCaseNode.setText(0, 'Summary')
-                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                        DSNewCaseNode.setText(0, 'Summary')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-            else:
-                for widgets in ItemsWidget:
-                    DSNewCaseNode = QTreeWidgetItem(widgets)
-                    DSNewCaseNode.setText(0, 'Summary')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                    else:
+                        for widgets in ItemsWidget:
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Summary')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -6965,7 +6967,6 @@ class Window(QMainWindow):
             # Merge Cases
             MergeCases = QAction("Merge Cases", self.CasesTreeWidget)
             MergeCases.triggered.connect(lambda: self.MergeCasesDialog(CasesItemName))
-
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == CasesItemName.text(0):

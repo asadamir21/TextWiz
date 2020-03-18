@@ -15,6 +15,7 @@ class File():
         super().__init__()
         self.DataSourceList = []
         self.TabList = []
+        self.requiredSaved = False
 
     def setFileName(self, name):
         self.FileName = name

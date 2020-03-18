@@ -150,6 +150,7 @@ class Window(QMainWindow):
         self.setMinimumSize(self.width/2, self.height/2)
         self.showMaximized()
 
+
         # *****************************  ToolBar ******************************************
 
         self.toolbar = self.addToolBar("Show Toolbar")
@@ -244,7 +245,7 @@ class Window(QMainWindow):
         exitButton = QAction('Exit', self)
         exitButton.setShortcut('Ctrl+Q')
         exitButton.setStatusTip('Exit application')
-        exitButton.triggered.connect(self.close_application)
+        exitButton.triggered.connect(self.closeEvent)
 
         fileMenu.addAction(newFileButton)
         fileMenu.addAction(OpenFileButton)
@@ -748,6 +749,7 @@ class Window(QMainWindow):
                 tabs.setisActive(False)
                 break
         self.tabWidget.removeTab(index)
+        myFile.requiredSaved = True
 
     #Find Similarity Between Data Sources
     def DataSourcesSimilarity(self):
@@ -830,6 +832,7 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                     tabs.tabWidget = DataSourcesSimilarityTab
                     tabs.setisActive(True)
+                    myFile.requiredSaved = True
 
                 elif DataSourceSimilarityTabFlag3:
                     tabs.tabWidget = DataSourcesSimilarityTab
@@ -851,7 +854,7 @@ class Window(QMainWindow):
 
                     self.tabWidget.addTab(DataSourcesSimilarityTab, "Data Sources Similarity")
                     self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
-
+                    myFile.requiredSaved = True
 
             else:
                 DataSourceLoadErrorBox = QMessageBox.critical(self, "Data Sources Similarity Error",
@@ -861,6 +864,7 @@ class Window(QMainWindow):
         elif tabs.tabWidget != None:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            myFile.requiredSaved = True
 
     # Update Similarity Between Data Sources
     def DataSourceSimilarityUpdate(self):
@@ -964,6 +968,7 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
                     tabs.tabWidget = DataSourceDocumentClusteringTab
                     tabs.setisActive(True)
+                    myFile.requiredSaved = True
 
                 elif DataSourceDocumentClusteringTabFlag3:
                     tabs.tabWidget = DataSourceDocumentClusteringTab
@@ -986,7 +991,7 @@ class Window(QMainWindow):
 
                     self.tabWidget.addTab(DataSourceDocumentClusteringTab, "Document Clustering")
                     self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
-
+                    myFile.requiredSaved = True
             else:
                 DataSourceDocumnetClusteringErrorBox = QMessageBox.critical(self, "Data Sources Documnet Clustering",
                                                                            "An Error Occured! Clustering can only be done if Data Sources are more than three",
@@ -994,6 +999,7 @@ class Window(QMainWindow):
         elif tabs.tabWidget != None:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            myFile.requiredSaved = True
 
     # Update Similarity Between Data Sources
     def DataSourceDocumentClusteringUpdate(self):
@@ -1183,7 +1189,7 @@ class Window(QMainWindow):
 
             # Data Source Remove
             DataSourceRemove = QAction('Remove', self.DataSourceTreeWidget)
-            DataSourceRemove.triggered.connect(lambda: self.DataSourceRemove(DataSourceWidgetItemName))
+            DataSourceRemove.triggered.connect(lambda: self.DataSourceRemoveDialog(DataSourceWidgetItemName))
             DataSourceRightClickMenu.addAction(DataSourceRemove)
 
             # Data Source Child Detail
@@ -1344,11 +1350,13 @@ class Window(QMainWindow):
                 # Adding Preview Tab to QTabWidget
                 self.tabWidget.addTab(PreviewWebTab, "Web Preview")
                 self.tabWidget.setCurrentWidget(PreviewWebTab)
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Show Tweet Data
     def DataSourceShowTweetData(self, DataSourceWidgetItemName):
@@ -1443,11 +1451,14 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
                 self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
             self.tabWidget.setCurrentWidget(ShowTweetDataTab)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Youtube Show Video
     def DataSourceYoutubeShowVideo(self, DataSourceWidgetItemName):
@@ -1498,11 +1509,13 @@ class Window(QMainWindow):
                 # Adding Preview Tab to QTabWidget
                 self.tabWidget.addTab(VideoTab, "Show Video")
                 self.tabWidget.setCurrentWidget(VideoTab)
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsURL(self, DataSourceWidgetItemName):
@@ -1597,12 +1610,14 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
                 self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                myFile.requiredSaved = True
 
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Show Youtube Comments URL
     def DataSourceShowYoutubeCommentsKeyWord(self, DataSourceWidgetItemName):
@@ -1703,12 +1718,13 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
                 self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
-
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
     
     # Data Source View Images
     def DataSourceViewImage(self, DataSourceWidgetItemName):
@@ -1821,11 +1837,13 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(ViewImageTab, "View Image")
                 self.tabWidget.setCurrentWidget(ViewImageTab)
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source View CSV Data
     def DataSourceViewCSVData(self, DataSourceWidgetItemName):
@@ -1919,12 +1937,13 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
                 self.tabWidget.setCurrentWidget(ViewCSVDataTab)
-
+                myFile.requiredSaved = True
         else:
             # Adding Word Frequency Tab to QTabWidget
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Previous Image Button
     def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
@@ -2025,11 +2044,13 @@ class Window(QMainWindow):
                 # Adding Preview Tab to QTabWidget
                 self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
                 self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                myFile.requiredSaved = True
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Word Preview
     def DataSourceWordPreview(self, DataSourceWidgetItemName):
@@ -2080,12 +2101,14 @@ class Window(QMainWindow):
                 # Adding Preview Tab to QTabWidget
                 self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
                 self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                myFile.requiredSaved = True
 
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Preview
     def DataSourcePreview(self, DataSourceWidgetItemName):
@@ -2136,7 +2159,7 @@ class Window(QMainWindow):
                 # Adding Preview Tab to QTabWidget
                 self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
                 self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
-
+                myFile.requiredSaved = True
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
@@ -2368,6 +2391,7 @@ class Window(QMainWindow):
                 # Adding Word Frequency Tab to QTabWidget
                 self.tabWidget.addTab(WordFrequencyTab, "Word Frequency")
                 self.tabWidget.setCurrentWidget(WordFrequencyTab)
+                myFile.requiredSaved = True
 
             # Adding Word Frequency Query
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -2392,6 +2416,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # *************************** Question Generator *****************************
@@ -2568,6 +2593,7 @@ class Window(QMainWindow):
                     # Adding Generate Questions Tab to QTabWidget
                     self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
                     self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
+                    myFile.requiredSaved = True
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
                 if len(ItemsWidget) == 0:                                   # if no Parent Widget
@@ -2593,6 +2619,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # ********************* Data Sources Sentiment Analysis **********************
@@ -2709,248 +2736,244 @@ class Window(QMainWindow):
 
     # Sentiment Analysis Table
     def SentimentAnalysisTable(self, DataSourceName, ColumnName):
-        try:
-            DataSourceSentimentAnalysisFlag = False
-            DataSourceSentimentAnalysisFlag2 = False
+        DataSourceSentimentAnalysisFlag = False
+        DataSourceSentimentAnalysisFlag2 = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
-                    if tabs.tabWidget != None:
-                        DataSourceSentimentAnalysisFlag = True
-                        break
-                    else:
-                        DataSourceSentimentAnalysisFlag2 = True
-                        break
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Automatic Sentiment Analysis':
+                if tabs.tabWidget != None:
+                    DataSourceSentimentAnalysisFlag = True
+                    break
+                else:
+                    DataSourceSentimentAnalysisFlag2 = True
+                    break
 
-            if not DataSourceSentimentAnalysisFlag:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        DS.SentimentAnalysis(ColumnName)
-                        DS.SentimentAnalysisVisualization()
-                        rowList = DS.AutomaticSentimentList
-                        break
+        if not DataSourceSentimentAnalysisFlag:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    DS.SentimentAnalysis(ColumnName)
+                    DS.SentimentAnalysisVisualization()
+                    rowList = DS.AutomaticSentimentList
+                    break
 
-                SentimentAnalysisTab = QWidget()
-                SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                                                              self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-                SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
+            SentimentAnalysisTab = QWidget()
+            SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
+                                                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
+            SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
-                # LayoutWidget For within Stem Word Tab
-                SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
-                SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                      self.tabWidget.height() / 10)
-                # Box Layout for Stem Word Tab
-                SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
-                SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # LayoutWidget For within Stem Word Tab
+            SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
+                                                                  self.tabWidget.height() / 10)
+            # Box Layout for Stem Word Tab
+            SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
+            SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
-                # Positive_Count Label
-                PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-                PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                               SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
-                                               SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                               SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-                PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
-                PositiveCountLabel.setAlignment(Qt.AlignVCenter)
-                PositiveCountLabel.adjustSize()
+            # Positive_Count Label
+            PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+            PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                           SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
+                                           SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                           SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
+            PositiveCountLabel.setAlignment(Qt.AlignVCenter)
+            PositiveCountLabel.adjustSize()
 
-                # Neutral_Count Label
-                NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-                NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                              SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
-                                              SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                              SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-                NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
-                NeutralCountLabel.setAlignment(Qt.AlignVCenter)
-                NeutralCountLabel.adjustSize()
+            # Neutral_Count Label
+            NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+            NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                          SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
+                                          SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                          SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
+            NeutralCountLabel.setAlignment(Qt.AlignVCenter)
+            NeutralCountLabel.adjustSize()
 
-                # Negative_Count Label
-                NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-                NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                               SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
-                                               SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                               SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
-                NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
-                NegativeCountLabel.setAlignment(Qt.AlignVCenter)
-                NegativeCountLabel.adjustSize()
+            # Negative_Count Label
+            NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
+            NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
+                                           SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
+                                           SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
+                                           SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
+            NegativeCountLabel.setAlignment(Qt.AlignVCenter)
+            NegativeCountLabel.adjustSize()
 
-                # Download Button For Sentiment Analysis Table
-                DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
-                DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
-                                                SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                                SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                                SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
-                DownloadAsCSVButton.setText("Download")
-                DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-                DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            # Download Button For Sentiment Analysis Table
+            DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
+            DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
+                                            SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                            SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                            SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+            DownloadAsCSVButton.setText("Download")
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
 
-                DownloadAsCSVButtonFont = QFont("sans-serif")
-                DownloadAsCSVButtonFont.setPixelSize(14)
-                DownloadAsCSVButtonFont.setBold(True)
-                DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
+            DownloadAsCSVButtonFont = QFont("sans-serif")
+            DownloadAsCSVButtonFont.setPixelSize(14)
+            DownloadAsCSVButtonFont.setBold(True)
+            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
 
-                self.LineEditSizeAdjustment(DownloadAsCSVButton)
+            self.LineEditSizeAdjustment(DownloadAsCSVButton)
 
-                # Data Source Label
-                DataSourceLabel = QLabel()
-                DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
-                DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
-                DataSourceLabel.setAlignment(Qt.AlignVCenter)
-                DataSourceLabel.hide()
-                SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
+            # Data Source Label
+            DataSourceLabel = QLabel()
+            DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
+            DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
+            DataSourceLabel.setAlignment(Qt.AlignVCenter)
+            DataSourceLabel.hide()
+            SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
 
-                # Data Source Sentiment Analysis  ComboBox
-                DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
-                DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
-                                         SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                         SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                         SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
-                DSSAComboBox.addItem("Show Table")
-                DSSAComboBox.addItem("Show Chart")
-                self.LineEditSizeAdjustment(DSSAComboBox)
+            # Data Source Sentiment Analysis  ComboBox
+            DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
+            DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
+                                     SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
+                                     SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
+                                     SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+            DSSAComboBox.addItem("Show Table")
+            DSSAComboBox.addItem("Show Chart")
+            self.LineEditSizeAdjustment(DSSAComboBox)
 
-                # LayoutWidget For within Sentiment Analysis Tab
-                SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
-                SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                        self.tabWidget.height() - self.tabWidget.height() / 10)
-                SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
+            # LayoutWidget For within Sentiment Analysis Tab
+            SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
+            SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
+                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
+            SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
 
-                # Box Layout for Sentiment Analysis Tab
-                SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
-                SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
+            # Box Layout for Sentiment Analysis Tab
+            SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
+            SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-                # Table for Word Frequency
-                SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
-                SentimentAnalysisTable.setColumnCount(2)
-                SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
-                                                         SentimentAnalysisTabverticalLayoutWidget2.height())
-                SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
-                SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-                SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
-                SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            # Table for Word Frequency
+            SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
+            SentimentAnalysisTable.setColumnCount(2)
+            SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
+                                                     SentimentAnalysisTabverticalLayoutWidget2.height())
+            SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
+            SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
+            SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+
+            for i in range(SentimentAnalysisTable.columnCount()):
+                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
+                SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+
+            DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+
+
+            if len(rowList) != 0:
+                for row in rowList:
+                    SentimentAnalysisTable.insertRow(rowList.index(row))
+                    for item in row:
+                        if row.index(item) == 0:
+                            ptext = QPlainTextEdit()
+                            ptext.setReadOnly(True)
+                            ptext.setPlainText(item);
+                            ptext.setFixedHeight(self.tabWidget.height()/15)
+                            SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+
+                        else:
+                            intItem = QTableWidgetItem()
+                            intItem.setData(Qt.EditRole, QVariant(item))
+                            SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
+                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
+                                Qt.AlignHCenter | Qt.AlignVCenter)
+                            SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
+                                Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                SentimentAnalysisTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                SentimentAnalysisTable.resizeColumnsToContents()
+                SentimentAnalysisTable.resizeRowsToContents()
+
+                SentimentAnalysisTable.setSortingEnabled(True)
+                SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
                 for i in range(SentimentAnalysisTable.columnCount()):
-                    SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
-                    SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont(SentimentAnalysisTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
+                    SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-                DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(SentimentAnalysisTable))
+                # Sentiment Analysis Chart
 
+                # LayoutWidget For within Sentiment Analysis Tab
+                SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
+                SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
+                                                                      self.tabWidget.width()/2,
+                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
+                SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
 
-                if len(rowList) != 0:
-                    for row in rowList:
-                        SentimentAnalysisTable.insertRow(rowList.index(row))
-                        for item in row:
-                            if row.index(item) == 0:
-                                ptext = QPlainTextEdit()
-                                ptext.setReadOnly(True)
-                                ptext.setPlainText(item);
-                                ptext.setFixedHeight(self.tabWidget.height()/15)
-                                SentimentAnalysisTable.setCellWidget(rowList.index(row), row.index(item), ptext)
+                # Box Layout for Sentiment Analysis Tab
+                SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
+                SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
 
-                            else:
-                                intItem = QTableWidgetItem()
-                                intItem.setData(Qt.EditRole, QVariant(item))
-                                SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
-                                SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                                    Qt.AlignHCenter | Qt.AlignVCenter)
-                                SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
-                                    Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-
-                    SentimentAnalysisTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
-                    SentimentAnalysisTable.resizeColumnsToContents()
-                    SentimentAnalysisTable.resizeRowsToContents()
-
-                    SentimentAnalysisTable.setSortingEnabled(True)
-                    SentimentAnalysisTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-
-                    for i in range(SentimentAnalysisTable.columnCount()):
-                        SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-                    # Sentiment Analysis Chart
-
-                    # LayoutWidget For within Sentiment Analysis Tab
-                    SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
-                    SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
-                                                                          self.tabWidget.width()/2,
-                                                                          self.tabWidget.height() - self.tabWidget.height() / 10)
-                    SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
-
-                    # Box Layout for Sentiment Analysis Tab
-                    SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
-                    SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
-
-                    canvas = FigureCanvas(DS.BarSentimentFigure)
-                    SentimentAnalysisverticalLayout3.addWidget(canvas)
-                    SentimentAnalysisTabverticalLayoutWidget3.hide()
+                canvas = FigureCanvas(DS.BarSentimentFigure)
+                SentimentAnalysisverticalLayout3.addWidget(canvas)
+                SentimentAnalysisTabverticalLayoutWidget3.hide()
 
 
-                    SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
-                    SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
-                                                                          self.tabWidget.width()/2,
-                                                                          self.tabWidget.height() - self.tabWidget.height() / 10)
-                    SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
+                SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
+                SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
+                                                                      self.tabWidget.width()/2,
+                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
+                SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
 
-                    # Box Layout for Sentiment Analysis Tab
-                    SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
-                    SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
+                # Box Layout for Sentiment Analysis Tab
+                SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
+                SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
 
-                    canvas2 = FigureCanvas(DS.PieSentimentFigure)
-                    SentimentAnalysisverticalLayout4.addWidget(canvas2)
-                    SentimentAnalysisTabverticalLayoutWidget4.hide()
+                canvas2 = FigureCanvas(DS.PieSentimentFigure)
+                SentimentAnalysisverticalLayout4.addWidget(canvas2)
+                SentimentAnalysisTabverticalLayoutWidget4.hide()
 
-                    DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
-                                                                                                   PositiveCountLabel,
-                                                                                                   NegativeCountLabel,
-                                                                                                   NeutralCountLabel,
-                                                                                                   DownloadAsCSVButton,
-                                                                                                   SentimentAnalysisTabverticalLayoutWidget2,
-                                                                                                   SentimentAnalysisTabverticalLayoutWidget3,
-                                                                                                   SentimentAnalysisTabverticalLayoutWidget4))
+                DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
+                                                                                               PositiveCountLabel,
+                                                                                               NegativeCountLabel,
+                                                                                               NeutralCountLabel,
+                                                                                               DownloadAsCSVButton,
+                                                                                               SentimentAnalysisTabverticalLayoutWidget2,
+                                                                                               SentimentAnalysisTabverticalLayoutWidget3,
+                                                                                               SentimentAnalysisTabverticalLayoutWidget4))
 
-                    if DataSourceSentimentAnalysisFlag2:
-                        tabs.tabWidget = SentimentAnalysisTab
-                        if tabs.isActive:
-                            self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
-                            if tabs.isCurrentWidget:
-                                self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                if DataSourceSentimentAnalysisFlag2:
+                    tabs.tabWidget = SentimentAnalysisTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(SentimentAnalysisTab, tabs.TabName)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
-                    else:
-                        # Adding Word Frequency Tab to TabList
-                        dummyTab = Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName)
-                        dummyTab.setAutomaticSentimentAnalysis(ColumnName)
-                        myFile.TabList.append(dummyTab)
+                else:
+                    # Adding Word Frequency Tab to TabList
+                    dummyTab = Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName)
+                    dummyTab.setAutomaticSentimentAnalysis(ColumnName)
+                    myFile.TabList.append(dummyTab)
 
-                        # Adding Word Frequency Tab to QTabWidget
-                        self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
-                        self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                    # Adding Word Frequency Tab to QTabWidget
+                    self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
+                    self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
+                    myFile.requiredSaved = True
 
-                    # Adding Word Frequency Query
-                    ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+                # Adding Word Frequency Query
+                ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-                    if len(ItemsWidget) == 0:
-                        DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                        DSVisualWidget.setText(0, DataSourceName)
-                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                        DSVisualWidget.setExpanded(True)
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
 
-                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
                         DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
                         DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                    else:
-                        for widgets in ItemsWidget:
-                            DSNewCaseNode = QTreeWidgetItem(widgets)
-                            DSNewCaseNode.setText(0, 'Automatic Sentiment Analysis')
-                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
-
-            else:
-                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                tabs.setisActive(True)
-
-        except Exception as e:
-            QMessageBox.critical(self, "Rename Error",
-                                 str(e),
-                                 QMessageBox.Ok)
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Sentiment Analysis ComboBox
     def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
@@ -3063,6 +3086,7 @@ class Window(QMainWindow):
                                     "Data Source Rename Successfully!",
                                     QMessageBox.Ok)
 
+            myFile.requiredSaved = True
         else:
             QMessageBox.critical(self, "Rename Error",
                                     "A Data Source with Similar Name Exist!",
@@ -3264,6 +3288,7 @@ class Window(QMainWindow):
                     # Adding Stem Word Tab to QTabWidget
                     self.tabWidget.addTab(StemWordTab, "Stem Word")
                     self.tabWidget.setCurrentWidget(StemWordTab)
+                    myFile.requiredSaved = True
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3290,6 +3315,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     #Word Suggestion
     def WordSuggestion(self, StemWordModel, CurrentText, DataSourceName):
@@ -3549,6 +3575,7 @@ class Window(QMainWindow):
                 # Adding Part of Speech Tab to QTabWidget
                 self.tabWidget.addTab(POSTab, "Parts of Speech")
                 self.tabWidget.setCurrentWidget(POSTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3575,6 +3602,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Toggle POS View
     def togglePOSView(self, Table, Label):
@@ -3759,6 +3787,7 @@ class Window(QMainWindow):
                 # Adding Entity Relationship Tab to QTabWidget
                 self.tabWidget.addTab(DSERTab, "Entity Relationship")
                 self.tabWidget.setCurrentWidget(DSERTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3784,6 +3813,8 @@ class Window(QMainWindow):
             # Adding Entity Relationship Tab to QTabWidget
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Toggle POS View
     def toggleERView(self, Table, HTMLViewer1, HTMLViewer2):
@@ -3933,6 +3964,7 @@ class Window(QMainWindow):
                 # Adding Topic Modelling Tab to QTabWidget
                 self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
                 self.tabWidget.setCurrentWidget(TopicModellingTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -3959,6 +3991,8 @@ class Window(QMainWindow):
             # Adding Topic Modelling Tab to QTabWidget
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # ************************ Data Sources Create Cases *************************
@@ -4014,9 +4048,12 @@ class Window(QMainWindow):
                 myFile.TabList.append(Tab("Create Cases", DataSourceCreateCasesTab, DataSourceWidgetItemName.text(0)))
                 self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
                 self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+                myFile.requiredSaved = True
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Create Cases Context Menu
     def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
@@ -4264,6 +4301,8 @@ class Window(QMainWindow):
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Data Source Create Sentiments Context Menu
     def CreateSentimentsContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
@@ -4580,30 +4619,32 @@ class Window(QMainWindow):
                     # Adding Preview Tab to QTabWidget
                     self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
                     self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                    myFile.requiredSaved = True
 
-                    # Adding Word Frequency Query
-                    ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+            # Adding Word Frequency Query
+            ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
-                    if len(ItemsWidget) == 0:
-                        DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
-                        DSVisualWidget.setText(0, DataSourceName)
-                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                        DSVisualWidget.setExpanded(True)
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.QueryTreeWidget)
+                DSVisualWidget.setText(0, DataSourceName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
 
-                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
-                        DSNewCaseNode.setText(0, 'Summary')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Summary')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
-                    else:
-                        for widgets in ItemsWidget:
-                            DSNewCaseNode = QTreeWidgetItem(widgets)
-                            DSNewCaseNode.setText(0, 'Summary')
-                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+            else:
+                for widgets in ItemsWidget:
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Summary')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # ************************ Data Sources Translation **************************
@@ -4799,6 +4840,7 @@ class Window(QMainWindow):
                     # Adding Translation Tab to QTabWidget
                     self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
                     self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                    myFile.requiredSaved = True
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -4824,61 +4866,67 @@ class Window(QMainWindow):
             else:
                 self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                 self.tabWidget.setCurrentWidget(tabs.TabName)
+                tabs.setisActive(True)
+                myFile.requiredSaved = True
 
     # ****************************************************************************
     # *************************** Data Source Remove *****************************
     # ****************************************************************************
 
-    #Data Source Remove
-    def DataSourceRemove(self, DataSourceWidgetItemName):
+    #Data Source Remove Dialog
+    def DataSourceRemoveDialog(self, DataSourceWidgetItemName):
         DataSourceRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this file? Doing this will remove all task related to " + DataSourceWidgetItemName.text(0),
                                                       QMessageBox.Yes | QMessageBox.No)
 
         if DataSourceRemoveChoice == QMessageBox.Yes:
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    if DataSourceWidgetItemName.parent().childCount() == 1:
-                        DataSourceWidgetItemName.parent().setHidden(True)
-
-                    DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
-                        ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
-                        str(DataSourceWidgetItemName.parent().childCount()-1)
-                    ))
-
-                    DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
-
-                    # Removing Queries
-                    for QueryTreeItems in self.QueryTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                        self.QueryParentRemove(QueryTreeItems)
-
-                    # Removing Cases
-                    for CasesTreeItems in self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                        self.CasesParentRemove(CasesTreeItems)
-
-                    # Removing sentiments
-                    for SentimentTreeItems in self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                        self.SentimentsRemove(SentimentTreeItems)
-
-                    # Removing Visualization
-                    for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
-                        self.VisualizationParentRemove(VisualTreeItems)
-
-                    # Removing all tabs related to Data Source
-                    for tabs in myFile.TabList:
-                        if DS.DataSourceName == tabs.DataSourceName:
-                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-
-                    myFile.TabList = [tabs for tabs in myFile.TabList if not tabs.DataSourceName == DS.DataSourceName]
-
-                    myFile.DataSourceList.remove(DS)
-                    DS.__del__()
-                    break
-
-            self.DataSourceSimilarityUpdate()
-            self.DataSourceDocumentClusteringUpdate()
-
+            self.DataSourceRemove(DataSourceWidgetItemName)
         else:
             pass
+
+    # Data Source Remove
+    def DataSourceRemove(self, DataSourceWidgetItemName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceWidgetItemName.text(0):
+                if DataSourceWidgetItemName.parent().childCount() == 1:
+                    DataSourceWidgetItemName.parent().setHidden(True)
+
+                DataSourceWidgetItemName.parent().setText(0, DataSourceWidgetItemName.parent().text(0).replace(
+                    ''.join(x for x in DataSourceWidgetItemName.parent().text(0) if x.isdigit()),
+                    str(DataSourceWidgetItemName.parent().childCount() - 1)
+                ))
+
+                DataSourceWidgetItemName.parent().removeChild(DataSourceWidgetItemName)
+
+                # Removing Queries
+                for QueryTreeItems in self.QueryTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                    self.QueryParentRemove(QueryTreeItems)
+
+                # Removing Cases
+                for CasesTreeItems in self.CasesTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                    self.CasesParentRemove(CasesTreeItems)
+
+                # Removing sentiments
+                for SentimentTreeItems in self.SentimentTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                    self.SentimentsRemove(SentimentTreeItems)
+
+                # Removing Visualization
+                for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
+                    self.VisualizationParentRemove(VisualTreeItems)
+
+                # Removing all tabs related to Data Source
+                for tabs in myFile.TabList:
+                    if DS.DataSourceName == tabs.DataSourceName:
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+
+                myFile.TabList = [tabs for tabs in myFile.TabList if not tabs.DataSourceName == DS.DataSourceName]
+
+                myFile.DataSourceList.remove(DS)
+                DS.__del__()
+                break
+
+        self.DataSourceSimilarityUpdate()
+        self.DataSourceDocumentClusteringUpdate()
+        myFile.requiredSaved = True
 
     # ****************************************************************************
     # ************************* Data Source Child Detail *************************
@@ -6211,6 +6259,7 @@ class Window(QMainWindow):
                 myFile.TabList.append(dummyTab)
                 self.tabWidget.addTab(WordCloudTab, "Word Cloud")
                 self.tabWidget.setCurrentWidget(WordCloudTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(WCDSName, Qt.MatchExactly, 0)
 
@@ -6233,6 +6282,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     #Word Cloud ContextMenu
     def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
@@ -6360,6 +6410,7 @@ class Window(QMainWindow):
                 # Adding Word Tree Tab to QTabWidget
                 self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
                 self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -6386,6 +6437,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************
@@ -6512,6 +6564,7 @@ class Window(QMainWindow):
                 myFile.TabList.append(Tab("Coordinate Map", DataSourceCoordinateMapTab, DataSourceName))
                 self.tabWidget.addTab(DataSourceCoordinateMapTab, "Coordinate Map")
                 self.tabWidget.setCurrentWidget(DataSourceCoordinateMapTab)
+                myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
@@ -6535,6 +6588,7 @@ class Window(QMainWindow):
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # ****************************************************************************
     # ********************** Enable/Disable/Reusable Function ********************
@@ -6682,20 +6736,13 @@ class Window(QMainWindow):
                     SaveSuccessBox.setIcon(QMessageBox.Information)
                     SaveSuccessBox.setText('Table successfully Saved in ' + path[0])
                     SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
-                    SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: self.OpenSaveTableCSVFile(path[0]))
+                    SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: os.startfile(path[0]))
                     SaveSuccessBox.show()
 
                     #self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
 
         except PermissionError:
             QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
-
-    # Open CSV File With Save Table
-    def OpenSaveTableCSVFile(self, path):
-        try:
-           os.startfile(path)
-        except Exception as e:
-            print(str(e))
 
     # Save Structure as PDF
     def SaveStructureAsPDF(self, graph):
@@ -6847,6 +6894,8 @@ class Window(QMainWindow):
 
             self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
 
+        myFile.requiredSaved = True
+
     # Remove Child Query (Tab) Dialog
     def QueryChildRemoveDialog(self, QueryItemName):
         QueryRemoveChoice = QMessageBox.critical(self, 'Remove',
@@ -6874,6 +6923,8 @@ class Window(QMainWindow):
         else:
             QueryItemName.parent().removeChild(QueryItemName)
 
+        myFile.requiredSaved = True
+
     # Preview Query/Tab on double click
     def QueryDoubleClickHandler(self, QueryItemName):
         if QueryItemName.text(0) == 'Data Sources Similarity':
@@ -6892,6 +6943,8 @@ class Window(QMainWindow):
                         self.tabWidget.setCurrentWidget(tabs.tabWidget)
                         tabs.setisActive(True)
                         break
+
+        myFile.requiredSaved = True
 
     # ****************************************************************************
     # *************************** Cases Context Menu *****************************
@@ -7187,6 +7240,7 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(CasesStructureTab)
                     tabs.tabWidget = CasesStructureTab
                     tabs.setisActive(True)
+                    myFile.requiredSaved = True
                 else:
                     # Adding Word Cloud Tab to QTabWidget
                     dummyTab = Tab("Cases Structure", CasesStructureTab, CasesItemName.text(0))
@@ -7194,10 +7248,12 @@ class Window(QMainWindow):
                     myFile.TabList.append(dummyTab)
                     self.tabWidget.addTab(CasesStructureTab, "Cases Structure")
                     self.tabWidget.setCurrentWidget(CasesStructureTab)
+                    myFile.requiredSaved = True
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Cases Structure Update
     def CasesStructureUpdate(self, CasesItemName):
@@ -7335,6 +7391,8 @@ class Window(QMainWindow):
                     # Setting All Child
                     self.SetCasesWidget(DS, CasesItemName)
 
+                    myFile.requiredSaved = True
+
                 else:
                     QMessageBox.critical(self, "Case Name Error",
                                          "Case cannot have the same Name as its Data Source",
@@ -7394,10 +7452,10 @@ class Window(QMainWindow):
 
                     CasesItemName.parent().removeChild(CasesItemName)
 
-            self.statusBar().showMessage('Case Unmerg Successfully')
+            self.statusBar().showMessage('Case Unmerge Successfully')
             self.CasesParentCoverageUpdate(tempWidget)
             self.CasesStructureUpdate(tempWidget)
-
+            myFile.requiredSaved = True
         except Exception as e:
             print(str(e))
 
@@ -7618,8 +7676,10 @@ class Window(QMainWindow):
 
             if CasesParentCoverageTabFlag3:
                 tabs.tabWidget = CasesParentCoverageTab
-                self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
+                if tabs.isActive:
+                    self.tabWidget.addTab(CasesParentCoverageTab, tabs.TabName)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(CasesParentCoverageTab)
             else:
                 if CasesParentCoverageTabFlag2:
                     tabs.setCasesLength(len(DS.CasesList))
@@ -7680,6 +7740,8 @@ class Window(QMainWindow):
                 DS.CasesList.clear()
                 self.statusBar().showMessage('Data Source Cases Removed Successfully')
                 break
+
+        myFile.requiredSaved = True
 
     # Cases Parent Detail
     def CasesParentDetail(self, CasesItemName):
@@ -7855,8 +7917,10 @@ class Window(QMainWindow):
 
             if CaseShowComponentTabFlag2:
                 tabs.tabWidget = CaseShowComponentTab
-                self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
-                self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+                if tabs.isActive:
+                    self.tabWidget.addTab(CaseShowComponentTab, tabs.TabName)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(CaseShowComponentTab)
             else:
                 # Adding Word Cloud Tab to QTabWidget
                 dummyTab = Tab("Case Component", CaseShowComponentTab, tempParent.text(0))
@@ -7865,10 +7929,13 @@ class Window(QMainWindow):
 
                 self.tabWidget.addTab(CaseShowComponentTab, "Case Component")
                 self.tabWidget.setCurrentWidget(CaseShowComponentTab)
+                myFile.requiredSaved = True
+
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
+            myFile.requiredSaved = True
 
     # Cases Show Topic Component Update
     def CasesShowTopicComponentUpdate(self, CasesItemName):
@@ -7913,6 +7980,8 @@ class Window(QMainWindow):
 
         self.CasesParentCoverageUpdate(CasesItemName)
         self.CasesStructureUpdate(CasesItemName)
+
+        myFile.requiredSaved = True
 
     # Cases Rename
     def CasesRename(self, CasesItemName):
@@ -7978,6 +8047,8 @@ class Window(QMainWindow):
 
             CasesItemName.setText(0, CaseName)
             CasesItemName.setToolTip(0, CasesItemName.text(0))
+
+            myFile.requiredSaved = True
 
             QMessageBox.information(self, "Rename Success",
                                     "Case Rename Successfully!",
@@ -8059,6 +8130,7 @@ class Window(QMainWindow):
 
                     self.statusBar().showMessage('Case Removed Successfully')
                     break
+            myFile.requiredSaved = True
 
         except Exception as e:
             print(str(e))
@@ -8392,9 +8464,12 @@ class Window(QMainWindow):
                     myFile.TabList.append(dummyTab)
                     self.tabWidget.addTab(SentimentsShowComponentTab, "Sentiments Component")
                     self.tabWidget.setCurrentWidget(SentimentsShowComponentTab)
+                    myFile.requiredSaved = True
             else:
                 self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
                 self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                tabs.setisActive(True)
+                myFile.requiredSaved = True
 
     #Toggle Sentiments Components
     def ToggleSentimentsComponent(self, Table, SentimentsItemName):
@@ -8459,6 +8534,8 @@ class Window(QMainWindow):
 
             Table.removeRow(row)
 
+        myFile.requiredSaved = True
+
     # Sentiments Remove Dialog
     def SentimentsRemoveDialog(self, SentimentsItemName):
         SentimentsRemoveChoice = QMessageBox.critical(self, 'Remove', "Are you sure you want to remove this Data Source's Sentiments?",
@@ -8478,6 +8555,8 @@ class Window(QMainWindow):
                 for sentiments in DS.SentimentList:
                     sentiments.SentimentTextList.clear()
                 break
+
+        myFile.requiredSaved = True
 
     # Sentiment Child Detail
     def SentimentsChildDetail(self, SentimentsItemName):
@@ -8714,6 +8793,8 @@ class Window(QMainWindow):
 
             self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
 
+        myFile.requiredSaved = True
+
     # Visualization Parent Detail
     def VisualizationDetail(self, VisualizationItemName):
         VisualizationDetailDialogBox = QDialog()
@@ -8806,6 +8887,8 @@ class Window(QMainWindow):
         else:
             VisualizationItemName.parent().removeChild(VisualizationItemName)
 
+        myFile.requiredSaved = True
+
     # Preview Visual/Tab on double click
     def VisualizationDoubleClickHandler(self, VisualizationItemName):
         if VisualizationItemName.text(0) == 'Document Clustering':
@@ -8825,371 +8908,415 @@ class Window(QMainWindow):
                         tabs.setisActive(True)
                         break
 
+        myFile.requiredSaved = True
+
     # ****************************************************************************
     # *********************** Application Basic Features *************************
     # ****************************************************************************
 
     # Close Application / Exit
-    def close_application(self):
-        choice = QMessageBox.question(self, 'Quit', "Are You Sure?", QMessageBox.Yes | QMessageBox.No)
-        if choice == QMessageBox.Yes:
-            sys.exit()
+    def closeEvent(self, event):
+        if myFile.requiredSaved:
+            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Exit', "Are you Sure you want to exit without Saving?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+            if SaveBeforeNewWindowOpenchoice == QMessageBox.No:
+                self.SaveASWindow()
+                if not myFile.requiredSaved:
+                    event.accept()
+                else:
+                    event.ignore()
+            elif SaveBeforeNewWindowOpenchoice == QMessageBox.Yes:
+                event.accept()
+            else:
+                event.ignore()
         else:
-            pass
+            event.accept()
 
     # Open New File
     def NewFileWindow(self):
-        myDialog = QDialog()
-        myDialog.setModal(True)
-        myDialog.setWindowTitle("New File")
-        myDialog.setParent(self)
+        if myFile.requiredSaved:
+            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Save', "You have made changes. Do you want to discard or save them?", QMessageBox.Save | QMessageBox.Discard)
+            if SaveBeforeNewWindowOpenchoice == QMessageBox.Save:
+                self.SaveASWindow()
+            else:
+                pass
 
-        self.QDialogAddProperties(myDialog)
+        self.EmptyWindowForNewFile()
 
-        myDialog.show()
-
-    # Open File
-    def OpenFileWindow(self):
+    # Empty Window For New File
+    def EmptyWindowForNewFile(self):
         try:
-            dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
-            path = dummyWindow.filepath
-            dummyWindow.__del__()
-
-            if all(path):
-                global myFile
-                myFile = pickle.load(open(path[0], "rb"))
-
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
-                        # Adding Node to Data Source Tree Widget
-
-                        # Word File
-                        if DS.DataSourceext == "Doc files (*.doc *.docx)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.wordTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
-                            if self.wordTreeWidget.isHidden():
-                                self.wordTreeWidget.setHidden(False)
-                                self.wordTreeWidget.setExpanded(True)
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # PDF File
-                        elif DS.DataSourceext == "Pdf files (*.pdf)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.pdfTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
-                            if self.pdfTreeWidget.isHidden():
-                                self.pdfTreeWidget.setHidden(False)
-                                self.pdfTreeWidget.setExpanded(True)
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # Text File
-                        elif DS.DataSourceext == "Notepad files (*.txt)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.txtTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
-                            if self.txtTreeWidget.isHidden():
-                                self.txtTreeWidget.setHidden(False)
-                                self.txtTreeWidget.setExpanded(True)
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # RTF File
-                        elif DS.DataSourceext == "Rich Text Format files (*.rtf)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.rtfTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
-
-                            if self.rtfTreeWidget.isHidden():
-                                self.rtfTreeWidget.setHidden(False)
-
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # Audio File
-                        elif DS.DataSourceext == "Audio files (*.wav *.mp3)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.audioSTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
-
-                            if self.audioSTreeWidget.isHidden():
-                                self.audioSTreeWidget.setHidden(False)
-                                self.audioSTreeWidget.setExpanded(True)
-
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # Image File
-                        elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
-
-                            # Adding Node to Data Source Tree Widget
-                            newNode = QTreeWidgetItem(self.ImageSTreeWidget)
-                            newNode.setText(0, DS.DataSourceName)
-                            self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
-
-                            if self.ImageSTreeWidget.isHidden():
-                                self.ImageSTreeWidget.setHidden(False)
-                                self.ImageSTreeWidget.setExpanded(True)
-
-                            newNode.setToolTip(0, newNode.text(0))
-
-                        # Adding Cases
-                        if (len(DS.CasesList) > 0):
-                            DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
-                            DSCaseWidget.setText(0, DS.DataSourceName)
-                            DSCaseWidget.setExpanded(True)
-
-                            self.SetCasesWidget(DS, DSCaseWidget)
-
-                        # Adding Sentiments
-                        NewWidgetAddFlagList = []
-
-                        for sentiments in DS.SentimentList:
-                            if len(sentiments.SentimentTextList) == 0:
-                                NewWidgetAddFlagList.append(True)
-                            else:
-                                NewWidgetAddFlagList.append(False)
-
-                        if not all([v for v in NewWidgetAddFlagList]):
-                            # Adding Sentiments
-                            DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
-                            DSSentimentWidget.setText(0, DS.DataSourceName)
-                            DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
-                            DSSentimentWidget.setExpanded(True)
-
-                            for sentiments in DS.SentimentList:
-                                DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
-                                DSNewSentimentNode.setText(0, sentiments.SentimentType)
-
-                    # CSV File
-                    elif DS.DataSourceext == "CSV files (*.csv)":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.CSVTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
-
-                        if self.CSVTreeWidget.isHidden():
-                            self.CSVTreeWidget.setHidden(False)
-                            self.CSVTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                    # URL
-                    elif DS.DataSourceext == "URL":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.WebTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
-
-                        if self.WebTreeWidget.isHidden():
-                            self.WebTreeWidget.setHidden(False)
-                            self.WebTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                    # Tweet
-                    elif DS.DataSourceext == "Tweet":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.TweetTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
-
-                        if self.TweetTreeWidget.isHidden():
-                            self.TweetTreeWidget.setHidden(False)
-                            self.TweetTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                    # Youtube
-                    elif DS.DataSourceext == "Youtube":
-
-                        # Adding Node to Data Source Tree Widget
-                        newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
-                        newNode.setText(0, DS.DataSourceName)
-                        self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
-
-                        if self.YoutubeTreeWidget.isHidden():
-                            self.YoutubeTreeWidget.setHidden(False)
-                            self.YoutubeTreeWidget.setExpanded(True)
-
-                        newNode.setToolTip(0, newNode.text(0))
-
-                for tabs in myFile.TabList:
-                    # Data Sources Similarity
-                    if tabs.TabName == "Data Sources Similarity":
-                        self.DataSourcesSimilarity()
-
-                    # Document Clustering
-                    elif tabs.TabName == "Document Clustering":
-                        self.DataSourceDocumentClustering()
-
-                    # Web Preview
-                    elif tabs.TabName == "Web Preview":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourcePreviewWeb(widgets)
-
-                    # Show Tweet Data
-                    elif tabs.TabName == "Show Tweet Data":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourceShowTweetData(widgets)
-
-                    # Show Video
-                    elif tabs.TabName == "Show Video":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            for DS in myFile.DataSourceList:
-                                if DS.DataSourceName == tabs.DataSourceName:
-                                    if DS.YoutubeURLFlag:
-                                        self.DataSourceYoutubeShowVideo(widgets)
-
-                    # Show Youtube Data
-                    elif tabs.TabName == "Show Youtube Data":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            for DS in myFile.DataSourceList:
-                                if DS.DataSourceName == tabs.DataSourceName:
-                                    if DS.YoutubeURLFlag:
-                                        self.DataSourceShowYoutubeCommentsURL(widgets)
-                                    else:
-                                        self.DataSourceShowYoutubeCommentsKeyWord(widgets)
-                                    break
-
-                    # View Image
-                    elif tabs.TabName == "View Image":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourceViewImage(widgets)
-
-                    # CSV Data
-                    elif tabs.TabName == "CSV Data":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourceViewCSVData(widgets)
-
-                    # Preview
-                    elif tabs.TabName == "Preview":
-                        for DS in myFile.DataSourceList:
-                            if DS.DataSourceName == tabs.DataSourceName:
-                                break
-
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            if DS.DataSourceext == "Pdf files (*.pdf)":
-                                self.DataSourcePDFPreview(widgets)
-
-                            elif DS.DataSourceext == "Doc files (*.doc *.docx)":
-                                self.DataSourceWordPreview(widgets)
-
-                            elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
-                                self.DataSourcePreview(widgets)
-
-                    # Word Frequency
-                    elif tabs.TabName == "Word Frequency":
-                        self.DataSourceShowFrequencyTable(tabs.DataSourceName)
-
-                    # Generate Questions
-                    elif tabs.TabName == "Generate Questions":
-                        self.DataSourcesGenerateQuestions(tabs.DataSourceName)
-
-                    # Automatic Sentiment Analysis
-                    elif tabs.TabName == "Automatic Sentiment Analysis":
-                        self.SentimentAnalysisTable(tabs.DataSourceName, tabs.AutomaticSentimentAnalysisColumnName)
-
-                    # Stem Word
-                    elif tabs.TabName == "Stem Word":
-                        self.mapStemWordonTab(tabs.DataSourceName, tabs.StemWord)
-
-                    # Parts of Speech
-                    elif tabs.TabName == "Parts of Speech":
-                        self.DataSourcePOS(tabs.DataSourceName)
-
-                    # Entity Relationship
-                    elif tabs.TabName == "Entity Relationship":
-                        self.DataSourceEntityRelationShip(tabs.DataSourceName)
-
-                    # Topic Modelling
-                    elif tabs.TabName == "Topic Modelling":
-                        self.DataSourceTopicModelling(tabs.DataSourceName)
-
-                    # Create Cases
-                    elif tabs.TabName == "Create Cases":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourceCreateCases(widgets)
-
-                    # Create Sentiments
-                    elif tabs.TabName == "Create Sentiments":
-                        for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.DataSourceCreateSentiments(widgets)
-
-                    # Translated Text
-                    elif tabs.TabName == "Translated Text":
-                        self.DataSourceTranslate(tabs.DataSourceName, tabs.TranslatedLanguage)
-
-                    # Word Cloud
-                    elif tabs.TabName == "Word Cloud":
-                        self.mapWordCloudonTab(tabs.DataSourceName, tabs.WordCloudBGColor, tabs.WordCloudMaxWords, tabs.WordCloudMask)
-
-                    # Word Tree
-                    elif tabs.TabName == "Word Tree":
-                        self.DataSourceWordTree(tabs.DataSourceName)
-
-                    # Coordinate Map
-                    elif tabs.TabName == "Coordinate Map":
-                        self.DataSourceCoordinateMap(tabs.DataSourceName)
-
-                    # Cases Structure
-                    elif tabs.TabName == "Cases Structure":
-                        for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.CasesStructure(widgets)
-
-                    # Cases Coverage
-                    elif tabs.TabName == "Cases Coverage":
-                        for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
-                            self.CasesParentCoverage(widgets)
-
-                    # Case Component
-                    elif tabs.TabName == "Case Component":
-                        CasesItemWidgets = self.CasesTreeWidget.findItems(tabs.tabCase, Qt.MatchRecursive, 0)
-
-                        if len(CasesItemWidgets) > 0:
-                            ItemPresentFlag = False
-                            for items in CasesItemWidgets:
-                                tempWidget = items
-                                while tempWidget.parent() != None:
-                                    tempWidget = tempWidget.parent()
-
-                                if tempWidget.text(0) == tabs.DataSourceName:
-                                    ItemPresetFlag = True
-                                    break
-
-                            if ItemPresentFlag:
-                                self.CasesShowTopicComponent(items)
-
-                    # Sentiments Component
-                    elif tabs.TabName == "Sentiments Component":
-                        SentimentItemWidgets = self.SentimentTreeWidget.findItems(tabs.tabSentiment, Qt.MatchRecursive, 0)
-
-                        if len(SentimentItemWidgets) > 0:
-                            ItemPresentFlag = False
-                            for items in SentimentItemWidgets:
-                                tempWidget = items
-                                while tempWidget.parent() != None:
-                                    tempWidget = tempWidget.parent()
-
-                                if tempWidget.text(0) == tabs.DataSourceName:
-                                    ItemPresetFlag = True
-                                    break
-
-                            if ItemPresentFlag:
-                                self.SentimentsShowComponent(items)
+            global myFile
+            DataSourceNameList = [DS.DataSourceName for DS in myFile.DataSourceList]
+
+            for DataSourceName in DataSourceNameList:
+                for widgets in self.DataSourceTreeWidget.findItems(DataSourceName, Qt.MatchRecursive, 0):
+                    self.DataSourceRemove(widgets)
+
+            myFile = File()
+            myFile.setCreatedDate(datetime.datetime.now())
+            myFile.setCreatedBy(getpass.getuser())
 
         except Exception as e:
             print(str(e))
+
+    # Open File
+    def OpenFileWindow(self):
+
+        dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
+        path = dummyWindow.filepath
+        dummyWindow.__del__()
+
+        if all(path):
+            global myFile
+
+            if not myFile.requiredSaved:
+                if hasattr(myFile, "FileLocation") and hasattr(myFile, "FileName"):
+                    self.EmptyWindowForNewFile()
+                else:
+                    pass
+            else:
+                SaveBeforeOpenWindowchoice = QMessageBox.question(self, 'Open File',
+                                                                  "You have made changes. Do you want to discard or save them?",
+                                                                  QMessageBox.Save | QMessageBox.Discard)
+                if SaveBeforeOpenWindowchoice == QMessageBox.Save:
+                    self.SaveASWindow()
+                    if not myFile.requiredSaved:
+                        self.EmptyWindowForNewFile()
+                    else:
+                        return
+
+                elif SaveBeforeOpenWindowchoice == QMessageBox.Discard:
+                    pass
+
+            myFile = pickle.load(open(path[0], "rb"))
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+                    # Adding Node to Data Source Tree Widget
+
+                    # Word File
+                    if DS.DataSourceext == "Doc files (*.doc *.docx)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.wordTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
+                        if self.wordTreeWidget.isHidden():
+                            self.wordTreeWidget.setHidden(False)
+                            self.wordTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # PDF File
+                    elif DS.DataSourceext == "Pdf files (*.pdf)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.pdfTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.pdfTreeWidget.setText(0, "PDF" + "(" + str(self.pdfTreeWidget.childCount()) + ")")
+                        if self.pdfTreeWidget.isHidden():
+                            self.pdfTreeWidget.setHidden(False)
+                            self.pdfTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Text File
+                    elif DS.DataSourceext == "Notepad files (*.txt)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.txtTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.txtTreeWidget.setText(0, "Text" + "(" + str(self.txtTreeWidget.childCount()) + ")")
+                        if self.txtTreeWidget.isHidden():
+                            self.txtTreeWidget.setHidden(False)
+                            self.txtTreeWidget.setExpanded(True)
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # RTF File
+                    elif DS.DataSourceext == "Rich Text Format files (*.rtf)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.rtfTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.rtfTreeWidget.setText(0, "RTF" + "(" + str(self.rtfTreeWidget.childCount()) + ")")
+
+                        if self.rtfTreeWidget.isHidden():
+                            self.rtfTreeWidget.setHidden(False)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Audio File
+                    elif DS.DataSourceext == "Audio files (*.wav *.mp3)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.audioSTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.audioSTreeWidget.setText(0, "Audio" + "(" + str(self.audioSTreeWidget.childCount()) + ")")
+
+                        if self.audioSTreeWidget.isHidden():
+                            self.audioSTreeWidget.setHidden(False)
+                            self.audioSTreeWidget.setExpanded(True)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Image File
+                    elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
+
+                        # Adding Node to Data Source Tree Widget
+                        newNode = QTreeWidgetItem(self.ImageSTreeWidget)
+                        newNode.setText(0, DS.DataSourceName)
+                        self.ImageSTreeWidget.setText(0, "Image" + "(" + str(self.ImageSTreeWidget.childCount()) + ")")
+
+                        if self.ImageSTreeWidget.isHidden():
+                            self.ImageSTreeWidget.setHidden(False)
+                            self.ImageSTreeWidget.setExpanded(True)
+
+                        newNode.setToolTip(0, newNode.text(0))
+
+                    # Adding Cases
+                    if (len(DS.CasesList) > 0):
+                        DSCaseWidget = QTreeWidgetItem(self.CasesTreeWidget)
+                        DSCaseWidget.setText(0, DS.DataSourceName)
+                        DSCaseWidget.setExpanded(True)
+
+                        self.SetCasesWidget(DS, DSCaseWidget)
+
+                    # Adding Sentiments
+                    NewWidgetAddFlagList = []
+
+                    for sentiments in DS.SentimentList:
+                        if len(sentiments.SentimentTextList) == 0:
+                            NewWidgetAddFlagList.append(True)
+                        else:
+                            NewWidgetAddFlagList.append(False)
+
+                    if not all([v for v in NewWidgetAddFlagList]):
+                        # Adding Sentiments
+                        DSSentimentWidget = QTreeWidgetItem(self.SentimentTreeWidget)
+                        DSSentimentWidget.setText(0, DS.DataSourceName)
+                        DSSentimentWidget.setToolTip(0, DSSentimentWidget.text(0))
+                        DSSentimentWidget.setExpanded(True)
+
+                        for sentiments in DS.SentimentList:
+                            DSNewSentimentNode = QTreeWidgetItem(DSSentimentWidget)
+                            DSNewSentimentNode.setText(0, sentiments.SentimentType)
+
+                # CSV File
+                elif DS.DataSourceext == "CSV files (*.csv)":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.CSVTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
+
+                    if self.CSVTreeWidget.isHidden():
+                        self.CSVTreeWidget.setHidden(False)
+                        self.CSVTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # URL
+                elif DS.DataSourceext == "URL":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.WebTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.WebTreeWidget.setText(0, "Web" + "(" + str(self.WebTreeWidget.childCount()) + ")")
+
+                    if self.WebTreeWidget.isHidden():
+                        self.WebTreeWidget.setHidden(False)
+                        self.WebTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # Tweet
+                elif DS.DataSourceext == "Tweet":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.TweetTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.TweetTreeWidget.setText(0, "Tweet" + "(" + str(self.TweetTreeWidget.childCount()) + ")")
+
+                    if self.TweetTreeWidget.isHidden():
+                        self.TweetTreeWidget.setHidden(False)
+                        self.TweetTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                # Youtube
+                elif DS.DataSourceext == "Youtube":
+
+                    # Adding Node to Data Source Tree Widget
+                    newNode = QTreeWidgetItem(self.YoutubeTreeWidget)
+                    newNode.setText(0, DS.DataSourceName)
+                    self.YoutubeTreeWidget.setText(0, "Youtube" + "(" + str(self.YoutubeTreeWidget.childCount()) + ")")
+
+                    if self.YoutubeTreeWidget.isHidden():
+                        self.YoutubeTreeWidget.setHidden(False)
+                        self.YoutubeTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+            for tabs in myFile.TabList:
+                # Data Sources Similarity
+                if tabs.TabName == "Data Sources Similarity":
+                    self.DataSourcesSimilarity()
+
+                # Document Clustering
+                elif tabs.TabName == "Document Clustering":
+                    self.DataSourceDocumentClustering()
+
+                # Web Preview
+                elif tabs.TabName == "Web Preview":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourcePreviewWeb(widgets)
+
+                # Show Tweet Data
+                elif tabs.TabName == "Show Tweet Data":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourceShowTweetData(widgets)
+
+                # Show Video
+                elif tabs.TabName == "Show Video":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        for DS in myFile.DataSourceList:
+                            if DS.DataSourceName == tabs.DataSourceName:
+                                if DS.YoutubeURLFlag:
+                                    self.DataSourceYoutubeShowVideo(widgets)
+
+                # Show Youtube Data
+                elif tabs.TabName == "Show Youtube Data":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        for DS in myFile.DataSourceList:
+                            if DS.DataSourceName == tabs.DataSourceName:
+                                if DS.YoutubeURLFlag:
+                                    self.DataSourceShowYoutubeCommentsURL(widgets)
+                                else:
+                                    self.DataSourceShowYoutubeCommentsKeyWord(widgets)
+                                break
+
+                # View Image
+                elif tabs.TabName == "View Image":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourceViewImage(widgets)
+
+                # CSV Data
+                elif tabs.TabName == "CSV Data":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourceViewCSVData(widgets)
+
+                # Preview
+                elif tabs.TabName == "Preview":
+                    for DS in myFile.DataSourceList:
+                        if DS.DataSourceName == tabs.DataSourceName:
+                            break
+
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        if DS.DataSourceext == "Pdf files (*.pdf)":
+                            self.DataSourcePDFPreview(widgets)
+
+                        elif DS.DataSourceext == "Doc files (*.doc *.docx)":
+                            self.DataSourceWordPreview(widgets)
+
+                        elif DS.DataSourceext == 'Notepad files (*.txt)' or DS.DataSourceext == 'Rich Text Format files (*.rtf)':
+                            self.DataSourcePreview(widgets)
+
+                # Word Frequency
+                elif tabs.TabName == "Word Frequency":
+                    self.DataSourceShowFrequencyTable(tabs.DataSourceName)
+
+                # Generate Questions
+                elif tabs.TabName == "Generate Questions":
+                    self.DataSourcesGenerateQuestions(tabs.DataSourceName)
+
+                # Automatic Sentiment Analysis
+                elif tabs.TabName == "Automatic Sentiment Analysis":
+                    self.SentimentAnalysisTable(tabs.DataSourceName, tabs.AutomaticSentimentAnalysisColumnName)
+
+                # Stem Word
+                elif tabs.TabName == "Stem Word":
+                    self.mapStemWordonTab(tabs.DataSourceName, tabs.StemWord)
+
+                # Parts of Speech
+                elif tabs.TabName == "Parts of Speech":
+                    self.DataSourcePOS(tabs.DataSourceName)
+
+                # Entity Relationship
+                elif tabs.TabName == "Entity Relationship":
+                    self.DataSourceEntityRelationShip(tabs.DataSourceName)
+
+                # Topic Modelling
+                elif tabs.TabName == "Topic Modelling":
+                    self.DataSourceTopicModelling(tabs.DataSourceName)
+
+                # Create Cases
+                elif tabs.TabName == "Create Cases":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourceCreateCases(widgets)
+
+                # Create Sentiments
+                elif tabs.TabName == "Create Sentiments":
+                    for widgets in self.DataSourceTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.DataSourceCreateSentiments(widgets)
+
+                # Translated Text
+                elif tabs.TabName == "Translated Text":
+                    self.DataSourceTranslate(tabs.DataSourceName, tabs.TranslatedLanguage)
+
+                # Word Cloud
+                elif tabs.TabName == "Word Cloud":
+                    self.mapWordCloudonTab(tabs.DataSourceName, tabs.WordCloudBGColor, tabs.WordCloudMaxWords, tabs.WordCloudMask)
+
+                # Word Tree
+                elif tabs.TabName == "Word Tree":
+                    self.DataSourceWordTree(tabs.DataSourceName)
+
+                # Coordinate Map
+                elif tabs.TabName == "Coordinate Map":
+                    self.DataSourceCoordinateMap(tabs.DataSourceName)
+
+                # Cases Structure
+                elif tabs.TabName == "Cases Structure":
+                    for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.CasesStructure(widgets)
+
+                # Cases Coverage
+                elif tabs.TabName == "Cases Coverage":
+                    for widgets in self.CasesTreeWidget.findItems(tabs.DataSourceName, Qt.MatchRecursive, 0):
+                        self.CasesParentCoverage(widgets)
+
+                # Case Component
+                elif tabs.TabName == "Case Component":
+                    CasesItemWidgets = self.CasesTreeWidget.findItems(tabs.tabCase, Qt.MatchRecursive, 0)
+
+                    if len(CasesItemWidgets) > 0:
+                        ItemPresentFlag = False
+                        for items in CasesItemWidgets:
+                            tempWidget = items
+                            while tempWidget.parent() != None:
+                                tempWidget = tempWidget.parent()
+
+                            if tempWidget.text(0) == tabs.DataSourceName:
+                                ItemPresetFlag = True
+                                break
+
+                        if ItemPresentFlag:
+                            self.CasesShowTopicComponent(items)
+
+                # Sentiments Component
+                elif tabs.TabName == "Sentiments Component":
+                    SentimentItemWidgets = self.SentimentTreeWidget.findItems(tabs.tabSentiment, Qt.MatchRecursive, 0)
+
+                    if len(SentimentItemWidgets) > 0:
+                        ItemPresentFlag = False
+                        for items in SentimentItemWidgets:
+                            tempWidget = items
+                            while tempWidget.parent() != None:
+                                tempWidget = tempWidget.parent()
+
+                            if tempWidget.text(0) == tabs.DataSourceName:
+                                ItemPresetFlag = True
+                                break
+
+                        if ItemPresentFlag:
+                            self.SentimentsShowComponent(items)
 
     # Save File Window
     def SaveWindow(self):
@@ -9213,6 +9340,7 @@ class Window(QMainWindow):
     def Save(self):
         myFile.setModifiedDate(datetime.datetime.now())
         myFile.setModifiedBy(getpass.getuser())
+        myFile.requiredSaved = False
 
         SaveFile = open(myFile.FileLocation, 'wb')
 
@@ -9274,7 +9402,7 @@ class Window(QMainWindow):
         try:
             for tabs in myFile.TabList:
                 print(tabs.DataSourceName + "  ,  " + tabs.TabName + "  ,  " + str(tabs.isActive))
-            print()
+            print(myFile.requiredSaved)
             file = open('LICENSE', 'r')
             lic = file.read()
             QMessageBox().about(self, "About TextWiz", lic)
@@ -9320,6 +9448,8 @@ class Window(QMainWindow):
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
+
+                            myFile.requiredSaved = True
                         else:
                             if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9367,6 +9497,8 @@ class Window(QMainWindow):
                                 self.statusBar().showMessage('PDF File Uploaded')
                                 self.DataSourceSimilarityUpdate()
                                 self.DataSourceDocumentClusteringUpdate()
+
+                                myFile.requiredSaved = True
                             else:
                                 dummyDataSource.__del__()
                         else:
@@ -9418,6 +9550,7 @@ class Window(QMainWindow):
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
 
+                            myFile.requiredSaved = True
                         else:
                             if len(dummyDataSource.DataSourcetext) == 0:
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9465,6 +9598,8 @@ class Window(QMainWindow):
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
+
+                            myFile.requiredSaved = True
                         else:
                             if len(dummyDataSource.DataSourcetext) == 0:
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9513,6 +9648,8 @@ class Window(QMainWindow):
 
                             self.DataSourceSimilarityUpdate()
                             self.DataSourceDocumentClusteringUpdate()
+
+                            myFile.requiredSaved = True
                         else:
                             if len(dummyDataSource.DataSourcetext) == 0:
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9561,6 +9698,8 @@ class Window(QMainWindow):
 
                         self.DataSourceSimilarityUpdate()
                         self.DataSourceDocumentClusteringUpdate()
+
+                        myFile.requiredSaved = True
                     else:
                         if len(dummyDataSource.DataSourcetext) == 0:
                             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9693,6 +9832,7 @@ class Window(QMainWindow):
 
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
+                myFile.requiredSaved = True
             else:
                 if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9821,6 +9961,7 @@ class Window(QMainWindow):
 
                     newNode.setToolTip(0, newNode.text(0))
                     self.DataSourceSimilarityUpdate()
+                    myFile.requiredSaved = True
                 else:
                     dummyDataSource.__del__()
                     DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
@@ -9912,6 +10053,7 @@ class Window(QMainWindow):
 
                     self.DataSourceSimilarityUpdate()
                     self.DataSourceDocumentClusteringUpdate()
+                    myFile.requiredSaved = True
                 else:
                     if dummyDataSource.DataSourceForbiddenLoadError:
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -10035,6 +10177,7 @@ class Window(QMainWindow):
 
                     self.DataSourceSimilarityUpdate()
                     self.DataSourceDocumentClusteringUpdate()
+                    myFile.requiredSaved = True
 
                 elif dummyDataSource.DataSourceLoadError:
                     if VideoURLCheck:
@@ -10074,7 +10217,6 @@ class Window(QMainWindow):
             QMessageBox.critical(self, "Import Error",
                                  "When the application started you were not connected to the internet. Please Restart the application and make sure you are connected to the internet",
                                  QMessageBox.Ok)
-
 
 if __name__ == "__main__":
     WindowTitleLogo = "Images/TextWizLogo.png"

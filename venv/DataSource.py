@@ -22,7 +22,7 @@ from textblob import TextBlob
 from nltk.tokenize import sent_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+#from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from operator import itemgetter
 
 import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
@@ -654,21 +654,38 @@ class DataSource():
         self.NegativeSentimentCount = 0
         self.NeutralSentimentCount = 0
 
+        # for line in DataSourceTextTokenize:
+        #     vs = analyzer.polarity_scores(line)
+        #
+        #     vs = analyzer.polarity_scores(line)
+        #     if vs['compound'] > 0.05:
+        #         self.AutomaticSentimentList.append([line, 'Positive'])
+        #         self.PositiveSentimentCount += 1
+        #
+        #     elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
+        #         self.AutomaticSentimentList.append([line, 'Neutral'])
+        #         self.NeutralSentimentCount += 1
+        #
+        #     elif vs['compound'] <= -0.05:
+        #         self.AutomaticSentimentList.append([line, 'Negative'])
+        #         self.NegativeSentimentCount += 1
+
         for line in DataSourceTextTokenize:
-            vs = analyzer.polarity_scores(line)
+            if str(line) != 'nan':
+                blob = TextBlob(line)
+                polarity_score = blob.sentiment.polarity
 
-            vs = analyzer.polarity_scores(line)
-            if vs['compound'] > 0.05:
-                self.AutomaticSentimentList.append([line, 'Positive'])
-                self.PositiveSentimentCount += 1
+                if polarity_score > 0.02:
+                    self.AutomaticSentimentList.append([line, 'Positive'])
+                    self.PositiveSentimentCount += 1
 
-            elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
-                self.AutomaticSentimentList.append([line, 'Neutral'])
-                self.NeutralSentimentCount += 1
+                elif polarity_score < -0.02:
+                    self.AutomaticSentimentList.append([line, 'Negative'])
+                    self.NegativeSentimentCount += 1
 
-            elif vs['compound'] <= -0.05:
-                self.AutomaticSentimentList.append([line, 'Negative'])
-                self.NegativeSentimentCount += 1
+                else:
+                    self.AutomaticSentimentList.append([line, 'Neutral'])
+                    self.NeutralSentimentCount += 1
 
     # Tweet Cleaner
     def tweet_cleaner(self, text):

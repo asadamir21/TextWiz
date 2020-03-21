@@ -8,9 +8,13 @@ from PyQt5.QtCore import *
 from PyQt5 import QtPrintSupport, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
 from PIL import  Image
-from File import *
+#from File import *
+from TaskThread import *
+from OpenWindow import *
+from MarkerModel import *
+
 import humanfriendly, platform
-import glob, sys, os, getpass, ntpath, math, csv, datetime, graphviz
+import glob, sys, os, getpass, ntpath, math, csv, datetime, graphviz, threading, queue
 
 WindowPlatform = False
 LinuxPlatform = False
@@ -26,32 +30,6 @@ elif platform.system() == "Darwin":
 if WindowPlatform:
     from PyQt5 import QAxContainer
 
-class MarkerModel(QAbstractListModel):
-    PositionRole, SourceRole = range(Qt.UserRole, Qt.UserRole + 2)
-
-    def __init__(self, parent=None):
-        super(MarkerModel, self).__init__(parent)
-        self._markers = []
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._markers)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if 0 <= index.row() < self.rowCount():
-            if role == MarkerModel.PositionRole:
-                return self._markers[index.row()]["position"]
-            elif role == MarkerModel.SourceRole:
-                return self._markers[index.row()]["source"]
-        return QVariant()
-
-    def roleNames(self):
-        return {MarkerModel.PositionRole: b"position_marker", MarkerModel.SourceRole: b"source_marker"}
-
-    def appendMarker(self, marker):
-        self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
-        self._markers.append(marker)
-        self.endInsertRows()
-
 class PicButton(QAbstractButton):
     def __init__(self, pixmap, parent=None):
         super(PicButton, self).__init__(parent)
@@ -63,32 +41,6 @@ class PicButton(QAbstractButton):
 
     def sizeHint(self):
         return self.pixmap.size()
-
-class OpenWindow(QFileDialog):
-    def __init__(self, title, ext, flag):
-        super().__init__()
-        self.title = title
-        self.width = pyautogui.size().width / 2
-        self.height = pyautogui.size().height / 2
-        self.left = pyautogui.size().width * 0.25
-        self.top = pyautogui.size().height * 0.25
-
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
-        self.setWindowFlags(Qt.WindowCloseButtonHint)
-        self.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
-        if flag == 0:
-            self.filepath =  self.getOpenFileNames(self, title, "", ext)
-        elif flag == -1:
-            self.filepath =  self.getOpenFileName(self, title, "", ext)
-        elif flag == 1:
-            self.filepath = self.getSaveFileName(self, title, "", ext)
-        elif flag == 2:
-            self.filepath = self.getOpenFileNames(self, title, "", ext)
-
-    def __del__(self):
-        self.delete = True
 
 class Window(QMainWindow):
     def __init__(self):
@@ -385,7 +337,7 @@ class Window(QMainWindow):
         EntityRelationship = QAction('Entity Relationship', self)
         EntityRelationship.setToolTip('Entity Relationship')
         EntityRelationship.triggered.connect(lambda: self.DataSourceEntityRelationShipDialog())
-        EntityRelationship.setDisabled(True)
+        #EntityRelationship.setDisabled(True)
         ToolMenu.addAction(EntityRelationship)
 
         # Sentiment Analysis
@@ -398,14 +350,14 @@ class Window(QMainWindow):
         TopicModelling = QAction('Topic Modelling', self)
         TopicModelling.setToolTip('Topic Modelling')
         TopicModelling.triggered.connect(lambda: self.DataSourceTopicModellingDialog())
-        TopicModelling.setDisabled(True)
+        #TopicModelling.setDisabled(True)
         ToolMenu.addAction(TopicModelling)
 
         # Generate Question
         GenerateQuestion = QAction('Generate Questions', self)
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
-        GenerateQuestion.setDisabled(True)
+        #GenerateQuestion.setDisabled(True)
         ToolMenu.addAction(GenerateQuestion)
 
         # Find Similarity
@@ -1455,8 +1407,8 @@ class Window(QMainWindow):
                 myFile.requiredSaved = True
         else:
             # updating tab
-            self.tabWidget.addTab(ShowTweetDataTab, tabs.TabName)
-            self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
             myFile.requiredSaved = True
 
@@ -2018,19 +1970,27 @@ class Window(QMainWindow):
             DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
             DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Data SourceTab
-            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            PDFPreviewWeb = QWebEngineView()
-            DataSourceverticalLayout.addWidget(PDFPreviewWeb)
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-                    PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
-                    break
-            
+                    if os.path.exists(DS.DataSourcePath):
+                        # Box Layout for Data SourceTab
+                        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+                        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+                        PDFPreviewWeb = QWebEngineView()
+                        DataSourceverticalLayout.addWidget(PDFPreviewWeb)
+                        PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+                        PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
+                        break
+                    else:
+                        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+                        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                        DataSourcePreview.setReadOnly(True)
+                        DataSourcePreview.setText(DS.DataSourcetext)
+                        break
+
             if DataSourcePreviewTabFlag2:
                 tabs.tabWidget = DataSourcePreviewTab
                 if tabs.isActive:
@@ -2073,20 +2033,28 @@ class Window(QMainWindow):
             DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
             DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Data SourceTab
-            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
+
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
-                    WordActivex = QAxContainer.QAxWidget()
-                    WordActivex.setFocusPolicy(Qt.StrongFocus)
-                    #contr = WordActivex.setControl("{00460182-9E5E-11d5-B7C8-B8269041DD57}")
+                    if os.path.exists(DS.DataSourcePath) and WindowPlatform:
+                        # Box Layout for Data SourceTab
+                        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
+                        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-                    WordActivex.setProperty("DisplayScrollBars", True);
-                    WordActivex.setControl(DS.DataSourcePath)
+                        WordActivex = QAxContainer.QAxWidget()
+                        WordActivex.setFocusPolicy(Qt.StrongFocus)
+                        WordActivex.setProperty("DisplayScrollBars", True);
+                        WordActivex.setControl(DS.DataSourcePath)
 
-                    DataSourceverticalLayout.addWidget(WordActivex)
+                        DataSourceverticalLayout.addWidget(WordActivex)
+                        break
+                    else:
+                        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
+                        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                        DataSourcePreview.setReadOnly(True)
+                        DataSourcePreview.setText(DS.DataSourcetext)
+                        break
 
             if DataSourcePreviewTabFlag:
                 tabs.tabWidget = DataSourcePreviewTab
@@ -2139,7 +2107,6 @@ class Window(QMainWindow):
             DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
             DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
             DataSourcePreview.setReadOnly(True)
-            DataSourcePreview.setContextMenuPolicy(Qt.CustomContextMenu)
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -2171,7 +2138,7 @@ class Window(QMainWindow):
                                  "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)",
                                  2)
         path = dummyWindow.filepath
-        dummyWindow.__del__()
+        del dummyWindow
 
         if all(path):
             for DS in myFile.DataSourceList:
@@ -2180,10 +2147,16 @@ class Window(QMainWindow):
                     break
 
             if len(DS.AddImagePathDoublingError) == 0:
-                DataSourceAddImageSuccessBox = QMessageBox.information(self, "Add Image",  "Images Added Successfully", QMessageBox.Ok)
+                QMessageBox.information(self, "Add Image",  "Images Added Successfully", QMessageBox.Ok)
+                myFile.requiredSaved = True
                 self.DataSourceSimilarityUpdate()
                 self.DataSourceDocumentClusteringUpdate()
             else:
+                if len(path[0]) == len(DS.AddImagePathDouble):
+                    myFile.requiredSaved = False
+                else:
+                    myFile.requiredSaved = True
+
                 ImagePathErrorText = ""
 
                 for ImagePath in DS.AddImagePathDouble:
@@ -2197,9 +2170,9 @@ class Window(QMainWindow):
                 else:
                     ImagePathErrorText += " is Already Added"
 
-                DataSourceAddImageErrorBox = QMessageBox.critical(self, "Add Image",
-                                                                       "Image Files : " + ImagePathErrorText,
-                                                                       QMessageBox.Ok)
+                QMessageBox.critical(self, "Add Image",
+                                     "Image Files : " + ImagePathErrorText,
+                                     QMessageBox.Ok)
 
     # ****************************************************************************
     # ********************** Data Sources Show Frequency *************************
@@ -2338,11 +2311,27 @@ class Window(QMainWindow):
                 WordFrequencyTable.horizontalHeaderItem(i).setFont(
                     QFont(WordFrequencyTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            dummyQuery = Query()
+
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    rowList = dummyQuery.FindWordFrequency(DS.DataSourcetext)
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Word Frequency")
+                    dummyProgressInfo.GenerateWordFrequency(DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Word Frequency Table")
+
+                    del dummyProgressInfo
+
+                    rowList = ThreadQueue.get()
                     break
 
             DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(WordFrequencyTable))
@@ -2490,7 +2479,7 @@ class Window(QMainWindow):
                     GenerateQuestionsTabFlag2 = True
                     break
 
-        if GenerateQuestionsTabFlag:
+        if not GenerateQuestionsTabFlag:
             #Generate Question Tab
             GenerateQuestionsTab = QWidget()
             GenerateQuestionsTab.setGeometry(
@@ -2550,11 +2539,30 @@ class Window(QMainWindow):
                 GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
                     QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-            dummyQuery = Query()
+
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    rowList = dummyQuery.GenerateQuestion(DS.DataSourcetext)
+
+
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Generate Question")
+                    dummyProgressInfo.QuestionGenerator(DS.DataSourcetext)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Questions")
+
+                    del dummyProgressInfo
+
+                    rowList = ThreadQueue.get()
+
                     break
 
             DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(GenerateQuestionsTable))
@@ -2590,6 +2598,7 @@ class Window(QMainWindow):
                 else:
                     # Adding Generate Question Tab to TabList
                     myFile.TabList.append(Tab("Generate Questions", GenerateQuestionsTab, DataSourceName))
+
                     # Adding Generate Questions Tab to QTabWidget
                     self.tabWidget.addTab(GenerateQuestionsTab, "Generate Questions")
                     self.tabWidget.setCurrentWidget(GenerateQuestionsTab)
@@ -2751,8 +2760,41 @@ class Window(QMainWindow):
         if not DataSourceSentimentAnalysisFlag:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    DS.SentimentAnalysis(ColumnName)
-                    DS.SentimentAnalysisVisualization()
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Sentiment Analysis")
+                    dummyProgressInfo.SentimentAnalysis(DS, ColumnName)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Performing Sentiment Analysis")
+
+                    del dummyProgressInfo
+
+                    DS = ThreadQueue.get()
+
+                    ProgressBarWidget2 = QDialog()
+                    progressBar2 = QProgressBar(ProgressBarWidget2)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Sentiment Analysis Visualization")
+                    dummyProgressInfo.SentimentAnalysisVisualization(DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget2.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget2, progressBar2, "Creating Sentiments Visualization")
+
+                    del dummyProgressInfo
+
+                    DS = ThreadQueue.get()
                     rowList = DS.AutomaticSentimentList
                     break
 
@@ -4611,7 +4653,7 @@ class Window(QMainWindow):
                     self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
                     tabs.tabWidget = DataSourceSummaryPreviewTab
                     tabs.setisActive(True)
-                else:                        
+                else:
                     # Adding Preview Tab to TabList
                     dummyTab = Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName)
                     dummyTab.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
@@ -4636,9 +4678,21 @@ class Window(QMainWindow):
 
             else:
                 for widgets in ItemsWidget:
-                    DSNewCaseNode = QTreeWidgetItem(widgets)
-                    DSNewCaseNode.setText(0, 'Summary')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                    SummaryWidget = self.QueryTreeWidget.findItems("Summary", Qt.MatchRecursive, 0)
+
+                    SummaryFlag = False
+
+                    if len(SummaryWidget) > 0:
+                        for SWidgets in SummaryWidget:
+                            if SWidgets.parent().text(0) == DataSourceName:
+                                SummaryFlag = True
+                                break
+
+                    if not SummaryFlag:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Summary')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -4921,7 +4975,7 @@ class Window(QMainWindow):
                 myFile.TabList = [tabs for tabs in myFile.TabList if not tabs.DataSourceName == DS.DataSourceName]
 
                 myFile.DataSourceList.remove(DS)
-                DS.__del__()
+                del DS
                 break
 
         self.DataSourceSimilarityUpdate()
@@ -6195,21 +6249,41 @@ class Window(QMainWindow):
     def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
         DataSourceWordCloudTabFlag = False
         DataSourceWordCloudTabFlag2 = False
+        DataSourceWordCloudTabFlag3 = False
 
         for tabs in myFile.TabList:
             if tabs.DataSourceName == WCDSName and tabs.TabName == 'Word Cloud':
                 if tabs.tabWidget != None:
-                    DataSourceWordCloudTabFlag = True
-                    break
+                    if tabs.WordCloudBGColor == WCBGColor and tabs.WordCloudMaxWords == maxword and tabs.WordCloudMask == maskname:
+                        DataSourceWordCloudTabFlag = True
+                        break
+                    else:
+                        DataSourceWordCloudTabFlag2 = True
+                        break
                 else:
-                    DataSourceWordCloudTabFlag2 = True
+                    DataSourceWordCloudTabFlag3 = True
                     break
 
-        if not DataSourceWordCloudTabFlag:
+        if not DataSourceWordCloudTabFlag or DataSourceWordCloudTabFlag2:
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == WCDSName:
-                    dummyQuery = Query()
-                    WordCloudImage = dummyQuery.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(WCDSName, "Word Cloud")
+                    dummyProgressInfo.CreateWordCloud(DS.DataSourcetext, WCBGColor, maxword, maskname)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Word Cloud")
+
+                    del dummyProgressInfo
+
+                    WordCloudImage = ThreadQueue.get()
                     break
 
             # Creating New Tab for WordCloud
@@ -6246,20 +6320,31 @@ class Window(QMainWindow):
                 lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
                                                                                                                      index2,
                                                                                                                      index3))
-            if DataSourceWordCloudTabFlag2:
+            if DataSourceWordCloudTabFlag3:
                 tabs.tabWidget = WordCloudTab
                 if tabs.isActive:
                     self.tabWidget.addTab(WordCloudTab, "Word Cloud")
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(WordCloudTab)
             else:
-                # Adding Word Cloud Tab to QTabWidget
-                dummyTab = Tab("Word Cloud", WordCloudTab, WCDSName)
-                dummyTab.setWordCloud(WCBGColor, maxword, maskname)
-                myFile.TabList.append(dummyTab)
-                self.tabWidget.addTab(WordCloudTab, "Word Cloud")
-                self.tabWidget.setCurrentWidget(WordCloudTab)
-                myFile.requiredSaved = True
+                if DataSourceWordCloudTabFlag2:
+                    tabs.setWordCloud(WCBGColor, maxword, maskname)
+                    self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                    self.tabWidget.addTab(WordCloudTab, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(WordCloudTab)
+                    tabs.tabWidget = WordCloudTab
+                    tabs.setisActive(True)
+
+                else:
+                    # Adding Word Cloud Tab to QTabWidget
+                    dummyTab = Tab("Word Cloud", WordCloudTab, WCDSName)
+                    dummyTab.setWordCloud(WCBGColor, maxword, maskname)
+                    myFile.TabList.append(dummyTab)
+
+                    # Adding Preview Tab to QTabWidget
+                    self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+                    self.tabWidget.setCurrentWidget(WordCloudTab)
+                    myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(WCDSName, Qt.MatchExactly, 0)
 
@@ -6275,9 +6360,21 @@ class Window(QMainWindow):
 
             else:
                 for widgets in ItemsWidget:
-                    DSNewCaseNode = QTreeWidgetItem(widgets)
-                    DSNewCaseNode.setText(0, 'Word Cloud')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                    WordCloudWidget = self.VisualizationTreeWidget.findItems("Word Cloud", Qt.MatchRecursive, 0)
+
+                    WordCloudWidgetFlag = False
+
+                    if len(WordCloudWidget) > 0:
+                        for WCWidgets in WordCloudWidget:
+                            if WCWidgets.parent().text(0) == WCDSName:
+                                WordCloudWidgetFlag = True
+                                break
+
+                    if not WordCloudWidgetFlag:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Word Cloud')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
@@ -6379,7 +6476,23 @@ class Window(QMainWindow):
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    WordTreeHTML = DS.CreateWordTree(self.tabWidget.width(), self.tabWidget.height())
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Word Tree")
+                    dummyProgressInfo.CreateWordTree(self.tabWidget.width(), self.tabWidget.height(), DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Word Tree")
+
+                    del dummyProgressInfo
+
+                    WordTreeHTML = ThreadQueue.get()
                     break
 
             # Creating New Tab for Word Tree
@@ -6877,7 +6990,7 @@ class Window(QMainWindow):
                 if tabs.TabName == 'Data Sources Similarity':
                     myFile.TabList.remove(tabs)
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    tabs.__del__()
+                    del tabs
 
             self.QueryTreeWidget.invisibleRootItem().removeChild(QueryItemName)
 
@@ -6886,7 +6999,7 @@ class Window(QMainWindow):
             for tabs in myFile.TabList:
                 if tabs.DataSourceName == QueryItemName.text(0):
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    tabs.__del__()
+                    del tabs
 
             # Removing Tabs From TabList
             myFile.TabList = [tabs for tabs in myFile.TabList if
@@ -6913,7 +7026,7 @@ class Window(QMainWindow):
             if tabs.DataSourceName == QueryItemName.parent().text(0) and tabs.TabName == QueryItemName.text(0):
                 myFile.TabList.remove(tabs)
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                tabs.__del__()
+                del tabs
                 break
 
         if QueryItemName.parent().childCount() == 1:
@@ -7448,7 +7561,7 @@ class Window(QMainWindow):
                     for cases in DS.CasesList:
                         if cases.CaseTopic == CasesItemName.text(0):
                             DS.CasesList.remove(cases)
-                            cases.__del__()
+                            del cases
 
                     CasesItemName.parent().removeChild(CasesItemName)
 
@@ -7735,7 +7848,7 @@ class Window(QMainWindow):
             if DS.DataSourceName == CasesItemName.text(0):
                 self.CasesTreeWidget.invisibleRootItem().removeChild(CasesItemName)
                 for cases in DS.CasesList:
-                    cases.__del__()
+                    del cases
 
                 DS.CasesList.clear()
                 self.statusBar().showMessage('Data Source Cases Removed Successfully')
@@ -8098,7 +8211,7 @@ class Window(QMainWindow):
                     for cases in DS.CasesList:
                         if cases.CaseTopic == CasesItemName.text(0):
                             DS.CasesList.remove(cases)
-                            cases.__del__()
+                            del cases
                             break
 
                     # while tempParent2.parent() != None and tempWidget2.parent().childCount() == 1:
@@ -8125,7 +8238,7 @@ class Window(QMainWindow):
                     for cases in DS.CasesList:
                         if cases.CaseTopic in CasesItemName.text(0):
                             DS.CasesList.remove(cases)
-                            cases.__del__()
+                            del cases
                             break
 
                     self.statusBar().showMessage('Case Removed Successfully')
@@ -8777,7 +8890,7 @@ class Window(QMainWindow):
                 if tabs.TabName == 'Document Clustering':
                     myFile.TabList.remove(tabs)
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    tabs.__del__()
+                    del tabs
 
             self.VisualizationTreeWidget.invisibleRootItem().removeChild(VisualizationItemName)
         else:
@@ -8785,7 +8898,7 @@ class Window(QMainWindow):
             for tabs in myFile.TabList:
                 if tabs.DataSourceName == VisualizationItemName.text(0):
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    tabs.__del__()
+                    del tabs
 
             # Removing Tabs From TabList
             myFile.TabList = [tabs for tabs in myFile.TabList if
@@ -8877,7 +8990,7 @@ class Window(QMainWindow):
             if tabs.DataSourceName == VisualizationItemName.parent().text(0) and tabs.TabName == VisualizationItemName.text(0):
                 myFile.TabList.remove(tabs)
                 self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                tabs.__del__()
+                del tabs
                 break
 
         if VisualizationItemName.parent().childCount() == 1:
@@ -8917,13 +9030,13 @@ class Window(QMainWindow):
     # Close Application / Exit
     def closeEvent(self, event):
         if myFile.requiredSaved:
-            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Exit', "Are you Sure you want to exit without Saving?", QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Exit', "Are you Sure you want to exit without Saving?", QMessageBox.No | QMessageBox.Yes | QMessageBox.Cancel)
             if SaveBeforeNewWindowOpenchoice == QMessageBox.No:
                 self.SaveASWindow()
                 if not myFile.requiredSaved:
                     event.accept()
                 else:
-                    event.ignore()
+                    self.closeEvent(event)
             elif SaveBeforeNewWindowOpenchoice == QMessageBox.Yes:
                 event.accept()
             else:
@@ -8964,7 +9077,7 @@ class Window(QMainWindow):
 
         dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
         path = dummyWindow.filepath
-        dummyWindow.__del__()
+        del dummyWindow
 
         if all(path):
             global myFile
@@ -9329,7 +9442,7 @@ class Window(QMainWindow):
     def SaveASWindow(self):
         dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", 1)
         path = dummyWindow.filepath
-        dummyWindow.__del__()
+        del dummyWindow
 
         if all(path):
             myFile.setFileLocation(path[0])
@@ -9362,6 +9475,44 @@ class Window(QMainWindow):
 
         for i in range(len(myFile.TabList)):
             myFile.TabList[i].tabWidget = dummyTabList[i]
+
+    # ProgressBar
+    def ProgressBar(self, ProgressBarWidget, progressBar, ProgressBarLabel):
+        # ProgressBar Widget
+        # if ProgressBarLabel == "Importing":
+        #     ProgressBarWidget.setGeometry(self.width * 0.375, self.height * 0.4875,
+        #                                   self.width * 0.25, self.height * 0.025)
+        # else:
+        #     ProgressBarWidget.setGeometry((self.width - self.tabWidget.width()) +  self.tabWidget.width()* 0.375,
+        #                                   (self.height - self.horizontalLayoutWidget.height()) + self.tabWidget.height()*0.4875,
+        #                                   self.tabWidget.width() * 0.25,
+        #                                   self.tabWidget.height() * 0.025)
+
+
+
+        ProgressBarWidget.setGeometry(self.width * 0.8,
+                                      self.statusBar().y() + (self.statusBar().height() - self.height * 0.025) / 2,
+                                      self.width * 0.2, self.height * 0.025)
+
+        ProgressBarWidget.setParent(self)
+        ProgressBarWidget.setAttribute(Qt.WA_DeleteOnClose)
+        self.QDialogAddProperties(ProgressBarWidget)
+        ProgressBarWidget.setWindowFlags(ProgressBarWidget.windowFlags() | Qt.FramelessWindowHint)
+
+        # ProgressBar
+        progressBar.setGeometry(0, 0, ProgressBarWidget.width(), ProgressBarWidget.height())
+        progressBar.setMaximum(0)
+        progressBar.setMinimum(0)
+
+        # ProgressBarLabel
+        progressBarLabel = QLabel(ProgressBarWidget)
+        progressBarLabel.setGeometry(0, 0, ProgressBarWidget.width(), ProgressBarWidget.height())
+        progressBarLabel.setStyleSheet("background-color: rgba(0,0,0,0%)");
+        progressBarLabel.setText(ProgressBarLabel + "...")
+        progressBarLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.LabelSizeAdjustment(progressBarLabel)
+
+        ProgressBarWidget.exec_()
 
     #Print Window
     def printWindow(self):
@@ -9400,9 +9551,9 @@ class Window(QMainWindow):
     # About Window Tab
     def AboutWindow(self):
         try:
-            for tabs in myFile.TabList:
-                print(tabs.DataSourceName + "  ,  " + tabs.TabName + "  ,  " + str(tabs.isActive))
-            print(myFile.requiredSaved)
+            #for tabs in myFile.TabList:
+            #    print(tabs.DataSourceName + "  ,  " + tabs.TabName + "  ,  " + str(tabs.isActive))
+            #print(myFile.requiredSaved)
             file = open('LICENSE', 'r')
             lic = file.read()
             QMessageBox().about(self, "About TextWiz", lic)
@@ -9419,11 +9570,27 @@ class Window(QMainWindow):
         if check == "Word":
             dummyWindow = OpenWindow("Open Word File", "Doc files (*.doc *.docx)", 0)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1])
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                    dummyProgressInfo.ImportFile(pth, path[1])
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                    del dummyProgressInfo
+
+                    dummyDataSource = ThreadQueue.get()
 
                     DataSourceNameCheck = False
 
@@ -9459,9 +9626,9 @@ class Window(QMainWindow):
                                 QMessageBox.critical(self, "Load Error",
                                                     "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                      QMessageBox.Ok)
-                            dummyDataSource.__del__()
+                            del dummyDataSource
                     else:
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                             QMessageBox.Ok)
@@ -9469,11 +9636,27 @@ class Window(QMainWindow):
         elif check == "PDF":
             dummyWindow = OpenWindow("Open PDF File", "Pdf files (*.pdf)", 0)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1])
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                    dummyProgressInfo.ImportFile(pth, path[1])
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                    del dummyProgressInfo
+
+                    dummyDataSource = ThreadQueue.get()
 
                     DataSourceNameCheck = False
 
@@ -9500,7 +9683,7 @@ class Window(QMainWindow):
 
                                 myFile.requiredSaved = True
                             else:
-                                dummyDataSource.__del__()
+                                del dummyDataSource
                         else:
                             if len(dummyDataSource.DataSourcetext) == 0:
                                 DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
@@ -9510,9 +9693,9 @@ class Window(QMainWindow):
                                 QMessageBox.critical(self, "Load Error",
                                                     "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                      QMessageBox.Ok)
-                            dummyDataSource.__del__()
+                            del dummyDataSource
                     else:
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                             QMessageBox.Ok)
@@ -9520,11 +9703,27 @@ class Window(QMainWindow):
         elif check == "Txt":
             dummyWindow = OpenWindow("Open Notepad File", "Notepad files (*.txt)", 0)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1])
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                    dummyProgressInfo.ImportFile(pth, path[1])
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                    del dummyProgressInfo
+
+                    dummyDataSource = ThreadQueue.get()
 
                     DataSourceNameCheck = False
 
@@ -9560,9 +9759,9 @@ class Window(QMainWindow):
                                 QMessageBox.critical(self, "Load Error",
                                                     "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                      QMessageBox.Ok)
-                            dummyDataSource.__del__()
+                            del dummyDataSource
                     else:
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                             QMessageBox.Ok)
@@ -9570,11 +9769,27 @@ class Window(QMainWindow):
         elif check == "RTF":
             dummyWindow = OpenWindow("Open Rich Text Format File", "Rich Text Format files (*.rtf)", 0)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1])
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                    dummyProgressInfo.ImportFile(pth, path[1])
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                    del dummyProgressInfo
+
+                    dummyDataSource = ThreadQueue.get()
 
                     DataSourceNameCheck = False
 
@@ -9609,9 +9824,9 @@ class Window(QMainWindow):
                                 QMessageBox.critical(self, "Load Error",
                                                      "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                      QMessageBox.Ok)
-                            dummyDataSource.__del__()
+                            del dummyDataSource
                     else:
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                             QMessageBox.Ok)
@@ -9619,11 +9834,27 @@ class Window(QMainWindow):
         elif check == "Sound":
             dummyWindow = OpenWindow("Open Audio File", "Audio files (*.wav *.mp3)", 0)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
                 for pth in path[0]:
-                    dummyDataSource = DataSource(pth, path[1])
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                    dummyProgressInfo.ImportFile(pth, path[1])
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                    del dummyProgressInfo
+
+                    dummyDataSource = ThreadQueue.get()
 
                     DataSourceNameCheck = False
 
@@ -9659,9 +9890,9 @@ class Window(QMainWindow):
                                 QMessageBox.critical(self, "Load Error",
                                                      "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                      QMessageBox.Ok)
-                            dummyDataSource.__del__()
+                            del dummyDataSource
                     else:
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                         DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                             "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                             QMessageBox.Ok)
@@ -9671,10 +9902,26 @@ class Window(QMainWindow):
                                      "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)",
                                      2)
             path = dummyWindow.filepath
-            dummyWindow.__del__()
+            del dummyWindow
 
             if all(path):
-                dummyDataSource = DataSource(path[0], path[1])
+                ProgressBarWidget = QDialog()
+                progressBar = QProgressBar(ProgressBarWidget)
+
+                dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
+                dummyProgressInfo.ImportFile(pth, path[1])
+
+                ThreadQueue.put(dummyProgressInfo)
+
+                self.myLongTask = TaskThread()
+                self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                self.myLongTask.start()
+
+                self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+                del dummyProgressInfo
+
+                dummyDataSource = ThreadQueue.get()
 
                 DataSourceNameCheck = False
 
@@ -9709,9 +9956,9 @@ class Window(QMainWindow):
                             QMessageBox.critical(self, "Load Error",
                                                  "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
                                                  QMessageBox.Ok)
-                        dummyDataSource.__del__()
+                        del dummyDataSource
                 else:
-                    dummyDataSource.__del__()
+                    del dummyDataSource
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                         "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                         QMessageBox.Ok)
@@ -9796,7 +10043,7 @@ class Window(QMainWindow):
     def CSVBrowseButtonAction(self, LineEdit):
         dummyWindow = OpenWindow("Open CSV File", "CSV files (*.csv)", -1)
         LineEdit.setText(dummyWindow.filepath[0])
-        dummyWindow.__del__()
+        del dummyWindow
 
     # Import From CSV
     def ImportFromCSV(self, CSVPath, CSVURLPath, CSVPathFlag, CSVHeader):
@@ -9811,7 +10058,26 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            dummyDataSource.CSVDataSource(CSVHeader, CSVPathFlag)
+            ProgressBarWidget = QDialog()
+            progressBar = QProgressBar(ProgressBarWidget)
+
+            dummyProgressInfo = ProgressInfo("CSV", "Importing")
+            dummyProgressInfo.ImportCSVFile(CSVHeader, CSVPathFlag, dummyDataSource)
+
+            ThreadQueue.put(dummyProgressInfo)
+
+            self.myLongTask = TaskThread()
+            self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+            self.myLongTask.start()
+
+            self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+            del dummyProgressInfo
+
+            dummyDataSource = ThreadQueue.get()
+
+
+            #dummyDataSource.CSVDataSource(CSVHeader, CSVPathFlag)
 
             if not dummyDataSource.DataSourceLoadError: #and not len(dummyDataSource.DataSourcetext) == 0:
                 myFile.setDataSources(dummyDataSource)
@@ -9849,9 +10115,9 @@ class Window(QMainWindow):
                                          QMessageBox.Ok)
 
 
-                dummyDataSource.__del__()
+                del dummyDataSource
         else:
-            dummyDataSource.__del__()
+            del dummyDataSource
             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                 "A Data Source with Similar Name Exist! Please Rename the File then try Again",
                                                                 QMessageBox.Ok)
@@ -9945,7 +10211,23 @@ class Window(QMainWindow):
                 DataSourceNameCheck = True
 
         if not DataSourceNameCheck:
-            dummyDataSource.TweetDataSource(Hashtag, Since, NoOfTweet)
+            ProgressBarWidget = QDialog()
+            progressBar = QProgressBar(ProgressBarWidget)
+
+            dummyProgressInfo = ProgressInfo("Tweet", "Importing")
+            dummyProgressInfo.ImportTweetFile(Hashtag, Since, NoOfTweet, dummyDataSource)
+
+            ThreadQueue.put(dummyProgressInfo)
+
+            self.myLongTask = TaskThread()
+            self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+            self.myLongTask.start()
+
+            self.ProgressBar(ProgressBarWidget, progressBar, "Retrieving Tweets")
+
+            del dummyProgressInfo
+
+            dummyDataSource = ThreadQueue.get()
 
             if not dummyDataSource.DataSourceLoadError:
                 if not dummyDataSource.DataSourceRetrieveZeroError:
@@ -9963,17 +10245,17 @@ class Window(QMainWindow):
                     self.DataSourceSimilarityUpdate()
                     myFile.requiredSaved = True
                 else:
-                    dummyDataSource.__del__()
+                    del dummyDataSource
                     DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
                                                                         "No Tweet Found with Hashtag : " + Hashtag,
                                                                         QMessageBox.Ok)
             else:
-                dummyDataSource.__del__()
+                del dummyDataSource
                 DataSourceImportNameErrorBox = QMessageBox.information(self, "Import Error",
                                                                        "TextWiz is unable to retrive any tweet",
                                                                        QMessageBox.Ok)
         else:
-            dummyDataSource.__del__()
+            del dummyDataSource
             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                    "A Tweet with Similar Hashtag Exist!",
                                                                    QMessageBox.Ok)
@@ -10030,7 +10312,23 @@ class Window(QMainWindow):
 
     # Import From URL
     def ImportFromURL(self, URL):
-        dummyDataSource = DataSource(URL, "URL")
+        ProgressBarWidget = QDialog()
+        progressBar = QProgressBar(ProgressBarWidget)
+
+        dummyProgressInfo = ProgressInfo(URL, "Importing")
+        dummyProgressInfo.ImportFile(URL, "URL")
+
+        ThreadQueue.put(dummyProgressInfo)
+
+        self.myLongTask = TaskThread()
+        self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+        self.myLongTask.start()
+
+        self.ProgressBar(ProgressBarWidget, progressBar, "Importing")
+
+        del dummyProgressInfo
+
+        dummyDataSource = ThreadQueue.get()
         DataSourceNameCheck = False
 
         for DS in myFile.DataSourceList:
@@ -10070,9 +10368,9 @@ class Window(QMainWindow):
                     QMessageBox.critical(self, "URL Error",
                                          dummyDataSource.DataSoureURLErrorMessage,
                                          QMessageBox.Ok)
-                dummyDataSource.__del__()
+                del dummyDataSource
         else:
-            dummyDataSource.__del__()
+            del dummyDataSource
             DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
                                                                    "A Web Source with Similar URL Exist!",
                                                                    QMessageBox.Ok)
@@ -10198,11 +10496,11 @@ class Window(QMainWindow):
                         QMessageBox.critical(self, "Import Error",
                                              "No comment Retreive of Key Word: " + KeyWord,
                                              QMessageBox.Ok)
-                    dummyDataSource.__del__()
+                    del dummyDataSource
 
 
             else:
-                dummyDataSource.__del__()
+                del dummyDataSource
 
                 if VideoURLCheck:
                     QMessageBox.critical(self, "Import Error",
@@ -10226,26 +10524,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    TextWizSplash = QSplashScreen()
-    TextWizSplash.resize(200, 100)
-    TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
-    TextWizSplash.setPixmap(TextWizSplashPixmap)
-
-    SplahScreenProgressBar = QProgressBar(TextWizSplash)
-    SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
-                            TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
-    SplahScreenProgressBar.setTextVisible(False)
-    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-
-    TextWizSplash.show()
-
-    for i in range(0, 100):
-        SplahScreenProgressBar.setValue(i)
-        t = time.time()
-        while time.time() < t + 0.05:
-            App.processEvents()
-
-    TextWizSplash.close()
+    # TextWizSplash = QSplashScreen()
+    # TextWizSplash.resize(200, 100)
+    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
+    # TextWizSplash.setPixmap(TextWizSplashPixmap)
+    #
+    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
+    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
+    # SplahScreenProgressBar.setTextVisible(False)
+    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    #
+    # TextWizSplash.show()
+    #
+    # for i in range(0, 100):
+    #     SplahScreenProgressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.05:
+    #         App.processEvents()
+    #
+    # TextWizSplash.close()
 
     TextWizMainwindow = Window()
     TextWizMainwindow.show()

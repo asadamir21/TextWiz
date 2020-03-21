@@ -12,7 +12,7 @@ def openURL(URL, params):
     return r.text
 
 class VideoComment:
-    def __init__(self, maxResults, videoId, key ):
+    def __init__(self, maxResults, videoId, key):
         self.comments = []
         self.replies = defaultdict(list)
         self.params = {

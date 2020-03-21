@@ -22,7 +22,6 @@ from textblob import TextBlob
 from nltk.tokenize import sent_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
-#from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from operator import itemgetter
 
 import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
@@ -477,7 +476,10 @@ class DataSource():
                 self.DataSourceForbiddenLoadError = True
 
             if not self.DataSourceForbiddenLoadError:
-                soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
+                try:
+                    soup = BeautifulSoup(self.DataSourceHTML, features="lxml")
+                except:
+                    soup = BeautifulSoup(self.DataSourceHTML)
 
                 # kill all script and style elements
                 for script in soup(["script", "style"]):
@@ -648,11 +650,12 @@ class DataSource():
                 if len(Temp) > 0:
                     DataSourceTextTokenize.append(Temp)
 
-        analyzer = SentimentIntensityAnalyzer()
 
         self.PositiveSentimentCount = 0
         self.NegativeSentimentCount = 0
         self.NeutralSentimentCount = 0
+
+        # analyzer = SentimentIntensityAnalyzer()
 
         # for line in DataSourceTextTokenize:
         #     vs = analyzer.polarity_scores(line)
@@ -669,7 +672,6 @@ class DataSource():
         #     elif vs['compound'] <= -0.05:
         #         self.AutomaticSentimentList.append([line, 'Negative'])
         #         self.NegativeSentimentCount += 1
-
         for line in DataSourceTextTokenize:
             if str(line) != 'nan':
                 blob = TextBlob(line)
@@ -894,55 +896,3 @@ class DataSource():
         ax2.set_xticks(y_pos)
         ax2.set_xticklabels(tuple(objects))
         ax2.set_ylabel('Case Weigthage')
-
-    def __del__(self):
-        self.DataSourceDelete = True
-
-
-# # Set Animation
-    # def Animation(self, name):
-    #     try:
-    #         loadingGIF = pyglet.image.load_animation("Loading gifs/"+ name)
-    #         loadingGIFSprite = pyglet.sprite.Sprite(loadingGIF)
-    #
-    #         self.myLoadingDialog = QDialog()
-    #         self.myLoadingDialog.setModal(True)
-    #         self.myLoadingDialog.setParent(self.MainWindow)
-    #
-    #         LoadingGifMovie = QMovie()
-    #         LoadingGifMovie.setFileName("Loading gifs/" + name)
-    #
-    #         gifWidth = loadingGIFSprite.width
-    #         gifheight = loadingGIFSprite.height
-    #
-    #         self.myLoadingDialog.setGeometry(pyautogui.size().width / 2 - gifWidth / 2,
-    #                                          pyautogui.size().height / 2 - gifheight / 2, gifWidth, gifheight)
-    #         self.myLoadingDialog.setAttribute(Qt.WA_TranslucentBackground)
-    #         self.myLoadingDialog.setWindowFlags(Qt.FramelessWindowHint)
-    #
-    #         movie_screen = QLabel()
-    #
-    #         # Make label fit the gif
-    #         movie_screen.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-    #         movie_screen.setAlignment(Qt.AlignCenter)
-    #
-    #         main_layout = QVBoxLayout()
-    #         main_layout.addWidget(movie_screen)
-    #
-    #         css = qstylizer.style.StyleSheet()
-    #         css.setValues(backgroundColor="transparent")
-    #         self.myLoadingDialog.setStyleSheet(css.toString())
-    #         self.myLoadingDialog.setLayout(main_layout)
-    #
-    #         # Add the QMovie object to the label
-    #         LoadingGifMovie.setCacheMode(QMovie.CacheAll)
-    #         LoadingGifMovie.setSpeed(100)
-    #         movie_screen.setMovie(LoadingGifMovie)
-    #         LoadingGifMovie.start()
-    #
-    #         self.myLoadingDialog.exec_()
-    #
-    #     except Exception as e:
-    #         print(str(e))
-
-    # Delete Object

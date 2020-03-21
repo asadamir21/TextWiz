@@ -38,5 +38,3 @@ class Tab():
     def setAutomaticSentimentAnalysis(self, ColumnName):
         self.AutomaticSentimentAnalysisColumnName = ColumnName
 
-    def __del__(self):
-        self.TabDelete = True

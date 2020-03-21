@@ -288,14 +288,8 @@ QMenu::separator
 QProgressBar
 {
     border: 2px solid grey;
-    border-radius: 5px;
-    text-align: center;
-}
-
-QProgressBar::chunk
-{
-    width: 2.15px;
-    margin: 0.5px;
+    border-radius:8px;
+    padding:1px
 }
 
 QTabBar::tab {

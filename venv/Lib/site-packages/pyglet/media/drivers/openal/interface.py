@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id$
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
 
 import ctypes
 from collections import namedtuple
@@ -65,7 +61,7 @@ class OpenALException(MediaException):
                                                           self.message)
 
 
-class OpenALObject(object):
+class OpenALObject:
     """Base class for OpenAL objects."""
     @classmethod
     def _check_error(cls, message=None):

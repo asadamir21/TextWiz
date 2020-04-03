@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -100,11 +100,8 @@ sprites within batches.
 .. versionadded:: 1.1
 """
 
-__docformat__ = 'restructuredtext'
-__version__ = '$Id$'
-
-import math
 import sys
+import math
 
 from pyglet.gl import *
 from pyglet import clock

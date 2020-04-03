@@ -4,6 +4,7 @@ class ProgressInfo:
         self.DataSourceName = DataSourceName
         self.ProcessName = ProcessName
 
+    # ************************* Importing *************************
 
     def ImportFile(self, Path, Extension):
         self.DataSourcePath = Path
@@ -20,6 +21,8 @@ class ProgressInfo:
         self.Since = Since
         self.DataSource = DataSource
 
+    # ************************** Queries **************************
+
     def GenerateWordFrequency(self, DataSource):
         self.DataSource = DataSource
 
@@ -27,8 +30,16 @@ class ProgressInfo:
         self.DataSource = DataSource
         self.SentimentAnalysisColumnName = Column
 
-    def SentimentAnalysisVisualization(self, DataSource):
+    def PartOfSpeech(self, DataSource):
         self.DataSource = DataSource
+
+    def EntityRelationShip(self, DataSource):
+        self.DataSource = DataSource
+
+    def TopicModelling(self, DataSource):
+        self.DataSource = DataSource
+
+    # *********************** Visualization ***********************
 
     def CreateWordCloud(self, DataSourcetext, WCBGColor, maxword, maskname):
         self.DataSourcetext = DataSourcetext

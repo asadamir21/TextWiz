@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,10 +49,6 @@ Modules must also implement the two functions::
         return []
 
 """
-from builtins import object
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 import os.path
 from pyglet import compat_platform
@@ -72,7 +68,7 @@ class ImageEncodeException(Exception):
     pass
 
 
-class ImageDecoder(object):
+class ImageDecoder:
     def get_file_extensions(self):
         """Return a list of accepted file extensions, e.g. ['.png', '.bmp']
         Lower-case only.
@@ -105,7 +101,7 @@ class ImageDecoder(object):
                                self.get_file_extensions())
 
 
-class ImageEncoder(object):
+class ImageEncoder:
     def get_file_extensions(self):
         """Return a list of accepted file extensions, e.g. ['.png', '.bmp']
         Lower-case only.

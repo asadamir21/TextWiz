@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id:$
 
 """Byte abstractions of Vertex Buffer Objects and vertex arrays.
 
@@ -45,13 +44,9 @@ Buffers can optionally be created "mappable" (incorporating the
 :py:meth:`~AbstractMappable.get_region` method which provides the most
 efficient path for updating partial data within the buffer.
 """
-from builtins import object
 
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
-
-import ctypes
 import sys
+import ctypes
 
 import pyglet
 from pyglet.gl import *
@@ -117,7 +112,7 @@ def create_mappable_buffer(size, target=GL_ARRAY_BUFFER, usage=GL_DYNAMIC_DRAW, 
         return VertexArray(size)
 
 
-class AbstractBuffer(object):
+class AbstractBuffer:
     """Abstract buffer of byte data.
 
     :Ivariables:
@@ -202,7 +197,7 @@ class AbstractBuffer(object):
         raise NotImplementedError('abstract')
 
 
-class AbstractMappable(object):
+class AbstractMappable:
     def get_region(self, start, size, ptr_type):
         """Map a region of the buffer into a ctypes array of the desired
         type.  This region does not need to be unmapped, but will become
@@ -444,7 +439,7 @@ class MappableVertexBufferObject(VertexBufferObject, AbstractMappable):
         self._dirty_max = 0
 
 
-class AbstractBufferRegion(object):
+class AbstractBufferRegion:
     """A mapped region of a buffer.
 
     Buffer regions are obtained using :py:meth:`~AbstractMappable.get_region`.

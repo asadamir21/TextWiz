@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import division
-from builtins import object
 
 import ctypes
 from collections import namedtuple
 
-from pyglet.compat import asbytes, asstr
+from pyglet.util import asbytes, asstr
 from pyglet.font import base
 from pyglet import image
 from pyglet.font.fontconfig import get_fontconfig
@@ -140,7 +138,7 @@ FreeTypeFontMetrics = namedtuple('FreeTypeFontMetrics',
                                  ['ascent', 'descent'])
 
 
-class MemoryFaceStore(object):
+class MemoryFaceStore:
     def __init__(self):
         self._dict = {}
 
@@ -211,7 +209,7 @@ class FreeTypeFont(base.Font):
         cls._memory_faces.add(face)
 
 
-class FreeTypeFace(object):
+class FreeTypeFace:
     """FreeType typographic face object.
 
     Keeps the reference count to the face at +1 as long as this object exists. If other objects

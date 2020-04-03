@@ -13,7 +13,6 @@ import collections
 
 import six
 
-
 Row = collections.namedtuple("Row", ("pre", "fill", "node"))
 
 
@@ -35,9 +34,11 @@ class AbstractStyle(object):
         self.vertical = vertical
         self.cont = cont
         self.end = end
-        assert (len(cont) == len(vertical) and len(cont) == len(end)), (
-            "'%s', '%s' and '%s' need to have equal length" % (vertical, cont,
-                                                               end))
+        assert len(cont) == len(vertical) == len(end), "'%s', '%s' and '%s' need to have equal length" % (
+            vertical,
+            cont,
+            end,
+        )
 
     @property
     def empty(self):
@@ -151,13 +152,14 @@ class DoubleStyle(AbstractStyle):
 @six.python_2_unicode_compatible
 class RenderTree(object):
 
-    def __init__(self, node, style=ContStyle(), childiter=list):
+    def __init__(self, node, style=ContStyle(), childiter=list, maxlevel=None):
         u"""
         Render tree starting at `node`.
 
         Keyword Args:
             style (AbstractStyle): Render Style.
             childiter: Child iterator.
+            maxlevel: Limit rendering to this depth.
 
         :any:`RenderTree` is an iterator, returning a tuple with 3 items:
 
@@ -205,6 +207,13 @@ class RenderTree(object):
         │   └── a
         │       b
         └── Z
+
+        `maxlevel` limits the depth of the tree:
+
+        >>> print(RenderTree(root, maxlevel=2))
+        Node('/root', lines=['c0fe', 'c0de'])
+        ├── Node('/root/sub0', lines=['ha', 'ba'])
+        └── Node('/root/sub1', lines=['Z'])
 
         The `childiter` is responsible for iterating over child nodes at the
         same level. An reversed order can be achived by using `reversed`.
@@ -263,17 +272,19 @@ class RenderTree(object):
         self.node = node
         self.style = style
         self.childiter = childiter
+        self.maxlevel = maxlevel
 
     def __iter__(self):
         return self.__next(self.node, tuple())
 
-    def __next(self, node, continues):
+    def __next(self, node, continues, level=0):
         yield RenderTree.__item(node, continues, self.style)
         children = node.children
-        if children:
+        level += 1
+        if children and (self.maxlevel is None or level < self.maxlevel):
             children = self.childiter(children)
             for child, is_last in _is_last(children):
-                for grandchild in self.__next(child, continues + (not is_last, )):
+                for grandchild in self.__next(child, continues + (not is_last, ), level=level):
                     yield grandchild
 
     @staticmethod
@@ -300,7 +311,7 @@ class RenderTree(object):
         return "%s(%s)" % (classname, ", ".join(args))
 
     def by_attr(self, attrname="name"):
-        """
+        u"""
         Return rendered tree with node attribute `attrname`.
 
         >>> from anytree import AnyNode, RenderTree
@@ -324,7 +335,6 @@ class RenderTree(object):
             └── sub1C
                 └── sub1Ca
 
-
         """
         def get():
             for pre, fill, node in self:
@@ -336,6 +346,7 @@ class RenderTree(object):
                 yield u"%s%s" % (pre, lines[0])
                 for line in lines[1:]:
                     yield u"%s%s" % (fill, line)
+
         return "\n".join(get())
 
 

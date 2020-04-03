@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from builtins import chr
-from builtins import object
+
 import unicodedata
 
 from pyglet.window import key
@@ -47,7 +46,7 @@ NSApplication = ObjCClass('NSApplication')
 
 # This custom NSTextView subclass is used for capturing all of the
 # on_text, on_text_motion, and on_text_motion_select events.
-class PygletTextView_Implementation(object):
+class PygletTextView_Implementation:
     PygletTextView = ObjCSubclass('NSTextView', 'PygletTextView')
 
     @PygletTextView.method(b'@'+PyObjectEncoding)

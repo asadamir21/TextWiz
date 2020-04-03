@@ -5,16 +5,19 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtChart import *
 from PyQt5 import QtPrintSupport, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
-from PIL import  Image
-#from File import *
+
+from PIL import Image
 from TaskThread import *
 from OpenWindow import *
 from MarkerModel import *
 
 import humanfriendly, platform
 import glob, sys, os, getpass, ntpath, math, csv, datetime, graphviz, threading, queue
+
+from pyparsing import Char
 
 WindowPlatform = False
 LinuxPlatform = False
@@ -102,7 +105,6 @@ class Window(QMainWindow):
         self.setMinimumSize(self.width/2, self.height/2)
         self.showMaximized()
 
-
         # *****************************  ToolBar ******************************************
 
         self.toolbar = self.addToolBar("Show Toolbar")
@@ -184,7 +186,6 @@ class Window(QMainWindow):
         SaveButton.triggered.connect(self.SaveWindow)
 
         SaveASButton = QAction(QIcon("Images/Save.png"), 'Save As', self)
-        SaveASButton.setShortcut('Ctrl+S')
         SaveASButton.setStatusTip('File Saved')
         SaveASButton.triggered.connect(self.SaveASWindow)
 
@@ -197,7 +198,7 @@ class Window(QMainWindow):
         exitButton = QAction('Exit', self)
         exitButton.setShortcut('Ctrl+Q')
         exitButton.setStatusTip('Exit application')
-        exitButton.triggered.connect(self.closeEvent)
+        exitButton.triggered.connect(self.close)
 
         fileMenu.addAction(newFileButton)
         fileMenu.addAction(OpenFileButton)
@@ -237,11 +238,6 @@ class Window(QMainWindow):
         toggleVisualizationButton.setChecked(True)
         toggleVisualizationButton.triggered.connect(lambda: self.LeftPaneHide(self.VisualizationLabel, self.VisualizationTreeWidget))
         viewMenu.addAction(toggleVisualizationButton)
-
-        toggleReportButton = QAction('Show Report', self, checkable=True)
-        toggleReportButton.setChecked(True)
-        toggleReportButton.triggered.connect(lambda: self.LeftPaneHide(self.ReportLabel, self.ReportTreeWidget))
-        viewMenu.addAction(toggleReportButton)
 
         ChangeThemeButton = QAction('Change Theme', self)
         ChangeThemeButton.triggered.connect(lambda: self.ChangeThemeDialog())
@@ -385,6 +381,18 @@ class Window(QMainWindow):
         WordTreeTool.setStatusTip('Word Tree')
         WordTreeTool.triggered.connect(lambda: self.DataSourceWordTreeDialog())
         VisualizationMenu.addAction(WordTreeTool)
+
+        # Survey Analysis Tool
+        SurveyAnalysisTool = QAction('Survey Analysis', self)
+        SurveyAnalysisTool.setStatusTip('Survey Analysis')
+        SurveyAnalysisTool.triggered.connect(lambda: self.DataSourceSurveyAnalysisDialog())
+        VisualizationMenu.addAction(SurveyAnalysisTool)
+
+        # Tweet Analysis
+        TweetAnalysisTool = QAction('Tweet Analysis', self)
+        TweetAnalysisTool.setStatusTip('Tweet Analysis')
+        TweetAnalysisTool.triggered.connect(lambda: self.DataSourceTweetAnalysisDialog())
+        VisualizationMenu.addAction(TweetAnalysisTool)
 
         # Document Clustering
         DocumentClusteringTool = QAction('Document Clustering', self)
@@ -597,7 +605,7 @@ class Window(QMainWindow):
 
         self.setCentralWidget(self.centralwidget)
 
-        #self.WelcomePage()
+        self.WelcomePage()
 
     # Welcome Page
     def WelcomePage(self):
@@ -1861,6 +1869,9 @@ class Window(QMainWindow):
                         newitem = int(newitem)
                     elif isinstance(newitem, (float, np.float)):
                         newitem = float(newitem)
+                    elif isinstance(newitem, (float, pd.datetime)):
+                        newitem = newitem.to_pydatetime().strftime("%m/%d/%Y, %H:%M:%S")
+
 
                     intItem = QTableWidgetItem()
                     intItem.setData(Qt.EditRole, QVariant(newitem))
@@ -2203,7 +2214,8 @@ class Window(QMainWindow):
                                DataSourceShowFrequencyTableDialog.width() / 2, DataSourceShowFrequencyTableDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -2439,7 +2451,8 @@ class Window(QMainWindow):
                                GenerateQuestionsDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -2778,24 +2791,9 @@ class Window(QMainWindow):
 
                     DS = ThreadQueue.get()
 
-                    ProgressBarWidget2 = QDialog()
-                    progressBar2 = QProgressBar(ProgressBarWidget2)
-
-                    dummyProgressInfo = ProgressInfo(DataSourceName, "Sentiment Analysis Visualization")
-                    dummyProgressInfo.SentimentAnalysisVisualization(DS)
-
-                    ThreadQueue.put(dummyProgressInfo)
-
-                    self.myLongTask = TaskThread()
-                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget2.close())
-                    self.myLongTask.start()
-
-                    self.ProgressBar(ProgressBarWidget2, progressBar2, "Creating Sentiments Visualization")
-
-                    del dummyProgressInfo
-
-                    DS = ThreadQueue.get()
                     rowList = DS.AutomaticSentimentList
+
+                    DS.SentimentAnalysisVisualization()
                     break
 
             SentimentAnalysisTab = QWidget()
@@ -3017,6 +3015,7 @@ class Window(QMainWindow):
             tabs.setisActive(True)
             myFile.requiredSaved = True
 
+
     # Sentiment Analysis ComboBox
     def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
         DSSAComboBox = self.sender()
@@ -3039,6 +3038,7 @@ class Window(QMainWindow):
             Layout1.hide()
             Layout2.show()
             Layout3.show()
+
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -3170,7 +3170,8 @@ class Window(QMainWindow):
 
 
         for DS in myFile.DataSourceList:
-            StemWordDSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                StemWordDSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(StemWordDSComboBox)
 
@@ -3440,7 +3441,8 @@ class Window(QMainWindow):
                                PartOfSpeechDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -3484,8 +3486,23 @@ class Window(QMainWindow):
             dummyQuery = Query()
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    POSGraph, rowList, noun_count, verb_count, adj_count = dummyQuery.PartOfSpeech(DS.DataSourceName,
-                                                                                                   DS.DataSourcetext, 3)
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Part of Speech")
+                    dummyProgressInfo.PartOfSpeech(DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Part of Speech Table")
+
+                    del dummyProgressInfo
+
+                    POSGraph, rowList, noun_count, verb_count, adj_count = ThreadQueue.get()
                     break
 
             # Creating New Tab for Part of Speech
@@ -3690,7 +3707,8 @@ class Window(QMainWindow):
                                EntityRelationShipDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -3731,11 +3749,26 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceERTabFlag:
-            dummyQuery = Query()
+
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    Entity_List, EntityHTML, DependencyHTML = dummyQuery.EntityRelationShip(
-                        DS.DataSourcetext)
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Entity Relationship")
+                    dummyProgressInfo.EntityRelationShip(DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Entity Relationship ")
+
+                    del dummyProgressInfo
+
+                    Entity_List, EntityHTML, DependencyHTML = ThreadQueue.get()
                     break
 
             # Creating New Tab for Entity Relationship
@@ -3908,7 +3941,8 @@ class Window(QMainWindow):
                                TopicModellingDialog.height() / 10)
 
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -3985,8 +4019,23 @@ class Window(QMainWindow):
             # Data Source Topic Modelling HTML
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-                    dummyQuery = Query()
-                    TopicModellingHTML = dummyQuery.TopicModelling(DS.DataSourcetext, 5)
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
+
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Topic Modelling")
+                    dummyProgressInfo.PartOfSpeech(DS)
+
+                    ThreadQueue.put(dummyProgressInfo)
+
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Generating Topic")
+
+                    del dummyProgressInfo
+
+                    TopicModellingHTML = ThreadQueue.get()
                     break
 
             # Topic Modelling HTML Viewer
@@ -4496,7 +4545,8 @@ class Window(QMainWindow):
                                         SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
 
         for DS in myFile.DataSourceList:
-            SummarizeDSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                SummarizeDSComboBox.addItem(DS.DataSourceName)
         self.LineEditSizeAdjustment(SummarizeDSComboBox)
 
         # Summarize Word QSpinBox
@@ -4740,7 +4790,8 @@ class Window(QMainWindow):
                                         DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
 
         for DS in myFile.DataSourceList:
-            TranslateDSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                TranslateDSComboBox.addItem(DS.DataSourceName)
         self.LineEditSizeAdjustment(TranslateDSComboBox)
 
         # Data Source Original Text LineEdit
@@ -6152,7 +6203,6 @@ class Window(QMainWindow):
             lambda: self.DataSourcesCreateDashboard(DSComboBox.currentText()))
 
         DataSourcesCreateDashboardDialog.exec()
-        print()
 
     # Create Dashboard
     def DataSourcesCreateDashboard(self, DataSourceName):
@@ -6195,7 +6245,8 @@ class Window(QMainWindow):
         WordCloudDSComboBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
 
         for DS in myFile.DataSourceList:
-            WordCloudDSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                WordCloudDSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(WordCloudDSComboBox)
 
@@ -6429,10 +6480,10 @@ class Window(QMainWindow):
                                DataSourceWordTreeDialog.height() * 0.2,
                                DataSourceWordTreeDialog.width() / 2,
                                DataSourceWordTreeDialog.height() / 10)
-        # if len(myFile.DataSourceList) > 1:
-        #     DSComboBox.addItem("All")
+
         for DS in myFile.DataSourceList:
-            DSComboBox.addItem(DS.DataSourceName)
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
 
         self.LineEditSizeAdjustment(DSComboBox)
 
@@ -6551,6 +6602,1522 @@ class Window(QMainWindow):
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
             myFile.requiredSaved = True
+
+    # ****************************************************************************
+    # ********************** Data Sources Survey Analysis ************************
+    # ****************************************************************************
+
+    # Data Source Survey Analysis Dialog
+    def DataSourceSurveyAnalysisDialog(self):
+        self.ChartType = ["Area Chart", "Bar Chart", "Donut Chart", "Pie Chart", "Scatter Plot", "Time Series"]
+        self.ChartListCount = 0
+
+        # Data Source Survey Analysis Dialog
+
+        DataSourceSurveyAnalysisDialog = QDialog()
+        DataSourceSurveyAnalysisDialog.setWindowTitle("Survey Analysis")
+        DataSourceSurveyAnalysisDialog.setGeometry(self.width * 0.3,
+                                                   self.height * 0.2,
+                                                   self.width * 0.4,
+                                                   self.height * 0.6)
+        DataSourceSurveyAnalysisDialog.setParent(self)
+        self.QDialogAddProperties(DataSourceSurveyAnalysisDialog)
+
+        # ************************* Survey Analysis First Layout *************************
+
+        # LayoutWidget For within Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayoutWidget = QWidget(DataSourceSurveyAnalysisDialog)
+        DataSourceSurveyAnalysisVerticalLayoutWidget.setGeometry(0, 0,
+                                                                 DataSourceSurveyAnalysisDialog.width(),
+                                                                 DataSourceSurveyAnalysisDialog.height()*0.2)
+
+        # Box Layout for Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayout = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget)
+        DataSourceSurveyAnalysisVerticalLayout.setContentsMargins(0, 0, 0, 0)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceSurveyAnalysisDialog)
+        DataSourcelabel.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget.width() * 0.125,
+                                    DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.2,
+                                    DataSourceSurveyAnalysisVerticalLayoutWidget.width() / 4,
+                                    DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceSurveyAnalysisVerticalLayoutWidget)
+        DSComboBox.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget.width() * 0.4,
+                               DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.2,
+                               DataSourceSurveyAnalysisVerticalLayoutWidget.width() / 2,
+                               DataSourceSurveyAnalysisVerticalLayoutWidget.height() / 10)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # ************************* Survey Analysis Second Layout *************************
+
+        # LayoutWidget For within Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayoutWidget2 = QWidget(DataSourceSurveyAnalysisDialog)
+        DataSourceSurveyAnalysisVerticalLayoutWidget2.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.2,
+                                                                 DataSourceSurveyAnalysisDialog.width(),
+                                                                 DataSourceSurveyAnalysisDialog.height() * 0.6)
+        # Box Layout for Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayout2 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget2)
+        DataSourceSurveyAnalysisVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+
+        # Scroll Area
+        DataSourceSurveyAnalysisScrollArea = QScrollArea(DataSourceSurveyAnalysisVerticalLayoutWidget2)
+        DataSourceSurveyAnalysisScrollArea.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.1,
+                                                       0,
+                                                       DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.8,
+                                                       DataSourceSurveyAnalysisVerticalLayoutWidget2.height())
+
+        DataSourceSurveyAnalysisScrollArea.setFixedWidth(DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.8)
+        DataSourceSurveyAnalysisScrollArea.setFixedHeight(DataSourceSurveyAnalysisVerticalLayoutWidget2.height())
+
+        DataSourceSurveyAnalysisScrollArea.setWidgetResizable(True)
+        DataSourceSurveyAnalysisVerticalLayout2.addWidget(DataSourceSurveyAnalysisScrollArea)
+
+        # # Scroll Area Widget
+        DataSourceSurveyAnalysisScrollWidget = QWidget(DataSourceSurveyAnalysisVerticalLayoutWidget2)
+        DataSourceSurveyAnalysisScrollWidget.setGeometry(DataSourceSurveyAnalysisScrollArea.width() * 0.1,
+                                                         0,
+                                                         DataSourceSurveyAnalysisScrollArea.width() * 0.8,
+                                                         DataSourceSurveyAnalysisScrollArea.height())
+        DataSourceSurveyAnalysisScrollArea.setWidget(DataSourceSurveyAnalysisScrollWidget)
+
+        # # Scroll Area Layout
+        DataSourceSurveyAnalysisScrollLayout = QVBoxLayout(DataSourceSurveyAnalysisScrollWidget)
+        DataSourceSurveyAnalysisScrollLayout.setContentsMargins(0, 0, 0, 0)
+
+
+        # ************************* Survey Analysis Third Layout *************************
+
+        # LayoutWidget For within Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayoutWidget3 = QWidget(DataSourceSurveyAnalysisDialog)
+        DataSourceSurveyAnalysisVerticalLayoutWidget3.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.8,
+                                                                  DataSourceSurveyAnalysisDialog.width(),
+                                                                  DataSourceSurveyAnalysisDialog.height() * 0.1)
+        # Box Layout for Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayout3 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget3)
+        DataSourceSurveyAnalysisVerticalLayout3.setContentsMargins(0, 0, 0, 0)
+
+        AddChartButton = QPushButton(DataSourceSurveyAnalysisVerticalLayoutWidget3)
+        AddChartButton.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget3.width() * 0.75,
+                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.height() * 0.2,
+                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.width() * 0.2,
+                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.height() * 0.8)
+        AddChartButton.setText("Add Chart")
+        AddChartButton.setStyleSheet("Text-align:left");
+        self.LabelSizeAdjustment(AddChartButton)
+
+        AddChartButton.clicked.connect(lambda: self.DataSourceSurveyAnalysisAddChartButtonClicked(DSComboBox, DataSourceSurveyAnalysisScrollLayout, DataSourceSurveyAnalysisScrollWidget))
+
+        if DSComboBox.count() == 0:
+            AddChartButton.setDisabled(True)
+
+        if self.ChartListCount < 6 and DSComboBox.count() > 0:
+            self.DataSourceSurveyAnalysissetInitialState(DataSourceSurveyAnalysisScrollLayout, AddChartButton,
+                                                         DataSourceSurveyAnalysisScrollWidget, DSComboBox)
+
+        # ************************* Survey Analysis Fourth Layout *************************
+
+        # LayoutWidget For within Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayoutWidget4 = QWidget(DataSourceSurveyAnalysisDialog)
+        DataSourceSurveyAnalysisVerticalLayoutWidget4.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.9,
+                                                                  DataSourceSurveyAnalysisDialog.width(),
+                                                                  DataSourceSurveyAnalysisDialog.height() * 0.2)
+        # Box Layout for Survey Analysis Tab
+        DataSourceSurveyAnalysisVerticalLayout4 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget4)
+        DataSourceSurveyAnalysisVerticalLayout4.setContentsMargins(0, 0, 0, 0)
+
+        # Survey Analysis Button Box
+        DataSourceSurveyAnalysisbuttonBox = QDialogButtonBox(DataSourceSurveyAnalysisVerticalLayoutWidget4)
+        DataSourceSurveyAnalysisbuttonBox.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget4.width() * 0.5,
+                                                      0,
+                                                      DataSourceSurveyAnalysisVerticalLayoutWidget4.width() * 0.45,
+                                                      DataSourceSurveyAnalysisVerticalLayoutWidget4.height())
+        DataSourceSurveyAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceSurveyAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Analyze')
+
+        if DSComboBox.count() == 0:
+            DataSourceSurveyAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(DataSourceSurveyAnalysisbuttonBox)
+
+        DSComboBox.currentTextChanged.connect(lambda: self.DataSourceSurveyAnalysisDSComboBoxTextChanged(DataSourceSurveyAnalysisScrollLayout, AddChartButton, DataSourceSurveyAnalysisScrollWidget, DSComboBox))
+
+        DataSourceSurveyAnalysisbuttonBox.accepted.connect(DataSourceSurveyAnalysisDialog.accept)
+        DataSourceSurveyAnalysisbuttonBox.rejected.connect(DataSourceSurveyAnalysisDialog.reject)
+
+        DataSourceSurveyAnalysisbuttonBox.accepted.connect(
+            lambda: self.DataSourceSurveyAnalysis(DSComboBox.currentText(), DataSourceSurveyAnalysisScrollLayout))
+
+        DataSourceSurveyAnalysisDialog.exec()
+
+    # Data Source Survey Analysis Data Source Combo Box Text Changed
+    def DataSourceSurveyAnalysisDSComboBoxTextChanged(self, DataSourceSurveyAnalysisScrollLayout, AddChartButton, DataSourceSurveyAnalysisScrollWidget, DSComboBox):
+        # Removing All Widgets
+        while DataSourceSurveyAnalysisScrollLayout.count() > 0:
+            WidgetItem = DataSourceSurveyAnalysisScrollLayout.takeAt(0)
+            if not WidgetItem:
+                continue
+
+            widget = WidgetItem.widget()
+            if widget:
+                widget.deleteLater()
+
+        # Restoring Counter and Button to Default
+        self.ChartListCount = 0
+        AddChartButton.setDisabled(False)
+
+        self.DataSourceSurveyAnalysissetInitialState(DataSourceSurveyAnalysisScrollLayout, AddChartButton, DataSourceSurveyAnalysisScrollWidget, DSComboBox)
+
+    # Data Source Survey Analysis set Initial State
+    def DataSourceSurveyAnalysissetInitialState(self, DataSourceSurveyAnalysisScrollLayout, AddChartButton, DataSourceSurveyAnalysisScrollWidget, DSComboBox):
+        ChartGroupBox = QGroupBox("Chart No. {}".format(self.ChartListCount + 1),
+                                  DataSourceSurveyAnalysisScrollWidget)
+        HorizontalBoxLayout = QHBoxLayout(ChartGroupBox)
+
+        # ***********************************************
+        # **************** Chart ComboBox ***************
+        # ***********************************************
+
+        # ComboBox Layout
+        ChartComboBoxLayout = QVBoxLayout()
+
+        # Chart Label
+        ChartLabel = QLabel()
+        ChartLabel.setText("Chart Type")
+        self.LabelSizeAdjustment(ChartLabel)
+        ChartComboBoxLayout.addWidget(ChartLabel)
+        ChartComboBoxLayout.addStretch(1)
+
+        # Chart ComboBox
+        ChartTypeCombBox = QComboBox()
+        for Chart in self.ChartType:
+            ChartTypeCombBox.addItem(Chart)
+
+        ChartComboBoxLayout.addWidget(ChartTypeCombBox)
+        ChartComboBoxLayout.addStretch(2)
+
+        HorizontalBoxLayout.addLayout(ChartComboBoxLayout)
+        HorizontalBoxLayout.addStretch(1)
+
+        # ***********************************************
+        # ************ First Column ComboBox ************
+        # ***********************************************
+
+        # First Column ComboBox Layout
+        FirstComboBoxLayout = QVBoxLayout()
+
+        # Chart Label
+        FirstLabel = QLabel()
+        FirstLabel.setText("First Quantity")
+        self.LabelSizeAdjustment(FirstLabel)
+        FirstComboBoxLayout.addWidget(FirstLabel)
+        FirstComboBoxLayout.addStretch(1)
+
+        # First Column ComboBox
+        FirstComboBox = QComboBox()
+        self.LineEditSizeAdjustment(FirstComboBox)
+
+        FirstComboBoxLayout.addWidget(FirstComboBox)
+        FirstComboBoxLayout.addStretch(2)
+
+        HorizontalBoxLayout.addLayout(FirstComboBoxLayout)
+        HorizontalBoxLayout.addStretch(2)
+
+        # ***********************************************
+        # ************ Second Column ComboBox ***********
+        # ***********************************************
+
+        # Second Column ComboBox Layout
+        SecondComboBoxLayout = QVBoxLayout()
+
+        # Second Column Label
+        SecondLabel = QLabel()
+        SecondLabel.setText("Second Quantity")
+        SecondLabel.hide()
+        self.LabelSizeAdjustment(SecondLabel)
+        SecondComboBoxLayout.addWidget(SecondLabel)
+        SecondComboBoxLayout.addStretch(1)
+
+        # Second Column ComboBox
+        SecondComboBox = QComboBox()
+        self.LineEditSizeAdjustment(SecondComboBox)
+
+        SecondComboBoxLayout.addWidget(SecondComboBox)
+        SecondComboBoxLayout.addStretch(2)
+
+        HorizontalBoxLayout.addLayout(SecondComboBoxLayout)
+        HorizontalBoxLayout.addStretch(3)
+
+        self.setItemsinComboBox(ChartTypeCombBox, DSComboBox, FirstComboBox, SecondComboBox, SecondLabel)
+        ChartTypeCombBox.currentTextChanged.connect(
+            lambda: self.DataSourceSurveyAnalysisChartComboBoxTextChanged(DSComboBox, FirstComboBox, SecondComboBox,
+                                                                          SecondLabel))
+
+        self.ChartListCount += 1
+
+        DataSourceSurveyAnalysisScrollLayout.addWidget(ChartGroupBox)
+        DataSourceSurveyAnalysisScrollLayout.addStretch(1)
+
+    # Data Source Survey Analysis Chart Combo Box Text Changed
+    def DataSourceSurveyAnalysisChartComboBoxTextChanged(self, DSComboBox, FirstComboBox, SecondComboBox, SecondLabel):
+        ChartTypeCombBox = self.sender()
+
+        # Clearing First ComboBox
+        while FirstComboBox.count() > 0:
+            FirstComboBox.removeItem(0)
+
+        # Clearing Second ComboBox
+        while SecondComboBox.count() > 0:
+            SecondComboBox.removeItem(0)
+
+        # Setting Items in ComboBox
+        self.setItemsinComboBox(ChartTypeCombBox, DSComboBox, FirstComboBox, SecondComboBox, SecondLabel)
+
+    # Data Source Survey Analysis Chart set Items in ComboBox
+    def setItemsinComboBox(self, ChartTypeCombBox, DSComboBox, FirstComboBox, SecondComboBox, SecondLabel):
+        # Data Source ComboBox
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DSComboBox.currentText():
+                for HeaderLabel in DS.CSVHeaderLabel:
+                    # Area Chart
+                    if ChartTypeCombBox.currentText() == "Area Chart":
+                        FirstComboBox.addItem(HeaderLabel)
+
+                    # Bar Chart | Donut Chart |  Pie Chart | Word Cloud
+                    elif ChartTypeCombBox.currentText() == "Bar Chart" or ChartTypeCombBox.currentText() == "Donut Chart" or ChartTypeCombBox.currentText() == "Pie Chart":
+                        if DS.CSVHeader:
+                            if str(DS.CSVData.dtypes[HeaderLabel]) == "object":
+                                FirstComboBox.addItem(HeaderLabel)
+                        else:
+                            if str(DS.CSVData.iloc[:, DS.CSVHeaderLabel.index(HeaderLabel)].dtype) == "object":
+                                FirstComboBox.addItem(HeaderLabel)
+
+                    # Scatter Chart
+                    elif ChartTypeCombBox.currentText() == "Scatter Plot":
+                        if DS.CSVHeader:
+                            FirstComboBox.addItem(HeaderLabel)
+
+                    # Time Series
+                    elif ChartTypeCombBox.currentText() == "Time Series":
+                        if DS.CSVHeader:
+                            if not str(DS.CSVData.dtypes[HeaderLabel]) == "datetime64[ns, UTC]" and not str(DS.CSVData.dtypes[HeaderLabel]) == "datetime64[ns]":
+                                FirstComboBox.addItem(HeaderLabel)
+                        else:
+                            if not str(DS.CSVData.iloc[:, DS.CSVHeaderLabel.index(HeaderLabel)].dtype) == "datetime64[ns, UTC]" and not str(DS.CSVData.iloc[:, DS.CSVHeaderLabel.index(HeaderLabel)].dtype) == "datetime64[ns]":
+                                FirstComboBox.addItem(HeaderLabel)
+
+
+        if ChartTypeCombBox.currentText() == "Time Series":
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DSComboBox.currentText():
+                    for HeaderLabel in DS.CSVHeaderLabel:
+                        # Time Series
+                        if ChartTypeCombBox.currentText() == "Time Series":
+                            if DS.CSVHeader:
+                                if str(DS.CSVData.dtypes[HeaderLabel]) == "datetime64[ns, UTC]" or str(DS.CSVData.dtypes[HeaderLabel]) == "datetime64[ns]":
+                                    SecondComboBox.addItem(HeaderLabel)
+                            else:
+                                if str(DS.CSVData.iloc[:, DS.CSVHeaderLabel.index(HeaderLabel)].dtype) == "datetime64[ns, UTC]" or str(DS.CSVData.iloc[:, DS.CSVHeaderLabel.index(HeaderLabel)].dtype) == "datetime64[ns]":
+                                    SecondComboBox.addItem(HeaderLabel)
+
+            SecondLabel.show()
+            SecondComboBox.show()
+        else:
+            SecondLabel.hide()
+            SecondComboBox.hide()
+
+    # Data Source Survey Analysis Add Chart Button Clicked
+    def DataSourceSurveyAnalysisAddChartButtonClicked(self, DSComboBox, DataSourceSurveyAnalysisScrollLayout, DataSourceSurveyAnalysisScrollWidget):
+        if self.ChartListCount < 6 and DSComboBox.count() > 0:
+            self.DataSourceSurveyAnalysissetInitialState(DataSourceSurveyAnalysisScrollLayout, self.sender(), DataSourceSurveyAnalysisScrollWidget, DSComboBox)
+
+        if self.ChartListCount == 6:
+            self.sender().setDisabled(True)
+
+    # Validate Chart List
+    def ValidateChartList(self, ChartList):
+        ValidatedChartList = []
+
+        for Chart in ChartList:
+            if Chart[0] == "Time Series":
+                if Chart[2] == '':
+                    pass
+                else:
+                    ValidatedChartList.append(Chart)
+            else:
+                if Chart[1] == '':
+                    pass
+                else:
+                    ValidatedChartList.append(Chart)
+
+        #[ValidatedChartList.remove(i) for i in [ValidatedChartList[i] for i in [i for i, x in enumerate([i[0] for i in ValidatedChartList]) if x == "Word Cloud"]][1:]]
+
+        return ValidatedChartList
+
+    # Data Source Survey Analysis
+    def DataSourceSurveyAnalysis(self, DataSourceName, DataSourceSurveyAnalysisScrollLayout):
+        # Collecting Data to create a ChartList
+        ChartList = []
+        GroupBoxItemsList = (DataSourceSurveyAnalysisScrollLayout.itemAt(i).widget() for i in range(DataSourceSurveyAnalysisScrollLayout.count()))
+
+        for GroupBox in GroupBoxItemsList:
+            if isinstance(GroupBox, QGroupBox):
+                Chart = []
+                for HBoxLayout in (GroupBox.findChildren(QHBoxLayout)):
+                    for VBoxLayout in (HBoxLayout.findChildren(QVBoxLayout)):
+                        if isinstance(VBoxLayout, QVBoxLayout):
+                            ComboBoxlist = [VBoxLayout.itemAt(i).widget() for i in range(VBoxLayout.count())]
+                            for ComboBox in ComboBoxlist:
+                                if isinstance(ComboBox, QComboBox):
+                                    Chart.append(ComboBox.currentText())
+                ChartList.append(Chart)
+
+        CharListlength = len(ChartList)
+        # Validate ChartList
+        ChartList = self.ValidateChartList(ChartList)
+
+        if len(ChartList) > 0 and len(ChartList) <=  CharListlength:
+            # Data Source Survey Analysis
+            DataSourceSurveyAnalysisTabFlag = False
+            DataSourceSurveyAnalysisTabFlag2 = False
+            DataSourceSurveyAnalysisTabFlag3 = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Survey Analysis':
+                    if tabs.tabWidget != None:
+                        if sorted(tabs.SurveyAnalysisChartList) == sorted(ChartList):
+                            DataSourceSurveyAnalysisTabFlag = True
+                            break
+
+                        else:
+                            DataSourceSurveyAnalysisTabFlag2 = True
+                            break
+                    else:
+                        DataSourceSurveyAnalysisTabFlag3 = True
+                        break
+
+            if not DataSourceSurveyAnalysisTabFlag or DataSourceSurveyAnalysisTabFlag2:
+                # Creating New Tab for Survey Analysis
+                DataSourceSurveyAnalysisTab = QWidget()
+
+                # **********************************************************************************************
+                # ************************ Data Source Survey Analysis Setting Widget **************************
+                # **********************************************************************************************
+
+                # LayoutWidget For within Survey Analysis Tab
+                DataSourceSurveyAnalysisTabverticalLayoutWidget = QWidget(DataSourceSurveyAnalysisTab)
+                DataSourceSurveyAnalysisTabverticalLayoutWidget.setGeometry(self.tabWidget.width()*0.2,
+                                                                            0,
+                                                                            self.tabWidget.width()*0.6,
+                                                                            self.tabWidget.height()/20)
+
+                # Box Layout for Survey Analysis Tab
+                DataSourceSurveyAnalysisTabverticalLayout = QHBoxLayout(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+                # ********************* Theme *********************
+                # Theme Label
+                ThemeLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                ThemeLabel.setText("Theme:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(1)
+
+                # Theme Combo Box
+                ThemeComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(2)
+
+                # Adding Items to ComboBox
+                ThemeComboBox.addItem("Light")
+                ThemeComboBox.addItem("Blue Cerulean")
+                ThemeComboBox.addItem("Blue Icy")
+                ThemeComboBox.addItem("Blue Ncs")
+                ThemeComboBox.addItem("Brown Sand")
+                ThemeComboBox.addItem("High Contrast")
+                ThemeComboBox.addItem("Theme Dark")
+
+                # ******************* Animation *******************
+
+                # Animation Label
+                AnimationLabel = QLabel()
+                AnimationLabel.setText("Animation:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(3)
+
+                # Animation Combo Box
+                AnimationComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(4)
+
+                # Adding Items to ComboBox
+                AnimationComboBox.addItem("All Animations")
+                AnimationComboBox.addItem("Series Animation")
+                AnimationComboBox.addItem("Grid Axis Animation")
+                AnimationComboBox.addItem("No Animation")
+
+                # ********************* Legend ********************
+                # Legend Label
+                LegendLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                LegendLabel.setText("Legend:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(5)
+
+
+                # Legend ComboBox
+                LegendComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(6)
+
+                # Adding Items to ComboBox
+                LegendComboBox.addItem("Bottom")
+                LegendComboBox.addItem("Top")
+                LegendComboBox.addItem("Left")
+                LegendComboBox.addItem("Right")
+                LegendComboBox.addItem("Hide")
+
+                self.LineEditSizeAdjustment(LegendComboBox)
+
+
+                # Download Button
+                DownloadDashboardButton = QPushButton('Download ')
+                DownloadDashboardButton.setIcon(QIcon("Images/Download Button.png"))
+                DownloadDashboardButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+
+                DownloadDashboardButtonFont = QFont("sans-serif")
+                DownloadDashboardButtonFont.setPixelSize(14)
+                DownloadDashboardButtonFont.setBold(True)
+                DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
+
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(DownloadDashboardButton)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(8)
+
+                self.LineEditSizeAdjustment(DownloadDashboardButton)
+
+                # *********************************************************************************************
+                # ************************ Data Source Survey Analysis Chart Widgets **************************
+                # *********************************************************************************************
+
+                chartWidget = []
+
+                for Chart in ChartList:
+                    # Area Chart
+                    if Chart[0] == "Area Chart":
+                        chartWidget.append("")
+
+                    # Bar Chart
+                    elif Chart[0] == "Bar Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisBarChart(Chart, DataSourceName))
+
+                    # Donut Chart
+                    elif Chart[0] == "Donut Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisDonutChart(Chart, DataSourceName))
+
+                    # Pie Chart
+                    elif Chart[0] == "Pie Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisPieChart(Chart, DataSourceName))
+
+                    # Scatter Chart
+                    elif Chart[0] == "Scatter Plot":
+                        chartWidget.append("")
+
+                    # Time Series
+                    elif Chart[0] == "Time Series":
+                        chartWidget.append(self.DataSourceSurveyAnalysisLineChart(Chart, DataSourceName))
+
+
+                # Group Widget For within Survey Analysis Tab
+                DashBoardWidget = QGroupBox(DataSourceSurveyAnalysisTab)
+                DashBoardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
+
+
+                # Box Layout for Survey Analysis Tab
+                DashBoardWidgetLayout = QGridLayout(DashBoardWidget)
+                DashBoardWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+                colWid = 0
+                if len(chartWidget) >= 5:
+                    colWid = 3
+                elif len(chartWidget) > 2  and len(chartWidget) < 5:
+                    colWid = 2
+
+                colcounter = 0
+                rowcounter = 0
+
+                for chartWid in chartWidget:
+                    if colcounter < colWid:
+                        pass
+                    else:
+                        colcounter = 0
+                        rowcounter += 1
+
+                    DashBoardWidgetLayout.addWidget(chartWid, rowcounter, colcounter)
+                    colcounter += 1
+
+
+                ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashBoardWidget.palette()))
+                AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
+                LegendComboBox.currentTextChanged.connect(lambda: self.LegendComboBoxTextChanged(chartWidget))
+
+                # Push Button Clicked
+                DownloadDashboardButton.clicked.connect(lambda : self.DataSourceSurveyAnalysisDownloadDashboard(DashBoardWidget))
+
+                # Tab Management
+                if DataSourceSurveyAnalysisTabFlag3:
+                    tabs.tabWidget = DataSourceSurveyAnalysisTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
+                else:
+                    if DataSourceSurveyAnalysisTabFlag2:
+                        tabs.setSurveryAnalysisChartList(ChartList)
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
+                        tabs.tabWidget = DataSourceSurveyAnalysisTab
+                        tabs.setisActive(True)
+
+                    else:
+                        # Adding Survey Analysis Tab to QTabWidget
+                        dummyTab = Tab("Survey Analysis", DataSourceSurveyAnalysisTab, DataSourceName)
+                        dummyTab.setSurveryAnalysisChartList(ChartList)
+
+                        myFile.TabList.append(dummyTab)
+
+                        # Adding Preview Tab to QTabWidget
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
+                        self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
+                        myFile.requiredSaved = True
+
+                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
+
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Survey Analysis')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        SurveyAnalysisWidget = self.VisualizationTreeWidget.findItems('Survey Analysis', Qt.MatchRecursive, 0)
+
+                        SurveyAnalysisWidgetFlag = False
+
+                        if len(SurveyAnalysisWidget) > 0:
+                            for SAWidgets in SurveyAnalysisWidget:
+                                if SAWidgets.parent().text(0) == DataSourceName:
+                                    SurveyAnalysisWidgetFlag = True
+                                    break
+
+                        if not SurveyAnalysisWidgetFlag:
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Survey Analysis')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                tabs.setisActive(True)
+                myFile.requiredSaved = True
+
+        else:
+            QMessageBox.critical(self, "Survey Analysis Error",
+                                 "There were some errors in selecting Chart Type!", QMessageBox.Ok)
+
+    # Data Source Survey Analysis Line Chart
+    def DataSourceSurveyAnalysisLineChart(self, Chart, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                df = DS.CSVData
+                break
+            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                df = DS.TweetDataFrame
+                break
+
+        # Creating a Line Chart
+        chart = QChart()
+        chart.setTitle(Chart[1])
+
+        DateFlag = False
+        TimeFlag = False
+
+        # **************************************************
+        # ***** Storing data from Pandas CSV to Series *****
+        # **************************************************
+
+        if DS.DataSourceext == "CSV files (*.csv)":
+            # Column Type Integer
+            if df.dtypes[Chart[1]] == 'float64' or df.dtypes[Chart[1]] == 'int64':
+
+                # Line Series
+                series = QLineSeries(self)
+                series.setName("Date wise " + Chart[1])
+                series.setPointsVisible(True)
+                series.setPointLabelsClipping(True)
+                series.setPointLabelsVisible(True)
+                series.setPointLabelsFormat("@yPoint");
+
+                data = df.groupby(Chart[2])[Chart[1]].sum().reset_index().values.tolist()
+
+                # Creating Series
+                for date, value in data:
+                    xValue = QDateTime()
+                    if not date.date() == datetime.date(1900, 1, 1):
+                        DateFlag = True
+                        xValue.setDate(QDate(date.date().year, date.date().month, date.date().day));
+
+                    if not date.time() == datetime.time(0, 0):
+                        TimeFlag = True
+                        xValue.setTime(QTime(date.time().hour, date.time().minute, date.time().second));
+
+                    series.append(xValue.toMSecsSinceEpoch(), value);
+
+                chart.addSeries(series)
+
+            # Column Type Object
+            elif df.dtypes[Chart[1]] == 'object':
+                LineSeriesList = df.groupby([Chart[1], Chart[2]]).size()
+
+                GroupList = LineSeriesList.keys().tolist()
+
+                UpdatedList = []
+
+                for city, date in GroupList:
+                    if any(city in sublist for sublist in UpdatedList):
+                        for sublist in UpdatedList:
+                            if sublist[0] == city:
+                                sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
+                                break
+
+                    else:
+                        sublist = [city, []]
+                        sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
+                        UpdatedList.append(sublist)
+
+                # Creating Series
+                for labelX, data in UpdatedList:
+                    series = QLineSeries(self)
+                    series.setName(labelX)
+                    series.setPointsVisible(True)
+                    series.setPointLabelsClipping(True)
+
+                    DateFlag = False
+                    TimeFlag = False
+
+                    for date, value in data:
+                        xValue = QDateTime()
+
+                        if not date.date() == datetime.date(1900, 1, 1):
+                            DateFlag = True
+                            xValue.setDate(QDate(date.date().year, date.date().month, date.date().day));
+
+                        if not date.time() == datetime.time(0, 0):
+                            TimeFlag = True
+                            xValue.setTime(QTime(date.time().hour, date.time().minute, date.time().second));
+
+                        series.append(xValue.toMSecsSinceEpoch(), value);
+
+                    # Adding Series
+                    chart.addSeries(series)
+
+        elif DS.DataSourceext == "Tweet":
+            # Line Series
+            series = QLineSeries(self)
+            series.setName("Date wise " + Chart[1])
+            series.setPointsVisible(True)
+            series.setPointLabelsClipping(True)
+            series.setPointLabelsVisible(True)
+            series.setPointLabelsFormat("@yPoint");
+
+            data = df.groupby([pd.Grouper(key=Chart[1], freq='H')]).size().reset_index(name='count').values.tolist()
+            DateFlag = False
+            TimeFlag = False
+            for Time, value in data:
+                xValue = QDateTime()
+
+                if not Time.date() == datetime.date(1900, 1, 1):
+                    DateFlag = True
+                    xValue.setDate(QDate(Time.date().year, Time.date().month, Time.date().day));
+
+                if not Time.time() == datetime.time(0, 0):
+                    TimeFlag = True
+                    xValue.setTime(QTime(Time.time().hour, Time.time().minute, Time.time().second));
+
+                series.append(xValue.toMSecsSinceEpoch(), value);
+
+            chart.addSeries(series)
+
+        # Chart Default Animation
+        chart.setAnimationOptions(QChart.AllAnimations)
+
+        # Chart Default Theme
+        chart.setTheme(QChart.ChartThemeQt)
+
+        # chart Title Font
+        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+        # Chart Axis
+        axisX = QDateTimeAxis()
+        axisX.setTitleText(Chart[2])
+        axisX.setTickCount(5);
+
+        if DateFlag and TimeFlag:
+            axisX.setFormat("dd-MM-yy hh:mm");
+        elif DateFlag:
+            axisX.setFormat("dd-MM-yy");
+        elif TimeFlag:
+            axisX.setFormat("hh:mm:ss");
+
+        chart.createDefaultAxes()
+        chart.setAxisX(axisX, series);
+
+        if DS.DataSourceext == "CSV files (*.csv)":
+            chart.axisY(series).setTitleText(Chart[1])
+        elif DS.DataSourceext == "Tweet":
+            chart.axisY(series).setTitleText("No. of Tweets per hour")
+
+        # Default legends
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignBottom)
+
+        # creating chartview for line chart
+        chartview = QChartView(chart)
+        chartview.setRenderHint(QPainter.Antialiasing)
+
+        return chartview
+
+    # Data Source Survey Analysis Donut Chart
+    def DataSourceSurveyAnalysisDonutChart(self, Chart, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                df = DS.CSVData
+                break
+            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                df = DS.TweetDataFrame
+                break
+
+        # Storing data from Pandas CSV to Series
+        LabelList = df[Chart[1]].value_counts().index.tolist()
+        ValueList = df[Chart[1]].value_counts(normalize=True).tolist()
+
+        data = [[LabelList[i], ValueList[i]] for i in range(0, len(LabelList))]
+
+        # Pie Series and Pie Slice
+        series = QPieSeries()
+        series.setHoleSize(0.35)
+
+        for d in data:
+            slice = QPieSlice()
+            slice = series.append(d[0] + " " + str("%0.3f" % (d[1] * 100)) + "%", d[1])
+            slice.setLabelVisible()
+            if data.index(d) == 0:
+                slice.setExploded()
+
+        # Creating a Donut Chart
+        chart = QChart()
+        chart.setTitle(Chart[1])
+        chart.addSeries(series)
+
+        # Chart Default Animation
+        chart.setAnimationOptions(QChart.AllAnimations)
+
+        # Chart Default Theme
+        chart.setTheme(QChart.ChartThemeQt)
+
+        # chart Title Font
+        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+        # Default legends
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignBottom)
+
+        # creating chartview for line chart
+        chartview = QChartView(chart)
+        chartview.setRenderHint(QPainter.Antialiasing)
+
+        return chartview
+
+    # Data Source Survey Analysis Pie Chart
+    def DataSourceSurveyAnalysisPieChart(self, Chart, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                df = DS.CSVData
+                break
+            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                df = DS.TweetDataFrame
+                break
+
+        # Storing data from Pandas CSV to Series
+        LabelList = df[Chart[1]].value_counts().index.tolist()
+        ValueList = df[Chart[1]].value_counts(normalize=True).tolist()
+
+        data = [[LabelList[i], ValueList[i]] for i in range(0, len(LabelList))]
+
+        series = QPieSeries()
+        series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
+        series.setLabelsVisible(True)
+
+        for name, value in data:
+            slice = series.append(name + " " + str("%0.3f" % (value * 100)) + "%", value)
+            slice.setLabelVisible(True)
+            slice.setLabelPosition(QPieSlice.LabelOutside)
+            slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+
+        chart = QChart()
+        chart.setTitle(Chart[1])
+        chart.setAnimationOptions(QChart.AllAnimations)
+        chart.addSeries(series)
+
+        # Chart Default Animation
+        chart.setAnimationOptions(QChart.SeriesAnimations)
+
+        # Chart Default Theme
+        chart.setTheme(QChart.ChartThemeQt)
+
+        # chart Title Font
+        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignBottom)
+        chart.legend().setFont(QFont("Times", 10))
+
+        chartview = QChartView(chart)
+        chartview.setRenderHint(QPainter.Antialiasing)
+
+        return chartview
+
+    # Data Source Survey Analysis Bar Chart
+    def DataSourceSurveyAnalysisBarChart(self, Chart, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                df = DS.CSVData
+                break
+            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                df = DS.TweetDataFrame
+                break
+
+        LabelList = df[Chart[1]].value_counts().index.tolist()
+        ValueList = df[Chart[1]].value_counts().tolist()
+
+        # Creating Bar Series
+        set0 = QBarSet(Chart[1])
+        set0.append(ValueList)
+
+        series = QBarSeries()
+        series.append(set0)
+        series.setLabelsVisible(True)
+        series.setLabelsAngle(-30.0)
+
+        # Creating a Bar Chart
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle(Chart[1])
+
+        # Chart Default Animation
+        chart.setAnimationOptions(QChart.SeriesAnimations)
+
+        # Chart Default Theme
+        chart.setTheme(QChart.ChartThemeQt)
+
+        # chart Title Font
+        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+        # Chart Axis
+        axisX = QBarCategoryAxis()
+        axisX.setTitleText(Chart[1])
+        axisX.append(LabelList)
+        axisX.setLabelsAngle(-30)
+
+        chart.addAxis(axisX, Qt.AlignBottom)
+        series.attachAxis(axisX)
+
+        axisY = QValueAxis()
+        axisY.setTitleText("Frequency")
+        chart.addAxis(axisY, Qt.AlignLeft)
+        series.attachAxis(axisY)
+        axisY.applyNiceNumbers()
+
+        # Chart legends
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignBottom)
+
+        # creating chartview for Bar chart
+        chartView = QChartView(chart)
+        chartView.setRenderHint(QPainter.Antialiasing)
+
+        return chartView
+
+    # Data Source Survey Analysis Word Cloud
+    def DataSourceSurveyAnalysisWordCloud(self, Chart, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                df = DS.CSVData
+                break
+            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                df = DS.TweetDataFrame
+                break
+
+        # Storing data from Pandas CSV to Series
+        LabelList = df[Chart[1]].value_counts().index.tolist()
+
+        # create numpy araay for wordcloud mask image
+        mask = np.array(Image.open("Word Cloud Maskes/" + random.choice(os.listdir("Word Cloud Maskes/"))))
+
+        # create wordcloud object
+        WordCloudImage = WordCloud(background_color="white", max_words=200, mask=mask, stopwords=set(STOPWORDS), collocations=False)
+
+        # generate wordcloud
+        WordCloudImage.generate(" ".join(LabelList))
+
+        return WordCloudImage.to_image()
+
+    # Word Cloud Combo Box Text Change
+    def WorldCloudComboBoxTextChanged(self, DashboardWidget, WordCloudWidget):
+        WordCloudComboBox = self.sender()
+
+        if WordCloudComboBox.currentText() == "Dashboard":
+            DashboardWidget.show()
+            WordCloudWidget.hide()
+        else:
+            DashboardWidget.hide()
+            WordCloudWidget.show()
+
+    # Theme Combo Box Text Change
+    def ThemeComboBoxTextChanged(self, chartWidget, pal):
+        ThemeComboBox = self.sender()
+
+        # Standard
+        if ThemeComboBox.currentText() == "Light":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeQt)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0xf0f0f0))
+                    pal.setColor(QPalette.WindowText, QColor(0x404044))
+
+        # Blue Cerulean
+        elif ThemeComboBox.currentText() == "Blue Cerulean":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeBlueCerulean)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0x40434a))
+                    pal.setColor(QPalette.WindowText, QColor(0xd6d6d6))
+
+        # Blue Icy
+        elif ThemeComboBox.currentText() == "Blue Icy":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeBlueIcy)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0xcee7f0))
+                    pal.setColor(QPalette.WindowText, QColor(0x404044))
+
+        # Blue Ncs
+        elif ThemeComboBox.currentText() == "Blue Ncs":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeBlueNcs)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0x018bba))
+                    pal.setColor(QPalette.WindowText, QColor(0x404044))
+
+        # Brown Sand
+        elif ThemeComboBox.currentText() == "Brown Sand":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeBrownSand)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0x9e8965))
+                    pal.setColor(QPalette.WindowText, QColor(0x404044))
+
+        # High Contrast
+        elif ThemeComboBox.currentText() == "High Contrast":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeHighContrast)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0xffab03))
+                    pal.setColor(QPalette.WindowText, QColor(0x181818))
+
+        # Theme Dark
+        elif ThemeComboBox.currentText() == "Theme Dark":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setTheme(QChart.ChartThemeDark)
+                    chartview.chart().setTitleFont(QFont("Times", 12, QFont.Bold))
+                    pal.setColor(QPalette.Window, QColor(0x121218))
+                    pal.setColor(QPalette.WindowText, QColor(0xd6d6d6))
+
+    # Animation Combo Box Text Change
+    def AnimationComboBoxTextChanged(self, chartWidget):
+        AnimationComboBox = self.sender()
+
+        # All Animations
+        if AnimationComboBox.currentText() == "All Animations":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setAnimationOptions(QChart.AllAnimations)
+
+        # Series Animation
+        elif AnimationComboBox.currentText() == "Series Animation":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setAnimationOptions(QChart.SeriesAnimations)
+
+        # Grid Axis Animation
+        elif AnimationComboBox.currentText() == "Grid Axis Animation":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setAnimationOptions(QChart.GridAxisAnimations)
+
+        # No Animation
+        elif AnimationComboBox.currentText() == "No Animation":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().setAnimationOptions(QChart.NoAnimation)
+
+    # Legend Combo Box Text Change
+    def LegendComboBoxTextChanged(self, chartWidget):
+        LegendComboBox = self.sender()
+
+        # Bottom
+        if LegendComboBox.currentText() == "Bottom":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().legend().setVisible(True)
+                    chartview.chart().legend().setAlignment(Qt.AlignBottom)
+
+        # Top
+        elif LegendComboBox.currentText() == "Top":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().legend().setVisible(True)
+                    chartview.chart().legend().setAlignment(Qt.AlignTop)
+
+        # Right
+        elif LegendComboBox.currentText() == "Right":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().legend().setVisible(True)
+                    chartview.chart().legend().setAlignment(Qt.AlignRight)
+
+        # left
+        elif LegendComboBox.currentText() == "Left":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().legend().setVisible(True)
+                    chartview.chart().legend().setAlignment(Qt.AlignLeft)
+
+        # Hide
+        elif LegendComboBox.currentText() == "Hide":
+            for chartview in chartWidget:
+                if not isinstance(chartview, Image.Image):
+                    chartview.chart().legend().setVisible(False)
+
+    # Download Dashboard
+    def DataSourceSurveyAnalysisDownloadDashboard(self, Widget):
+        path = QFileDialog.getSaveFileName(self, 'Save File', '', 'PNG(*.png)')
+
+        if all(path):
+            pixmap = QPixmap(Widget.size())
+            Widget.render(pixmap)
+            pixmap.save(path[0])
+
+            self.statusBar().showMessage('Saved Successfully')
+
+            SaveSuccessBox = QMessageBox(self)
+            SaveSuccessBox.setIcon(QMessageBox.Information)
+            SaveSuccessBox.setText('Image successfully Saved in ' + path[0])
+            SaveSuccessBox.setStandardButtons(QMessageBox.Open | QMessageBox.Ok)
+            SaveSuccessBox.button(QMessageBox.Open).clicked.connect(lambda: os.startfile(path[0]))
+            SaveSuccessBox.show()
+
+    # ****************************************************************************
+    # ********************** Data Source Tweet Analysis **************************
+    # ****************************************************************************
+
+    # Data Source Tweet Analysis Dialog
+    def DataSourceTweetAnalysisDialog(self):
+        DataSourceTweetAnalysisDialog = QDialog()
+        DataSourceTweetAnalysisDialog.setWindowTitle("Tweet Analysis")
+        DataSourceTweetAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
+                                                  self.height / 10)
+        DataSourceTweetAnalysisDialog.setParent(self)
+        self.QDialogAddProperties(DataSourceTweetAnalysisDialog)
+
+        # Data Source Label
+        DataSourcelabel = QLabel(DataSourceTweetAnalysisDialog)
+        DataSourcelabel.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.125,
+                                    DataSourceTweetAnalysisDialog.height() * 0.2,
+                                    DataSourceTweetAnalysisDialog.width() / 4,
+                                    DataSourceTweetAnalysisDialog.height() * 0.1)
+
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
+        self.LabelSizeAdjustment(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox(DataSourceTweetAnalysisDialog)
+        DSComboBox.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.4,
+                               DataSourceTweetAnalysisDialog.height() * 0.2,
+                               DataSourceTweetAnalysisDialog.width() / 2,
+                               DataSourceTweetAnalysisDialog.height() / 10)
+
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceext == 'Tweet':
+                DSComboBox.addItem(DS.DataSourceName)
+
+        self.LineEditSizeAdjustment(DSComboBox)
+
+        # Stem Word Button Box
+        DataSourceTweetAnalysisbuttonBox = QDialogButtonBox(DataSourceTweetAnalysisDialog)
+        DataSourceTweetAnalysisbuttonBox.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.125,
+                                                     DataSourceTweetAnalysisDialog.height() * 0.7,
+                                                     DataSourceTweetAnalysisDialog.width() * 3 / 4,
+                                                     DataSourceTweetAnalysisDialog.height() / 5)
+        DataSourceTweetAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceTweetAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+
+        if DSComboBox.count() == 0:
+            DataSourceTweetAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        self.LineEditSizeAdjustment(DataSourceTweetAnalysisbuttonBox)
+
+        DataSourceTweetAnalysisbuttonBox.accepted.connect(DataSourceTweetAnalysisDialog.accept)
+        DataSourceTweetAnalysisbuttonBox.rejected.connect(DataSourceTweetAnalysisDialog.reject)
+
+        DataSourceTweetAnalysisbuttonBox.accepted.connect(lambda: self.DataSourceTweetAnalysis(DSComboBox.currentText()))
+
+        DataSourceTweetAnalysisDialog.exec()
+
+    # Data Source Tweet Analysis
+    def DataSourceTweetAnalysis(self, DataSourceName):
+        DataSourceTweetAnalysisTabFlag = False
+        DataSourceTweetAnalysisTabFlag2 = False
+
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Tweet Analysis':
+                if tabs.tabWidget != None:
+                    DataSourceTweetAnalysisTabFlag = True
+                    break
+                else:
+                    DataSourceTweetAnalysisTabFlag2 = True
+                    break
+
+        if not DataSourceTweetAnalysisTabFlag:
+            # Creating New Tab for Survey Analysis
+            DataSourceTweetAnalysisTab = QWidget()
+
+            # **********************************************************************************************
+            # ************************ Data Source Survey Analysis Setting Widget **************************
+            # **********************************************************************************************
+
+            # LayoutWidget For within Survey Analysis Tab
+            OptionWidget = QWidget(DataSourceTweetAnalysisTab)
+            OptionWidget.setGeometry(self.tabWidget.width() * 0.2, 0, self.tabWidget.width() * 0.6,self.tabWidget.height() / 20)
+
+            # Box Layout for Survey Analysis Tab
+            OptionWidgetLayout = QHBoxLayout(OptionWidget)
+            OptionWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+            # ********************* Theme *********************
+
+            # Theme Label
+            ThemeLabel = QLabel(OptionWidget)
+            ThemeLabel.setText("Theme:")
+            OptionWidgetLayout.addWidget(ThemeLabel)
+            OptionWidgetLayout.addStretch(1)
+
+            # Theme Combo Box
+            ThemeComboBox = QComboBox(OptionWidget)
+            OptionWidgetLayout.addWidget(ThemeComboBox)
+            OptionWidgetLayout.addStretch(2)
+
+            # Adding Items to ComboBox
+            ThemeComboBox.addItem("Standard")
+            ThemeComboBox.addItem("Blue Cerulean")
+            ThemeComboBox.addItem("Blue Icy")
+            ThemeComboBox.addItem("Blue Ncs")
+            ThemeComboBox.addItem("Brown Sand")
+            ThemeComboBox.addItem("High Contrast")
+            ThemeComboBox.addItem("Theme Dark")
+
+            # ******************* Animation *******************
+
+            # Animation Label
+            AnimationLabel = QLabel()
+            AnimationLabel.setText("Animation:")
+            OptionWidgetLayout.addWidget(AnimationLabel)
+            OptionWidgetLayout.addStretch(3)
+
+            # Animation Combo Box
+            AnimationComboBox = QComboBox(OptionWidget)
+            OptionWidgetLayout.addWidget(AnimationComboBox)
+            OptionWidgetLayout.addStretch(4)
+
+            # Adding Items to ComboBox
+            AnimationComboBox.addItem("All Animations")
+            AnimationComboBox.addItem("Series Animation")
+            AnimationComboBox.addItem("Grid Axis Animation")
+            AnimationComboBox.addItem("No Animation")
+
+            # ********************* Legend ********************
+            # Legend Label
+            LegendLabel = QLabel(OptionWidget)
+            LegendLabel.setText("Legend:")
+            OptionWidgetLayout.addWidget(LegendLabel)
+            OptionWidgetLayout.addStretch(5)
+
+            # Legend ComboBox
+            LegendComboBox = QComboBox(OptionWidget)
+            OptionWidgetLayout.addWidget(LegendComboBox)
+            OptionWidgetLayout.addStretch(6)
+
+            # Adding Items to ComboBox
+            LegendComboBox.addItem("Bottom")
+            LegendComboBox.addItem("Top")
+            LegendComboBox.addItem("Left")
+            LegendComboBox.addItem("Right")
+            LegendComboBox.addItem("Hide")
+
+            self.LineEditSizeAdjustment(LegendComboBox)
+
+            # Word Cloud ComboBox
+            WordCloudComboBox = QComboBox()
+            OptionWidgetLayout.addWidget(WordCloudComboBox)
+            OptionWidgetLayout.addStretch(7)
+
+            WordCloudComboBox.addItem("Dashboard")
+            WordCloudComboBox.addItem("Word Cloud")
+
+            self.LineEditSizeAdjustment(WordCloudComboBox)
+
+            # Download Button
+            DownloadDashboardButton = QPushButton('Download ')
+            DownloadDashboardButton.setIcon(QIcon("Images/Download Button.png"))
+            DownloadDashboardButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+
+            DownloadDashboardButtonFont = QFont("sans-serif")
+            DownloadDashboardButtonFont.setPixelSize(14)
+            DownloadDashboardButtonFont.setBold(True)
+            DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
+
+            OptionWidgetLayout.addWidget(DownloadDashboardButton)
+            OptionWidgetLayout.addStretch(7)
+
+            self.LineEditSizeAdjustment(DownloadDashboardButton)
+
+            # *********************************************************************************************
+            # ************************ Data Source Survey Analysis Chart Widgets **************************
+            # *********************************************************************************************
+
+            # ********************* Dashboard *********************
+
+            chartWidget = []
+
+            chartWidget.append(self.DataSourceSurveyAnalysisBarChart(['Bar Chart', 'Phone Type', ''], DataSourceName))
+            chartWidget.append(self.DataSourceSurveyAnalysisDonutChart(['Pie Chart', 'Retweeted', ''], DataSourceName))
+            chartWidget.append(self.SentimentAnalysisPieChart(DataSourceName))
+            chartWidget.append(self.DataSourceSurveyAnalysisLineChart(['LineChart', 'Tweet Created At', ''], DataSourceName))
+
+            # Group Widget For within Survey Analysis Tab
+            DashboardWidget = QGroupBox(DataSourceTweetAnalysisTab)
+            DashboardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
+
+            # Box Layout for Survey Analysis Tab
+            DashboardWidgetLayout = QGridLayout(DashboardWidget)
+            DashboardWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+            colWid = 2
+
+            colcounter = 0
+            rowcounter = 0
+
+            for chartWid in chartWidget:
+                if colcounter < colWid:
+                    pass
+                else:
+                    colcounter = 0
+                    rowcounter += 1
+
+                DashboardWidgetLayout.addWidget(chartWid, rowcounter, colcounter)
+                colcounter += 1
+
+            # ******************************************************
+            # ********************* Word Cloud *********************
+            # ******************************************************
+
+            WordCloudWidget = QGroupBox(DataSourceTweetAnalysisTab)
+            WordCloudWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
+
+            # Box Layout for Survey Analysis Tab
+            WordCloudWidgetLayout = QGridLayout(WordCloudWidget)
+            WordCloudWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+            WordCloudLabel = QLabel(WordCloudWidget)
+
+            # Resizing label to Layout
+            WordCloudLabel.resize(WordCloudWidget.width(), WordCloudWidget.height())
+
+            # Setting and Scaling Pixmap image on Label
+            WordCloudLabel.setPixmap(self.DataSourceSurveyAnalysisWordCloud(['Word Cloud', 'Tweet Text', ''], DataSourceName).toqpixmap().scaled(WordCloudWidget.width(), WordCloudWidget.height(), Qt.KeepAspectRatio))
+
+            WordCloudLabel.setGeometry((WordCloudWidget.width() - WordCloudLabel.pixmap().width()) / 2,
+                                       (WordCloudWidget.height() - WordCloudLabel.pixmap().height()) / 2,
+                                       WordCloudLabel.pixmap().width(), WordCloudLabel.pixmap().height())
+            WordCloudWidget.hide()
+
+            # ******************************************************
+            # ************** ComboBox Text Changed *****************
+            # ******************************************************
+
+            WordCloudComboBox.currentTextChanged.connect(lambda: self.WordCloudComboBoxTextChanged(DashboardWidget, WordCloudWidget))
+            ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashboardWidget.palette()))
+            AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
+            LegendComboBox.currentTextChanged.connect(lambda: self.LegendComboBoxTextChanged(chartWidget))
+
+            # *************** Push Button Clicked ******************
+
+            DownloadDashboardButton.clicked.connect(lambda: self.DataSourceSurveyAnalysisDownloadDashboard(DashboardWidget) if WordCloudWidget.isHidden() else self.DataSourceSurveyAnalysisDownloadDashboard(WordCloudWidget))
+
+            # *********************************************************************************************
+            # ************************************ Tab Management *****************************************
+            # *********************************************************************************************
+
+            if DataSourceTweetAnalysisTabFlag2:
+                tabs.tabWidget = DataSourceTweetAnalysisTab
+                if tabs.isActive:
+                    self.tabWidget.addTab(DataSourceTweetAnalysisTab, "Tweet Analysis")
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DataSourceTweetAnalysisTab)
+            else:
+                # ************ Adding Survey Analysis Tab to QTabWidget *************
+
+                myFile.TabList.append(Tab("Tweet Analysis", DataSourceTweetAnalysisTab, DataSourceName))
+
+                # ***************** Adding Preview Tab to QTabWidget ****************
+
+                self.tabWidget.addTab(DataSourceTweetAnalysisTab, "Tweet Analysis")
+                self.tabWidget.setCurrentWidget(DataSourceTweetAnalysisTab)
+                myFile.requiredSaved = True
+
+            ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:
+                DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSVisualWidget.setText(0, DataSourceName)
+                DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                DSVisualWidget.setExpanded(True)
+
+                DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                DSNewCaseNode.setText(0, 'Tweet Analysis')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    SurveyAnalysisWidget = self.VisualizationTreeWidget.findItems('Tweet Analysis', Qt.MatchRecursive, 0)
+
+                    SurveyAnalysisWidgetFlag = False
+
+                    if len(SurveyAnalysisWidget) > 0:
+                        for SAWidgets in SurveyAnalysisWidget:
+                            if SAWidgets.parent().text(0) == DataSourceName:
+                                SurveyAnalysisWidgetFlag = True
+                                break
+
+                    if not SurveyAnalysisWidgetFlag:
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Tweet Analysis')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+        else:
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
+
+    # Sentiment Analysis Pie Chart
+    def SentimentAnalysisPieChart(self, DataSourceName):
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == DataSourceName:
+                if hasattr(DS, "PositiveSentimentCount"):
+                    pass
+                else:
+                    DS.SentimentAnalysis("Tweet Text")
+                break
+
+
+        series = QPieSeries()
+        series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
+        series.setLabelsVisible(True)
+
+        # Setting Data in Pie Series
+        # Positive
+        slice = series.append("Positive " + str("%0.3f" % (DS.PositiveSentimentCount * 100/len(DS.AutomaticSentimentList))) + "%", DS.PositiveSentimentCount)
+        slice.setLabelVisible(True)
+        slice.setLabelPosition(QPieSlice.LabelOutside)
+        slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+
+        # Negative
+        slice = series.append("Negative " + str("%0.3f" % (DS.NegativeSentimentCount * 100/len(DS.AutomaticSentimentList))) + "%", DS.NegativeSentimentCount)
+        slice.setLabelVisible(True)
+        slice.setLabelPosition(QPieSlice.LabelOutside)
+        slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+
+        # Neutral
+        slice = series.append("Neutral " + str("%0.3f" % (DS.NeutralSentimentCount * 100/len(DS.AutomaticSentimentList))) + "%", DS.NeutralSentimentCount)
+        slice.setLabelVisible(True)
+        slice.setLabelPosition(QPieSlice.LabelOutside)
+        slice.setLabelFont(QFont("Times", 8, QFont.Bold))
+
+        # Creating Chart For Pie Series
+        chart = QChart()
+        chart.setTitle("Sentiment Analysis")
+        chart.setAnimationOptions(QChart.AllAnimations)
+        chart.addSeries(series)
+
+        # Chart Default Animation
+        chart.setAnimationOptions(QChart.SeriesAnimations)
+
+        # Chart Default Theme
+        chart.setTheme(QChart.ChartThemeQt)
+
+        # chart Title Font
+        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+        chart.legend().setVisible(True)
+        chart.legend().setAlignment(Qt.AlignBottom)
+        chart.legend().setFont(QFont("Times", 10))
+
+        # Creating Chartview for Pie Chart
+        chartview = QChartView(chart)
+        chartview.setRenderHint(QPainter.Antialiasing)
+
+        return chartview
+
+    # Word CLoud Combo Box Text Change
+    def WordCloudComboBoxTextChanged(self, DashboardWidget, WordCloudWidget):
+        WordCloudComboBox = self.sender()
+
+        if WordCloudComboBox.currentText() == "Word Cloud":
+            DashboardWidget.hide()
+            WordCloudWidget.show()
+        else:
+            DashboardWidget.show()
+            WordCloudWidget.hide()
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************
@@ -8329,18 +9896,15 @@ class Window(QMainWindow):
 
         # No of Cases LineEdit
         NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
-        try:
-            if case.MergedCase:
-                TotalComponent = 0
-                for cases2 in DS.CasesList:
-                    if cases2.ParentCase == case:
-                        TotalComponent += len(cases2.TopicCases)
-                NoofCasesLineEdit.setText(str(TotalComponent))
-            else:
-                NoofCasesLineEdit.setText(str(len(case.TopicCases)))
-        except Exception as e2:
-            print(str(e2))
-            print("Hello")
+
+        if case.MergedCase:
+            TotalComponent = 0
+            for cases2 in DS.CasesList:
+                if cases2.ParentCase == case:
+                    TotalComponent += len(cases2.TopicCases)
+            NoofCasesLineEdit.setText(str(TotalComponent))
+        else:
+            NoofCasesLineEdit.setText(str(len(case.TopicCases)))
 
         NoofCasesLineEdit.setReadOnly(True)
         NoofCasesLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
@@ -9047,13 +10611,17 @@ class Window(QMainWindow):
     # Open New File
     def NewFileWindow(self):
         if myFile.requiredSaved:
-            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Save', "You have made changes. Do you want to discard or save them?", QMessageBox.Save | QMessageBox.Discard)
+            SaveBeforeNewWindowOpenchoice = QMessageBox.question(self, 'Save', "You have made changes. Do you want to discard or save them?", QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
             if SaveBeforeNewWindowOpenchoice == QMessageBox.Save:
                 self.SaveASWindow()
+                if not myFile.requiredSaved:
+                    self.EmptyWindowForNewFile()
+                else:
+                    self.NewFileWindow()
+            elif SaveBeforeNewWindowOpenchoice == QMessageBox.Discard:
+                self.EmptyWindowForNewFile()
             else:
                 pass
-
-        self.EmptyWindowForNewFile()
 
     # Empty Window For New File
     def EmptyWindowForNewFile(self):
@@ -9074,7 +10642,6 @@ class Window(QMainWindow):
 
     # Open File
     def OpenFileWindow(self):
-
         dummyWindow = OpenWindow("Open File", "TextWiz File *.twiz", -1)
         path = dummyWindow.filepath
         del dummyWindow
@@ -9101,7 +10668,11 @@ class Window(QMainWindow):
                 elif SaveBeforeOpenWindowchoice == QMessageBox.Discard:
                     pass
 
+                self.EmptyWindowForNewFile()
+
             myFile = pickle.load(open(path[0], "rb"))
+
+            # Setting Data Sources
             for DS in myFile.DataSourceList:
                 if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
                     # Adding Node to Data Source Tree Widget
@@ -9267,6 +10838,7 @@ class Window(QMainWindow):
 
                     newNode.setToolTip(0, newNode.text(0))
 
+            # Setting tabs
             for tabs in myFile.TabList:
                 # Data Sources Similarity
                 if tabs.TabName == "Data Sources Similarity":
@@ -9479,20 +11051,14 @@ class Window(QMainWindow):
     # ProgressBar
     def ProgressBar(self, ProgressBarWidget, progressBar, ProgressBarLabel):
         # ProgressBar Widget
-        # if ProgressBarLabel == "Importing":
-        #     ProgressBarWidget.setGeometry(self.width * 0.375, self.height * 0.4875,
-        #                                   self.width * 0.25, self.height * 0.025)
-        # else:
-        #     ProgressBarWidget.setGeometry((self.width - self.tabWidget.width()) +  self.tabWidget.width()* 0.375,
-        #                                   (self.height - self.horizontalLayoutWidget.height()) + self.tabWidget.height()*0.4875,
-        #                                   self.tabWidget.width() * 0.25,
-        #                                   self.tabWidget.height() * 0.025)
-
-
-
-        ProgressBarWidget.setGeometry(self.width * 0.8,
-                                      self.statusBar().y() + (self.statusBar().height() - self.height * 0.025) / 2,
-                                      self.width * 0.2, self.height * 0.025)
+        if ProgressBarLabel == "Importing" or ProgressBarLabel == "Retrieving Tweets":
+            ProgressBarWidget.setGeometry(self.width * 0.375, self.height * 0.4875,
+                                          self.width * 0.25, self.height * 0.025)
+        else:
+            ProgressBarWidget.setGeometry((self.width - self.tabWidget.width()) +  self.tabWidget.width()* 0.375,
+                                          (self.height - self.horizontalLayoutWidget.height()) + self.tabWidget.height()*0.4875,
+                                          self.tabWidget.width() * 0.25,
+                                          self.tabWidget.height() * 0.025)
 
         ProgressBarWidget.setParent(self)
         ProgressBarWidget.setAttribute(Qt.WA_DeleteOnClose)
@@ -9550,16 +11116,9 @@ class Window(QMainWindow):
 
     # About Window Tab
     def AboutWindow(self):
-        try:
-            #for tabs in myFile.TabList:
-            #    print(tabs.DataSourceName + "  ,  " + tabs.TabName + "  ,  " + str(tabs.isActive))
-            #print(myFile.requiredSaved)
-            file = open('LICENSE', 'r')
-            lic = file.read()
-            QMessageBox().about(self, "About TextWiz", lic)
-
-        except Exception as e:
-            print(str(e))
+        file = open('LICENSE', 'r')
+        lic = file.read()
+        QMessageBox().about(self, "About TextWiz", lic)
 
     # ****************************************************************************
     # *************************** Import Features ********************************
@@ -10076,10 +11635,7 @@ class Window(QMainWindow):
 
             dummyDataSource = ThreadQueue.get()
 
-
-            #dummyDataSource.CSVDataSource(CSVHeader, CSVPathFlag)
-
-            if not dummyDataSource.DataSourceLoadError: #and not len(dummyDataSource.DataSourcetext) == 0:
+            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.CSVData.index) == 0:
                 myFile.setDataSources(dummyDataSource)
                 newNode = QTreeWidgetItem(self.CSVTreeWidget)
                 if CSVPathFlag:
@@ -10100,9 +11656,9 @@ class Window(QMainWindow):
                 self.DataSourceDocumentClusteringUpdate()
                 myFile.requiredSaved = True
             else:
-                if len(dummyDataSource.DataSourcetext) == 0 and not dummyDataSource.DataSourceLoadError:
+                if len(dummyDataSource.CSVData.index) == 0 and not dummyDataSource.DataSourceLoadError:
                     DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        dummyDataSource.DataSourceName + " doesnot contains any text",
+                                                                        dummyDataSource.DataSourceName + " doesnot contains any row",
                                                                         QMessageBox.Ok)
                 elif dummyDataSource.DataSourceHTTPError:
                     QMessageBox.critical(self, "Load Error",
@@ -10497,7 +12053,6 @@ class Window(QMainWindow):
                                              "No comment Retreive of Key Word: " + KeyWord,
                                              QMessageBox.Ok)
                     del dummyDataSource
-
 
             else:
                 del dummyDataSource

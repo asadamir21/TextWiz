@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ from .. import Model, Material, MaterialGroup, TexturedMaterialGroup
 from . import ModelDecodeException, ModelDecoder
 
 
-class Mesh(object):
+class Mesh:
     def __init__(self, name):
         self.name = name
         self.material = None

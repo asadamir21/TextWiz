@@ -1,4 +1,4 @@
-#!C:\Users\Asad\PycharmProjects\TextAS\venv\Scripts\python.exe
+#!C:\Users\Asad\PycharmProjects\TextWiz\venv\Scripts\python.exe
 
 import sys
 import json

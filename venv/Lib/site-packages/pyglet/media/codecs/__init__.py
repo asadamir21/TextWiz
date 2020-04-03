@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ _decoder_extensions = {}    # Map str -> list of matching MediaDecoders
 _encoder_extensions = {}    # Map str -> list of matching MediaEncoders
 
 
-class MediaDecoder(object):
+class MediaDecoder:
     def get_file_extensions(self):
         """Return a list or tuple of accepted file extensions, e.g. ['.wav', '.ogg']
         Lower-case only.
@@ -71,7 +71,7 @@ class MediaDecoder(object):
         return "{0}{1}".format(self.__class__.__name__, self.get_file_extensions())
 
 
-class MediaEncoder(object):
+class MediaEncoder:
     def get_file_extensions(self):
         """Return a list or tuple of accepted file extensions, e.g. ['.wav', '.ogg']
         Lower-case only.
@@ -160,6 +160,22 @@ def add_default_media_codecs():
     except ImportError:
         pass
 
+    if pyglet.compat_platform.startswith('linux'):
+        try:
+            from . import gstreamer
+            add_decoders(gstreamer)
+        except ImportError:
+            pass
+
+    try:
+        if pyglet.compat_platform in ('win32', 'cygwin'):
+            from pyglet.libs.win32.constants import WINDOWS_VISTA_OR_GREATER
+            if WINDOWS_VISTA_OR_GREATER:  # Supports Vista and above.
+                from . import wmf
+                add_decoders(wmf)
+    except ImportError:
+        pass
+
     try:
         if have_ffmpeg():
             from . import ffmpeg
@@ -182,7 +198,7 @@ def have_ffmpeg():
             print('FFmpeg available, using to load media files.')
         return True
 
-    except ImportError:
+    except (ImportError, FileNotFoundError):
         if _debug:
             print('FFmpeg not available.')
         return False

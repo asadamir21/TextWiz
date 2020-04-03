@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -76,7 +76,7 @@ If you wish to adjust this, you can manually create the Animation from a list of
 """
 
 
-class Animation(object):
+class Animation:
     """Sequence of images with timing information.
 
     If no frames of the animation have a duration of ``None``, the animation
@@ -166,20 +166,20 @@ class Animation(object):
         return max([frame.image.height for frame in self.frames])
 
     @classmethod
-    def from_image_sequence(cls, sequence, period, loop=True):
+    def from_image_sequence(cls, sequence, duration, loop=True):
         """Create an animation from a list of images and a constant framerate.
 
         :Parameters:
             `sequence` : list of `~pyglet.image.AbstractImage`
                 Images that make up the animation, in sequence.
-            `period` : float
+            `duration` : float
                 Number of seconds to display each image.
             `loop` : bool
                 If True, the animation will loop continuously.
 
         :rtype: :py:class:`~pyglet.image.Animation`
         """
-        frames = [AnimationFrame(image, period) for image in sequence]
+        frames = [AnimationFrame(image, duration) for image in sequence]
         if not loop:
             frames[-1].duration = None
         return cls(frames)
@@ -188,7 +188,7 @@ class Animation(object):
         return "Animation(frames={0})".format(len(self.frames))
 
 
-class AnimationFrame(object):
+class AnimationFrame:
     """A single frame of an animation."""
 
     __slots__ = 'image', 'duration'

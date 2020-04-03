@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: $
 
 """Text formatting, layout and display.
 
@@ -73,10 +72,6 @@ creating scrollable layouts.
 
 .. versionadded:: 1.1
 """
-from builtins import object
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 import os.path
 
@@ -89,7 +84,7 @@ class DocumentDecodeException(Exception):
     pass
 
 
-class DocumentDecoder(object):
+class DocumentDecoder:
     """Abstract document decoder.
     """
 

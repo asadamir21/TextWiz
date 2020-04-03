@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,17 +32,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from builtins import object
-# !/usr/bin/python
-# $Id:$
 
-from pyglet import app
 from pyglet import gl
+from pyglet import app
 from pyglet import window
 from pyglet import canvas
 
 
-class Display(object):
+class Display:
     """A display device supporting one or more screens.
     
     .. versionadded:: 1.2
@@ -116,7 +113,7 @@ class Display(object):
         return [window for window in app.windows if window.display is self]
 
 
-class Screen(object):
+class Screen:
     """A virtual monitor that supports fullscreen windows.
 
     Screens typically map onto a physical display such as a
@@ -301,7 +298,7 @@ class Screen(object):
         raise NotImplementedError('abstract')
 
 
-class ScreenMode(object):
+class ScreenMode:
     """Screen resolution and display settings.
 
     Applications should not construct `ScreenMode` instances themselves; see
@@ -349,7 +346,7 @@ class ScreenMode(object):
             self.width, self.height, self.depth, self.rate)
 
 
-class Canvas(object):
+class Canvas:
     """Abstract drawing area.
 
     Canvases are used internally by pyglet to represent drawing areas --

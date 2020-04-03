@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-
-'''
-'''
-from __future__ import absolute_import
-from __future__ import division
-from past.utils import old_div
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 from ctypes import *
 
@@ -217,6 +208,10 @@ class CocoaWindow(BaseWindow):
             self.set_minimum_size(*self._minimum_size)
         if self._maximum_size is not None:
             self.set_maximum_size(*self._maximum_size)
+
+        # TODO: Add support for file drops.
+        if self._file_drops:
+            raise NotImplementedError("File drops are not implemented on MacOS")
 
         self.context.update_geometry()
         self.switch_to()

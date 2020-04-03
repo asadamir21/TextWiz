@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,27 +32,22 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import print_function
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
-from builtins import object
 
-import platform
-import queue
 import sys
+import queue
+import platform
 import threading
 
 from pyglet import app
-from pyglet import compat_platform
 from pyglet import clock
 from pyglet import event
+from pyglet import compat_platform
+
 
 _is_pyglet_doc_run = hasattr(sys, "is_pyglet_doc_run") and sys.is_pyglet_doc_run
 
 
-class PlatformEventLoop(object):
+class PlatformEventLoop:
     """ Abstract class, implementation depends on platform.
     
     .. versionadded:: 1.2
@@ -151,6 +146,7 @@ class EventLoop(event.EventDispatcher):
         self._has_exit_condition = threading.Condition()
         self.clock = clock.get_default()
         self.is_running = False
+        self._redraw_window_func = self._redraw_window
 
     def run(self):
         """Begin processing events, scheduled functions and window updates.
@@ -307,6 +303,12 @@ class EventLoop(event.EventDispatcher):
         dt = self.clock.update_time()
         redraw_all = self.clock.call_scheduled_functions(dt)
 
+        self._redraw_window_func(redraw_all)
+
+        # Update timout
+        return self.clock.get_sleep_time(True)
+
+    def _redraw_windows(self, redraw_all):
         # Redraw all windows
         for window in app.windows:
             if redraw_all or (window._legacy_invalid and window.invalid):
@@ -315,8 +317,22 @@ class EventLoop(event.EventDispatcher):
                 window.flip()
                 window._legacy_invalid = False
 
-        # Update timout
-        return self.clock.get_sleep_time(True)
+    def _redraw_window(self, redraw_all):
+        # Redraw a single window, no need to switch_to.
+        for window in app.windows:
+            if redraw_all or (window._legacy_invalid and window.invalid):
+                window.dispatch_event('on_draw')
+                window.flip()
+                window._legacy_invalid = False
+
+    def update_window_count(self):
+        """ Adjust window drawing function, we only need to switch_to when using multiple windows.
+            This function will adjust it depending on window count to save performance.
+        """
+        if len(app.windows) == 1:
+            self._redraw_window_func = self._redraw_window
+        else:
+            self._redraw_window_func = self._redraw_windows
 
     @property
     def has_exit(self):

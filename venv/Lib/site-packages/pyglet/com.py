@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-'''Minimal Windows COM interface.
+"""Minimal Windows COM interface.
 
 Allows pyglet to use COM interfaces on Windows without comtypes.  Unlike
 comtypes, this module does not provide property interfaces, read typelibs,
@@ -67,11 +67,10 @@ the return value.
 
 Don't forget to manually manage memory... call Release() when you're done with
 an interface.
-'''
-from builtins import object
+"""
 
-import ctypes
 import sys
+import ctypes
 
 from pyglet.debug import debug_print
 
@@ -79,6 +78,7 @@ _debug_com = debug_print('debug_com')
 
 if sys.platform != 'win32':
     raise ImportError('pyglet.com requires a Windows build of Python')
+
 
 class GUID(ctypes.Structure):
     _fields_ = [
@@ -99,12 +99,26 @@ class GUID(ctypes.Structure):
         return 'GUID(%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x)' % (
             self.Data1, self.Data2, self.Data3, b1, b2, b3, b4, b5, b6, b7, b8)
 
+    def __cmp__(self, other):
+        if isinstance(other, GUID):
+            return ctypes.cmp(bytes(self), bytes(other))
+        return -1
+
+    def __eq__(self, other):
+        return isinstance(other, GUID) and bytes(self) == bytes(other)
+
+    def __hash__(self):
+        return hash(bytes(self))
+
+
 LPGUID = ctypes.POINTER(GUID)
 IID = GUID
 REFIID = ctypes.POINTER(IID)
 
-class METHOD(object):
-    '''COM method.'''
+
+class METHOD:
+    """COM method."""
+
     def __init__(self, restype, *args):
         self.restype = restype
         self.argtypes = args
@@ -112,13 +126,17 @@ class METHOD(object):
     def get_field(self):
         return ctypes.WINFUNCTYPE(self.restype, *self.argtypes)
 
+
 class STDMETHOD(METHOD):
-    '''COM method with HRESULT return value.'''
+    """COM method with HRESULT return value."""
+
     def __init__(self, *args):
         super(STDMETHOD, self).__init__(ctypes.HRESULT, *args)
 
-class COMMethodInstance(object):
-    '''Binds a COM interface method.'''
+
+class COMMethodInstance:
+    """Binds a COM interface method."""
+
     def __init__(self, name, i, method):
         self.name = name
         self.i = i
@@ -127,23 +145,27 @@ class COMMethodInstance(object):
     def __get__(self, obj, tp):
         if obj is not None:
             def _call(*args):
-                assert _debug_com('COM: IN {}({}, {})'.format(self.name, obj.__class__.__name__, args))
+                assert _debug_com('COM: #{} IN {}({}, {})'.format(self.i, self.name, obj.__class__.__name__, args))
                 ret = self.method.get_field()(self.i, self.name)(obj, *args)
-                assert _debug_com('COM: OUT {}({}, {})'.format(self.name, obj.__class__.__name__, args))
+                assert _debug_com('COM: #{} OUT {}({}, {})'.format(self.i, self.name, obj.__class__.__name__, args))
                 assert _debug_com('COM: RETURN {}'.format(ret))
                 return ret
+
             return _call
 
         raise AttributeError()
 
+
 class COMInterface(ctypes.Structure):
-    '''Dummy struct to serve as the type of all COM pointers.'''
+    """Dummy struct to serve as the type of all COM pointers."""
     _fields_ = [
         ('lpVtbl', ctypes.c_void_p),
     ]
 
+
 class InterfaceMetaclass(type(ctypes.POINTER(COMInterface))):
-    '''Creates COM interface pointers.'''
+    """Creates COM interface pointers."""
+
     def __new__(cls, name, bases, dct):
         methods = []
         for base in bases[::-1]:
@@ -157,11 +179,13 @@ class InterfaceMetaclass(type(ctypes.POINTER(COMInterface))):
 
         return super(InterfaceMetaclass, cls).__new__(cls, name, bases, dct)
 
-# future.utils.with_metaclass does not work here, as the base class is from _ctypes.lib
+
+# pyglet.util.with_metaclass does not work here, as the base class is from _ctypes.lib
 # See https://wiki.python.org/moin/PortingToPy3k/BilingualQuickRef
-Interface = InterfaceMetaclass(str('Interface'), (ctypes.POINTER(COMInterface),), {
-    '__doc__': 'Base COM interface pointer.',
-    })
+Interface = InterfaceMetaclass(str('Interface'),
+                               (ctypes.POINTER(COMInterface),),
+                               {'__doc__': 'Base COM interface pointer.'})
+
 
 class IUnknown(Interface):
     _methods_ = [
@@ -169,4 +193,3 @@ class IUnknown(Interface):
         ('AddRef', METHOD(ctypes.c_int)),
         ('Release', METHOD(ctypes.c_int))
     ]
-

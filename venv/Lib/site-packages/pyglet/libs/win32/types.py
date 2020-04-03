@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-
-"""
-"""
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 import sys
 import ctypes
@@ -102,6 +96,7 @@ UINT_PTR = HANDLE
 LONG_PTR = HANDLE
 HDROP = HANDLE
 LPTSTR = LPWSTR
+LPSTREAM = c_void_p
 
 LF_FACESIZE = 32
 CCHDEVICENAME = 32
@@ -471,3 +466,15 @@ class RAWINPUT(Structure):
         ('header', RAWINPUTHEADER),
         ('data', _RAWINPUTDEVICEUNION),
     ]
+
+
+# PROPVARIANT wrapper, doesn't require InitPropVariantFromInt64 this way.
+class PROPVARIANT(ctypes.Structure):
+    _fields_ = [
+        ('vt', ctypes.c_ushort),
+        ('wReserved1', ctypes.c_ubyte),
+        ('wReserved2', ctypes.c_ubyte),
+        ('wReserved3', ctypes.c_ulong),
+        ('llVal', ctypes.c_longlong),
+    ]
+

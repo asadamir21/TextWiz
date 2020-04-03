@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,8 +50,6 @@ pyglet will automatically load any system-installed fonts.  You can add addition
 See the :mod:`pyglet.font.base` module for documentation on the base classes used
 by this package.
 """
-from __future__ import absolute_import, division
-from builtins import str
 
 import os
 import sys

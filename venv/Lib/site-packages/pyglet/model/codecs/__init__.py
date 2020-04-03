@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ class ModelEncodeException(Exception):
     pass
 
 
-class ModelDecoder(object):
+class ModelDecoder:
     def get_file_extensions(self):
         """Return a list of accepted file extensions, e.g. ['.obj', '.gox']
         Lower-case only.
@@ -67,7 +67,7 @@ class ModelDecoder(object):
         return "{0}{1}".format(self.__class__.__name__, self.get_file_extensions())
 
 
-class ModelEncoder(object):
+class ModelEncoder:
     def get_file_extensions(self):
         """Return a list of accepted file extensions, e.g. ['.obj', '.gox']
         Lower-case only.

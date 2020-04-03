@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -122,24 +122,19 @@ above, "Working with multiple screens")::
         win = window.Window(config=configs[0])
 
 """
-from __future__ import division
-
-from builtins import object
-
-from future.utils import with_metaclass
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id$'
 
 import sys
 import math
 
 import pyglet
+import pyglet.window.key
+import pyglet.window.event
+
 from pyglet import gl
 from pyglet.event import EventDispatcher
 from pyglet.window import key
-import pyglet.window.key
-import pyglet.window.event
+from pyglet.util import with_metaclass
+
 
 _is_pyglet_doc_run = hasattr(sys, "is_pyglet_doc_run") and sys.is_pyglet_doc_run
 
@@ -171,7 +166,7 @@ class MouseCursorException(WindowException):
     pass
 
 
-class MouseCursor(object):
+class MouseCursor:
     """An abstract mouse cursor."""
 
     #: Indicates if the cursor is drawn using OpenGL.  This is True
@@ -236,7 +231,7 @@ class ImageMouseCursor(MouseCursor):
         gl.glPopAttrib()
 
 
-class Projection(object):
+class Projection:
     """Abstract OpenGL projection."""
 
     def set(self, window_width, window_height, viewport_width, viewport_height):
@@ -468,6 +463,7 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
     _fullscreen = False
     _visible = False
     _vsync = False
+    _file_drops = False
     _screen = None
     _config = None
     _context = None
@@ -489,6 +485,7 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
     _enable_event_queue = True     # overridden by EventLoop.
     _allow_dispatch_event = False  # controlled by dispatch_events stack frame
 
+
     # Class attributes
 
     _default_width = 640
@@ -503,6 +500,7 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
                  fullscreen=False,
                  visible=True,
                  vsync=True,
+                 file_drops=False,
                  display=None,
                  screen=None,
                  config=None,
@@ -627,18 +625,16 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
         else:
             self._vsync = vsync
 
+        self._file_drops = file_drops
         if caption is None:
             caption = sys.argv[0]
-            # PYTHON2 - Remove this decode hack for unicode support:
-            if hasattr(caption, "decode"):
-                try:
-                    caption = caption.decode("utf8")
-                except UnicodeDecodeError:
-                    caption = "pyglet"
+
         self._caption = caption
+
 
         from pyglet import app
         app.windows.add(self)
+        app.event_loop.update_window_count()
         self._create()
 
         self.switch_to()
@@ -831,6 +827,7 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
         if not self._context:
             return
         app.windows.remove(self)
+        app.event_loop.update_window_count()
         self._context.destroy()
         self._config = None
         self._context = None
@@ -1715,6 +1712,15 @@ class BaseWindow(with_metaclass(_WindowMetaclass, EventDispatcher)):
             :event:
             """
 
+        def on_file_drop(self, x, y, paths):
+            """File(s) were dropped into the window, will return the position of the cursor and
+            a list of paths to the files that were dropped.
+
+            .. versionadded:: 1.5.1
+
+            :event:
+            """
+
         def on_draw(self):
             """The window contents must be redrawn.
 
@@ -1758,10 +1764,11 @@ BaseWindow.register_event_type('on_show')
 BaseWindow.register_event_type('on_hide')
 BaseWindow.register_event_type('on_context_lost')
 BaseWindow.register_event_type('on_context_state_lost')
+BaseWindow.register_event_type('on_file_drop')
 BaseWindow.register_event_type('on_draw')
 
 
-class FPSDisplay(object):
+class FPSDisplay:
     """Display of a window's framerate.
 
     This is a convenience class to aid in profiling and debugging.  Typical
@@ -1876,14 +1883,8 @@ else:
     elif pyglet.compat_platform in ('win32', 'cygwin'):
         from pyglet.window.win32 import Win32Window as Window
     else:
-        # XXX HACK around circ problem, should be fixed after removal of
-        # shadow nonsense
-        #pyglet.window = sys.modules[__name__]
-        #import key, mouse
-
         from pyglet.window.xlib import XlibWindow as Window
 
-# XXX remove
 # Create shadow window. (trickery is for circular import)
 if not _is_pyglet_doc_run:
     pyglet.window = sys.modules[__name__]

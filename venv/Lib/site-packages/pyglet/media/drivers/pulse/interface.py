@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import print_function
-from __future__ import absolute_import
 
 import ctypes
 import sys
@@ -76,18 +74,15 @@ class PulseAudioException(MediaException):
         self.message = message
 
     def __str__(self):
-        return '{}: [{}] {}'.format(self.__class__.__name__,
-                                    self.error_code,
-                                    self.message)
+        return '{}: [{}] {}'.format(self.__class__.__name__, self.error_code, self.message)
 
     __repr__ = __str__
 
 
-class PulseAudioMainLoop(object):
+class PulseAudioMainLoop:
     def __init__(self):
         self._pa_threaded_mainloop = pa.pa_threaded_mainloop_new()
-        self._pa_mainloop = pa.pa_threaded_mainloop_get_api(
-            self._pa_threaded_mainloop)
+        self._pa_mainloop = pa.pa_threaded_mainloop_get_api(self._pa_threaded_mainloop)
         self._lock_count = 0
 
     def __del__(self):
@@ -166,7 +161,7 @@ class PulseAudioMainLoop(object):
         self.unlock()
 
 
-class PulseAudioLockable(object):
+class PulseAudioLockable:
     def __init__(self, mainloop):
         assert mainloop is not None
         self.mainloop = weakref.ref(mainloop)

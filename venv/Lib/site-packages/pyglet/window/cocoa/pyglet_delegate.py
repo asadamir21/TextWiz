@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import absolute_import
-from builtins import object
 
 from pyglet.libs.darwin.cocoapy import ObjCClass, ObjCSubclass, ObjCInstance
 from pyglet.libs.darwin.cocoapy import NSApplicationDidHideNotification
@@ -47,7 +45,7 @@ NSNotificationCenter = ObjCClass('NSNotificationCenter')
 NSApplication = ObjCClass('NSApplication')
 
 
-class PygletDelegate_Implementation(object):
+class PygletDelegate_Implementation:
     PygletDelegate = ObjCSubclass('NSObject', 'PygletDelegate')
 
     @PygletDelegate.method(b'@'+PyObjectEncoding)

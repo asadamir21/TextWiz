@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -85,9 +85,6 @@ from .codecs import Source, StaticSource, StreamingSource, SourceGroup
 
 from . import synthesis
 
-# deprecated:: 1.4
-# Procedural was renamed to `synthesis` in 1.4
-from . import synthesis as procedural
 
 __all__ = (
     'load',

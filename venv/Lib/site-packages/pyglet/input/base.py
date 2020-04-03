@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,13 +37,9 @@
 
 .. versionadded:: 1.2
 """
-from __future__ import division
-from builtins import object
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 import sys
+
 from pyglet.event import EventDispatcher
 
 _is_pyglet_doc_run = hasattr(sys, "is_pyglet_doc_run") and sys.is_pyglet_doc_run
@@ -61,7 +57,7 @@ class DeviceExclusiveException(DeviceException):
     pass
 
 
-class Device(object):
+class Device:
     """Input device.
 
     :Ivariables:
@@ -616,7 +612,7 @@ AppleRemote.register_event_type('on_button_press')
 AppleRemote.register_event_type('on_button_release')
 
 
-class Tablet(object):
+class Tablet:
     """High-level interface to tablet devices.
 
     Unlike other devices, tablets must be opened for a specific window,
@@ -731,7 +727,7 @@ TabletCanvas.register_event_type('on_leave')
 TabletCanvas.register_event_type('on_motion')
 
 
-class TabletCursor(object):
+class TabletCursor:
     """A distinct cursor used on a tablet.
 
     Most tablets support at least a *stylus* and an *erasor* cursor; this

@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
+import sys
+
 # Most of this file is win32con.py from Python for Windows Extensions:
 # http://www.python.net/crew/mhammond/win32/
 
@@ -1366,6 +1368,7 @@ WM_COMMNOTIFY = 68
 WM_WINDOWPOSCHANGING = 70
 WM_WINDOWPOSCHANGED = 71
 WM_POWER = 72
+WM_COPYGLOBALDATA = 73
 PWR_OK = 1
 PWR_FAIL = (-1)
 PWR_SUSPENDREQUEST = 1
@@ -5035,3 +5038,32 @@ RI_MOUSE_BUTTON_5_DOWN = 0x0100
 RI_MOUSE_BUTTON_5_UP = 0x0200
 
 RI_MOUSE_WHEEL = 0x0400
+
+WINDOWS_VISTA_OR_GREATER = sys.getwindowsversion() >= (6, 0)
+WINDOWS_7_OR_GREATER = sys.getwindowsversion() >= (6, 1)
+WINDOWS_8_OR_GREATER = sys.getwindowsversion() >= (6, 2)
+WINDOWS_8_1_OR_GREATER = sys.getwindowsversion() >= (6, 3)
+WINDOWS_10_ANNIVERSARY_UPDATE_OR_GREATER = sys.getwindowsversion() >= (10, 0, 14393)  # 1607
+WINDOWS_10_CREATORS_UPDATE_OR_GREATER = sys.getwindowsversion() >= (10, 0, 15063)  # 1703
+
+MSGFLT_ALLOW = 1
+MSGFLT_DISALLOW = 2
+MSGFLT_RESET = 0
+
+COINIT_APARTMENTTHREADED = 0x2
+COINIT_MULTITHREADED = 0x0
+COINIT_DISABLE_OLE1DDE = 0x4
+COINIT_SPEED_OVER_MEMORY = 0x8
+
+MF_ACCESSMODE_READ = 1
+MF_ACCESSMODE_WRITE = 2
+MF_ACCESSMODE_READWRITE = 3
+
+MF_OPENMODE_FAIL_IF_NOT_EXIST = 0
+MF_OPENMODE_FAIL_IF_EXIST = 1
+MF_OPENMODE_RESET_IF_EXIST = 2
+MF_OPENMODE_APPEND_IF_EXIST = 3
+MF_OPENMODE_DELETE_IF_EXIST = 4
+
+MF_FILEFLAGS_NONE = 0
+MF_FILEFLAGS_NOBUFFERING = 1

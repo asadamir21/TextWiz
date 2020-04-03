@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -82,11 +82,8 @@ instance when loading the Model::
 .. versionadded:: 1.4
 """
 
-__docformat__ = 'restructuredtext'
-__version__ = '$Id$'
+import io
 
-
-from pyglet.compat import BytesIO
 from pyglet.gl import *
 from pyglet import graphics
 
@@ -125,7 +122,7 @@ def load(filename, file=None, decoder=None, batch=None):
         file = open(filename, 'rb')
 
     if not hasattr(file, 'seek'):
-        file = BytesIO(file.read())
+        file = io.BytesIO(file.read())
 
     try:
         if decoder:
@@ -149,7 +146,7 @@ def load(filename, file=None, decoder=None, batch=None):
         file.close()
 
 
-class Model(object):
+class Model:
     """Instance of a 3D object.
 
     See the module documentation for usage.
@@ -227,7 +224,7 @@ class Model(object):
         self._batch.draw_subset(self.vertex_lists)
 
 
-class Material(object):
+class Material:
     __slots__ = ("name", "diffuse", "ambient", "specular", "emission", "shininess", "texture_name")
 
     def __init__(self, name, diffuse, ambient, specular, emission, shininess, texture_name=None):

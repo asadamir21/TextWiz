@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: $
 
 """Render simple text and formatted documents efficiently.
 
@@ -153,14 +152,6 @@ document; they will be ignored by the built-in text classes.
 
 .. versionadded:: 1.1
 """
-from __future__ import division
-from builtins import zip
-from builtins import map
-from builtins import range
-from builtins import object
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 import re
 import sys
@@ -209,7 +200,7 @@ def _parse_distance(distance, dpi):
         assert False, 'Unknown distance unit %s' % unit
 
 
-class _Line(object):
+class _Line:
     align = 'left'
 
     margin_left = 0
@@ -250,7 +241,7 @@ class _Line(object):
             box.delete(layout)
 
 
-class _LayoutContext(object):
+class _LayoutContext:
     def __init__(self, layout, document, colors_iter, background_iter):
         self.colors_iter = colors_iter
         underline_iter = document.get_style_runs('underline')
@@ -286,7 +277,7 @@ class _IncrementalLayoutContext(_LayoutContext):
         pass
 
 
-class _AbstractBox(object):
+class _AbstractBox:
     owner = None
 
     def __init__(self, ascent, descent, advance, length):
@@ -483,7 +474,7 @@ class _InlineElementBox(_AbstractBox):
         return '_InlineElementBox(%r)' % self.element
 
 
-class _InvalidRange(object):
+class _InvalidRange:
     def __init__(self):
         self.start = sys.maxsize
         self.end = 0
@@ -546,6 +537,15 @@ class TextLayoutGroup(graphics.Group):
 
     def unset_state(self):
         glPopAttrib()
+
+    def __hash__(self):
+        return hash((id(self.parent), GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA))
+
+    def __eq__(self, other):
+        return self.__class__ is other.__class__ and self.parent is other.parent
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.parent)
 
 
 class ScrollableTextLayoutGroup(graphics.Group):
@@ -703,7 +703,7 @@ class TextLayoutTextureGroup(graphics.Group):
     def __eq__(self, other):
         return (self.__class__ is other.__class__ and
                 self.texture.id == other.texture.id and
-                self.parent is other.parent)
+                self.parent == other.parent)
 
     def __repr__(self):
         return '%s(%d, %r)' % (self.__class__.__name__,
@@ -711,7 +711,7 @@ class TextLayoutTextureGroup(graphics.Group):
                                self.parent)
 
 
-class TextLayout(object):
+class TextLayout:
     """Lay out and display documents.
 
     This class is intended for displaying documents that do not change
@@ -1476,11 +1476,8 @@ class TextLayout(object):
             self._update()
         else:
             dx = x - self._x
-            l_dx = lambda x: int(x + dx)
             for vertex_list in self._vertex_lists:
-                vertices = vertex_list.vertices[:]
-                vertices[::2] = list(map(l_dx, vertices[::2]))
-                vertex_list.vertices[:] = vertices
+                vertex_list.vertices[::2] = [v + dx for v in vertex_list.vertices[::2]]
             self._x = x
 
     def _get_x(self):
@@ -1502,11 +1499,8 @@ class TextLayout(object):
             self._update()
         else:
             dy = y - self._y
-            l_dy = lambda y: int(y + dy)
             for vertex_list in self._vertex_lists:
-                vertices = vertex_list.vertices[:]
-                vertices[1::2] = list(map(l_dy, vertices[1::2]))
-                vertex_list.vertices[:] = vertices
+                vertex_list.vertices[1::2] = [v + dy for v in vertex_list.vertices[1::2]]
             self._y = y
 
     def _get_y(self):

@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id:$
 
 """Manage related vertex attributes within a single vertex domain.
 
@@ -56,14 +55,9 @@ The entire domain can be efficiently drawn in one step with the
 :py:meth:`VertexDomain.draw` method, assuming all the vertices comprise
 primitives of the same OpenGL primitive mode.
 """
-from builtins import zip
-from builtins import object
 
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
-
-import ctypes
 import re
+import ctypes
 
 from pyglet.gl import *
 from pyglet.graphics import allocation, vertexattribute, vertexbuffer
@@ -152,7 +146,7 @@ def create_indexed_domain(*attribute_usage_formats):
     return IndexedVertexDomain(attribute_usages)
 
 
-class VertexDomain(object):
+class VertexDomain:
     """Management of a set of vertex lists.
 
     Construction of a vertex domain is usually done with the
@@ -331,7 +325,7 @@ class VertexDomain(object):
         return '<%s@%x %s>' % (self.__class__.__name__, id(self), self.allocator)
 
 
-class VertexList(object):
+class VertexList:
     """A list of vertices within a :py:class:`VertexDomain`.  Use
     :py:meth:`VertexDomain.create` to construct this list.
     """

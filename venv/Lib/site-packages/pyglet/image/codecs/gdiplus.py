@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,25 +32,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import division
-from builtins import range
-
-
-from ctypes import *
 
 from pyglet.com import IUnknown
-from pyglet.gl import *
 from pyglet.image import *
 from pyglet.image.codecs import *
 from pyglet.libs.win32.constants import *
 from pyglet.libs.win32.types import *
 from pyglet.libs.win32 import _kernel32 as kernel32
+from pyglet.libs.win32 import _ole32 as ole32
 
 
-ole32 = windll.ole32
 gdiplus = windll.gdiplus
 
-LPSTREAM = c_void_p
 REAL = c_float
 
 PixelFormat1bppIndexed    = 196865
@@ -124,7 +117,6 @@ class PropertyItem(Structure):
 INT_PTR = POINTER(INT)
 UINT_PTR = POINTER(UINT)
 
-ole32.CreateStreamOnHGlobal.argtypes = [HGLOBAL, BOOL, LPSTREAM]
 
 gdiplus.GdipBitmapLockBits.restype = c_int
 gdiplus.GdipBitmapLockBits.argtypes = [c_void_p, c_void_p, UINT, c_int, c_void_p]

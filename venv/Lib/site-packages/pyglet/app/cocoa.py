@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-__docformat__ = 'restructuredtext'
-__version__ = '$Id: $'
 
 from pyglet.app.base import PlatformEventLoop
 from pyglet.libs.darwin import cocoapy
@@ -47,7 +45,7 @@ NSEvent = cocoapy.ObjCClass('NSEvent')
 NSUserDefaults = cocoapy.ObjCClass('NSUserDefaults')
 
 
-class AutoReleasePool(object):
+class AutoReleasePool:
     def __enter__(self):
         self.pool = NSAutoreleasePool.alloc().init()
         return self.pool

@@ -9,17 +9,16 @@ import numpy as np
 from pandas.core.dtypes.common import is_list_like
 from pandas.core.dtypes.generic import ABCDataFrame, ABCIndexClass, ABCSeries
 
+from pandas.plotting._matplotlib import compat
+
 
 def format_date_labels(ax, rot):
     # mini version of autofmt_xdate
-    try:
-        for label in ax.get_xticklabels():
-            label.set_ha("right")
-            label.set_rotation(rot)
-        fig = ax.get_figure()
-        fig.subplots_adjust(bottom=0.2)
-    except Exception:  # pragma: no cover
-        pass
+    for label in ax.get_xticklabels():
+        label.set_ha("right")
+        label.set_rotation(rot)
+    fig = ax.get_figure()
+    fig.subplots_adjust(bottom=0.2)
 
 
 def table(ax, data, rowLabels=None, colLabels=None, **kwargs):
@@ -63,10 +62,7 @@ def _get_layout(nplots, layout=None, layout_type="box"):
 
         if nrows * ncols < nplots:
             raise ValueError(
-                "Layout of {nrows}x{ncols} must be larger "
-                "than required size {nplots}".format(
-                    nrows=nrows, ncols=ncols, nplots=nplots
-                )
+                f"Layout of {nrows}x{ncols} must be larger than required size {nplots}"
             )
 
         return layout
@@ -104,7 +100,7 @@ def _subplots(
     ax=None,
     layout=None,
     layout_type="box",
-    **fig_kw
+    **fig_kw,
 ):
     """Create a figure with a set of subplots already made.
 
@@ -191,8 +187,7 @@ def _subplots(
             ax = _flatten(ax)
             if layout is not None:
                 warnings.warn(
-                    "When passing multiple axes, layout keyword is " "ignored",
-                    UserWarning,
+                    "When passing multiple axes, layout keyword is ignored", UserWarning
                 )
             if sharex or sharey:
                 warnings.warn(
@@ -207,8 +202,8 @@ def _subplots(
                 return fig, ax
             else:
                 raise ValueError(
-                    "The number of passed axes must be {0}, the "
-                    "same as the output plot".format(naxes)
+                    f"The number of passed axes must be {naxes}, the "
+                    "same as the output plot"
                 )
 
         fig = ax.get_figure()
@@ -281,22 +276,26 @@ def _remove_labels_from_axis(axis):
     for t in axis.get_majorticklabels():
         t.set_visible(False)
 
-    try:
-        # set_visible will not be effective if
-        # minor axis has NullLocator and NullFormattor (default)
-        if isinstance(axis.get_minor_locator(), ticker.NullLocator):
-            axis.set_minor_locator(ticker.AutoLocator())
-        if isinstance(axis.get_minor_formatter(), ticker.NullFormatter):
-            axis.set_minor_formatter(ticker.FormatStrFormatter(""))
-        for t in axis.get_minorticklabels():
-            t.set_visible(False)
-    except Exception:  # pragma no cover
-        raise
+    # set_visible will not be effective if
+    # minor axis has NullLocator and NullFormattor (default)
+    if isinstance(axis.get_minor_locator(), ticker.NullLocator):
+        axis.set_minor_locator(ticker.AutoLocator())
+    if isinstance(axis.get_minor_formatter(), ticker.NullFormatter):
+        axis.set_minor_formatter(ticker.FormatStrFormatter(""))
+    for t in axis.get_minorticklabels():
+        t.set_visible(False)
+
     axis.get_label().set_visible(False)
 
 
 def _handle_shared_axes(axarr, nplots, naxes, nrows, ncols, sharex, sharey):
     if nplots > 1:
+        if compat._mpl_ge_3_2_0():
+            row_num = lambda x: x.get_subplotspec().rowspan.start
+            col_num = lambda x: x.get_subplotspec().colspan.start
+        else:
+            row_num = lambda x: x.rowNum
+            col_num = lambda x: x.colNum
 
         if nrows > 1:
             try:
@@ -304,13 +303,13 @@ def _handle_shared_axes(axarr, nplots, naxes, nrows, ncols, sharex, sharey):
                 # so that we can correctly handle 'gaps"
                 layout = np.zeros((nrows + 1, ncols + 1), dtype=np.bool)
                 for ax in axarr:
-                    layout[ax.rowNum, ax.colNum] = ax.get_visible()
+                    layout[row_num(ax), col_num(ax)] = ax.get_visible()
 
                 for ax in axarr:
                     # only the last row of subplots should get x labels -> all
                     # other off layout handles the case that the subplot is
                     # the last in the column, because below is no subplot/gap.
-                    if not layout[ax.rowNum + 1, ax.colNum]:
+                    if not layout[row_num(ax) + 1, col_num(ax)]:
                         continue
                     if sharex or len(ax.get_shared_x_axes().get_siblings(ax)) > 1:
                         _remove_labels_from_axis(ax.xaxis)
@@ -343,6 +342,21 @@ def _flatten(axes):
     return np.array(axes)
 
 
+def _set_ticks_props(axes, xlabelsize=None, xrot=None, ylabelsize=None, yrot=None):
+    import matplotlib.pyplot as plt
+
+    for ax in _flatten(axes):
+        if xlabelsize is not None:
+            plt.setp(ax.get_xticklabels(), fontsize=xlabelsize)
+        if xrot is not None:
+            plt.setp(ax.get_xticklabels(), rotation=xrot)
+        if ylabelsize is not None:
+            plt.setp(ax.get_yticklabels(), fontsize=ylabelsize)
+        if yrot is not None:
+            plt.setp(ax.get_yticklabels(), rotation=yrot)
+    return axes
+
+
 def _get_all_lines(ax):
     lines = ax.get_lines()
 
@@ -362,18 +376,3 @@ def _get_xlim(lines):
         left = min(np.nanmin(x), left)
         right = max(np.nanmax(x), right)
     return left, right
-
-
-def _set_ticks_props(axes, xlabelsize=None, xrot=None, ylabelsize=None, yrot=None):
-    import matplotlib.pyplot as plt
-
-    for ax in _flatten(axes):
-        if xlabelsize is not None:
-            plt.setp(ax.get_xticklabels(), fontsize=xlabelsize)
-        if xrot is not None:
-            plt.setp(ax.get_xticklabels(), rotation=xrot)
-        if ylabelsize is not None:
-            plt.setp(ax.get_yticklabels(), fontsize=ylabelsize)
-        if yrot is not None:
-            plt.setp(ax.get_yticklabels(), rotation=yrot)
-    return axes

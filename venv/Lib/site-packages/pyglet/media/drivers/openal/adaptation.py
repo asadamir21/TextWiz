@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import print_function
-from __future__ import absolute_import
 
-import time
 import weakref
 
 import pyglet
@@ -52,8 +49,7 @@ class OpenALDriver(AbstractAudioDriver):
     def __init__(self, device_name=None):
         super(OpenALDriver, self).__init__()
 
-        # TODO devices must be enumerated on Windows, otherwise 1.0 context is
-        # returned.
+        # TODO devices must be enumerated on Windows, otherwise 1.0 context is returned.
 
         self.device = interface.OpenALDevice(device_name)
         self.context = self.device.create_context()
@@ -121,7 +117,7 @@ class OpenALAudioPlayer(AbstractAudioPlayer):
     min_buffer_size = 512
 
     #: Aggregate (desired) buffer size, in seconds
-    _ideal_buffer_size = 1.
+    _ideal_buffer_size = 1.0
 
     def __init__(self, driver, source, player):
         super(OpenALAudioPlayer, self).__init__(source, player)
@@ -167,7 +163,6 @@ class OpenALAudioPlayer(AbstractAudioPlayer):
         self.refill(self.ideal_buffer_size)
 
     def __del__(self):
-        assert _debug("Delete OpenALAudioPlayer")
         self.delete()
 
     def delete(self):
@@ -194,12 +189,8 @@ class OpenALAudioPlayer(AbstractAudioPlayer):
     def stop(self):
         assert _debug('OpenALAudioPlayer.stop()')
         pyglet.clock.unschedule(self._check_refill)
-
         assert self.driver is not None
         assert self.alsource is not None
-
-        self._pause_timestamp = self.get_time()
-
         self.alsource.pause()
         self._playing = False
 
@@ -225,7 +216,7 @@ class OpenALAudioPlayer(AbstractAudioPlayer):
         del self._buffer_sizes[:]
         del self._buffer_timestamps[:]
 
-    def _check_refill(self, dt): # Need a better name!
+    def _check_refill(self, dt=0):
         write_size = self.get_write_size()
         if write_size > self.min_buffer_size:
             self.refill(write_size)
@@ -256,7 +247,7 @@ class OpenALAudioPlayer(AbstractAudioPlayer):
                 # Underrun, take note of timestamp.
                 # We check that the timestamp is not None, because otherwise
                 # our source could have been cleared.
-                self._underrun_timestamp =  self._buffer_timestamps[-1] + \
+                self._underrun_timestamp = self._buffer_timestamps[-1] + \
                     self._buffer_sizes[-1] / float(self.source.audio_format.bytes_per_second)
             self._update_buffer_cursor(processed)
 

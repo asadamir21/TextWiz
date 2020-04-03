@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from abc import ABCMeta, abstractmethod
+
 import math
-from future.utils import with_metaclass
 import weakref
+
+from abc import ABCMeta, abstractmethod
+
+from pyglet.util import with_metaclass
 
 
 class AbstractAudioPlayer(with_metaclass(ABCMeta, object)):
@@ -67,7 +70,7 @@ class AbstractAudioPlayer(with_metaclass(ABCMeta, object)):
         self.audio_diff_avg_count = 0
         self.audio_diff_cum = 0.0
         self.audio_diff_avg_coef = math.exp(math.log10(0.01) / self.AUDIO_DIFF_AVG_NB)
-        self.audio_diff_threshold = 0.1 # Experimental. ffplay computes it differently
+        self.audio_diff_threshold = 0.1  # Experimental. ffplay computes it differently
 
     @abstractmethod
     def play(self):
@@ -188,7 +191,7 @@ class AbstractAudioPlayer(with_metaclass(ABCMeta, object)):
 
     @property
     def source(self):
-        "Source to play from."
+        """Source to play from."""
         return self._source
 
     @source.setter

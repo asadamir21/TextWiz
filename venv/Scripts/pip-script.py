@@ -1,4 +1,4 @@
-#!C:\Users\Asad\PycharmProjects\TextAS\venv\Scripts\python.exe
+#!C:\Users\Asad\PycharmProjects\TextWiz\venv\Scripts\python.exe
 # EASY-INSTALL-ENTRY-SCRIPT: 'pip==19.0.3','console_scripts','pip'
 __requires__ = 'pip==19.0.3'
 import re

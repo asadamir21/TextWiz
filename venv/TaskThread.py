@@ -1,3 +1,5 @@
+from calendar import different_locale
+
 from PyQt5.QtCore import QThread, pyqtSignal
 from ProgressInfo import *
 from File import *
@@ -11,6 +13,8 @@ class TaskThread(QThread):
     def run(self):
         try:
             dummyProgressInfo = ThreadQueue.get()
+
+            # ************************* Importing *************************
 
             # Importing Data Source
             if dummyProgressInfo.ProcessName == "Importing":
@@ -35,14 +39,7 @@ class TaskThread(QThread):
                                                  dummyProgressInfo.DataSourceExt)
                     ThreadQueue.put(dummyDataSource)
 
-            # Word Cloud
-            elif dummyProgressInfo.ProcessName == "Word Cloud":
-                dummyQuery = Query()
-                WordCloudImage = dummyQuery.CreateWordCloud(dummyProgressInfo.DataSourcetext,
-                                                            dummyProgressInfo.WCBGColor,
-                                                            dummyProgressInfo.maxword,
-                                                            dummyProgressInfo.maskname)
-                ThreadQueue.put(WordCloudImage)
+            # ************************** Queries **************************
 
             # Word Frequency
             elif dummyProgressInfo.ProcessName == "Word Frequency":
@@ -58,12 +55,45 @@ class TaskThread(QThread):
 
             # Sentiment Analysis
             elif dummyProgressInfo.ProcessName == "Sentiment Analysis":
-                dummyProgressInfo.DataSource.SentimentAnalysis(dummyProgressInfo.SentimentAnalysisColumnName)
+                if hasattr(dummyProgressInfo.DataSource, "PositiveSentimentCount"):
+                    pass
+                else:
+                    dummyProgressInfo.DataSource.SentimentAnalysis(dummyProgressInfo.SentimentAnalysisColumnName)
                 ThreadQueue.put(dummyProgressInfo.DataSource)
 
-            elif dummyProgressInfo.ProcessName == "Sentiment Analysis Visualization":
-                dummyProgressInfo.DataSource.SentimentAnalysisVisualization()
-                ThreadQueue.put(dummyProgressInfo.DataSource)
+            # Entity Relationship
+            elif dummyProgressInfo.ProcessName == "Entity Relationship":
+                dummyQuery = Query()
+                EntityRelationShip = dummyQuery.EntityRelationShip(dummyProgressInfo.DataSource.DataSourcetext)
+                ThreadQueue.put(EntityRelationShip)
+
+            # Part of Speech
+            elif dummyProgressInfo.ProcessName == "Part of Speech":
+                dummyQuery = Query()
+                PartOfSpeech = dummyQuery.PartOfSpeech(dummyProgressInfo.DataSource.DataSourceName,
+                                                       dummyProgressInfo.DataSource.DataSourcetext, 3)
+                ThreadQueue.put(PartOfSpeech)
+
+            # Topic Modelling
+            elif dummyProgressInfo.ProcessName == "Topic Modelling":
+                dummyQuery = Query()
+                TopicModellingHTML = dummyQuery.TopicModelling(dummyProgressInfo.DataSource.DataSourcetext, 5)
+                ThreadQueue.put(TopicModellingHTML)
+
+            # *************************** Cases ***************************
+
+            # ************************* Sentiments ************************
+
+            # *********************** Visualization ***********************
+
+            # Word Cloud
+            elif dummyProgressInfo.ProcessName == "Word Cloud":
+                dummyQuery = Query()
+                WordCloudImage = dummyQuery.CreateWordCloud(dummyProgressInfo.DataSourcetext,
+                                                            dummyProgressInfo.WCBGColor,
+                                                            dummyProgressInfo.maxword,
+                                                            dummyProgressInfo.maskname)
+                ThreadQueue.put(WordCloudImage)
 
             # Word Tree
             elif dummyProgressInfo.ProcessName == "Word Tree":
@@ -71,9 +101,10 @@ class TaskThread(QThread):
                                                                            dummyProgressInfo.WordTreeHeight)
                 ThreadQueue.put(WordTreeHTML)
 
-            # Save
-            elif dummyProgressInfo.ProcessName == "Save":
+            # Survey Analysis
+            elif dummyProgressInfo.ProcessName == "Survey Analysis":
                 pass
+
 
             self.taskFinished.emit()
 

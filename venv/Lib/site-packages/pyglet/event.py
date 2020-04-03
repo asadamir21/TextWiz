@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -151,20 +151,12 @@ the particular class documentation.
         dispatcher.push_handlers(my_handler_instance)
 
 """
-from builtins import object
 
-__docformat__ = 'restructuredtext'
-__version__ = '$Id$'
-
-import sys
 import inspect
-from functools import partial
-import sys
-from .compat import WeakMethod
 
-# PYTHON2 - remove this legacy backwards compatibility hack:
-if sys.version_info < (3, 2):
-    inspect.getfullargspec = inspect.getargspec
+from functools import partial
+from weakref import WeakMethod
+
 
 EVENT_HANDLED = True
 EVENT_UNHANDLED = None
@@ -176,7 +168,7 @@ class EventException(Exception):
     pass
 
 
-class EventDispatcher(object):
+class EventDispatcher:
     """Generic event dispatcher interface.
 
     See the module docstring for usage.

@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from __future__ import print_function
-from __future__ import absolute_import
 
 import weakref
 
@@ -46,7 +44,6 @@ from pyglet.debug import debug_print
 from . import lib_pulseaudio as pa
 from .interface import PulseAudioContext, PulseAudioContext, PulseAudioMainLoop, PulseAudioStream
 
-import pyglet
 
 _debug = debug_print('debug_media')
 
@@ -58,7 +55,7 @@ class PulseAudioDriver(AbstractAudioDriver):
         self.lock = self.mainloop
         self.context = None
 
-        self._players = pyglet.app.WeakSet()
+        self._players = weakref.WeakSet()
         self._listener = PulseAudioListener(self)
 
     def __del__(self):

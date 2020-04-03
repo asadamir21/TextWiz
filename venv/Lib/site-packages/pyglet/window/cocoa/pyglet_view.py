@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,11 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-from builtins import object
 from pyglet.window import key, mouse
 from pyglet.libs.darwin.quartzkey import keymap, charmap
 
 from pyglet.libs.darwin import cocoapy
+
 
 NSTrackingArea = cocoapy.ObjCClass('NSTrackingArea')
 
@@ -91,7 +91,7 @@ def getSymbol(nsevent):
     return None
 
 
-class PygletView_Implementation(object):
+class PygletView_Implementation:
     PygletView = cocoapy.ObjCSubclass('NSView', 'PygletView')
 
     @PygletView.method(b'@'+cocoapy.NSRectEncoding+cocoapy.PyObjectEncoding)

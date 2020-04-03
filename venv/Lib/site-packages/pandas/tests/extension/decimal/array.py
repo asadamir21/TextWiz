@@ -8,8 +8,9 @@ import numpy as np
 from pandas.core.dtypes.base import ExtensionDtype
 
 import pandas as pd
-from pandas.api.extensions import register_extension_dtype
+from pandas.api.extensions import no_default, register_extension_dtype
 from pandas.core.arrays import ExtensionArray, ExtensionScalarOpsMixin
+from pandas.core.indexers import check_array_indexer
 
 
 @register_extension_dtype
@@ -22,12 +23,13 @@ class DecimalDtype(ExtensionDtype):
     def __init__(self, context=None):
         self.context = context or decimal.getcontext()
 
-    def __repr__(self):
-        return "DecimalDtype(context={})".format(self.context)
+    def __repr__(self) -> str:
+        return f"DecimalDtype(context={self.context})"
 
     @classmethod
     def construct_array_type(cls):
-        """Return the array type associated with this dtype
+        """
+        Return the array type associated with this dtype.
 
         Returns
         -------
@@ -40,7 +42,7 @@ class DecimalDtype(ExtensionDtype):
         if string == cls.name:
             return cls()
         else:
-            raise TypeError("Cannot construct a '{}' from '{}'".format(cls, string))
+            raise TypeError(f"Cannot construct a '{cls.__name__}' from '{string}'")
 
     @property
     def _is_numeric(self):
@@ -83,6 +85,12 @@ class DecimalArray(ExtensionArray, ExtensionScalarOpsMixin):
 
     _HANDLED_TYPES = (decimal.Decimal, numbers.Number, np.ndarray)
 
+    def to_numpy(self, dtype=None, copy=False, na_value=no_default, decimals=None):
+        result = np.asarray(self, dtype=dtype)
+        if decimals is not None:
+            result = np.asarray([round(x, decimals) for x in result])
+        return result
+
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         #
         if not all(
@@ -108,6 +116,8 @@ class DecimalArray(ExtensionArray, ExtensionScalarOpsMixin):
         if isinstance(item, numbers.Integral):
             return self._data[item]
         else:
+            # array, slice.
+            item = pd.api.indexers.check_array_indexer(self, item)
             return type(self)(self._data[item])
 
     def take(self, indexer, allow_fill=False, fill_value=None):
@@ -135,13 +145,15 @@ class DecimalArray(ExtensionArray, ExtensionScalarOpsMixin):
             value = [decimal.Decimal(v) for v in value]
         else:
             value = decimal.Decimal(value)
+
+        key = check_array_indexer(self, key)
         self._data[key] = value
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
     @property
-    def nbytes(self):
+    def nbytes(self) -> int:
         n = len(self)
         if n:
             return n * sys.getsizeof(self[0])
@@ -166,14 +178,19 @@ class DecimalArray(ExtensionArray, ExtensionScalarOpsMixin):
     def _reduce(self, name, skipna=True, **kwargs):
 
         if skipna:
-            raise NotImplementedError("decimal does not support skipna=True")
+            # If we don't have any NAs, we can ignore skipna
+            if self.isna().any():
+                other = self[~self.isna()]
+                return other._reduce(name, **kwargs)
+
+        if name == "sum" and len(self) == 0:
+            # GH#29630 avoid returning int 0 or np.bool_(False) on old numpy
+            return decimal.Decimal(0)
 
         try:
             op = getattr(self.data, name)
         except AttributeError:
-            raise NotImplementedError(
-                "decimal does not support the {} operation".format(name)
-            )
+            raise NotImplementedError(f"decimal does not support the {name} operation")
         return op(axis=0)
 
 

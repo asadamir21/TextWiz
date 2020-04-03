@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,14 +39,6 @@ These classes should not be constructed directly.  Instead, use the functions
 in `pyglet.font` to obtain platform-specific instances.  You can use these
 classes as a documented interface to the concrete classes.
 """
-from builtins import chr
-from builtins import str
-from builtins import map
-from builtins import range
-from builtins import object
-
-__docformat__ = 'restructuredtext'
-__version__ = '$Id$'
 
 import unicodedata
 
@@ -256,7 +248,7 @@ class GlyphTextureAtlas(image.Texture):
         return region
 
 
-class GlyphRenderer(object):
+class GlyphRenderer:
     """Abstract class for creating glyph images.
     """
     def __init__(self, font):
@@ -272,7 +264,7 @@ class FontException(Exception):
     pass
 
 
-class Font(object):
+class Font:
     """Abstract font class able to produce glyphs.
 
     To construct a font, use :py:func:`pyglet.font.load`, which will instantiate the

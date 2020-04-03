@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,14 +60,13 @@ by the application; see the documentation for :class:`Screen`.
 """
 
 import sys
-
-from pyglet.app import WeakSet
+import weakref
 
 
 _is_pyglet_doc_run = hasattr(sys, "is_pyglet_doc_run") and sys.is_pyglet_doc_run
 
 
-_displays = WeakSet()
+_displays = weakref.WeakSet()
 """Set of all open displays.  Instances of :class:`Display` are automatically
 added to this set upon construction.  The set uses weak references, so displays
 are removed from the set when they are no longer referenced.

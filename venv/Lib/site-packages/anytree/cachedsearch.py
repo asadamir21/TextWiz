@@ -12,6 +12,7 @@ try:
 except ImportError:
     from functools import wraps
 
+    # dummy decorator which does NOT cache
     def _cache(size):
         def decorator(func):
             @wraps(func)
@@ -20,7 +21,6 @@ except ImportError:
             return wrapped
         return decorator
 
-from anytree.iterators import PreOrderIter
 
 CACHE_SIZE = 32
 

@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,6 @@
 
 """Decoder for RIFF Wave files, using the standard library wave module.
 """
-from __future__ import absolute_import, division
 
 from ..exceptions import MediaDecodeException
 from .base import StreamingSource, AudioData, AudioFormat, StaticSource
@@ -60,8 +59,6 @@ class WaveSource(StreamingSource):
         except wave.Error as e:
             raise WAVEDecodeException(e)
 
-        # PYTHON2: use the named tuple instead of explicit unpacking
-        # parameters = self._wave.getparams()
         nchannels, sampwidth, framerate, nframes, comptype, compname = self._wave.getparams()
 
         self.audio_format = AudioFormat(channels=nchannels,

@@ -1,10 +1,7 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import object
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,13 +33,13 @@ from builtins import object
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
+import io
 import ctypes
 
-from pyglet.compat import bytes_type, BytesIO
 from pyglet.media.exceptions import MediaException, CannotSeekException
 
 
-class AudioFormat(object):
+class AudioFormat:
     """Audio details.
 
     An instance of this class is provided by sources with audio tracks.  You
@@ -81,7 +78,7 @@ class AudioFormat(object):
             self.sample_rate)
 
 
-class VideoFormat(object):
+class VideoFormat:
     """Video details.
 
     An instance of this class is provided by sources with a video stream. You
@@ -117,7 +114,7 @@ class VideoFormat(object):
         return False
 
 
-class AudioData(object):
+class AudioData:
     """A single packet of audio data.
 
     This class is used internally by pyglet.
@@ -186,22 +183,15 @@ class AudioData(object):
         """Return data as a bytestring.
 
         Returns:
-            bytes or str: Data as a (byte)string. For Python 3 it's a
-            bytestring while for Python 2 it's a string.
+            bytes: Data as a (byte)string.
         """
-        # PYTHON2 - remove old Python 2 type checks
         if self.data is None:
             return b''
 
-        if isinstance(self.data, bytes_type):
-            return self.data
-
-        buf = ctypes.create_string_buffer(self.length)
-        ctypes.memmove(buf, self.data, self.length)
-        return buf.raw
+        return memoryview(self.data).tobytes()[:self.length]
 
 
-class SourceInfo(object):
+class SourceInfo:
     """Source metadata information.
 
     Fields are the empty string or zero if the information is not available.
@@ -229,7 +219,7 @@ class SourceInfo(object):
     genre = ''
 
 
-class Source(object):
+class Source:
     """An audio and/or video source.
 
     Args:
@@ -368,11 +358,11 @@ class Source(object):
         """
         return self
 
-    def get_audio_data(self, bytes, compensation_time=0.0):
+    def get_audio_data(self, num_bytes, compensation_time=0.0):
         """Get next packet of audio data.
 
         Args:
-            bytes (int): Maximum number of bytes of data to return.
+            num_bytes (int): Maximum number of bytes of data to return.
             compensation_time (float): Time in sec to compensate due to a
                 difference between the master clock and the audio clock.
 
@@ -411,7 +401,7 @@ class StreamingSource(Source):
             :class:`.Source`
         """
         if self.is_player_source:
-            raise MediaException('This source is already a source on a player.')
+            raise MediaException('This source is already queued on a player.')
         self.is_player_source = True
         return self
 
@@ -436,8 +426,7 @@ class StaticSource(Source):
     def __init__(self, source):
         source = source.get_queue_source()
         if source.video_format:
-            raise NotImplementedError(
-                'Static sources not supported for video yet.')
+            raise NotImplementedError('Static sources not supported for video.')
 
         self.audio_format = source.audio_format
         if not self.audio_format:
@@ -450,7 +439,7 @@ class StaticSource(Source):
 
         # Naive implementation.  Driver-specific implementations may override
         # to load static audio data into device (or at least driver) memory.
-        data = BytesIO()
+        data = io.BytesIO()
         while True:
             audio_data = source.get_audio_data(buffer_size)
             if not audio_data:
@@ -458,14 +447,13 @@ class StaticSource(Source):
             data.write(audio_data.get_string_data())
         self._data = data.getvalue()
 
-        self._duration = (len(self._data) /
-                          float(self.audio_format.bytes_per_second))
+        self._duration = len(self._data) / self.audio_format.bytes_per_second
 
     def get_queue_source(self):
         if self._data is not None:
             return StaticMemorySource(self._data, self.audio_format)
 
-    def get_audio_data(self, bytes, compensation_time=0.0):
+    def get_audio_data(self, num_bytes, compensation_time=0.0):
         """The StaticSource does not provide audio data.
 
         When the StaticSource is queued on a
@@ -492,7 +480,7 @@ class StaticMemorySource(StaticSource):
 
     def __init__(self, data, audio_format):
         """Construct a memory source over the given data buffer."""
-        self._file = BytesIO(data)
+        self._file = io.BytesIO(data)
         self._max_offset = len(data)
         self.audio_format = audio_format
         self._duration = len(data) / float(audio_format.bytes_per_second)
@@ -513,11 +501,11 @@ class StaticMemorySource(StaticSource):
 
         self._file.seek(offset)
 
-    def get_audio_data(self, bytes, compensation_time=0.0):
+    def get_audio_data(self, num_bytes, compensation_time=0.0):
         """Get next packet of audio data.
 
         Args:
-            bytes (int): Maximum number of bytes of data to return.
+            num_bytes (int): Maximum number of bytes of data to return.
             compensation_time (float): Not used in this class.
 
         Returns:
@@ -529,11 +517,11 @@ class StaticMemorySource(StaticSource):
 
         # Align to sample size
         if self.audio_format.bytes_per_sample == 2:
-            bytes &= 0xfffffffe
+            num_bytes &= 0xfffffffe
         elif self.audio_format.bytes_per_sample == 4:
-            bytes &= 0xfffffffc
+            num_bytes &= 0xfffffffc
 
-        data = self._file.read(bytes)
+        data = self._file.read(num_bytes)
         if not len(data):
             return None
 
@@ -541,7 +529,7 @@ class StaticMemorySource(StaticSource):
         return AudioData(data, len(data), timestamp, duration, [])
 
 
-class SourceGroup(object):
+class SourceGroup:
     """Group of like sources to allow gapless playback.
 
     Seamlessly read data from a group of sources to allow for

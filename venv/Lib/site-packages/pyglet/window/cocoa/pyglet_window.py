@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
-# Copyright (c) 2008-2019 pyglet contributors
+# Copyright (c) 2008-2020 pyglet contributors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,14 +34,13 @@
 # ----------------------------------------------------------------------------
 
 from ctypes import c_void_p, c_bool
-from builtins import object
 
 from pyglet.libs.darwin.cocoapy import ObjCClass, ObjCSubclass, send_super
 from pyglet.libs.darwin.cocoapy import NSUInteger, NSUIntegerEncoding
 from pyglet.libs.darwin.cocoapy import NSRectEncoding
 
 
-class PygletWindow_Implementation(object):
+class PygletWindow_Implementation:
     PygletWindow = ObjCSubclass('NSWindow', 'PygletWindow')
 
     @PygletWindow.method('B')
@@ -82,7 +81,7 @@ class PygletWindow_Implementation(object):
         return 0.0
 
 
-class PygletToolWindow_Implementation(object):
+class PygletToolWindow_Implementation:
     PygletToolWindow = ObjCSubclass('NSPanel', 'PygletToolWindow')
 
     @PygletToolWindow.method(b'@'+NSUIntegerEncoding+b'@@B')

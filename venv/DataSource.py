@@ -418,15 +418,30 @@ class DataSource():
             self.CSVHeaderLabel = []
 
             if self.CSVHeader:
-                self.CSVData = pd.read_csv(self.DataSourcePath)
+                try:
+                    self.CSVData = pd.read_csv(self.DataSourcePath)
+                except UnicodeDecodeError:
+                    self.CSVData = pd.read_csv(self.DataSourcePath, engine = 'python')
                 self.CSVHeaderLabel = self.CSVData.columns.tolist()
+
             else:
-                self.CSVData = pd.read_csv(self.DataSourcePath, header=None)
+                try:
+                    self.CSVData = pd.read_csv(self.DataSourcePath, header=None)
+                except UnicodeDecodeError:
+                    self.CSVData = pd.read_csv(self.DataSourcePath, header=None, engine = 'python')
+
                 for i in range(len(self.CSVData.columns)):
                     self.CSVHeaderLabel.append("Column " + str(i + 1))
 
-            for row in self.CSVData:
-                self.DataSourcetext += " ".join(row)
+                self.CSVData.columns = self.CSVHeaderLabel
+
+            for col in range(len(self.CSVData.columns)):
+                try:
+                    if not self.CSVData.iloc[:, col].dtype == np.float64 and not self.CSVData.iloc[:, col].dtype == np.int64:
+                        self.CSVData.iloc[:, col] = pd.to_datetime(self.CSVData.iloc[:, col])
+                except:
+                    pass
+
 
             self.DataSourceLoadError = False
             self.DataSourceHTTPError = False
@@ -502,10 +517,10 @@ class DataSource():
         try:
             self.DataSourceHashtag = Hashtag
 
-            consumer_key = 's3MT03IsWkMrTj41HxH6InNzr'
-            consumer_secret = 'jaqHc7GLjmxaM8xITLHWdcHC10nhzPXfG6RTwtUOmAJo673nRg'
-            access_token = '1115595365380550659-1q2eKGnzYESKSujOTKQ16fhWbHRWAk'
-            access_token_secret = 'le5JNnMhFM3iLbbRODsJyLblIZCltKwwjIXsdVokxsG20'
+            consumer_key = 'qtIeuuQrsjnP6lSvKd9Vf5uij'
+            consumer_secret = '2NFYIVQDfYQeA0GgNdc1dtuJbleoZl6Mogeh2ZZ1U92ljnRy6n'
+            access_token = '1115595365380550659-wCanQ5Jcwjx204nWxfymwEgQEqP6Qs'
+            access_token_secret = 'OpAdIBm8XkEBIQUkEJpdC635xK6eWXUrprml4S31pAcp0'
 
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
             auth.set_access_token(access_token, access_token_secret)
@@ -513,9 +528,9 @@ class DataSource():
 
             self.TweetData = []
 
-            for tweet in tweepy.Cursor(api.search, q=Hashtag, count=NoOfTweet, lang="en", since=Since).items():
-                self.DataSourcetext = self.DataSourcetext + tweet.text
+            tweetdata = tweepy.Cursor(api.search, q=Hashtag, count=NoOfTweet, lang="en", since=Since).items()
 
+            for tweet in tweetdata:
                 eachtweet = [tweet.user.screen_name,
                              tweet.user.name,
                              str(tweet.created_at),
@@ -534,6 +549,23 @@ class DataSource():
             if len(self.TweetData) == 0:
                 self.DataSourceRetrieveZeroError = True
             else:
+                # Converting Tweet Data to Pandas DataFrame
+                self.TweetDataFrame = pd.DataFrame(self.TweetData)
+                self.TweetDataFrame.columns = ["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates",
+                 "Retweet Count", "Retweeted", "Phone Type", "Favorite Count", "Favorited", "Replied"]
+
+                for col in self.TweetDataFrame.columns:
+                    try:
+                        self.TweetDataFrame[col] = pd.to_numeric(self.TweetDataFrame[col])
+                    except:
+                        try:
+                            self.TweetDataFrame[col] = pd.to_datetime(self.TweetDataFrame[col])
+                        except:
+                            pass
+
+                filehandler = open("List2", 'wb')
+                pickle.dump(self.TweetDataFrame, filehandler)
+
                 self.DataSourceRetrieveZeroError = False
 
         except Exception as e:
@@ -655,23 +687,6 @@ class DataSource():
         self.NegativeSentimentCount = 0
         self.NeutralSentimentCount = 0
 
-        # analyzer = SentimentIntensityAnalyzer()
-
-        # for line in DataSourceTextTokenize:
-        #     vs = analyzer.polarity_scores(line)
-        #
-        #     vs = analyzer.polarity_scores(line)
-        #     if vs['compound'] > 0.05:
-        #         self.AutomaticSentimentList.append([line, 'Positive'])
-        #         self.PositiveSentimentCount += 1
-        #
-        #     elif vs['compound'] > -0.05 and vs['compound'] <= 0.05:
-        #         self.AutomaticSentimentList.append([line, 'Neutral'])
-        #         self.NeutralSentimentCount += 1
-        #
-        #     elif vs['compound'] <= -0.05:
-        #         self.AutomaticSentimentList.append([line, 'Negative'])
-        #         self.NegativeSentimentCount += 1
         for line in DataSourceTextTokenize:
             if str(line) != 'nan':
                 blob = TextBlob(line)
@@ -896,3 +911,4 @@ class DataSource():
         ax2.set_xticks(y_pos)
         ax2.set_xticklabels(tuple(objects))
         ax2.set_ylabel('Case Weigthage')
+

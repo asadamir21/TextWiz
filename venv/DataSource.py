@@ -30,23 +30,25 @@ import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet,
 import docx2txt, PyPDF2, tweepy, httplib2
 
 #Youtube
-# from Youtube.URL import *
-# import google.auth.exceptions
-# try:
-#     YoutubeServerNotFoundError = False
-#     from Youtube.KeyWord import *
-# except httplib2.ServerNotFoundError:
-#     YoutubeServerNotFoundError = True
-# except google.auth.exceptions.RefreshError:
-#     print("Done")
-# except Exception as e:
-#     print(str(e))
+from Youtube.URL import *
+import google.auth.exceptions
+try:
+    YoutubeServerNotFoundError = False
+    from Youtube.KeyWord import *
+except httplib2.ServerNotFoundError:
+    YoutubeServerNotFoundError = True
+except google.auth.exceptions.RefreshError:
+    print("Done")
+except Exception as e:
+    print(str(e))
 
 #Audio
 import wave
 from pydub import AudioSegment
-#from pydub.silence import split_on_silence
+
+os.environ["PATH"] += os.pathsep + 'ffmpeg/bin/'
 from ffmpeg import *
+
 import speech_recognition as sr
 
 class DataSource():
@@ -346,7 +348,6 @@ class DataSource():
 
     # Audio Convert to .wav
     def converttowav(self, audiopath):
-        os.environ["PATH"] += os.pathsep + 'ffmpeg/bin/'
         audiotowav = AudioSegment.from_mp3(audiopath)
         audiotowav.export(os.getcwd() + "\CAudio.wav", format="wav")
 
@@ -574,12 +575,16 @@ class DataSource():
     #Yotube Comments From URL
     def YoutubeURL(self):
         self.YoutubeURLFlag = True
+
+        #Youtube_API_Key = 'Enter Your API Key'
+        Youtube_API_Key = 'AIzaSyClLW3rJUSeU5kLrf7njWItFdKdgtoX1pA'
+
         try:
             video_id = urlparse(self.DataSourcePath)
             q = parse_qs(video_id.query)
             vid = q["v"][0]
 
-            VC = VideoComment(100, vid, 'AIzaSyClLW3rJUSeU5kLrf7njWItFdKdgtoX1pA')
+            VC = VideoComment(100, vid, Youtube_API_Key)
             self.YoutubeData = VC.comments
 
             self.DataSourcetext = ""
@@ -588,6 +593,7 @@ class DataSource():
 
             self.DataSourceLoadError = False
         except Exception as e:
+            print(str(e))
             self.DataSourceLoadError = True
 
     # Yotube Comments From KeyWord
@@ -604,6 +610,7 @@ class DataSource():
                 self.DataSourceLoadError = False
 
             except Exception as e:
+                print(str(e))
                 self.DataSourceLoadError = True
         else:
             self.YoutubeServerNotFoundError = True
@@ -714,10 +721,6 @@ class DataSource():
     # Emoji Cleaner
     def deEmojify(self, inputString):
         return inputString.encode('ascii', 'ignore').decode('ascii')
-
-    # Create Dashboard
-    def CreateDashboard(self):
-        print("Hello")
 
     # Word Tree
     def CreateWordTree(self, width, height):

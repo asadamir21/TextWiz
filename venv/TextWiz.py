@@ -1,5 +1,5 @@
-from distutils.errors import PreprocessError
-#from idlelib.idle_test.test_configdialog import GenPageTest
+#from distutils.errors import PreprocessError
+from idlelib.idle_test.test_configdialog import GenPageTest
 
 import PyQt5
 from PyQt5.QtWidgets import *
@@ -73,8 +73,10 @@ class Window(QMainWindow):
 
         self.settings = QSettings('TextWiz', 'TextWiz')
 
+        # Retrieving Theme from settings
         self.theme = self.settings.value('theme', '')
 
+        # setting theme from setting
         if self.theme == '' or self.theme == 'Light':
            self.setStyleSheet(open('Styles/Light.css', 'r').read())
         elif self.theme == 'Dark':
@@ -82,12 +84,12 @@ class Window(QMainWindow):
         elif self.theme == 'DarkOrange':
            self.setStyleSheet(open('Styles/DarkOrange.css', 'r').read())
 
-           self.settings.setValue('theme', 'DarkOrange')
 
         self.languages = open('Languages.txt', 'r').read().split("\n")
 
         for fileRow in self.languages:
             self.languages[self.languages.index(fileRow)] = fileRow.split(',')
+
 
         coordinatecsvreader = csv.reader(open('Coordinates.csv'))
 
@@ -98,6 +100,7 @@ class Window(QMainWindow):
 
         self.initWindows()
 
+    # Initiate Windows
     def initWindows(self):
         self.setWindowIcon(QIcon(WindowTitleLogo))
         self.setWindowTitle(self.title)
@@ -149,7 +152,6 @@ class Window(QMainWindow):
 
         YoutubeAct = QAction(QIcon('Images/Youtube.png'), 'Youtube', self)
         YoutubeAct.triggered.connect(lambda: self.ImportYoutubeWindow())
-        YoutubeAct.setDisabled(True)
         self.toolbar.addAction(YoutubeAct)
 
         self.toolbar.addSeparator()
@@ -161,7 +163,6 @@ class Window(QMainWindow):
 
         mainMenu = self.menuBar()
         fileMenu = mainMenu.addMenu('File')
-        editMenu = mainMenu.addMenu('Edit')
         viewMenu = mainMenu.addMenu('View')
         importMenu = mainMenu.addMenu('Import')
         ToolMenu = mainMenu.addMenu('Tools')
@@ -266,7 +267,7 @@ class Window(QMainWindow):
         importMenu.addAction(RTFFileButton)
 
         SoundFileButton = QAction(QIcon("Images/Sound.png"), 'Audio File', self)
-        SoundFileButton.setStatusTip('Word File')
+        SoundFileButton.setStatusTip('Audio File')
         SoundFileButton.triggered.connect(lambda: self.ImportFileWindow("Sound"))
         importMenu.addAction(SoundFileButton)
 
@@ -293,7 +294,6 @@ class Window(QMainWindow):
         YoutubeButton = QAction(QIcon("Images\Youtube.png"), 'Youtube Comments', self)
         YoutubeButton.setStatusTip('Youtube Comments')
         YoutubeButton.triggered.connect(lambda checked: self.ImportYoutubeWindow())
-        YoutubeButton.setDisabled(True)
         importMenu.addAction(YoutubeButton)
 
         # *****************************  ToolsMenuItem **************************************
@@ -333,7 +333,6 @@ class Window(QMainWindow):
         EntityRelationship = QAction('Entity Relationship', self)
         EntityRelationship.setToolTip('Entity Relationship')
         EntityRelationship.triggered.connect(lambda: self.DataSourceEntityRelationShipDialog())
-        #EntityRelationship.setDisabled(True)
         ToolMenu.addAction(EntityRelationship)
 
         # Sentiment Analysis
@@ -346,14 +345,12 @@ class Window(QMainWindow):
         TopicModelling = QAction('Topic Modelling', self)
         TopicModelling.setToolTip('Topic Modelling')
         TopicModelling.triggered.connect(lambda: self.DataSourceTopicModellingDialog())
-        #TopicModelling.setDisabled(True)
         ToolMenu.addAction(TopicModelling)
 
         # Generate Question
         GenerateQuestion = QAction('Generate Questions', self)
         GenerateQuestion.setToolTip('Generate Questions')
         GenerateQuestion.triggered.connect(lambda: self.DataSourcesGenerateQuestions())
-        #GenerateQuestion.setDisabled(True)
         ToolMenu.addAction(GenerateQuestion)
 
         # Find Similarity
@@ -363,12 +360,6 @@ class Window(QMainWindow):
         ToolMenu.addAction(FindSimilarity)
 
         # *************************  VisualizationMenuItem **********************************
-
-        # Create Dashboard
-        CreateDasboard = QAction('Create Dashboard', self)
-        CreateDasboard.setToolTip('Find Similarity Between Data Sources')
-        CreateDasboard.triggered.connect(lambda: self.DataSourcesCreateDashboardDialog())
-        VisualizationMenu.addAction(CreateDasboard)
 
         # Create Word Cloud Tool
         CreateWordCloudTool = QAction('Create Word Cloud', self)
@@ -407,8 +398,13 @@ class Window(QMainWindow):
         VisualizationMenu.addAction(CreateCoordinateMapTool)
 
         # *****************************  HelpMenuItem ***************************************
+        
+        LicenseButton = QAction('License', self)
+        LicenseButton.setStatusTip('License')
+        LicenseButton.triggered.connect(lambda: self.LicenseWindow())
+        helpMenu.addAction(LicenseButton)
 
-        AboutButton = QAction(QIcon('exit24.png'), 'About Us', self)
+        AboutButton = QAction('About Us', self)        
         AboutButton.setStatusTip('About Us')
         AboutButton.triggered.connect(self.AboutWindow)
         helpMenu.addAction(AboutButton)
@@ -588,51 +584,9 @@ class Window(QMainWindow):
                                                 self.width - self.verticalLayoutWidget.width(),
                                                 self.verticalLayoutWidget.height())
 
-        # print(self.height - self.verticalLayoutWidget.height())
-        # print("Title Offset: " + str(titleOffset))
-        # print("Menu: " + str(self.menuBar().height()))
-        # print("Toolbar: " + str(self.toolbar.height()))
-        # print("Status Bar: " + str(self.statusBar().height()))
-        # print("Tabbar: " + str(self.tabWidget.tabBar().height()))
-        # print(self.tabWidget.tabBar().geometry().height())
-        #print(self.height - titleOffset - self.menuBar().height() - self.toolbar.height() - self.tabWidget.tabBar().height())
-
-
         self.horizontalLayout.addWidget(self.tabWidget)
-
-
         self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
-
         self.setCentralWidget(self.centralwidget)
-
-        self.WelcomePage()
-
-    # Welcome Page
-    def WelcomePage(self):
-        # Welcome Tab
-        TextWizWelcomeTab = QWidget()
-
-        # LayoutWidget For within Welcome Tab
-        TextWizWelcomeTabverticalLayoutWidget = QWidget(TextWizWelcomeTab)
-        TextWizWelcomeTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-        TextWizWelcomeTabverticalLayoutWidget.setGeometry(0, 0, self.horizontalLayoutWidget.width(), self.horizontalLayoutWidget.height())
-
-        # Box Layout for Welcome Tab
-        TextWizWelcomeTabverticalLayout = QVBoxLayout(TextWizWelcomeTabverticalLayoutWidget)
-        TextWizWelcomeTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        TextWizWelcomeWeb = QWebEngineView()
-        TextWizWelcomeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-        TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-        TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        TextWizWelcomeTabverticalLayout.addWidget(TextWizWelcomeWeb)
-        #TextWizWelcomeWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-
-        #TextWizWelcomeWeb.load(QUrl(os.getcwd() + "\welcomepage\Light\welcome.html"))
-        TextWizWelcomeWeb.setHtml(open("welcomepage/Light/welcome.html").read())
-
-        self.tabWidget.addTab(TextWizWelcomeTab, "Welcome")
-        self.tabWidget.setCurrentWidget(TextWizWelcomeTab)
 
     # Change Theme Dialog
     def ChangeThemeDialog(self):
@@ -6145,70 +6099,6 @@ class Window(QMainWindow):
         ChangedTime.setText(DS.DataSourceChangeTime[currentIndex])
 
     # ****************************************************************************
-    # ********************* Data Source Create Dashboard *************************
-    # ****************************************************************************
-
-    # Create Dashboard Dialog
-    def DataSourcesCreateDashboardDialog(self):
-        DataSourcesCreateDashboardDialog = QDialog()
-        DataSourcesCreateDashboardDialog.setWindowTitle("Create Dashboard")
-        DataSourcesCreateDashboardDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                       self.height / 10)
-        DataSourcesCreateDashboardDialog.setParent(self)
-        self.QDialogAddProperties(DataSourcesCreateDashboardDialog)
-
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourcesCreateDashboardDialog)
-        DataSourcelabel.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.125,
-                                    DataSourcesCreateDashboardDialog.height() * 0.2,
-                                    DataSourcesCreateDashboardDialog.width() / 4,
-                                    DataSourcesCreateDashboardDialog.height() * 0.1)
-
-        DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
-
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourcesCreateDashboardDialog)
-        DSComboBox.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.4,
-                               DataSourcesCreateDashboardDialog.height() * 0.2,
-                               DataSourcesCreateDashboardDialog.width() / 2,
-                               DataSourcesCreateDashboardDialog.height() / 10)
-
-        self.LineEditSizeAdjustment(DSComboBox)
-
-        # Stem Word Button Box
-        DataSourcesCreateDashboardbuttonBox = QDialogButtonBox(DataSourcesCreateDashboardDialog)
-        DataSourcesCreateDashboardbuttonBox.setGeometry(DataSourcesCreateDashboardDialog.width() * 0.125,
-                                                     DataSourcesCreateDashboardDialog.height() * 0.7,
-                                                     DataSourcesCreateDashboardDialog.width() * 3 / 4,
-                                                     DataSourcesCreateDashboardDialog.height() / 5)
-        DataSourcesCreateDashboardbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-        DataSourcesCreateDashboardbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
-
-        if len(myFile.DataSourceList) == 0:
-            DataSourcesCreateDashboardbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        else:
-            if len(myFile.DataSourceList) > 1:
-                DSComboBox.addItem("All")
-            for DS in myFile.DataSourceList:
-                DSComboBox.addItem(DS.DataSourceName)
-
-        self.LineEditSizeAdjustment(DataSourcesCreateDashboardbuttonBox)
-
-        DataSourcesCreateDashboardbuttonBox.accepted.connect(DataSourcesCreateDashboardDialog.accept)
-        DataSourcesCreateDashboardbuttonBox.rejected.connect(DataSourcesCreateDashboardDialog.reject)
-
-        DataSourcesCreateDashboardbuttonBox.accepted.connect(
-            lambda: self.DataSourcesCreateDashboard(DSComboBox.currentText()))
-
-        DataSourcesCreateDashboardDialog.exec()
-
-    # Create Dashboard
-    def DataSourcesCreateDashboard(self, DataSourceName):
-        print("Hello")
-
-    # ****************************************************************************
     # ************************ Data Sources Word Cloud ***************************
     # ****************************************************************************
 
@@ -6354,23 +6244,19 @@ class Window(QMainWindow):
             # Resizing label to Layout
             WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
 
-            # Converting WordCloud Image to Pixmap
-            WordCloudPixmap = WordCloudImage.toqpixmap()
-
-            # Scaling Pixmap image
-            dummypixmap = WordCloudPixmap.scaled(WordCloudTabverticalLayoutWidget.width(),
-                                                 WordCloudTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-            WordCloudLabel.setPixmap(dummypixmap)
-            WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                       (WordCloudTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                       dummypixmap.width(), dummypixmap.height())
+            # Setting Scaled Converted Word Cloud Pixamp image on Word Cloud label
+            WordCloudLabel.setPixmap(WordCloudImage.toqpixmap().scaled(WordCloudTabverticalLayoutWidget.width(),
+                                                                       WordCloudTabverticalLayoutWidget.height(),
+                                                                       Qt.KeepAspectRatio))
+            WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - WordCloudLabel.pixmap().width()) / 2,
+                                       (WordCloudTabverticalLayoutWidget.height() - WordCloudLabel.pixmap().height()) / 2,
+                                       WordCloudLabel.pixmap().width(), WordCloudLabel.pixmap().height())
 
             # Setting ContextMenu Policies on Label
             WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-            WordCloudLabel.customContextMenuRequested.connect(
-                lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index,
-                                                                                                                     index2,
-                                                                                                                     index3))
+            WordCloudLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent: self.WordCloudContextMenu(index,
+                                                                                                                        WordCloudLabel.pixmap(),
+                                                                                                                        WordCloudLabel))
             if DataSourceWordCloudTabFlag3:
                 tabs.tabWidget = WordCloudTab
                 if tabs.isActive:
@@ -11114,11 +11000,33 @@ class Window(QMainWindow):
             Dialog.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.Tool)
             Dialog.setFixedSize(Dialog.width(), Dialog.height())
 
-    # About Window Tab
-    def AboutWindow(self):
+    # License Window
+    def LicenseWindow(self):
         file = open('LICENSE', 'r')
         lic = file.read()
-        QMessageBox().about(self, "About TextWiz", lic)
+        QMessageBox().about(self, "License", lic)
+
+    # License Window
+    def AboutWindow(self):
+        try:
+            QMessageBox().about(self,
+                                "About TextWiz",
+                                '''
+                                <h2 style="text-align:center">TextWiz For Windows</h2>
+                                <br>
+                                <p style="text-align:center;font-size:40px">Version 1.0.0 (32 Bit)</p>
+                                <br>
+                                <p style="text-align:center;font-size:20px">Edition: Community</p>
+                                <br>
+                                <p style="text-align:center;font-size:40px">Copyright @ 1999-2015 QRS International</p>
+                                <br>
+                                <p style="text-align:center;font-size:40px">Ptv Ltd. All rights reserved</p>
+                                <a href='https://www.google.com/'>TextWiz</a>
+                                '''
+                                );
+
+        except Exception as e:
+            print(str(e))
 
     # ****************************************************************************
     # *************************** Import Features ********************************
@@ -11531,7 +11439,7 @@ class Window(QMainWindow):
         CSVDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(CSVDialog)
 
-        # Summarization Default Radio Button
+        # CSV Path Radio Button
         PathRadioButton = QRadioButton(CSVDialog)
         PathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.1,
                                     CSVDialog.width() / 5, CSVDialog.height() / 10)
@@ -11546,6 +11454,7 @@ class Window(QMainWindow):
         CSVPathLineEdit.setEnabled(False)
         self.LineEditSizeAdjustment(CSVPathLineEdit)
 
+        # CSV Browse Button
         CSVBrowseButton = QPushButton(CSVDialog)
         CSVBrowseButton.setText("Browse")
         CSVBrowseButton.setGeometry(CSVDialog.width() * 0.8, CSVDialog.height() * 0.2,
@@ -11553,21 +11462,21 @@ class Window(QMainWindow):
         CSVBrowseButton.setEnabled(False)
         self.LineEditSizeAdjustment(CSVBrowseButton)
 
-        # Summarization Total Word Count Radio Button
+        # CSV URL Radio Button
         URLPathRadioButton = QRadioButton(CSVDialog)
         URLPathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.3,
                                        CSVDialog.width() / 5, CSVDialog.height() / 10)
         URLPathRadioButton.setText("URL")
         URLPathRadioButton.adjustSize()
 
-        # CSV Path LineEdit
+        # CSV URL Path LineEdit
         CSVURLPathLineEdit = QLineEdit(CSVDialog)
         CSVURLPathLineEdit.setGeometry(CSVDialog.width() * 0.15, CSVDialog.height() * 0.4,
                                        CSVDialog.width() * 0.7, CSVDialog.height() / 10)
         CSVURLPathLineEdit.setEnabled(False)
         self.LineEditSizeAdjustment(CSVURLPathLineEdit)
 
-        #Header Label Radio Button
+        # CSV Header CheckBox
         CSVHeaderCheckBox = QCheckBox(CSVDialog)
         CSVHeaderCheckBox.setChecked(True)
         CSVHeaderCheckBox.setText("Contains Header")
@@ -11575,7 +11484,7 @@ class Window(QMainWindow):
                                       CSVDialog.width() / 10, CSVDialog.height() / 10)
         CSVHeaderCheckBox.adjustSize()
 
-        # TweetDialog ButtonBox
+        # CSV ButtonBox
         CSVbuttonBox = QDialogButtonBox(CSVDialog)
         CSVbuttonBox.setGeometry(CSVDialog.width() * 0.6, CSVDialog.height() * 0.75,
                                  CSVDialog.width() / 3, CSVDialog.height() / 10)
@@ -11701,7 +11610,7 @@ class Window(QMainWindow):
         DateLabel.setText("Since")
         self.LabelSizeAdjustment(DateLabel)
 
-        # No. of Tweets Label Label
+        # No. of Tweets Label
         NTweetLabel = QLabel(TweetDialog)
         NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.5,
                                 TweetDialog.width() / 5, TweetDialog.height() / 10)
@@ -11835,21 +11744,21 @@ class Window(QMainWindow):
         URLDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(URLDialog)
 
-        # Tweet HashTag Label
+        # URL Label
         URLLabel = QLabel(URLDialog)
         URLLabel.setGeometry(URLDialog.width() * 0.1, URLDialog.height() * 0.3,
                              URLDialog.width()/10 , URLDialog.height() / 10)
         URLLabel.setText("URL")
         self.LabelSizeAdjustment(URLLabel)
 
-        # Twitter HashTag LineEdit
+        # URL LineEdit
         URLLineEdit = QLineEdit(URLDialog)
         URLLineEdit.setGeometry(URLDialog.width() * 0.25, URLDialog.height() * 0.3,
                                 URLDialog.width() * 0.7, URLDialog.height() /10)
         URLLineEdit.setAlignment(Qt.AlignVCenter)
         self.LineEditSizeAdjustment(URLLineEdit)
 
-        # TweetDialog ButtonBox
+        # URL ButtonBox
         URLbuttonBox = QDialogButtonBox(URLDialog)
         URLbuttonBox.setGeometry(URLDialog.width() * 0.5, URLDialog.height() * 0.7,
                                  URLDialog.width() / 3, URLDialog.height() / 10)
@@ -11940,13 +11849,13 @@ class Window(QMainWindow):
         YoutubeDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(YoutubeDialog)
 
-        # Summarization Default Radio Button
+        # Youtube URL Radio Button
         VideoURLRadioButton = QRadioButton(YoutubeDialog)
         VideoURLRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.2,
                                        YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
         VideoURLRadioButton.setText("Video URL")
 
-        # Twitter HashTag LineEdit
+        # Youtube URL LineEdit
         URLLineEdit = QLineEdit(YoutubeDialog)
         URLLineEdit.setGeometry(YoutubeDialog.width() * 0.3, YoutubeDialog.height() * 0.2,
                                 YoutubeDialog.width() * 0.6, YoutubeDialog.height() / 10)
@@ -11954,14 +11863,14 @@ class Window(QMainWindow):
         URLLineEdit.setEnabled(False)
         self.LineEditSizeAdjustment(URLLineEdit)
 
-        # Summarization Total Word Count Radio Button
+        # Youtube Keyword Radio Button
         KeyWordRadioButton = QRadioButton(YoutubeDialog)
         KeyWordRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.4,
                                        YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
         KeyWordRadioButton.setText("Key Word")
         KeyWordRadioButton.adjustSize()
 
-        # Twitter HashTag LineEdit
+        # Twitter KeyWord LineEdit
         KeyWordLineEdit = QLineEdit(YoutubeDialog)
         KeyWordLineEdit.setGeometry(YoutubeDialog.width() * 0.6, YoutubeDialog.height() * 0.4,
                                     YoutubeDialog.width() * 0.3, YoutubeDialog.height() / 10)
@@ -11969,7 +11878,7 @@ class Window(QMainWindow):
         KeyWordLineEdit.setEnabled(False)
         self.LineEditSizeAdjustment(KeyWordLineEdit)
 
-        # TweetDialog ButtonBox
+        # Youtube ButtonBox
         YoutubebuttonBox = QDialogButtonBox(YoutubeDialog)
         YoutubebuttonBox.setGeometry(YoutubeDialog.width() * 0.5, YoutubeDialog.height() * 0.8,
                                      YoutubeDialog.width() / 3, YoutubeDialog.height() / 10)
@@ -11998,6 +11907,7 @@ class Window(QMainWindow):
             dummyDataSource = DataSource(URL, "Youtube")
             dummyDataSource.YoutubeURL()
             DataSourceNameCheck = False
+
         elif KeyWordCheck:
             dummyDataSource = DataSource(KeyWord, "Youtube")
             dummyDataSource.YoutubeKeyWord()

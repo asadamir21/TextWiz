@@ -43,7 +43,6 @@ from pyglet import clock
 from pyglet import event
 from pyglet import compat_platform
 
-
 _is_pyglet_doc_run = hasattr(sys, "is_pyglet_doc_run") and sys.is_pyglet_doc_run
 
 
@@ -52,12 +51,13 @@ class PlatformEventLoop:
     
     .. versionadded:: 1.2
     """
+
     def __init__(self):
         self._event_queue = queue.Queue()
         self._is_running = threading.Event()
         self._is_running.clear()
 
-    def is_running(self):  
+    def is_running(self):
         """Return True if the event loop is currently processing, or False
         if it is blocked or not activated.
 
@@ -146,7 +146,6 @@ class EventLoop(event.EventDispatcher):
         self._has_exit_condition = threading.Condition()
         self.clock = clock.get_default()
         self.is_running = False
-        self._redraw_window_func = self._redraw_window
 
     def run(self):
         """Begin processing events, scheduled functions and window updates.
@@ -162,87 +161,21 @@ class EventLoop(event.EventDispatcher):
         platform_event_loop = app.platform_event_loop
         platform_event_loop.start()
         self.dispatch_event('on_enter')
-
         self.is_running = True
-        legacy_platforms = ('XP', '2000', '2003Server', 'post2003')
-        if compat_platform == 'win32' and platform.win32_ver()[0] in legacy_platforms:
-            self._run_estimated()
-        else:
-            self._run()
+
+        while not self.has_exit:
+            timeout = self.idle()
+            platform_event_loop.step(timeout)
 
         self.is_running = False
         self.dispatch_event('on_exit')
         platform_event_loop.stop()
 
-    def _run(self):
-        """The simplest standard run loop, using constant timeout.  Suitable
-        for well-behaving platforms (Mac, Linux and some Windows).
-        """
-        platform_event_loop = app.platform_event_loop
-        while not self.has_exit:
-            timeout = self.idle()
-            platform_event_loop.step(timeout)
-
-    def _run_estimated(self):
-        """Run-loop that continually estimates function mapping requested
-        timeout to measured timeout using a least-squares linear regression.
-        Suitable for oddball platforms (Windows).
-
-        XXX: There is no real relation between the timeout given by self.idle(), and used
-        to calculate the estimate, and the time actually spent waiting for events. I have
-        seen this cause a negative gradient, showing a negative relation. Then CPU use
-        runs out of control due to very small estimates.
-        """
-        platform_event_loop = app.platform_event_loop
-
-        predictor = self._least_squares()
-        gradient, offset = next(predictor)
-
-        time = self.clock.time
-        while not self.has_exit:
-            timeout = self.idle()
-            if timeout is None: 
-                estimate = None
-            else:
-                estimate = max(gradient * timeout + offset, 0.0)
-            if False:
-                print('Gradient = %f, Offset = %f' % (gradient, offset))
-                print('Timeout = %f, Estimate = %f' % (timeout, estimate))
-
-            t = time()
-            if not platform_event_loop.step(estimate) and estimate != 0.0 and estimate is not None:
-                dt = time() - t
-                gradient, offset = predictor.send((dt, estimate))
-
-    @staticmethod
-    def _least_squares(gradient=1, offset=0):
-        X = 0
-        Y = 0
-        XX = 0
-        XY = 0
-        n = 0
-
-        while True:
-            x, y = yield gradient, offset
-            X += x
-            Y += y
-            XX += x * x
-            XY += x * y
-            n += 1
-
-            try:
-                gradient = (n * XY - X * Y) / (n * XX - X * X)
-                offset = (Y - gradient * X) / n
-            except ZeroDivisionError:
-                # Can happen in pathalogical case; keep current
-                # gradient/offset for now.
-                pass
-
     def _legacy_setup(self):
         # Disable event queuing for dispatch_events
         from pyglet.window import Window
         Window._enable_event_queue = False
-        
+
         # Dispatch pending events
         for window in app.windows:
             window.switch_to()
@@ -303,12 +236,6 @@ class EventLoop(event.EventDispatcher):
         dt = self.clock.update_time()
         redraw_all = self.clock.call_scheduled_functions(dt)
 
-        self._redraw_window_func(redraw_all)
-
-        # Update timout
-        return self.clock.get_sleep_time(True)
-
-    def _redraw_windows(self, redraw_all):
         # Redraw all windows
         for window in app.windows:
             if redraw_all or (window._legacy_invalid and window.invalid):
@@ -317,22 +244,8 @@ class EventLoop(event.EventDispatcher):
                 window.flip()
                 window._legacy_invalid = False
 
-    def _redraw_window(self, redraw_all):
-        # Redraw a single window, no need to switch_to.
-        for window in app.windows:
-            if redraw_all or (window._legacy_invalid and window.invalid):
-                window.dispatch_event('on_draw')
-                window.flip()
-                window._legacy_invalid = False
-
-    def update_window_count(self):
-        """ Adjust window drawing function, we only need to switch_to when using multiple windows.
-            This function will adjust it depending on window count to save performance.
-        """
-        if len(app.windows) == 1:
-            self._redraw_window_func = self._redraw_window
-        else:
-            self._redraw_window_func = self._redraw_windows
+        # Update timout
+        return self.clock.get_sleep_time(True)
 
     @property
     def has_exit(self):

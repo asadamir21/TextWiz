@@ -8,7 +8,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtChart import *
 from PyQt5 import QtPrintSupport, QtQuickWidgets, QtPositioning
 from PyQt5.QtWebEngineWidgets import *
-
 from PIL import Image
 from TaskThread import *
 from OpenWindow import *
@@ -591,7 +590,7 @@ class Window(QMainWindow):
     # Change Theme Dialog
     def ChangeThemeDialog(self):
         ChangeThemeDialog = QDialog()
-        ChangeThemeDialog.setWindowTitle("Show Word Frequency Table")
+        ChangeThemeDialog.setWindowTitle("Change Theme Dialog")
         ChangeThemeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
                                                        self.height / 10)
         ChangeThemeDialog.setParent(self)
@@ -624,7 +623,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(ThemeComboBox)
 
-        # Stem Word Button Box
+        # Change Theme Button Box
         ChangeThemebuttonBox = QDialogButtonBox(ChangeThemeDialog)
         ChangeThemebuttonBox.setGeometry(ChangeThemeDialog.width() * 0.125,
                                          ChangeThemeDialog.height() * 0.7,
@@ -755,10 +754,10 @@ class Window(QMainWindow):
                         if tabs.isCurrentWidget:
                             self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
                 else:
-                    # Adding Word Cloud Tab to QTabWidget
+                    # Adding Data Source Similarity Tab to QTabWidget
                     myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
 
-                    # Adding Word Frequency Query
+                    # Adding Data Sources Similarity Query
                     ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
 
                     if len(ItemsWidget) == 0:
@@ -892,10 +891,10 @@ class Window(QMainWindow):
                             self.tabWidget.setCurrentWidget(DataSourceDocumentClusteringTab)
 
                 else:
-                    # Adding Word Cloud Tab to QTabWidget
+                    # Adding Document Clustering Tab to QTabWidget
                     myFile.TabList.append(Tab("Document Clustering", DataSourceDocumentClusteringTab, len(myFile.DataSourceList)))
 
-                    # Adding Word Frequency Query
+                    # Adding Document Clustering Query
                     ItemsWidget = self.VisualizationTreeWidget.findItems("Document Clustering", Qt.MatchExactly, 0)
 
                     if len(ItemsWidget) == 0:
@@ -1225,14 +1224,14 @@ class Window(QMainWindow):
                     break
 
         if not DataSourcePreviewWebTabFlag:
-            # Creating New Tab for Stem Word
+            # Creating New Tab for Preview Tab
             PreviewWebTab = QWidget()
 
-            # LayoutWidget For within Stem Word Tab
+            # LayoutWidget For within Preview Tab
             PreviewWebTabVerticalLayoutWidget = QWidget(PreviewWebTab)
             PreviewWebTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Preview Tab
             PreviewWebTabVerticalLayout = QHBoxLayout(PreviewWebTabVerticalLayoutWidget)
             PreviewWebTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -1293,16 +1292,16 @@ class Window(QMainWindow):
                              self.horizontalLayoutWidget.height()))
             ShowTweetDataTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Word Frequency Tab
+            # LayoutWidget For within Show Tweet Data Tab
             ShowTweetDataTabverticalLayoutWidget = QWidget(ShowTweetDataTab)
             ShowTweetDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
             ShowTweetDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
+            # Box Layout for Show Tweet Data Tab
             ShowTweetDataTabverticalLayout = QVBoxLayout(ShowTweetDataTabverticalLayoutWidget)
             ShowTweetDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
+            # Table for Show Tweet Data
             ShowTweetDataTable = QTableWidget(ShowTweetDataTabverticalLayoutWidget)
             ShowTweetDataTable.setColumnCount(12)
             ShowTweetDataTable.setGeometry(0, 0, ShowTweetDataTabverticalLayoutWidget.width(),
@@ -1359,10 +1358,10 @@ class Window(QMainWindow):
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(ShowTweetDataTab)
             else:
-                # Adding Word Frequency Tab to TabList
+                # Adding Show Tweet Data Tab to TabList
                 myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
 
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding Show Tweet Data Tab to QTabWidget
                 self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
                 self.tabWidget.setCurrentWidget(ShowTweetDataTab)
 
@@ -1393,14 +1392,14 @@ class Window(QMainWindow):
                 break
 
         if not DataSourceYoutubeShowVideoTabFlag:
-            # Creating New Tab for Stem Word
+            # Creating New Tab for Video Tab
             VideoTab = QWidget()
 
-            # LayoutWidget For within Stem Word Tab
+            # LayoutWidget For within Video Tab
             VideoTabVerticalLayoutWidget = QWidget(VideoTab)
             VideoTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Video Tab
             VideoTabVerticalLayout = QHBoxLayout(VideoTabVerticalLayoutWidget)
             VideoTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -1451,16 +1450,16 @@ class Window(QMainWindow):
                              self.horizontalLayoutWidget.height()))
             ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Word Frequency Tab
+            # LayoutWidget For within Show Youtube Comments Tab
             ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
             ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
             ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
+            # Box Layout for Show Youtube Comments Tab
             ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
             ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
+            # Table for Show Youtube Comments
             ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
             ShowYoutubeCommentsTable.setColumnCount(4)
             ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
@@ -1518,10 +1517,10 @@ class Window(QMainWindow):
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
             else:
-                # Adding Word Frequency Tab to TabList
+                # Adding Show Youtube Comments Tab to TabList
                 myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
     
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding Show Youtube Comments Tab to QTabWidget
                 self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
                 self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
                 myFile.requiredSaved = True
@@ -1554,16 +1553,16 @@ class Window(QMainWindow):
                              self.horizontalLayoutWidget.height()))
             ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Word Frequency Tab
+            # LayoutWidget For within Show Youtube Comments Tab
             ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
             ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
             ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
+            # Box Layout for Show Youtube Comments Tab
             ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
             ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
+            # Table for Show Youtube Comments
             ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
             ShowYoutubeCommentsTable.setColumnCount(7)
             ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
@@ -1626,10 +1625,10 @@ class Window(QMainWindow):
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
             else:
-                # Adding Word Frequency Tab to TabList
+                # Adding Show Youtube Comments Tab to TabList
                 myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
     
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding Show Youtube Comments Tab to QTabWidget
                 self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
                 self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
                 myFile.requiredSaved = True
@@ -1693,7 +1692,7 @@ class Window(QMainWindow):
             RightButton = PicButton(QPixmap('Images/Next Image.png'))
             ViewImageTabverticalLayout2.addWidget(RightButton)
 
-            # Box Layout for Word Frequency Tab
+            # Box Layout for View Image Tab
             ViewImageTabverticalLayout = QVBoxLayout(ViewImageTabverticalLayoutWidget)
             ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -1748,7 +1747,7 @@ class Window(QMainWindow):
             else:
                 myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
     
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding View Image Tab to QTabWidget
                 self.tabWidget.addTab(ViewImageTab, "View Image")
                 self.tabWidget.setCurrentWidget(ViewImageTab)
                 myFile.requiredSaved = True
@@ -1784,17 +1783,17 @@ class Window(QMainWindow):
                                                      self.width - self.verticalLayoutWidget.width(),self.horizontalLayoutWidget.height()))
             ViewCSVDataTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Word Frequency Tab
+            # LayoutWidget For within View CSV Data Tab
             ViewCSVDataTabverticalLayoutWidget = QWidget(ViewCSVDataTab)
             ViewCSVDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
                                                                    self.tabWidget.height())
             ViewCSVDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
 
-            # Box Layout for Word Frequency Tab
+            # Box Layout for View CSV Data Tab
             ViewCSVDataTabverticalLayout = QVBoxLayout(ViewCSVDataTabverticalLayoutWidget)
             ViewCSVDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
+            # Table for View CSV Data
             ViewCSVDataTable = QTableWidget(ViewCSVDataTabverticalLayoutWidget)
             ViewCSVDataTable.setColumnCount(len(DS.CSVHeaderLabel))
             ViewCSVDataTable.setGeometry(0, 0, ViewCSVDataTabverticalLayoutWidget.width(),
@@ -1848,15 +1847,15 @@ class Window(QMainWindow):
                     if tabs.isCurrentWidget:
                         self.tabWidget.setCurrentWidget(ViewCSVDataTab)
             else:
-                # Adding Word Frequency Tab to TabList
+                # Adding View CSV Data Tab to TabList
                 myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
     
-                # Adding Word Frequency Tab to QTabWidget
+                # Adding View CSV Data Tab to QTabWidget
                 self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
                 self.tabWidget.setCurrentWidget(ViewCSVDataTab)
                 myFile.requiredSaved = True
         else:
-            # Adding Word Frequency Tab to QTabWidget
+            # Adding View CSV Data Tab to QTabWidget
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
@@ -2173,7 +2172,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Show Word Frequency Button Box
         DataSourceShowFrequencybuttonBox = QDialogButtonBox(DataSourceShowFrequencyTableDialog)
         DataSourceShowFrequencybuttonBox.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.125, DataSourceShowFrequencyTableDialog.height() * 0.7,
                                       DataSourceShowFrequencyTableDialog.width() * 3 / 4, DataSourceShowFrequencyTableDialog.height() / 5)
@@ -2215,14 +2214,14 @@ class Window(QMainWindow):
                                    self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
             WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Stem Word Tab
+            # LayoutWidget For within Word Freuency Tab
             WordFrequencyTabVerticalLayoutWidget2 = QWidget(WordFrequencyTab)
             WordFrequencyTabVerticalLayoutWidget2.setGeometry(WordFrequencyTab.width() / 4,
                                                               0,
                                                               WordFrequencyTab.width() / 2,
                                                               WordFrequencyTab.height() / 10)
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Word Freuency Tab
             WordFrequencyTabVerticalLayout2 = QHBoxLayout(WordFrequencyTabVerticalLayoutWidget2)
             WordFrequencyTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
@@ -2410,7 +2409,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Generate Questio Button Box
         GenerateQuestionbuttonBox = QDialogButtonBox(GenerateQuestionsDialog)
         GenerateQuestionbuttonBox.setGeometry(GenerateQuestionsDialog.width() * 0.125,
                                                      GenerateQuestionsDialog.height() * 0.7,
@@ -2666,7 +2665,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(ColumnComboBox)
 
-        # Stem Word Button Box
+        # Sentiment Analysis Button Box
         SentimentAnalysisbuttonBox = QDialogButtonBox(SentimentAnalysisDialog)
         SentimentAnalysisbuttonBox.setGeometry(SentimentAnalysisDialog.width() * 0.125,
                                                SentimentAnalysisDialog.height() * 0.8,
@@ -2755,11 +2754,11 @@ class Window(QMainWindow):
                                                           self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
             SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
 
-            # LayoutWidget For within Stem Word Tab
+            # LayoutWidget For within SentimentAnalysis Tab
             SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
             SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
                                                                   self.tabWidget.height() / 10)
-            # Box Layout for Stem Word Tab
+            # Box Layout for SentimentAnalysis Tab
             SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
             SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -2838,7 +2837,7 @@ class Window(QMainWindow):
             SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
             SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
 
-            # Table for Word Frequency
+            # Table for Sentiment Analysis
             SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
             SentimentAnalysisTable.setColumnCount(2)
             SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
@@ -2934,17 +2933,17 @@ class Window(QMainWindow):
                             self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
 
                 else:
-                    # Adding Word Frequency Tab to TabList
+                    # Adding Automatic Sentiment Analysis Tab to TabList
                     dummyTab = Tab("Automatic Sentiment Analysis", SentimentAnalysisTab, DataSourceName)
                     dummyTab.setAutomaticSentimentAnalysis(ColumnName)
                     myFile.TabList.append(dummyTab)
 
-                    # Adding Word Frequency Tab to QTabWidget
+                    # Adding Sentiment Analysis Tab to QTabWidget
                     self.tabWidget.addTab(SentimentAnalysisTab, "Automatic Sentiment Analysis")
                     self.tabWidget.setCurrentWidget(SentimentAnalysisTab)
                     myFile.requiredSaved = True
 
-                # Adding Word Frequency Query
+                # Adding Sentiment Query
                 ItemsWidget = self.SentimentTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
                 if len(ItemsWidget) == 0:
@@ -3400,7 +3399,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Part Of Speech Button Box
         PartOfSpeechbuttonBox = QDialogButtonBox(PartOfSpeechDialog)
         PartOfSpeechbuttonBox.setGeometry(PartOfSpeechDialog.width() * 0.125,
                                               PartOfSpeechDialog.height() * 0.7,
@@ -3505,12 +3504,12 @@ class Window(QMainWindow):
             POSComboBox.addItem("Show Graph")
             self.LineEditSizeAdjustment(POSComboBox)
 
-            # 2nd LayoutWidget For within Stem Word Tab
+            # 2nd LayoutWidget For within Part Of Speech Tab
             POSTabVerticalLayoutWidget2 = QWidget(POSTab)
             POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
+            # 2nd Box Layout for Part Of Speech Tab
             POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
             POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
 
@@ -3552,27 +3551,21 @@ class Window(QMainWindow):
                 for i in range(POSTable.columnCount()):
                     POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            # Label for Word Cloud Image
+            # Label for POSGraph Image
             POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
+
             # Resizing label to Layout
             POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
 
-            # Converting WordCloud Image to Pixmap
-            POSGraphPixmap = POSGraph.toqpixmap()
 
-            # Scaling Pixmap image
-            dummypixmap = POSGraphPixmap.scaled(POSTabVerticalLayoutWidget2.width(),
-                                                POSTabVerticalLayoutWidget2.height(), Qt.KeepAspectRatio)
-
-            POSGraphLabel.setPixmap(dummypixmap)
-            POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
-                                      (POSTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
-                                      dummypixmap.width(), dummypixmap.height())
+            # Settinh Scaled Converted Pixmap Image on Label
+            POSGraphLabel.setPixmap(POSGraph.toqpixmap().scaled(POSTabVerticalLayoutWidget2.width(),
+                                                                POSTabVerticalLayoutWidget2.height(),
+                                                                Qt.KeepAspectRatio))
+            POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - POSGraphLabel.pixmap().width()) / 2,
+                                      (POSTabVerticalLayoutWidget2.height() - POSGraphLabel.pixmap().height()) / 2,
+                                      POSGraphLabel.pixmap().width(), POSGraphLabel.pixmap().height())
             POSGraphLabel.hide()
-
-            # Setting ContextMenu Policies on Label
-            # POSGraphLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-            # POSGraphLabel.customContextMenuRequested.connect(lambda index=QContextMenuEvent, index2=dummypixmap, index3=WordCloudLabel: self.WordCloudContextMenu(index, index2, index3))
 
             POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
 
@@ -3666,7 +3659,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Entity RelationShip Button Box
         EntityRelationShipbuttonBox = QDialogButtonBox(EntityRelationShipDialog)
         EntityRelationShipbuttonBox.setGeometry(EntityRelationShipDialog.width() * 0.125,
                                                 EntityRelationShipDialog.height() * 0.7,
@@ -3732,7 +3725,7 @@ class Window(QMainWindow):
             DSERTabVerticalLayoutWidget = QWidget(DSERTab)
             DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Entity RelationShip Tab
             DSERTabVerticalLayout = QHBoxLayout(DSERTabVerticalLayoutWidget)
             DSERTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -3751,7 +3744,7 @@ class Window(QMainWindow):
             DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
+            # 2nd Box Layout for Entity RelationShip Tab
             DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
 
             DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
@@ -3900,7 +3893,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Topic Modelling Button Box
         TopicModellingbuttonBox = QDialogButtonBox(TopicModellingDialog)
         TopicModellingbuttonBox.setGeometry(TopicModellingDialog.width() * 0.125,
                                             TopicModellingDialog.height() * 0.7,
@@ -4662,12 +4655,13 @@ class Window(QMainWindow):
                     dummyTab = Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName)
                     dummyTab.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
                     myFile.TabList.append(dummyTab)
+
                     # Adding Preview Tab to QTabWidget
                     self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
                     self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
                     myFile.requiredSaved = True
 
-            # Adding Word Frequency Query
+            # Adding Summary Preview Query
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
 
             if len(ItemsWidget) == 0:
@@ -6373,7 +6367,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Word Tree Button Box
         DataSourceWordTreebuttonBox = QDialogButtonBox(DataSourceWordTreeDialog)
         DataSourceWordTreebuttonBox.setGeometry(DataSourceWordTreeDialog.width() * 0.125,
                                                       DataSourceWordTreeDialog.height() * 0.7,
@@ -7668,7 +7662,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Tweet Analysis Button Box
         DataSourceTweetAnalysisbuttonBox = QDialogButtonBox(DataSourceTweetAnalysisDialog)
         DataSourceTweetAnalysisbuttonBox.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.125,
                                                      DataSourceTweetAnalysisDialog.height() * 0.7,
@@ -8043,7 +8037,7 @@ class Window(QMainWindow):
 
         self.LineEditSizeAdjustment(DSComboBox)
 
-        # Stem Word Button Box
+        # Coordinate Map Button Box
         DataSourcesCoordinateMapbuttonBox = QDialogButtonBox(DataSourceCoordinateMapDialog)
         DataSourcesCoordinateMapbuttonBox.setGeometry(DataSourceCoordinateMapDialog.width() * 0.125,
                                                         DataSourceCoordinateMapDialog.height() * 0.7,
@@ -8687,15 +8681,15 @@ class Window(QMainWindow):
                 if DS.DataSourceName == CasesItemName.text(0):
                     break
 
-            # Creating New Tab for Stem Word
+            # Creating New Tab for Case Structure Tab
             CasesStructureTab = QWidget()
 
-            # ******************************* LayoutWidget For within Stem Word Tab ************************************
+            # ******************************* LayoutWidget For within Case Structure Tab ************************************
             CasesStructureTabVerticalLayoutWidget = QWidget(CasesStructureTab)
             CasesStructureTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
                                                                     self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Case Structure Tab
             CasesStructureTabVerticalLayout = QHBoxLayout(CasesStructureTabVerticalLayoutWidget)
             CasesStructureTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -8715,13 +8709,13 @@ class Window(QMainWindow):
             self.LineEditSizeAdjustment(DownloadAsPDFButton)
 
 
-            # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
+            # *************************** 2nd LayoutWidget For within Case Structure Tab *************************************
             CasesStructureTabVerticalLayoutWidget2 = QWidget(CasesStructureTab)
             CasesStructureTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
                                                                self.tabWidget.width(),
                                                                self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
+            # 2nd Box Layout for Case Structure Tab
             CasesStructureTabVerticalLayout2 = QVBoxLayout(CasesStructureTabVerticalLayoutWidget2)
 
             os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
@@ -9136,14 +9130,14 @@ class Window(QMainWindow):
                     break
 
 
-            # Creating New Tab for Stem Word
+            # Creating New Tab for Case Parent Coverage Tab
             CasesParentCoverageTab = QWidget()
 
-            # ******************************* LayoutWidget For within Stem Word Tab ************************************
+            # ******************************* LayoutWidget For within Case Parent Coverage Tab ************************************
             CasesParentCoverageTabVerticalLayoutWidget = QWidget(CasesParentCoverageTab)
             CasesParentCoverageTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Case Parent Coverage Tab
             CasesParentCoverageTabVerticalLayout = QHBoxLayout(CasesParentCoverageTabVerticalLayoutWidget)
             CasesParentCoverageTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -9155,14 +9149,14 @@ class Window(QMainWindow):
             CasesParentCoverageTabVerticalLayout.addWidget(DataSourceLabel)
 
 
-            # *************************** 2nd LayoutWidget For within Stem Word Tab *************************************
+            # *************************** 2nd LayoutWidget For within Case Parent Coverage Tab *************************************
             CasesParentCoverageTabVerticalLayoutWidget2 = QWidget(CasesParentCoverageTab)
             CasesParentCoverageTabVerticalLayoutWidget2.setGeometry(0,
                                                                     self.tabWidget.height() / 10,
                                                                     self.tabWidget.width()/4,
                                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
+            # 2nd Box Layout for Case Parent Coverage Tab
             CasesParentCoverageTabVerticalLayout2 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget2)
 
             CasesList = QListWidget(CasesParentCoverageTabVerticalLayoutWidget2)
@@ -9175,13 +9169,13 @@ class Window(QMainWindow):
                 if not cases.MergedCase:
                     CasesList.addItem(cases.CaseTopic)
 
-            # *************************** 3rd LayoutWidget For within Stem Word Tab *************************************
+            # *************************** 3rd LayoutWidget For within Case Parent Coverage Tab *************************************
             CasesParentCoverageTabVerticalLayoutWidget3 = QWidget(CasesParentCoverageTab)
             CasesParentCoverageTabVerticalLayoutWidget3.setGeometry(self.tabWidget.width()*0.25,
                                                                     self.tabWidget.height()*0.1,
                                                                     self.tabWidget.width()*0.75,
                                                                     self.tabWidget.height()*0.45)
-            # 3rd Box Layout for Stem Word Tab
+            # 3rd Box Layout for Case Parent Coverage Tab
             CasesParentCoverageTabVerticalLayout3 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget3)
 
             dummyQuery = Query()
@@ -9192,7 +9186,7 @@ class Window(QMainWindow):
 
             rowList = dummyQuery.FindSimpleFrequency(TempText)
 
-            # Table for Word Frequency
+            # Table for Cases Parent Coverage
             CasesParentCoverageTable = QTableWidget(CasesParentCoverageTabVerticalLayoutWidget3)
             CasesParentCoverageTable.setColumnCount(4)
             CasesParentCoverageTable.setGeometry(0, 0,
@@ -9228,13 +9222,13 @@ class Window(QMainWindow):
                 for i in range(CasesParentCoverageTable.columnCount()):
                     CasesParentCoverageTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            # *************************** 4th LayoutWidget For within Stem Word Tab *************************************
+            # *************************** 4th LayoutWidget For within Case Parent Coverage Tab *************************************
             CasesParentCoverageTabVerticalLayoutWidget4 = QWidget(CasesParentCoverageTab)
             CasesParentCoverageTabVerticalLayoutWidget4.setGeometry(self.tabWidget.width()*0.25,
                                                                     self.tabWidget.height()*0.55,
                                                                     self.tabWidget.width()*0.75,
                                                                     self.tabWidget.height()*0.45)
-            # 4th Box Layout for Stem Word Tab
+            # 4th Box Layout for Case Parent Coverage Tab
             CasesParentCoverageTabVerticalLayout4 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget4)
 
             canvas = FigureCanvas(DS.BarCasesCoverageFigure)
@@ -9392,14 +9386,14 @@ class Window(QMainWindow):
                     break
 
         if not CaseShowComponentTabFlag:
-            # Creating New Tab for Stem Word
+            # Creating New Tab for Case Show Component
             CaseShowComponentTab = QWidget()
 
-            # LayoutWidget For within Stem Word Tab
+            # LayoutWidget For within Case Show Component Tab
             CaseShowComponentTabVerticalLayoutWidget = QWidget(CaseShowComponentTab)
             CaseShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # Box Layout for Stem Word Tab
+            # Box Layout for Case Show Component Tab
             CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
             CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -9412,12 +9406,12 @@ class Window(QMainWindow):
             CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
             CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
 
-            # 2nd LayoutWidget For within Stem Word Tab
+            # 2nd LayoutWidget For within Case Show Component Tab
             CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
             CaseShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                                   self.tabWidget.height() - self.tabWidget.height() / 10)
 
-            # 2nd Box Layout for Stem Word Tab
+            # 2nd Box Layout for Case Show Component Tab
             CaseShowComponentTabVerticalLayout2 = QVBoxLayout(CaseShowComponentTabVerticalLayoutWidget2)
 
             CaseShowComponentTable = QTableWidget(CaseShowComponentTabVerticalLayoutWidget2)
@@ -9930,11 +9924,11 @@ class Window(QMainWindow):
                 # Creating New Tab for Sentiment Show Component
                 SentimentsShowComponentTab = QWidget()
 
-                # LayoutWidget For within Stem Word Tab
+                # LayoutWidget For within Sentiments Show Component Tab
                 SentimentsShowComponentTabVerticalLayoutWidget = QWidget(SentimentsShowComponentTab)
                 SentimentsShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-                # Box Layout for Stem Word Tab
+                # Box Layout for Sentiments Show Component Tab
                 SentimentsShowComponentTabVerticalLayout = QHBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget)
                 SentimentsShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -9956,12 +9950,12 @@ class Window(QMainWindow):
 
                 self.LineEditSizeAdjustment(SentimentsComboBox)
 
-                # 2nd LayoutWidget For within Stem Word Tab
+                # 2nd LayoutWidget For within Sentiments Show Component Tab
                 SentimentsShowComponentTabVerticalLayoutWidget2 = QWidget(SentimentsShowComponentTab)
                 SentimentsShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
                                                                       self.tabWidget.height() - self.tabWidget.height() / 10)
 
-                # 2nd Box Layout for Stem Word Tab
+                # 2nd Box Layout for Sentiments Show Component Tab
                 SentimentsShowComponentTabVerticalLayout2 = QVBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget2)
 
                 SentimentsShowComponentTable = QTableWidget(SentimentsShowComponentTabVerticalLayoutWidget2)

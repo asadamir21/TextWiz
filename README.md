@@ -1,4 +1,7 @@
 # TextWiz
+
+![alt text](https://github.com/asadamir21/TextWiz/blob/master/venv/Images/TextWizLogo.ico)
+
 A Qualitative Data Analysis Software. This project’s main purpose is to provide an open source software to analyze text documents to understand perceptions, identify concepts, key ideas, interesting patterns and extract useful knowledge to support decision makings for the user.
 
 Main Features Include:

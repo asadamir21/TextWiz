@@ -29,7 +29,7 @@ Enter these commands on cmd to install all required dependencies
 
 - If you want to use social network analysis you will need an api key for google and twitter. You can obtain the api keys from Google Developer and Twitter Developer and enter the keys in the following file and line numbers.
 
-# For Twitter
+For Twitter
 
 File Name: DataSource.py
 
@@ -38,7 +38,7 @@ Line 522:  Consumer Secret
 Line 523:  Access Token
 Line 524:  Access Token Secret 
 
-# For Youtube
+For Youtube
 
 File Name: DataSource.py
 

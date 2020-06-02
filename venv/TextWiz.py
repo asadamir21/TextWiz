@@ -192,7 +192,6 @@ class Window(QMainWindow):
         printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
-        printButton.setDisabled(True)
         printButton.triggered.connect(self.printWindow)
 
         exitButton = QAction('Exit', self)
@@ -2967,7 +2966,6 @@ class Window(QMainWindow):
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
             tabs.setisActive(True)
             myFile.requiredSaved = True
-
 
     # Sentiment Analysis ComboBox
     def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
@@ -10962,13 +10960,20 @@ class Window(QMainWindow):
 
     #Print Window
     def printWindow(self):
-        printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
-        self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
-        self.Printdialog.setWindowTitle('Print')
-        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
+        try:
+            printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+            self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
+            self.Printdialog.setWindowTitle('Print')
+            self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
+            
+            if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
+                if self.tabWidget.currentWidget() is not None:
+                    pixmap = QPixmap(self.tabWidget.currentWidget().size())
+                    self.tabWidget.currentWidget().render(pixmap)
+                    pixmap.print_(printer)
 
-        if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
-            self.textedit.print_(printer)
+        except Exception as e:
+            print(str(e))
 
     #Hide ToolBar
     def toolbarHide(self):

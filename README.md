@@ -1,6 +1,8 @@
 # TextWiz
 
-![alt text](venv/Images/TextWizLogo.ico)
+<p align="center"> 
+    <img src="venv/Images/TextWizLogo.ico" alt="alternate text">
+</p>
 
 A Qualitative Data Analysis Software. This projectâ€™s main purpose is to provide an open source software to analyze text documents to understand perceptions, identify concepts, key ideas, interesting patterns and extract useful knowledge to support decision makings for the user.
 

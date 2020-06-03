@@ -1,6 +1,6 @@
 # TextWiz
 
-![alt text](https://github.com/asadamir21/TextWiz/blob/master/venv/Images/TextWizLogo.ico)
+![alt text](venv/Images/TextWizLogo.ico)
 
 A Qualitative Data Analysis Software. This projectâ€™s main purpose is to provide an open source software to analyze text documents to understand perceptions, identify concepts, key ideas, interesting patterns and extract useful knowledge to support decision makings for the user.
 
@@ -24,11 +24,11 @@ Enter these commands on cmd to install all required dependencies
  
 1. python -m pip install --upgrade pip command
 2. pip install -r requirements.txt 
-3. pip install pywin32 (**For Windows User Only**)
-3. python -m nltk.downloader all
-4. python -m spacy download en_core_web_sm
-
-- If you want to use social network analysis you will need an api key for google and twitter. You can obtain the api keys from Google Developer and Twitter Developer and enter the keys in the following file and line numbers.
+3. pip install pywin32 (**For Windows Only**)
+4. python -m nltk.downloader all
+5. python -m spacy download en_core_web_sm
+   
+6. If you want to use social network analysis you will need an api key for google and twitter. You can obtain the api keys from <a href = "https://console.developers.google.com/projectselector2/apis/dashboard">Google Developer</a> and <a href = "https://developer.twitter.com/en">Twitter Developer</a> and enter the keys in the following file and line numbers.
 
     ####For Twitter
         File Name: DataSource.py
@@ -39,11 +39,18 @@ Enter these commands on cmd to install all required dependencies
         4. Line 524:  Access Token Secret 
 
     ####For Youtube
-
+    ##### For Extracting Comments from Video URL    
+        Generate YouTube Data API v3 Key and paste it in
         File Name: DataSource.py
-
         Line 580: Youtube API key
-
+    
+    ##### For Extracting Comments by Using Keyword
+        Generate YouTube Data API v3 OAuth 2.0 Client IDs
+        Download the JSON file  
+        Rename it to "client_secret.json" 
+        Move and Replace the file to "TextWiz/Youtube/" 
+        
+    
 ### How to use this software
 1. Clone the repo
 2. Open cmd and change path to current directory

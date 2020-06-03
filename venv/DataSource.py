@@ -577,7 +577,7 @@ class DataSource():
         self.YoutubeURLFlag = True
 
         #Youtube_API_Key = 'Enter Your API Key'
-        Youtube_API_Key = 'AIzaSyClLW3rJUSeU5kLrf7njWItFdKdgtoX1pA'
+        Youtube_API_Key = 'AIzaSyA3QcnBjBetRoqFfz5YiDryhyE5_o7jpGo'
 
         try:
             video_id = urlparse(self.DataSourcePath)
@@ -593,7 +593,6 @@ class DataSource():
 
             self.DataSourceLoadError = False
         except Exception as e:
-            print(str(e))
             self.DataSourceLoadError = True
 
     # Yotube Comments From KeyWord

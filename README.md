@@ -34,10 +34,10 @@ Enter these commands on cmd to install all required dependencies
 
    ### For Twitter
         File Name: DataSource.py
-	1. Line 521:  Consumer Key
-	2. Line 522:  Consumer Secret
-	3. Line 523:  Access Token
-	4. Line 524:  Access Token Secret 
+		1. Line 521:  Consumer Key
+		2. Line 522:  Consumer Secret
+		3. Line 523:  Access Token
+		4. Line 524:  Access Token Secret 
 
    ### For Youtube
 	#### For Extracting Comments from Video URL    
@@ -49,7 +49,7 @@ Enter these commands on cmd to install all required dependencies
 		Generate YouTube Data API v3 OAuth 2.0 Client IDs
 		Download the JSON file  
 		Rename it to "client_secret.json" 
-        	Move and Replace the file to "TextWiz/Youtube/" 
+		Move and Replace the file to "TextWiz/Youtube/" 
             
 ## How to use this software
 1. Clone the repo

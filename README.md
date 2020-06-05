@@ -18,8 +18,8 @@ A Qualitative Data Analysis Software. This projectâ€™s main purpose is to p
 - Survey Analysis
 
 ## Requirements
-0. Python 3.x
-1. Internet Connection
+1. Python 3.x
+2. Internet Connection
 
 ## Setup and Install requirements
 Enter these commands on cmd to install all required dependencies
@@ -32,27 +32,25 @@ Enter these commands on cmd to install all required dependencies
    
 6. If you want to use social network analysis you will need an api key for google and twitter. You can obtain the api keys from <a href = "https://console.developers.google.com/projectselector2/apis/dashboard">Google Developer</a> and <a href = "https://developer.twitter.com/en">Twitter Developer</a> and enter the keys in the following file and line numbers.
 
-    ###For Twitter
-        
+   ### For Twitter
         File Name: DataSource.py
-        1. Line 521:  Consumer Key
-        2. Line 522:  Consumer Secret
-        3. Line 523:  Access Token
-        4. Line 524:  Access Token Secret 
+	1. Line 521:  Consumer Key
+	2. Line 522:  Consumer Secret
+	3. Line 523:  Access Token
+	4. Line 524:  Access Token Secret 
 
-    ### For Youtube
-    #### For Extracting Comments from Video URL    
-        Generate YouTube Data API v3 Key and paste it in
-        File Name: DataSource.py
-        Line 580: Youtube API key
+   ### For Youtube
+	#### For Extracting Comments from Video URL    
+		Generate YouTube Data API v3 Key and paste it in
+		File Name: DataSource.py
+		Line 580: Youtube API key
     
-    #### For Extracting Comments by Using Keyword
-        Generate YouTube Data API v3 OAuth 2.0 Client IDs
-        Download the JSON file  
-        Rename it to "client_secret.json" 
-        Move and Replace the file to "TextWiz/Youtube/" 
-        
-    
+	#### For Extracting Comments by Using Keyword
+		Generate YouTube Data API v3 OAuth 2.0 Client IDs
+		Download the JSON file  
+		Rename it to "client_secret.json" 
+        	Move and Replace the file to "TextWiz/Youtube/" 
+            
 ## How to use this software
 1. Clone the repo
 2. Open cmd and change path to current directory

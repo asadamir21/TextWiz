@@ -1,0 +1,124 @@
+af, Afrikaans
+sq, Albanian
+am, Amharic
+ar, Arabic
+hy, Armenian
+az, Azerbaijani
+eu, Basque
+be, Belarusian
+bn, Bengali
+bs, Bosnian
+bg, Bulgarian
+my, Burmese
+ca, Catalan/ Valencian
+cs, Czech
+zh, Chinese
+kw, Cornish
+co, Corsican
+cy, Welsh
+cs, Czech
+da, Danish
+de, German
+nl, Dutch/ Flemish
+dz, Dzongkha
+el, Greek Modern 1453-
+en, English
+eo, Esperanto
+et, Estonian
+eu, Basque
+fa, Persian
+fi, Finnish
+fr, French
+fr, French
+fy, Western Frisian
+Ga, Georgian
+gd, Gaelic/ Scottish Gaelic
+ga, Irish
+gl, Galician
+el, Greek Modern 1453-
+gu, Gujarati
+ht, Haitian/ Haitian Creole
+ha, Hausa
+he, Hebrew
+hi, Hindi
+hr, Croatian
+hu, Hungarian
+hy, Armenian
+ig, Igbo
+is, Icelandic
+id, Indonesian
+is, Icelandic
+it, Italian
+jv, Javanese
+ja, Japanese
+kn, Kannada
+ka, Georgian
+kk, Kazakh
+km, Central Khmer
+ky, Kirghiz/ Kyrgyz
+ko, Korean
+kj, Kuanyama/ Kwanyama
+ku, Kurdish
+lo, Lao
+la, Latin
+lv, Latvian
+lt, Lithuanian
+lb, Luxembourgish/ Letzeburgesch
+mk, Macedonian
+ml, Malayalam
+mi, Maori
+mr, Marathi
+ms, Malay
+Mi, Micmac
+mk, Macedonian
+mg, Malagasy
+mt, Maltese
+mn, Mongolian
+mi, Maori
+ms, Malay
+my, Burmese
+ne, Nepali
+nl, Dutch/ Flemish
+nn, Norwegian Nynorsk/ Nynorsk Norwegian
+nb, Bokmål Norwegian/ Norwegian Bokmål
+no, Norwegian
+pa, Panjabi/ Punjabi
+fa, Persian
+pl, Polish
+pt, Portuguese
+ps, Pushto/ Pashto
+ro, Romanian/ Moldavian/ Moldovan
+ro, Romanian/ Moldavian/ Moldovan
+ru, Russian
+si, Sinhala/ Sinhalese
+sk, Slovak
+sk, Slovak
+sl, Slovenian
+sm, Samoan
+sn, Shona
+sd, Sindhi
+so, Somali
+st, Sotho Southern
+es, Spanish/ Castilian
+sq, Albanian
+sr, Serbian
+su, Sundanese
+sw, Swahili
+sv, Swedish
+ty, Tahitian
+ta, Tamil
+te, Telugu
+tg, Tajik
+tl, Tagalog
+th, Thai
+tr, Turkish
+uk, Ukrainian
+ur, Urdu
+uz, Uzbek
+vi, Vietnamese
+cy, Welsh
+xh, Xhosa
+yi, Yiddish
+yo, Yoruba
+zh, Chinese
+zu, Zulu

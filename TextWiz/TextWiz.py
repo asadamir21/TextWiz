@@ -1,6 +1,3 @@
-#from distutils.errors import PreprocessError
-from idlelib.idle_test.test_configdialog import GenPageTest
-
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -86,9 +83,16 @@ class Window(QMainWindow):
 
         self.languages = open('Languages.txt', 'r').read().split("\n")
 
+        self.stopwordspath = self.settings.value('stopwords', '')
+
+        if not self.stopwordspath == '':
+            try:
+                self.stopwords = open(self.stopwordspath, 'r').read().split("\n")
+            except IOError:
+                pass
+
         for fileRow in self.languages:
             self.languages[self.languages.index(fileRow)] = fileRow.split(',')
-
 
         coordinatecsvreader = csv.reader(open('Coordinates.csv'))
 
@@ -170,40 +174,67 @@ class Window(QMainWindow):
 
         # *****************************  FileMenuItem ***************************************
 
+        # New File Button
         newFileButton = QAction('New File', self)
         newFileButton.setShortcut('Ctrl+N')
         newFileButton.setStatusTip('New File')
         newFileButton.triggered.connect(self.NewFileWindow)
+        fileMenu.addAction(newFileButton)
 
+        # Open File Button
         OpenFileButton = QAction('Open File', self)
         OpenFileButton.setShortcut('Ctrl+O')
         OpenFileButton.setStatusTip('Open File')
         OpenFileButton.triggered.connect(self.OpenFileWindow)
+        fileMenu.addAction(OpenFileButton)
 
+        # Save File Button
         SaveButton = QAction(QIcon("Images/Save.png"), 'Save', self)
         SaveButton.setShortcut('Ctrl+S')
         SaveButton.setStatusTip('File Saved')
         SaveButton.triggered.connect(self.SaveWindow)
+        fileMenu.addAction(SaveButton)
 
+        # SaveAS File Button
         SaveASButton = QAction(QIcon("Images/Save.png"), 'Save As', self)
         SaveASButton.setStatusTip('File Saved')
         SaveASButton.triggered.connect(self.SaveASWindow)
+        fileMenu.addAction(SaveASButton)
+
+        # print Button
+        printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
+        printButton.setShortcut('Ctrl+P')
+        printButton.setStatusTip('Print')
+        printButton.triggered.connect(self.printWindow)
+        fileMenu.addAction(printButton)
+
+        # Add Stopword File
+        self.AddStopWordFileButton = QAction('Add Stopword File', self)
+        self.AddStopWordFileButton.setStatusTip('Add Stopword File')
+        self.AddStopWordFileButton.triggered.connect(self.AddStopWordFile)
+        fileMenu.addAction(self.AddStopWordFileButton)
+
+        # Remove Stopword File
+        self.RemoveStopWordFileButton = QAction('Remove Stopword File', self)
+        self.RemoveStopWordFileButton.setStatusTip('Remove Stopword File')
+        self.RemoveStopWordFileButton.triggered.connect(self.RemoveStopWordFile)
+
+        if self.stopwordspath == '':
+            self.RemoveStopWordFileButton.setDisabled(True)
+
+        fileMenu.addAction(self.RemoveStopWordFileButton)
 
         printButton = QAction(QIcon("Images/Printer.png"), 'Print', self)
         printButton.setShortcut('Ctrl+P')
         printButton.setStatusTip('Print')
         printButton.triggered.connect(self.printWindow)
+        fileMenu.addAction(printButton)
 
+        # exit Button
         exitButton = QAction('Exit', self)
         exitButton.setShortcut('Ctrl+Q')
         exitButton.setStatusTip('Exit application')
         exitButton.triggered.connect(self.close)
-
-        fileMenu.addAction(newFileButton)
-        fileMenu.addAction(OpenFileButton)
-        fileMenu.addAction(SaveButton)
-        fileMenu.addAction(SaveASButton)
-        fileMenu.addAction(printButton)
         fileMenu.addAction(exitButton)
 
         # *****************************  ViewMenuItem ***************************************
@@ -585,6 +616,70 @@ class Window(QMainWindow):
         self.horizontalLayout.addWidget(self.tabWidget)
         self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
         self.setCentralWidget(self.centralwidget)
+
+    # StopWord File Doesnot Exist
+    def StopWordFileExistence(self):
+        if not self.stopwordspath == '':
+            if os.path.exists(self.stopwordspath):
+                if os.path.isfile(self.stopwordspath) and self.stopwordspath.endswith('.txt'):
+                    pass
+                else:
+                    QMessageBox.warning(self, 'Stopword File',
+                                        'Stopword File is not a valid txt File!',
+                                        QMessageBox.Ok)
+
+                    self.RemoveStopWordFileButton.setDisabled(True)
+                    self.settings.setValue('stopwords', '')
+                    if hasattr(self, 'stopwordspath'):
+                        del self.stopwordspath
+
+                    if hasattr(self, 'stopwords'):
+                        del self.stopwords
+            else:
+                QMessageBox.warning(self, 'Stopword File',
+                                    'Stopword File Path doesnot exist!',
+                                    QMessageBox.Ok)
+
+                self.RemoveStopWordFileButton.setDisabled(True)
+                self.settings.setValue('stopwords', '')
+                if hasattr(self, 'stopwordspath'):
+                    del self.stopwordspath
+
+                if hasattr(self, 'stopwords'):
+                    del self.stopwords
+
+    # Add Stopword File
+    def AddStopWordFile(self):
+        try:
+            path = QFileDialog.getOpenFileName(self, 'Open Stopword File', '', 'TXT(*.txt)')
+
+            if all(path):
+                self.stopwords = open(path[0], 'r').read().split("\n")
+
+                self.RemoveStopWordFileButton.setDisabled(False)
+
+                self.settings.setValue('stopwords', path[0])
+                self.statusBar().showMessage('Stopword File successfully added')
+                QMessageBox.information(self, "Stopword File",
+                                        "Stopword File successfully added!", QMessageBox.Ok)
+
+
+        except PermissionError:
+            QMessageBox.critical(self, "Saving Error", "Permission Denied!", QMessageBox.Ok)
+
+    # Remove Stopword File
+    def RemoveStopWordFile(self):
+        self.RemoveStopWordFileButton.setDisabled(True)
+        self.settings.setValue('stopwords', '')
+        self.statusBar().showMessage('Stopword File successfully removed')
+        QMessageBox.information(self, "Stopword File",
+                                "Stopword File successfully Removed!", QMessageBox.Ok)
+
+        if hasattr(self, 'stopwordspath'):
+            del self.stopwordspath
+
+        if hasattr(self, 'stopwords'):
+            del self.stopwords
 
     # Change Theme Dialog
     def ChangeThemeDialog(self):
@@ -1886,30 +1981,26 @@ class Window(QMainWindow):
 
     # Next Image Button
     def NextImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, LeftButton):
-        try:
-            RightButton = self.sender()
+        RightButton = self.sender()
 
-            for qpix in qpixmap_file:
-                if qpix == self.ImagePreviewPixmap:
-                    if qpixmap_file.index(qpix) == len(qpixmap_file) - 2:
-                        RightButton.hide()
-                    elif qpixmap_file.index(qpix) == 0:
-                        LeftButton.show()
+        for qpix in qpixmap_file:
+            if qpix == self.ImagePreviewPixmap:
+                if qpixmap_file.index(qpix) == len(qpixmap_file) - 2:
+                    RightButton.hide()
+                elif qpixmap_file.index(qpix) == 0:
+                    LeftButton.show()
 
-                    currentIndex = qpixmap_file.index(qpix)
-                    self.ImagePreviewPixmap = qpixmap_file[currentIndex + 1]
+                currentIndex = qpixmap_file.index(qpix)
+                self.ImagePreviewPixmap = qpixmap_file[currentIndex + 1]
 
-                    dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
-                                                            ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-                    ImagePreviewLabel.setPixmap(dummypixmap)
-                    ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                                  (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                                  dummypixmap.width(), dummypixmap.height())
+                dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
+                                                        ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
+                ImagePreviewLabel.setPixmap(dummypixmap)
+                ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
+                                              (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
+                                              dummypixmap.width(), dummypixmap.height())
 
-                    break
-
-        except Exception as e:
-            print(str(e))
+                break
 
     # Data Source PDF Preview
     def DataSourcePDFPreview(self, DataSourceWidgetItemName):
@@ -6178,7 +6269,7 @@ class Window(QMainWindow):
 
         CreateWordCloudDialog.exec_()
 
-    #map WordCloud on Tab
+    # map WordCloud on Tab
     def mapWordCloudonTab(self, WCDSName, WCBGColor, maxword, maskname):
         DataSourceWordCloudTabFlag = False
         DataSourceWordCloudTabFlag2 = False
@@ -6310,7 +6401,7 @@ class Window(QMainWindow):
             tabs.setisActive(True)
             myFile.requiredSaved = True
 
-    #Word Cloud ContextMenu
+    # Word Cloud ContextMenu
     def WordCloudContextMenu(self, WordCloudClickEvent, dummypixmap, WordCloudLabel):
         WordCloudClickMenu = QMenu()
 
@@ -6320,7 +6411,7 @@ class Window(QMainWindow):
 
         WordCloudClickMenu.exec(WordCloudClickEvent)
 
-    #WordCloud Download
+    # WordCloud Download
     def WordCloudDownload(self, dummypixmap):
         dummyWindow = OpenWindow("Save Word Cloud", ".png", 1)
         path = dummyWindow.filepath
@@ -6836,276 +6927,272 @@ class Window(QMainWindow):
 
     # Data Source Survey Analysis
     def DataSourceSurveyAnalysis(self, DataSourceName, ArgChartList, DataSourceSurveyAnalysisScrollLayout):
-        try:
-            if ArgChartList is None and DataSourceSurveyAnalysisScrollLayout is not None:
-                # Collecting Data to create a ChartList
-                ChartList = []
-                GroupBoxItemsList = (DataSourceSurveyAnalysisScrollLayout.itemAt(i).widget() for i in range(DataSourceSurveyAnalysisScrollLayout.count()))
+        if ArgChartList is None and DataSourceSurveyAnalysisScrollLayout is not None:
+            # Collecting Data to create a ChartList
+            ChartList = []
+            GroupBoxItemsList = (DataSourceSurveyAnalysisScrollLayout.itemAt(i).widget() for i in range(DataSourceSurveyAnalysisScrollLayout.count()))
 
-                for GroupBox in GroupBoxItemsList:
-                    if isinstance(GroupBox, QGroupBox):
-                        Chart = []
-                        for HBoxLayout in (GroupBox.findChildren(QHBoxLayout)):
-                            for VBoxLayout in (HBoxLayout.findChildren(QVBoxLayout)):
-                                if isinstance(VBoxLayout, QVBoxLayout):
-                                    ComboBoxlist = [VBoxLayout.itemAt(i).widget() for i in range(VBoxLayout.count())]
-                                    for ComboBox in ComboBoxlist:
-                                        if isinstance(ComboBox, QComboBox):
-                                            Chart.append(ComboBox.currentText())
-                        ChartList.append(Chart)
-            else:
-                ChartList = ArgChartList
+            for GroupBox in GroupBoxItemsList:
+                if isinstance(GroupBox, QGroupBox):
+                    Chart = []
+                    for HBoxLayout in (GroupBox.findChildren(QHBoxLayout)):
+                        for VBoxLayout in (HBoxLayout.findChildren(QVBoxLayout)):
+                            if isinstance(VBoxLayout, QVBoxLayout):
+                                ComboBoxlist = [VBoxLayout.itemAt(i).widget() for i in range(VBoxLayout.count())]
+                                for ComboBox in ComboBoxlist:
+                                    if isinstance(ComboBox, QComboBox):
+                                        Chart.append(ComboBox.currentText())
+                    ChartList.append(Chart)
+        else:
+            ChartList = ArgChartList
 
-            CharListlength = len(ChartList)
-            # Validate ChartList
-            ChartList = self.ValidateChartList(ChartList)
+        CharListlength = len(ChartList)
+        # Validate ChartList
+        ChartList = self.ValidateChartList(ChartList)
 
-            if len(ChartList) > 0 and len(ChartList) <=  CharListlength:
-                # Data Source Survey Analysis
-                DataSourceSurveyAnalysisTabFlag = False
-                DataSourceSurveyAnalysisTabFlag2 = False
-                DataSourceSurveyAnalysisTabFlag3 = False
+        if len(ChartList) > 0 and len(ChartList) <=  CharListlength:
+            # Data Source Survey Analysis
+            DataSourceSurveyAnalysisTabFlag = False
+            DataSourceSurveyAnalysisTabFlag2 = False
+            DataSourceSurveyAnalysisTabFlag3 = False
 
-                for tabs in myFile.TabList:
-                    if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Survey Analysis':
-                        if tabs.tabWidget != None:
-                            if sorted(tabs.SurveyAnalysisChartList) == sorted(ChartList):
-                                DataSourceSurveyAnalysisTabFlag = True
-                                break
-
-                            else:
-                                DataSourceSurveyAnalysisTabFlag2 = True
-                                break
-                        else:
-                            DataSourceSurveyAnalysisTabFlag3 = True
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Survey Analysis':
+                    if tabs.tabWidget != None:
+                        if sorted(tabs.SurveyAnalysisChartList) == sorted(ChartList):
+                            DataSourceSurveyAnalysisTabFlag = True
                             break
 
-                if not DataSourceSurveyAnalysisTabFlag or DataSourceSurveyAnalysisTabFlag2:
-                    # Creating New Tab for Survey Analysis
-                    DataSourceSurveyAnalysisTab = QWidget()
-
-                    # **********************************************************************************************
-                    # ************************ Data Source Survey Analysis Setting Widget **************************
-                    # **********************************************************************************************
-
-                    # LayoutWidget For within Survey Analysis Tab
-                    DataSourceSurveyAnalysisTabverticalLayoutWidget = QWidget(DataSourceSurveyAnalysisTab)
-                    DataSourceSurveyAnalysisTabverticalLayoutWidget.setGeometry(self.tabWidget.width()*0.2,
-                                                                                0,
-                                                                                self.tabWidget.width()*0.6,
-                                                                                self.tabWidget.height()/20)
-
-                    # Box Layout for Survey Analysis Tab
-                    DataSourceSurveyAnalysisTabverticalLayout = QHBoxLayout(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    DataSourceSurveyAnalysisTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-                    # ********************* Theme *********************
-                    # Theme Label
-                    ThemeLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    ThemeLabel.setText("Theme:")
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeLabel)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(1)
-
-                    # Theme Combo Box
-                    ThemeComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeComboBox)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(2)
-
-                    # Adding Items to ComboBox
-                    ThemeComboBox.addItem("Light")
-                    ThemeComboBox.addItem("Blue Cerulean")
-                    ThemeComboBox.addItem("Blue Icy")
-                    ThemeComboBox.addItem("Blue Ncs")
-                    ThemeComboBox.addItem("Brown Sand")
-                    ThemeComboBox.addItem("High Contrast")
-                    ThemeComboBox.addItem("Theme Dark")
-
-                    # ******************* Animation *******************
-
-                    # Animation Label
-                    AnimationLabel = QLabel()
-                    AnimationLabel.setText("Animation:")
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationLabel)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(3)
-
-                    # Animation Combo Box
-                    AnimationComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationComboBox)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(4)
-
-                    # Adding Items to ComboBox
-                    AnimationComboBox.addItem("All Animations")
-                    AnimationComboBox.addItem("Series Animation")
-                    AnimationComboBox.addItem("Grid Axis Animation")
-                    AnimationComboBox.addItem("No Animation")
-
-                    # ********************* Legend ********************
-                    # Legend Label
-                    LegendLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    LegendLabel.setText("Legend:")
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendLabel)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(5)
-
-
-                    # Legend ComboBox
-                    LegendComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendComboBox)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(6)
-
-                    # Adding Items to ComboBox
-                    LegendComboBox.addItem("Bottom")
-                    LegendComboBox.addItem("Top")
-                    LegendComboBox.addItem("Left")
-                    LegendComboBox.addItem("Right")
-                    LegendComboBox.addItem("Hide")
-
-                    self.LineEditSizeAdjustment(LegendComboBox)
-
-
-                    # Download Button
-                    DownloadDashboardButton = QPushButton('Download ')
-                    DownloadDashboardButton.setIcon(QIcon("Images/Download Button.png"))
-                    DownloadDashboardButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
-
-                    DownloadDashboardButtonFont = QFont("sans-serif")
-                    DownloadDashboardButtonFont.setPixelSize(14)
-                    DownloadDashboardButtonFont.setBold(True)
-                    DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
-
-                    DataSourceSurveyAnalysisTabverticalLayout.addWidget(DownloadDashboardButton)
-                    DataSourceSurveyAnalysisTabverticalLayout.addStretch(8)
-
-                    self.LineEditSizeAdjustment(DownloadDashboardButton)
-
-                    # *********************************************************************************************
-                    # ************************ Data Source Survey Analysis Chart Widgets **************************
-                    # *********************************************************************************************
-
-                    chartWidget = []
-
-                    for Chart in ChartList:
-                        # Bar Chart
-                        if Chart[0] == "Bar Chart":
-                            chartWidget.append(self.DataSourceSurveyAnalysisBarChart(Chart, DataSourceName))
-
-                        # Donut Chart
-                        elif Chart[0] == "Donut Chart":
-                            chartWidget.append(self.DataSourceSurveyAnalysisDonutChart(Chart, DataSourceName))
-
-                        # Pie Chart
-                        elif Chart[0] == "Pie Chart":
-                            chartWidget.append(self.DataSourceSurveyAnalysisPieChart(Chart, DataSourceName))
-
-                        # Time Series
-                        elif Chart[0] == "Time Series":
-                            chartWidget.append(self.DataSourceSurveyAnalysisLineChart(Chart, DataSourceName))
-
-
-                    # Group Widget For within Survey Analysis Tab
-                    DashBoardWidget = QGroupBox(DataSourceSurveyAnalysisTab)
-                    DashBoardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
-
-
-                    # Box Layout for Survey Analysis Tab
-                    DashBoardWidgetLayout = QGridLayout(DashBoardWidget)
-                    DashBoardWidgetLayout.setContentsMargins(0, 0, 0, 0)
-
-                    colWid = 0
-                    if len(chartWidget) >= 5:
-                        colWid = 3
-                    elif len(chartWidget) > 2  and len(chartWidget) < 5:
-                        colWid = 2
-
-                    colcounter = 0
-                    rowcounter = 0
-
-                    for chartWid in chartWidget:
-                        if colcounter < colWid:
-                            pass
                         else:
-                            colcounter = 0
-                            rowcounter += 1
+                            DataSourceSurveyAnalysisTabFlag2 = True
+                            break
+                    else:
+                        DataSourceSurveyAnalysisTabFlag3 = True
+                        break
 
-                        DashBoardWidgetLayout.addWidget(chartWid, rowcounter, colcounter)
-                        colcounter += 1
+            if not DataSourceSurveyAnalysisTabFlag or DataSourceSurveyAnalysisTabFlag2:
+                # Creating New Tab for Survey Analysis
+                DataSourceSurveyAnalysisTab = QWidget()
+
+                # **********************************************************************************************
+                # ************************ Data Source Survey Analysis Setting Widget **************************
+                # **********************************************************************************************
+
+                # LayoutWidget For within Survey Analysis Tab
+                DataSourceSurveyAnalysisTabverticalLayoutWidget = QWidget(DataSourceSurveyAnalysisTab)
+                DataSourceSurveyAnalysisTabverticalLayoutWidget.setGeometry(self.tabWidget.width()*0.2,
+                                                                            0,
+                                                                            self.tabWidget.width()*0.6,
+                                                                            self.tabWidget.height()/20)
+
+                # Box Layout for Survey Analysis Tab
+                DataSourceSurveyAnalysisTabverticalLayout = QHBoxLayout(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+
+                # ********************* Theme *********************
+                # Theme Label
+                ThemeLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                ThemeLabel.setText("Theme:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(1)
+
+                # Theme Combo Box
+                ThemeComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(2)
+
+                # Adding Items to ComboBox
+                ThemeComboBox.addItem("Light")
+                ThemeComboBox.addItem("Blue Cerulean")
+                ThemeComboBox.addItem("Blue Icy")
+                ThemeComboBox.addItem("Blue Ncs")
+                ThemeComboBox.addItem("Brown Sand")
+                ThemeComboBox.addItem("High Contrast")
+                ThemeComboBox.addItem("Theme Dark")
+
+                # ******************* Animation *******************
+
+                # Animation Label
+                AnimationLabel = QLabel()
+                AnimationLabel.setText("Animation:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(3)
+
+                # Animation Combo Box
+                AnimationComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(4)
+
+                # Adding Items to ComboBox
+                AnimationComboBox.addItem("All Animations")
+                AnimationComboBox.addItem("Series Animation")
+                AnimationComboBox.addItem("Grid Axis Animation")
+                AnimationComboBox.addItem("No Animation")
+
+                # ********************* Legend ********************
+                # Legend Label
+                LegendLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                LegendLabel.setText("Legend:")
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendLabel)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(5)
 
 
-                    ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashBoardWidget.palette()))
-                    AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
-                    LegendComboBox.currentTextChanged.connect(lambda: self.LegendComboBoxTextChanged(chartWidget))
+                # Legend ComboBox
+                LegendComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendComboBox)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(6)
 
-                    # Push Button Clicked
-                    DownloadDashboardButton.clicked.connect(lambda : self.DataSourceSurveyAnalysisDownloadDashboard(DashBoardWidget))
+                # Adding Items to ComboBox
+                LegendComboBox.addItem("Bottom")
+                LegendComboBox.addItem("Top")
+                LegendComboBox.addItem("Left")
+                LegendComboBox.addItem("Right")
+                LegendComboBox.addItem("Hide")
 
-                    # Tab Management
-                    if DataSourceSurveyAnalysisTabFlag3:
+                self.LineEditSizeAdjustment(LegendComboBox)
+
+
+                # Download Button
+                DownloadDashboardButton = QPushButton('Download ')
+                DownloadDashboardButton.setIcon(QIcon("Images/Download Button.png"))
+                DownloadDashboardButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+
+                DownloadDashboardButtonFont = QFont("sans-serif")
+                DownloadDashboardButtonFont.setPixelSize(14)
+                DownloadDashboardButtonFont.setBold(True)
+                DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
+
+                DataSourceSurveyAnalysisTabverticalLayout.addWidget(DownloadDashboardButton)
+                DataSourceSurveyAnalysisTabverticalLayout.addStretch(8)
+
+                self.LineEditSizeAdjustment(DownloadDashboardButton)
+
+                # *********************************************************************************************
+                # ************************ Data Source Survey Analysis Chart Widgets **************************
+                # *********************************************************************************************
+
+                chartWidget = []
+
+                for Chart in ChartList:
+                    # Bar Chart
+                    if Chart[0] == "Bar Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisBarChart(Chart, DataSourceName))
+
+                    # Donut Chart
+                    elif Chart[0] == "Donut Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisDonutChart(Chart, DataSourceName))
+
+                    # Pie Chart
+                    elif Chart[0] == "Pie Chart":
+                        chartWidget.append(self.DataSourceSurveyAnalysisPieChart(Chart, DataSourceName))
+
+                    # Time Series
+                    elif Chart[0] == "Time Series":
+                        chartWidget.append(self.DataSourceSurveyAnalysisLineChart(Chart, DataSourceName))
+
+
+                # Group Widget For within Survey Analysis Tab
+                DashBoardWidget = QGroupBox(DataSourceSurveyAnalysisTab)
+                DashBoardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
+
+
+                # Box Layout for Survey Analysis Tab
+                DashBoardWidgetLayout = QGridLayout(DashBoardWidget)
+                DashBoardWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+                colWid = 0
+                if len(chartWidget) >= 5:
+                    colWid = 3
+                elif len(chartWidget) > 2  and len(chartWidget) < 5:
+                    colWid = 2
+
+                colcounter = 0
+                rowcounter = 0
+
+                for chartWid in chartWidget:
+                    if colcounter < colWid:
+                        pass
+                    else:
+                        colcounter = 0
+                        rowcounter += 1
+
+                    DashBoardWidgetLayout.addWidget(chartWid, rowcounter, colcounter)
+                    colcounter += 1
+
+
+                ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashBoardWidget.palette()))
+                AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
+                LegendComboBox.currentTextChanged.connect(lambda: self.LegendComboBoxTextChanged(chartWidget))
+
+                # Push Button Clicked
+                DownloadDashboardButton.clicked.connect(lambda : self.DataSourceSurveyAnalysisDownloadDashboard(DashBoardWidget))
+
+                # Tab Management
+                if DataSourceSurveyAnalysisTabFlag3:
+                    tabs.tabWidget = DataSourceSurveyAnalysisTab
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
+                else:
+                    if DataSourceSurveyAnalysisTabFlag2:
+                        tabs.setSurveryAnalysisChartList(ChartList)
+                        self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, tabs.TabName)
+                        self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
                         tabs.tabWidget = DataSourceSurveyAnalysisTab
-                        if tabs.isActive:
-                            self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
-                            if tabs.isCurrentWidget:
-                                self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
-                    else:
-                        if DataSourceSurveyAnalysisTabFlag2:
-                            tabs.setSurveryAnalysisChartList(ChartList)
-                            self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                            self.tabWidget.addTab(DataSourceSurveyAnalysisTab, tabs.TabName)
-                            self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
-                            tabs.tabWidget = DataSourceSurveyAnalysisTab
-                            tabs.setisActive(True)
-
-                        else:
-                            # Adding Survey Analysis Tab to QTabWidget
-                            dummyTab = Tab("Survey Analysis", DataSourceSurveyAnalysisTab, DataSourceName)
-                            dummyTab.setSurveryAnalysisChartList(ChartList)
-
-                            myFile.TabList.append(dummyTab)
-
-                            # Adding Preview Tab to QTabWidget
-                            self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
-                            self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
-                            myFile.requiredSaved = True
-
-                    ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
-
-                    if len(ItemsWidget) == 0:
-                        DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
-                        DSVisualWidget.setText(0, DataSourceName)
-                        DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
-                        DSVisualWidget.setExpanded(True)
-
-                        DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
-                        DSNewCaseNode.setText(0, 'Survey Analysis')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                        tabs.setisActive(True)
 
                     else:
-                        for widgets in ItemsWidget:
-                            SurveyAnalysisWidget = self.VisualizationTreeWidget.findItems('Survey Analysis', Qt.MatchRecursive, 0)
+                        # Adding Survey Analysis Tab to QTabWidget
+                        dummyTab = Tab("Survey Analysis", DataSourceSurveyAnalysisTab, DataSourceName)
+                        dummyTab.setSurveryAnalysisChartList(ChartList)
 
-                            SurveyAnalysisWidgetFlag = False
+                        myFile.TabList.append(dummyTab)
 
-                            if len(SurveyAnalysisWidget) > 0:
-                                for SAWidgets in SurveyAnalysisWidget:
-                                    if SAWidgets.parent().text(0) == DataSourceName:
-                                        SurveyAnalysisWidgetFlag = True
-                                        break
+                        # Adding Preview Tab to QTabWidget
+                        self.tabWidget.addTab(DataSourceSurveyAnalysisTab, "Survey Analysis")
+                        self.tabWidget.setCurrentWidget(DataSourceSurveyAnalysisTab)
+                        myFile.requiredSaved = True
 
-                            if not SurveyAnalysisWidgetFlag:
-                                DSNewCaseNode = QTreeWidgetItem(widgets)
-                                DSNewCaseNode.setText(0, 'Survey Analysis')
-                                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:
+                    DSVisualWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                    DSVisualWidget.setText(0, DataSourceName)
+                    DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
+                    DSVisualWidget.setExpanded(True)
+
+                    DSNewCaseNode = QTreeWidgetItem(DSVisualWidget)
+                    DSNewCaseNode.setText(0, 'Survey Analysis')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
                 else:
-                    self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                    tabs.setisActive(True)
-                    myFile.requiredSaved = True
+                    for widgets in ItemsWidget:
+                        SurveyAnalysisWidget = self.VisualizationTreeWidget.findItems('Survey Analysis', Qt.MatchRecursive, 0)
+
+                        SurveyAnalysisWidgetFlag = False
+
+                        if len(SurveyAnalysisWidget) > 0:
+                            for SAWidgets in SurveyAnalysisWidget:
+                                if SAWidgets.parent().text(0) == DataSourceName:
+                                    SurveyAnalysisWidgetFlag = True
+                                    break
+
+                        if not SurveyAnalysisWidgetFlag:
+                            DSNewCaseNode = QTreeWidgetItem(widgets)
+                            DSNewCaseNode.setText(0, 'Survey Analysis')
+                            DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
 
             else:
-                QMessageBox.critical(self, "Survey Analysis Error",
-                                     "There were some errors in selecting Chart Type!", QMessageBox.Ok)
-        except Exception as e:
-            print(str(e))
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                tabs.setisActive(True)
+                myFile.requiredSaved = True
 
+        else:
+            QMessageBox.critical(self, "Survey Analysis Error",
+                                 "There were some errors in selecting Chart Type!", QMessageBox.Ok)
 
     # Data Source Survey Analysis Line Chart
     def DataSourceSurveyAnalysisLineChart(self, Chart, DataSourceName):
@@ -8960,55 +9047,52 @@ class Window(QMainWindow):
 
     # UnMerge Cases
     def CasesUnMerge(self, CasesItemName):
-        try:
-            tempWidget = CasesItemName
-            while tempWidget.parent() != None:
-                tempWidget = tempWidget.parent()
+        tempWidget = CasesItemName
+        while tempWidget.parent() != None:
+            tempWidget = tempWidget.parent()
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == tempWidget.text(0):
-                    for cases in DS.CasesList:
-                        if cases.ParentCase != None:
-                            if cases.ParentCase.CaseTopic == CasesItemName.text(0):
-                                for cases2 in DS.CasesList:
-                                    if cases2.CaseTopic == cases.ParentCase.CaseTopic:
-                                        cases.ParentCase = cases2.ParentCase
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == tempWidget.text(0):
+                for cases in DS.CasesList:
+                    if cases.ParentCase != None:
+                        if cases.ParentCase.CaseTopic == CasesItemName.text(0):
+                            for cases2 in DS.CasesList:
+                                if cases2.CaseTopic == cases.ParentCase.CaseTopic:
+                                    cases.ParentCase = cases2.ParentCase
 
-                                ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
-                                if len(ItemWidget) > 1:
-                                    ItemPresentFlag = False
-                                    for widget in ItemWidget:
-                                        tempWidget2 = widget
-                                        while tempWidget2.parent() != None:
-                                            tempWidget2 = tempWidget2.parent()
+                            ItemWidget = self.CasesTreeWidget.findItems(cases.CaseTopic, Qt.MatchRecursive, 0)
+                            if len(ItemWidget) > 1:
+                                ItemPresentFlag = False
+                                for widget in ItemWidget:
+                                    tempWidget2 = widget
+                                    while tempWidget2.parent() != None:
+                                        tempWidget2 = tempWidget2.parent()
 
-                                        if tempWidget2.text(0) == tempWidget2.text(0):
-                                            ItemPresentFlag = True
-                                            break
+                                    if tempWidget2.text(0) == tempWidget2.text(0):
+                                        ItemPresentFlag = True
+                                        break
 
-                                    if ItemPresentFlag:
-                                        tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
-                                        CasesItemName.parent().addChild(tempChild)
+                                if ItemPresentFlag:
+                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
+                                    CasesItemName.parent().addChild(tempChild)
 
-                                elif len(ItemWidget) == 1:
-                                    for widget in ItemWidget:
-                                        tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
-                                        CasesItemName.parent().addChild(tempChild)
+                            elif len(ItemWidget) == 1:
+                                for widget in ItemWidget:
+                                    tempChild = CasesItemName.takeChild(CasesItemName.indexOfChild(widget))
+                                    CasesItemName.parent().addChild(tempChild)
 
 
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == CasesItemName.text(0):
-                            DS.CasesList.remove(cases)
-                            del cases
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CasesItemName.text(0):
+                        DS.CasesList.remove(cases)
+                        del cases
 
-                    CasesItemName.parent().removeChild(CasesItemName)
+                CasesItemName.parent().removeChild(CasesItemName)
 
-            self.statusBar().showMessage('Case Unmerge Successfully')
-            self.CasesParentCoverageUpdate(tempWidget)
-            self.CasesStructureUpdate(tempWidget)
-            myFile.requiredSaved = True
-        except Exception as e:
-            print(str(e))
+        self.statusBar().showMessage('Case Unmerge Successfully')
+        self.CasesParentCoverageUpdate(tempWidget)
+        self.CasesStructureUpdate(tempWidget)
+        myFile.requiredSaved = True
 
     # Set Cases Widget
     def SetCasesWidget(self, DS, CasesItemName):
@@ -9624,67 +9708,32 @@ class Window(QMainWindow):
 
     # Cases Remove Dialog
     def CasesChildRemove(self, CasesItemName):
-        try:
-            tempWidget = CasesItemName
-            while tempWidget.parent() != None:
-                tempWidget = tempWidget.parent()
+        tempWidget = CasesItemName
+        while tempWidget.parent() != None:
+            tempWidget = tempWidget.parent()
 
-            for DS in myFile.DataSourceList:
-                if DS.DataSourceName == tempWidget.text(0):
-                    # tempWidget2 = CasesItemName
-                    # tempParent2 = CasesItemName
-                    # CasesList = []
-                    # CasesList.append(CasesItemName.text(0))
-
-                    if CasesItemName.parent().childCount() == 1:
-                        TempParent = CasesItemName.parent()
-                        TempParent.removeChild(CasesItemName)
-                        if TempParent == tempWidget:
-                            self.CasesTreeWidget.invisibleRootItem().removeChild(TempParent)
-                        else:
-                            TempParent.parent().removeChild(TempParent)
+        for DS in myFile.DataSourceList:
+            if DS.DataSourceName == tempWidget.text(0):
+                if CasesItemName.parent().childCount() == 1:
+                    TempParent = CasesItemName.parent()
+                    TempParent.removeChild(CasesItemName)
+                    if TempParent == tempWidget:
+                        self.CasesTreeWidget.invisibleRootItem().removeChild(TempParent)
                     else:
-                        CasesItemName.parent().removeChild(CasesItemName)
+                        TempParent.parent().removeChild(TempParent)
+                else:
+                    CasesItemName.parent().removeChild(CasesItemName)
 
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic == CasesItemName.text(0):
-                            DS.CasesList.remove(cases)
-                            del cases
-                            break
+                for cases in DS.CasesList:
+                    if cases.CaseTopic == CasesItemName.text(0):
+                        DS.CasesList.remove(cases)
+                        del cases
+                        break
 
-                    # while tempParent2.parent() != None and tempWidget2.parent().childCount() == 1:
-                    #     print(tempParent2.text(0))
-                    #     tempParent2 = tempWidget2.parent()
-                    #     print(tempParent2.text(0))
-                    #     if tempWidget2.parent().childCount() == 1:
-                    #         TempParent = tempWidget2.parent()
-                    #         TempParent.removeChild(tempWidget2)
-                    #         if TempParent == tempWidget:
-                    #             print(TempParent.text(0))
-                    #             print(tempWidget2.text(0))
-                    #             self.CasesTreeWidget.invisibleRootItem().removeChild(TempParent)
-                    #         else:
-                    #             CasesList.append(TempParent.text(0))
-                    #             print(TempParent.text(0))
-                    #             TempParent.parent().removeChild(TempParent)
-                    #     else:
-                    #         CasesList.append(tempWidget2.text(0))
-                    #         tempWidget2.parent().removeChild(tempWidget2)
-                    #
-                    #     tempWidget2 = tempParent2
+                self.statusBar().showMessage('Case Removed Successfully')
+                break
 
-                    for cases in DS.CasesList:
-                        if cases.CaseTopic in CasesItemName.text(0):
-                            DS.CasesList.remove(cases)
-                            del cases
-                            break
-
-                    self.statusBar().showMessage('Case Removed Successfully')
-                    break
-            myFile.requiredSaved = True
-
-        except Exception as e:
-            print(str(e))
+        myFile.requiredSaved = True
 
     # Cases Child Detail
     def CasesChildDetail(self, CasesItemName):
@@ -10496,20 +10545,16 @@ class Window(QMainWindow):
 
     # Empty Window For New File
     def EmptyWindowForNewFile(self):
-        try:
-            global myFile
-            DataSourceNameList = [DS.DataSourceName for DS in myFile.DataSourceList]
+        global myFile
+        DataSourceNameList = [DS.DataSourceName for DS in myFile.DataSourceList]
 
-            for DataSourceName in DataSourceNameList:
-                for widgets in self.DataSourceTreeWidget.findItems(DataSourceName, Qt.MatchRecursive, 0):
-                    self.DataSourceRemove(widgets)
+        for DataSourceName in DataSourceNameList:
+            for widgets in self.DataSourceTreeWidget.findItems(DataSourceName, Qt.MatchRecursive, 0):
+                self.DataSourceRemove(widgets)
 
-            myFile = File()
-            myFile.setCreatedDate(datetime.datetime.now())
-            myFile.setCreatedBy(getpass.getuser())
-
-        except Exception as e:
-            print(str(e))
+        myFile = File()
+        myFile.setCreatedDate(datetime.datetime.now())
+        myFile.setCreatedBy(getpass.getuser())
 
     # Open File
     def OpenFileWindow(self):
@@ -10964,20 +11009,16 @@ class Window(QMainWindow):
 
     # Print Window
     def printWindow(self):
-        try:
-            printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
-            self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
-            self.Printdialog.setWindowTitle('Print')
-            self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
-            
-            if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
-                if self.tabWidget.currentWidget() is not None:
-                    pixmap = QPixmap(self.tabWidget.currentWidget().size())
-                    self.tabWidget.currentWidget().render(pixmap)
-                    pixmap.print_(printer)
+        printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
+        self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
+        self.Printdialog.setWindowTitle('Print')
+        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
 
-        except Exception as e:
-            print(str(e))
+        if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
+            if self.tabWidget.currentWidget() is not None:
+                pixmap = QPixmap(self.tabWidget.currentWidget().size())
+                self.tabWidget.currentWidget().render(pixmap)
+                pixmap.print_(printer)
 
     # Hide ToolBar
     def toolbarHide(self):
@@ -11011,25 +11052,21 @@ class Window(QMainWindow):
 
     # License Window
     def AboutWindow(self):
-        try:
-            QMessageBox().about(self,
-                                "About TextWiz",
-                                '''
-                                <h2 style="text-align:center">TextWiz For Windows</h2>
-                                <br>
-                                <p style="text-align:center;font-size:40px">Version 1.0.0 (32 Bit)</p>
-                                <br>
-                                <p style="text-align:center;font-size:20px">Edition: Community</p>
-                                <br>
-                                <p style="text-align:center;font-size:40px">Copyright @ 1999-2015 QRS International</p>
-                                <br>
-                                <p style="text-align:center;font-size:40px">Ptv Ltd. All rights reserved</p>
-                                <a href='https://www.google.com/'>TextWiz</a>
-                                '''
-                                );
-
-        except Exception as e:
-            print(str(e))
+        QMessageBox().about(self,
+                            "About TextWiz",
+                            '''
+                            <h2 style="text-align:center">TextWiz For Windows</h2>
+                            <br>
+                            <p style="text-align:center;font-size:40px">Version 1.0.0 (32 Bit)</p>
+                            <br>
+                            <p style="text-align:center;font-size:20px">Edition: Community</p>
+                            <br>
+                            <p style="text-align:center;font-size:40px">Copyright @ 1999-2015 QRS International</p>
+                            <br>
+                            <p style="text-align:center;font-size:40px">Ptv Ltd. All rights reserved</p>
+                            <a href='https://www.google.com/'>TextWiz</a>
+                            '''
+                            );
 
     # ****************************************************************************
     # *************************** Import Features ********************************
@@ -11378,8 +11415,8 @@ class Window(QMainWindow):
                 ProgressBarWidget = QDialog()
                 progressBar = QProgressBar(ProgressBarWidget)
 
-                dummyProgressInfo = ProgressInfo(ntpath.basename(pth), "Importing")
-                dummyProgressInfo.ImportFile(pth, path[1])
+                dummyProgressInfo = ProgressInfo(ntpath.basename(path[0][0]), "Importing")
+                dummyProgressInfo.ImportFile(path[0], path[1])
 
                 ThreadQueue.put(dummyProgressInfo)
 
@@ -12015,4 +12052,6 @@ if __name__ == "__main__":
 
     TextWizMainwindow = Window()
     TextWizMainwindow.show()
+    TextWizMainwindow.StopWordFileExistence()
+
     sys.exit(App.exec())

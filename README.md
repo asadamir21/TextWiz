@@ -6,7 +6,7 @@
 
 A Qualitative Data Analysis Software. This projectâ€™s main purpose is to provide an open source software to analyze text documents to understand perceptions, identify concepts, key ideas, interesting patterns and extract useful knowledge to support decision makings for the user.
 
-##Main Features Include:
+## Main Features Include:
 
 - Import data/text using different file formats, web and social media
 - Study word frequency, distributions and patterns.
@@ -25,11 +25,14 @@ A Qualitative Data Analysis Software. This projectâ€™s main purpose is to p
 Enter these commands on cmd to install all required dependencies
  
 1. python -m pip install --upgrade pip command
-2. pip install -r requirements.txt 
+2. pip install -r requirement.txt 
 3. pip install pywin32 (**For Windows Only**)
 4. python -m nltk.downloader all
 5. python -m spacy download en_core_web_sm
-   
+
+(Note: If you get a visual c++ requirement error please download and install MS visual build tools)
+	https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
 6. If you want to use social network analysis you will need an api key for google and twitter. You can obtain the api keys from <a href = "https://console.developers.google.com/projectselector2/apis/dashboard">Google Developer</a> and <a href = "https://developer.twitter.com/en">Twitter Developer</a> and enter the keys in the following file and line numbers.
 
    ### For Twitter

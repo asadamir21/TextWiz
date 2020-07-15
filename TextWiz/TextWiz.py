@@ -1,4 +1,3 @@
-import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -12029,26 +12028,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    # TextWizSplash = QSplashScreen()
-    # TextWizSplash.resize(200, 100)
-    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
-    # TextWizSplash.setPixmap(TextWizSplashPixmap)
-    #
-    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
-    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
-    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
-    # SplahScreenProgressBar.setTextVisible(False)
-    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-    #
-    # TextWizSplash.show()
-    #
-    # for i in range(0, 100):
-    #     SplahScreenProgressBar.setValue(i)
-    #     t = time.time()
-    #     while time.time() < t + 0.05:
-    #         App.processEvents()
-    #
-    # TextWizSplash.close()
+    TextWizSplash = QSplashScreen()
+    TextWizSplash.resize(200, 100)
+    TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
+    TextWizSplash.setPixmap(TextWizSplashPixmap)
+
+    SplahScreenProgressBar = QProgressBar(TextWizSplash)
+    SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+                            TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
+    SplahScreenProgressBar.setTextVisible(False)
+    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+
+    TextWizSplash.show()
+
+    for i in range(0, 100):
+        SplahScreenProgressBar.setValue(i)
+        t = time.time()
+        while time.time() < t + 0.05:
+            App.processEvents()
+
+    TextWizSplash.close()
 
     TextWizMainwindow = Window()
     TextWizMainwindow.show()

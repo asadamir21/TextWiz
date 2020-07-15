@@ -518,15 +518,10 @@ class DataSource():
         try:
             self.DataSourceHashtag = Hashtag
 
-            consumer_key = 'ULAbv50EPqfSeyfL4MsVTUZbq'
-            consumer_secret = 'f2ZRTGDbkrWGtlDonJALozxXdVSrmxVXheluYvyV1KXpkER4yh'
-            access_token = '1115595365380550659-YAjKBtRYOVTZZkk2OlCvalppMiTTyW'
-            access_token_secret = 'BAM9sczcKOMKoYWY3g3ePXt7Q2h3hAZNluwJcqOberqX2'
-
-            # consumer_key = 'Enter Consumer Key'
-            # consumer_secret = 'Enter Consumer Secret'
-            # access_token = 'Enter Access Token'
-            # access_token_secret = 'Enter Token Secret'
+            consumer_key = 'Enter Consumer Key'
+            consumer_secret = 'Enter Consumer Secret'
+            access_token = 'Enter Access Token'
+            access_token_secret = 'Enter Token Secret'
 
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
             auth.set_access_token(access_token, access_token_secret)
@@ -568,9 +563,6 @@ class DataSource():
                             self.TweetDataFrame[col] = pd.to_datetime(self.TweetDataFrame[col])
                         except:
                             pass
-
-                filehandler = open("List2", 'wb')
-                pickle.dump(self.TweetDataFrame, filehandler)
 
                 self.DataSourceRetrieveZeroError = False
 

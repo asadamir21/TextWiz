@@ -1916,13 +1916,16 @@ class Window(QMainWindow):
                     elif isinstance(newitem, (float, np.float)):
                         newitem = float(newitem)
                     elif isinstance(newitem, (float, pd.datetime)):
-                        newitem = newitem.to_pydatetime().strftime("%m/%d/%Y, %H:%M:%S")
+                        try:
+                            newitem = newitem.to_pydatetime().strftime("%m/%d/%Y, %H:%M:%S")
+                        except:
+                            pass
 
 
                     intItem = QTableWidgetItem()
                     intItem.setData(Qt.EditRole, QVariant(newitem))
                     ViewCSVDataTable.setItem(i, j, intItem)
-                    ViewCSVDataTable.item(i, j).setTextAlignment(Qt.AlignVCenter)
+                    ViewCSVDataTable.item(i, j).setTextAlignment(Qt.AlignCenter)
                     ViewCSVDataTable.item(i, j).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             ViewCSVDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -1942,7 +1945,7 @@ class Window(QMainWindow):
             else:
                 # Adding View CSV Data Tab to TabList
                 myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
-    
+
                 # Adding View CSV Data Tab to QTabWidget
                 self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
                 self.tabWidget.setCurrentWidget(ViewCSVDataTab)
@@ -7195,87 +7198,50 @@ class Window(QMainWindow):
 
     # Data Source Survey Analysis Line Chart
     def DataSourceSurveyAnalysisLineChart(self, Chart, DataSourceName):
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
-                df = DS.CSVData
-                break
-            elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
-                df = DS.TweetDataFrame
-                break
+        try:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName and DS.DataSourceext == "CSV files (*.csv)":
+                    df = DS.CSVData
+                    break
+                elif DS.DataSourceName == DataSourceName and DS.DataSourceext == "Tweet":
+                    df = DS.TweetDataFrame
+                    break
 
-        # Creating a Line Chart
-        chart = QChart()
-        chart.setTitle(Chart[1])
+            # Creating a Line Chart
+            chart = QChart()
+            chart.setTitle(Chart[1])
 
-        DateFlag = False
-        TimeFlag = False
+            DateFlag = False
+            TimeFlag = False
 
-        # **************************************************
-        # ***** Storing data from Pandas CSV to Series *****
-        # **************************************************
+            # **************************************************
+            # ***** Storing data from Pandas CSV to Series *****
+            # **************************************************
 
-        if DS.DataSourceext == "CSV files (*.csv)":
-            # Column Type Integer
-            if df.dtypes[Chart[1]] == 'float64' or df.dtypes[Chart[1]] == 'int64':
+            if DS.DataSourceext == "CSV files (*.csv)":
+                # Column Type Integer
 
-                # Line Series
-                series = QLineSeries(self)
-                series.setName("Date wise " + Chart[1])
-                series.setPointsVisible(True)
-                series.setPointLabelsClipping(True)
-                series.setPointLabelsVisible(True)
-                series.setPointLabelsFormat("@yPoint");
+                if df.dtypes[Chart[1]] == 'float64' or df.dtypes[Chart[1]] == 'int64':
 
-                data = df.groupby(Chart[2])[Chart[1]].sum().reset_index().values.tolist()
-
-                # Creating Series
-                for date, value in data:
-                    xValue = QDateTime()
-                    if not date.date() == datetime.date(1900, 1, 1):
-                        DateFlag = True
-                        xValue.setDate(QDate(date.date().year, date.date().month, date.date().day));
-
-                    if not date.time() == datetime.time(0, 0):
-                        TimeFlag = True
-                        xValue.setTime(QTime(date.time().hour, date.time().minute, date.time().second));
-
-                    series.append(xValue.toMSecsSinceEpoch(), value);
-
-                chart.addSeries(series)
-
-            # Column Type Object
-            elif df.dtypes[Chart[1]] == 'object':
-                LineSeriesList = df.groupby([Chart[1], Chart[2]]).size()
-
-                GroupList = LineSeriesList.keys().tolist()
-
-                UpdatedList = []
-
-                for city, date in GroupList:
-                    if any(city in sublist for sublist in UpdatedList):
-                        for sublist in UpdatedList:
-                            if sublist[0] == city:
-                                sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
-                                break
-
-                    else:
-                        sublist = [city, []]
-                        sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
-                        UpdatedList.append(sublist)
-
-                # Creating Series
-                for labelX, data in UpdatedList:
+                    # Line Series
                     series = QLineSeries(self)
-                    series.setName(labelX)
+                    series.setName("Date wise " + Chart[1])
                     series.setPointsVisible(True)
                     series.setPointLabelsClipping(True)
+                    series.setPointLabelsVisible(True)
+                    series.setPointLabelsFormat("@yPoint");
 
-                    DateFlag = False
-                    TimeFlag = False
+                    Full_Data_List = df.groupby(Chart[2])[Chart[1]].sum().reset_index().values.tolist()
 
+                    data = []
+
+                    for i, value in enumerate(Full_Data_List):
+                        if i % int(len(Full_Data_List) / 10) == 0:
+                            data.append(Full_Data_List[i])
+
+                    # Creating Series
                     for date, value in data:
                         xValue = QDateTime()
-
                         if not date.date() == datetime.date(1900, 1, 1):
                             DateFlag = True
                             xValue.setDate(QDate(date.date().year, date.date().month, date.date().day));
@@ -7286,74 +7252,139 @@ class Window(QMainWindow):
 
                         series.append(xValue.toMSecsSinceEpoch(), value);
 
-                    # Adding Series
                     chart.addSeries(series)
 
-        elif DS.DataSourceext == "Tweet":
-            # Line Series
-            series = QLineSeries(self)
-            series.setName("Date wise " + Chart[1])
-            series.setPointsVisible(True)
-            series.setPointLabelsClipping(True)
-            series.setPointLabelsVisible(True)
-            series.setPointLabelsFormat("@yPoint");
+                # Column Type Object
+                elif df.dtypes[Chart[1]] == 'object':
+                    LineSeriesList = df.groupby([Chart[1], Chart[2]]).size()
 
-            data = df.groupby([pd.Grouper(key=Chart[1], freq='H')]).size().reset_index(name='count').values.tolist()
-            DateFlag = False
-            TimeFlag = False
-            for Time, value in data:
-                xValue = QDateTime()
+                    GroupList = LineSeriesList.keys().tolist()
 
-                if not Time.date() == datetime.date(1900, 1, 1):
-                    DateFlag = True
-                    xValue.setDate(QDate(Time.date().year, Time.date().month, Time.date().day));
+                    UpdatedList = []
 
-                if not Time.time() == datetime.time(0, 0):
-                    TimeFlag = True
-                    xValue.setTime(QTime(Time.time().hour, Time.time().minute, Time.time().second));
+                    for city, date in GroupList:
+                        if any(city in sublist for sublist in UpdatedList):
+                            for sublist in UpdatedList:
+                                if sublist[0] == city:
+                                    sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
+                                    break
 
-                series.append(xValue.toMSecsSinceEpoch(), value);
+                        else:
+                            sublist = [city, []]
+                            sublist[1].append([date, LineSeriesList[GroupList.index((city, date))]])
+                            UpdatedList.append(sublist)
 
-            chart.addSeries(series)
+                    # Creating Series
+                    for labelX, data in UpdatedList:
+                        series = QLineSeries(self)
+                        series.setName(labelX)
+                        series.setPointsVisible(True)
+                        series.setPointLabelsClipping(True)
 
-        # Chart Default Animation
-        chart.setAnimationOptions(QChart.AllAnimations)
+                        DateFlag = False
+                        TimeFlag = False
 
-        # Chart Default Theme
-        chart.setTheme(QChart.ChartThemeQt)
+                        #print(data)
+                        # data = []
+                        #
+                        # print()
+                        #
+                        # for i, value in enumerate(Full_Data_List):
+                        #     if i % int(len(Full_Data_List) / 10) == 0:
+                        #         data.append(Full_Data_List[i])
 
-        # chart Title Font
-        chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+                        for date, value in data:
+                            xValue = QDateTime()
 
-        # Chart Axis
-        axisX = QDateTimeAxis()
-        axisX.setTitleText(Chart[2])
-        axisX.setTickCount(5);
+                            if not date.date() == datetime.date(1900, 1, 1):
+                                DateFlag = True
+                                xValue.setDate(QDate(date.date().year, date.date().month, date.date().day));
 
-        if DateFlag and TimeFlag:
-            axisX.setFormat("dd-MM-yy hh:mm");
-        elif DateFlag:
-            axisX.setFormat("dd-MM-yy");
-        elif TimeFlag:
-            axisX.setFormat("hh:mm:ss");
+                            if not date.time() == datetime.time(0, 0):
+                                TimeFlag = True
+                                xValue.setTime(QTime(date.time().hour, date.time().minute, date.time().second));
 
-        chart.createDefaultAxes()
-        chart.setAxisX(axisX, series);
+                            series.append(xValue.toMSecsSinceEpoch(), value);
 
-        if DS.DataSourceext == "CSV files (*.csv)":
-            chart.axisY(series).setTitleText(Chart[1])
-        elif DS.DataSourceext == "Tweet":
-            chart.axisY(series).setTitleText("No. of Tweets per hour")
+                        # Adding Series
+                        chart.addSeries(series)
 
-        # Default legends
-        chart.legend().setVisible(True)
-        chart.legend().setAlignment(Qt.AlignBottom)
+            elif DS.DataSourceext == "Tweet":
+                # Line Series
+                series = QLineSeries(self)
+                series.setName("Date wise " + Chart[1])
+                series.setPointsVisible(True)
+                series.setPointLabelsClipping(True)
+                series.setPointLabelsVisible(True)
+                series.setPointLabelsFormat("@yPoint");
 
-        # creating chartview for line chart
-        chartview = QChartView(chart)
-        chartview.setRenderHint(QPainter.Antialiasing)
+                Full_Data_List = df.groupby([pd.Grouper(key=Chart[1], freq='H')]).size().reset_index(name='count').values.tolist()
 
-        return chartview
+                data = []
+
+                for i, value in enumerate(Full_Data_List):
+                    if i % int(len(Full_Data_List) / 10) == 0:
+                        data.append(Full_Data_List[i])
+
+                DateFlag = False
+                TimeFlag = False
+
+                for Time, value in data:
+                    xValue = QDateTime()
+
+                    if not Time.date() == datetime.date(1900, 1, 1):
+                        DateFlag = True
+                        xValue.setDate(QDate(Time.date().year, Time.date().month, Time.date().day));
+
+                    if not Time.time() == datetime.time(0, 0):
+                        TimeFlag = True
+                        xValue.setTime(QTime(Time.time().hour, Time.time().minute, Time.time().second));
+
+                    series.append(xValue.toMSecsSinceEpoch(), value);
+
+                chart.addSeries(series)
+
+            # Chart Default Animation
+            chart.setAnimationOptions(QChart.AllAnimations)
+
+            # Chart Default Theme
+            chart.setTheme(QChart.ChartThemeQt)
+
+            # chart Title Font
+            chart.setTitleFont(QFont("Times", 12, QFont.Bold))
+
+            # Chart Axis
+            axisX = QDateTimeAxis()
+            axisX.setTitleText(Chart[2])
+            axisX.setTickCount(5);
+
+            if DateFlag and TimeFlag:
+                axisX.setFormat("dd-MM-yy hh:mm");
+            elif DateFlag:
+                axisX.setFormat("dd-MM-yy");
+            elif TimeFlag:
+                axisX.setFormat("hh:mm:ss");
+
+            chart.createDefaultAxes()
+            chart.setAxisX(axisX, series);
+
+            if DS.DataSourceext == "CSV files (*.csv)":
+                chart.axisY(series).setTitleText(Chart[1])
+            elif DS.DataSourceext == "Tweet":
+                chart.axisY(series).setTitleText("No. of Tweets per hour")
+
+            # Default legends
+            chart.legend().setVisible(True)
+            chart.legend().setAlignment(Qt.AlignBottom)
+
+            # creating chartview for line chart
+            chartview = QChartView(chart)
+            chartview.setRenderHint(QPainter.Antialiasing)
+
+            return chartview
+
+        except Exception as e:
+            print(str(e))
 
     # Data Source Survey Analysis Donut Chart
     def DataSourceSurveyAnalysisDonutChart(self, Chart, DataSourceName):
@@ -12028,26 +12059,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    TextWizSplash = QSplashScreen()
-    TextWizSplash.resize(200, 100)
-    TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
-    TextWizSplash.setPixmap(TextWizSplashPixmap)
-
-    SplahScreenProgressBar = QProgressBar(TextWizSplash)
-    SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
-                            TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
-    SplahScreenProgressBar.setTextVisible(False)
-    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-
-    TextWizSplash.show()
-
-    for i in range(0, 100):
-        SplahScreenProgressBar.setValue(i)
-        t = time.time()
-        while time.time() < t + 0.05:
-            App.processEvents()
-
-    TextWizSplash.close()
+    # TextWizSplash = QSplashScreen()
+    # TextWizSplash.resize(200, 100)
+    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
+    # TextWizSplash.setPixmap(TextWizSplashPixmap)
+    # 
+    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
+    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
+    # SplahScreenProgressBar.setTextVisible(False)
+    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    # 
+    # TextWizSplash.show()
+    # 
+    # for i in range(0, 100):
+    #     SplahScreenProgressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.05:
+    #         App.processEvents()
+    # 
+    # TextWizSplash.close()
 
     TextWizMainwindow = Window()
     TextWizMainwindow.show()

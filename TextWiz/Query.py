@@ -123,7 +123,6 @@ class Query():
             antonyms = []
             i = 0
 
-
             if len(syns) != 0:
                 for syn in syns:
                     if len(syn.lemmas()) != 0:

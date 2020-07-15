@@ -1,5 +1,4 @@
 
-
 import random
 from sklearn.cluster import KMeans
 import pandas as pd

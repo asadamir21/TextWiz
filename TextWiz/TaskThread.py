@@ -80,11 +80,11 @@ class TaskThread(QThread):
                 TopicModellingHTML = dummyQuery.TopicModelling(dummyProgressInfo.DataSource.DataSourcetext, 5)
                 ThreadQueue.put(TopicModellingHTML)
 
-            # *************************** Cases ***************************
-
-            # ************************* Sentiments ************************
 
             # *********************** Visualization ***********************
+            # Create Dashboard
+            elif dummyProgressInfo.ProcessName == "Dashboard":
+                ThreadQueue.put(dummyProgressInfo.DataSource.CreateDashboard())
 
             # Word Cloud
             elif dummyProgressInfo.ProcessName == "Word Cloud":

@@ -2,7 +2,7 @@ from builtins import dict
 
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
 from PIL import Image
 from gensim import *
 from textblob import TextBlob

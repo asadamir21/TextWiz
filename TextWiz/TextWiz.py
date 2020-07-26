@@ -388,6 +388,11 @@ class Window(QMainWindow):
         ToolMenu.addAction(FindSimilarity)
 
         # *************************  VisualizationMenuItem **********************************
+        # Create Dashboard
+        CreateDashboard = QAction('Create Dashboard', self)
+        CreateDashboard.setStatusTip('Create Dashboard')
+        CreateDashboard.triggered.connect(lambda: self.DataSourceCreateDashboardDialog())
+        VisualizationMenu.addAction(CreateDashboard)
 
         # Create Word Cloud Tool
         CreateWordCloudTool = QAction('Create Word Cloud', self)
@@ -6183,6 +6188,141 @@ class Window(QMainWindow):
         ModifiedTime.setText(DS.DataSourceModifiedTime[currentIndex])
         ChangedTime.setText(DS.DataSourceChangeTime[currentIndex])
 
+    # ****************************************************************************
+    # ************************ Data Sources Dashboard ****************************
+    # ****************************************************************************
+
+    # Data Source Create Dashboard
+    def DataSourceCreateDashboardDialog(self):
+        DataSourceCreateDashboardDialog = QDialog()
+        DataSourceCreateDashboardDialog.setWindowTitle("Create Dashboard")
+        DataSourceCreateDashboardDialog.setParent(self)
+        self.QDialogAddProperties(DataSourceCreateDashboardDialog)
+
+        DataSourceCreateDashboardLayout = QVBoxLayout(DataSourceCreateDashboardDialog)
+        DataSourceCreateDashboardLayout.setAlignment(Qt.AlignCenter)
+
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
+        DataSourcelabel.setText("Data Source")
+        DataSourceWidgetLayout.addWidget(DataSourcelabel)
+
+        # Data Source ComboBox
+        DSComboBox = QComboBox()
+        for DS in myFile.DataSourceList:
+            if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
+                DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox)
+
+        DataSourceCreateDashboardLayout.addWidget(DataSourceWidget)
+
+        # *************** Dashboard Button Box *******************
+        DataSourceDashboardbuttonBox = QDialogButtonBox()
+        DataSourceDashboardbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        DataSourceDashboardbuttonBox.button(QDialogButtonBox.Ok).setText('Create')
+
+        if DSComboBox.count() == 0:
+            DataSourceDashboardbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+        DataSourceCreateDashboardLayout.addWidget(DataSourceDashboardbuttonBox)
+
+        DataSourceDashboardbuttonBox.accepted.connect(DataSourceCreateDashboardDialog.accept)
+        DataSourceDashboardbuttonBox.rejected.connect(DataSourceCreateDashboardDialog.reject)
+
+        DataSourceDashboardbuttonBox.accepted.connect(lambda: self.DataSourceCreateDashboard(DSComboBox.currentText()))
+
+        DataSourceCreateDashboardDialog.exec()
+
+    # DataSource Create Dashboard
+    def DataSourceCreateDashboard(self, DataSourceName):
+        try:
+            DataSourceCreateDashboardFlag = False
+            DataSourceCreateDashboardFlag2 = False
+
+            for tabs in myFile.TabList:
+                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Dashboard':
+                    if tabs.tabWidget != None:
+                        DataSourceCreateDashboardFlag = True
+                        break
+                    else:
+                        DataSourceCreateDashboardFlag2 = True
+                        break
+
+            if not DataSourceCreateDashboardFlag:
+                for DS in myFile.DataSourceList:
+                    if DS.DataSourceName == DataSourceName:
+                        ProgressBarWidget = QDialog()
+                        progressBar = QProgressBar(ProgressBarWidget)
+
+                        dummyProgressInfo = ProgressInfo(DataSourceName, "Dashboard")
+                        dummyProgressInfo.CreateDashboard(DS)
+
+                        ThreadQueue.put(dummyProgressInfo)
+
+                        self.myLongTask = TaskThread()
+                        self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                        self.myLongTask.start()
+
+                        self.ProgressBar(ProgressBarWidget, progressBar, "Creating Dashboard")
+
+                        del dummyProgressInfo
+
+                        DashboardHTML = ThreadQueue.get()
+
+                        break
+
+                # Creating New Tab for Entity Relationship
+                DashboardWeb = QWebEngineView()
+                DashboardWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+                DashboardWeb.setHtml(DashboardHTML)
+
+                if DataSourceCreateDashboardFlag2:
+                    tabs.tabWidget = DashboardWeb
+                    if tabs.isActive:
+                        self.tabWidget.addTab(DashboardWeb, tabs.TabName)
+                        if tabs.isCurrentWidget:
+                            self.tabWidget.setCurrentWidget(DashboardWeb)
+                else:
+                    # Adding Entity Relationship Tab to QTabWidget
+                    myFile.TabList.append(Tab("Dashboard", DashboardWeb, DataSourceName))
+                    # Adding Entity Relationship Tab to QTabWidget
+                    self.tabWidget.addTab(DashboardWeb, "Dashboard")
+                    self.tabWidget.setCurrentWidget(DashboardWeb)
+                    myFile.requiredSaved = True
+
+                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+                if len(ItemsWidget) == 0:  # if no Parent Widget
+                    # Adding Parent Query
+                    DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                    DSQueryWidget.setText(0, DataSourceName)
+                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                    DSQueryWidget.setExpanded(True)
+
+                    # Adding Dashboard Query
+                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                    DSNewCaseNode.setText(0, 'Dashboard')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+                else:
+                    for widgets in ItemsWidget:
+                        # Adding Dashboard Query
+                        DSNewCaseNode = QTreeWidgetItem(widgets)
+                        DSNewCaseNode.setText(0, 'Entity Relationship')
+                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+            else:
+                # Adding Dashboard Tab to QTabWidget
+                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+                self.tabWidget.setCurrentWidget(tabs.tabWidget)
+                tabs.setisActive(True)
+                myFile.requiredSaved = True
+
+        except Exception as e:
+            print(str(e))
     # ****************************************************************************
     # ************************ Data Sources Word Cloud ***************************
     # ****************************************************************************
@@ -12046,26 +12186,26 @@ if __name__ == "__main__":
 
     App = QApplication(sys.argv)
 
-    TextWizSplash = QSplashScreen()
-    TextWizSplash.resize(200, 100)
-    TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
-    TextWizSplash.setPixmap(TextWizSplashPixmap)
-
-    SplahScreenProgressBar = QProgressBar(TextWizSplash)
-    SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
-                            TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
-    SplahScreenProgressBar.setTextVisible(False)
-    SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
-
-    TextWizSplash.show()
-
-    for i in range(0, 100):
-        SplahScreenProgressBar.setValue(i)
-        t = time.time()
-        while time.time() < t + 0.05:
-            App.processEvents()
-
-    TextWizSplash.close()
+    # TextWizSplash = QSplashScreen()
+    # TextWizSplash.resize(200, 100)
+    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
+    # TextWizSplash.setPixmap(TextWizSplashPixmap)
+    #
+    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
+    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
+    # SplahScreenProgressBar.setTextVisible(False)
+    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    #
+    # TextWizSplash.show()
+    #
+    # for i in range(0, 100):
+    #     SplahScreenProgressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.05:
+    #         App.processEvents()
+    #
+    # TextWizSplash.close()
 
     TextWizMainwindow = Window()
     TextWizMainwindow.show()

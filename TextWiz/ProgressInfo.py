@@ -41,6 +41,9 @@ class ProgressInfo:
 
     # *********************** Visualization ***********************
 
+    def CreateDashboard(self, DataSource):
+        self.DataSource = DataSource
+
     def CreateWordCloud(self, DataSourcetext, WCBGColor, maxword, maskname):
         self.DataSourcetext = DataSourcetext
         self.WCBGColor = WCBGColor

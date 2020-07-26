@@ -3,8 +3,7 @@ import random
 from sklearn.cluster import KMeans
 import pandas as pd
 from scipy.cluster.hierarchy import ward, dendrogram, linkage
-import sys
-
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from sklearn.feature_extraction.text import TfidfVectorizer
 from DataSource import *
 from Tab import *

@@ -1,18 +1,12 @@
 from builtins import set
 
 import matplotlib
-from dateutil.rrule import weekday
-
 matplotlib.use("Qt5Agg")
+
 import numpy as np
-from numpy import arange, sin, pi
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
 from Query import *
-from pyglet import *
-
 from Cases import *
 from Sentiments import *
 from stat import *
@@ -24,7 +18,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from operator import itemgetter
 
-import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random
+import platform, urllib, requests, cv2, pytesseract, string, re, ntpath, pyglet, os, time, csv, random, base64, io, collections, pycountry
 
 #PDF, Word, Twitter
 import docx2txt, PyPDF2, tweepy, httplib2
@@ -910,4 +904,202 @@ class DataSource():
         ax2.set_xticks(y_pos)
         ax2.set_xticklabels(tuple(objects))
         ax2.set_ylabel('Case Weigthage')
+
+    # Clean Text
+    def clean_text(self):
+        tokens = word_tokenize(self.DataSourcetext)
+        words = [word for word in tokens if word.isalpha()]
+        words = [word for word in tokens if len(word) > 2]
+        words = [each_string.lower() for each_string in words]
+        stop_words = set(stopwords.words('english'))
+        words = [w for w in words if not w in stop_words]
+
+        lem = WordNetLemmatizer()
+        lemmatized_output = ' '.join([lem.lemmatize(w) for w in words])
+        words = word_tokenize(lemmatized_output)
+        return words
+
+    # Create Dashboard
+    def CreateDashboard(self):
+        # ******************** Word Cloud ************************
+        WordCloudByteArr = io.BytesIO()
+        WordCloud(background_color="white",
+                  max_words=100,
+                  mask=np.array(Image.open("Word Cloud Maskes/cloud.png")),
+                  stopwords=set(STOPWORDS)).generate(self.DataSourcetext.lower()).to_image().save(WordCloudByteArr, format='PNG')
+
+        # ****************** Word Frequency ************************
+        words = self.clean_text()
+        count_of_words = collections.Counter(words)
+        WordFrequencyDataFrame = pd.DataFrame(count_of_words.most_common(), columns=['Word', 'Count'])
+        WordFrequencyDataFrame['Weightage'] = WordFrequencyDataFrame['Count'] / sum(WordFrequencyDataFrame['Count'])
+
+        # ********************** Bar Chart ************************
+        words = WordFrequencyDataFrame['Word'].head(10)
+        count = WordFrequencyDataFrame['Count'].head(10)
+        plt.barh(words[0:10], count[0:10])
+        plt.xlabel('Count')
+        plt.ylabel('Words')
+        plt.legend('Count')
+
+        BarChartImage = io.BytesIO()
+        plt.savefig(BarChartImage, format='png')
+        BarChartImage.seek(0)  # rewind the data
+
+        # ************************ POS ****************************
+        tags = nltk.pos_tag(WordFrequencyDataFrame['Word'])
+
+        nouns = 0
+        verbs = 0
+        adj = 0
+
+        for word, tag in tags:
+
+            WordFrequencyDataFrame['POS tags'] = tag
+
+            if tag == "NN" or tag == 'NNS':
+                nouns += 1
+            elif tag == "VB" or tag == 'VBD':
+                verbs += 1
+            elif tag == "JJ" or tag == 'JJR' or tag == 'JJS':
+                adj += 1
+
+        # ****************** Tone and Context ************************
+        tone = ''
+        context = ''
+
+        try:
+            blob = TextBlob(self.DataSourcetext)
+
+            if blob.sentiment.polarity > 0.5:
+                tone = 'Positive'
+            elif blob.sentiment.polarity < -0.5:
+                tone = 'Negative'
+            else:
+                tone = 'Neutral'
+
+            if blob.sentiment.polarity >= 0.5:
+                context = 'Opinion (subjective)'
+            elif blob.sentiment.polarity < 0.5:
+                context = 'Factual Information (objective)'
+
+        except:
+            tone = 'Cannot determine tone'
+            context = 'Cannot determine context'
+
+        # ******************* Language ************************
+        try:
+            language = pycountry.languages.get(alpha_2=TextBlob(self.DataSourcetext).detect_language()).name
+        except:
+            language = 'Unable to detect'
+
+        # ******************** Summary ************************
+        try:
+            summary = summarization.summarizer.summarize(self.DataSourcetext)
+        except:
+            summary = "Sorry, cannot generate summary of this text :("
+
+        return '''
+                   <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+                    <title>TextWiz</title>
+
+                    <style>
+                      /* Create two equal columns that floats next to each other */
+
+                    .center {
+                      display: block;
+                      margin-left: auto;
+                      margin-right: auto;
+                      width: 50%;
+                    }
+
+                    .column {
+                      float: left;
+                      width: 50%;
+                      padding: 10px;
+                    }
+                    .dark-mode {
+                      background-color: black;
+                      color: white;
+                    }
+
+                    /* Clear floats after the columns */
+                    .row:after {
+                      content: "";
+                      display: table;
+                      clear: both;
+                    }
+
+                    #img-container {
+                          text-align: center;
+                    }
+                    </style>			   
+                </head>
+
+                <body>
+                    <div style="margin: 50px;">
+                        <div class="row">
+                            <div class="column" style="overflow:scroll; background-color:#bbb;  height:400px; width: 33%;">
+                                <h2>Preview Text</h2>
+                                <p value ="" style="white-space: pre-line;">''' + self.DataSourcetext + '''</p>
+                            </div>
+
+                            <div id= "img-container"class="column" style="background-color:#ccc; height: 400px; width: 34%;">
+                                <h2>Word Cloud</h2>
+                                <img src="data:image/png;base64, ''' + base64.b64encode(WordCloudByteArr.getvalue()).decode('utf-8') + '''" height="300px", width="300px" text-align = "center"/>
+                            </div>
+                            <div class="column" style="background-color:#bbb; height: 400px; width: 33%;">
+                              <h2  align = "center">Document Statistics</h2><br>
+                              <p>Total Words: <b>''' + str(len(word_tokenize(self.DataSourcetext))) + '''</b> </p>
+                              <p>Total Sentences: <b>''' + str(len(sent_tokenize(self.DataSourcetext))) + '''</b> </p>
+
+                              <p><b>POS tags:</b> </p>
+                              <ul>
+                                <li>Number of Nouns: <b>''' + str(nouns) + '''</b></li>
+                                <li>Number of Verbs: <b>''' + str(verbs) + '''</b></li>
+                                <li>Number of Adjectives: <b>''' + str(adj) + '''</b></li>
+                              </ul>
+
+                              <p>Document Overall Tone: <b>''' + tone + '''</b> </p>
+                              <p>Document Context: <b>''' + context + '''</b> </p>
+                              <p>Document Language: <b>''' + language + '''</b> </p>
+                            </div>					  
+                        </div>
+
+                        <div class="row">
+                            <!-- <div class="column" style="background-color:#ccc; width: 100%; height: 500px;"> -->
+                            <!-- <h2 align = "center">Word Frequency Distribution</h2> -->
+
+                            <div class="column" style="background-color:#ddd; height: 500px; overflow:scroll;">
+                                <h3 align = "center">Word Frequency Table</h3><br>
+                                ''' + WordFrequencyDataFrame.to_html(classes = 'table table-hover', justify = 'justify-all', index_names = False) + '''
+                            </div>
+
+                            <div class="column" style="background-color:#ddd; height: 500px">
+                                <h3 align = "center">Top 10 Words</h3>
+                                <img src="data:image/png;base64,''' + base64.b64encode(BarChartImage.read()).decode('utf-8') + '''" class="center" style=" width: 80%; height: 80%;"/>
+                            </div>
+                        <!-- </div> -->
+                        </div>
+
+                        <div class="row">				  
+                            <div class="column" style="background-color:#eee; height: 400px; overflow:scroll; width: 100%;">
+                            <h2 align = "center">Document Summary</h2>
+                            <p style="white-space: pre-line;">''' + summary + '''</p>
+                        </div>				   				 
+                    </div>
+                </div>
+
+                <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+                <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script> 
+            </body>
+
+            '''
 

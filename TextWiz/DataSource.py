@@ -934,9 +934,11 @@ class DataSource():
         WordFrequencyDataFrame = pd.DataFrame(count_of_words.most_common(), columns=['Word', 'Count'])
         WordFrequencyDataFrame['Weightage'] = WordFrequencyDataFrame['Count'] / sum(WordFrequencyDataFrame['Count'])
 
+        WordFrequencyDataFrameCopied = WordFrequencyDataFrame.copy()
+
         # ********************** Bar Chart ************************
-        words = WordFrequencyDataFrame['Word'].head(10)
-        count = WordFrequencyDataFrame['Count'].head(10)
+        words = WordFrequencyDataFrameCopied['Word'].head(10)
+        count = WordFrequencyDataFrameCopied['Count'].head(10)
         plt.barh(words[0:10], count[0:10])
         plt.xlabel('Count')
         plt.ylabel('Words')
@@ -947,15 +949,14 @@ class DataSource():
         BarChartImage.seek(0)  # rewind the data
 
         # ************************ POS ****************************
-        tags = nltk.pos_tag(WordFrequencyDataFrame['Word'])
+        tags = nltk.pos_tag(WordFrequencyDataFrameCopied['Word'])
 
         nouns = 0
         verbs = 0
         adj = 0
 
         for word, tag in tags:
-
-            WordFrequencyDataFrame['POS tags'] = tag
+            WordFrequencyDataFrameCopied['POS tags'] = tag
 
             if tag == "NN" or tag == 'NNS':
                 nouns += 1

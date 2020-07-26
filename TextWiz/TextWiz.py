@@ -6239,90 +6239,87 @@ class Window(QMainWindow):
 
     # DataSource Create Dashboard
     def DataSourceCreateDashboard(self, DataSourceName):
-        try:
-            DataSourceCreateDashboardFlag = False
-            DataSourceCreateDashboardFlag2 = False
+        DataSourceCreateDashboardFlag = False
+        DataSourceCreateDashboardFlag2 = False
 
-            for tabs in myFile.TabList:
-                if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Dashboard':
-                    if tabs.tabWidget != None:
-                        DataSourceCreateDashboardFlag = True
-                        break
-                    else:
-                        DataSourceCreateDashboardFlag2 = True
-                        break
-
-            if not DataSourceCreateDashboardFlag:
-                for DS in myFile.DataSourceList:
-                    if DS.DataSourceName == DataSourceName:
-                        ProgressBarWidget = QDialog()
-                        progressBar = QProgressBar(ProgressBarWidget)
-
-                        dummyProgressInfo = ProgressInfo(DataSourceName, "Dashboard")
-                        dummyProgressInfo.CreateDashboard(DS)
-
-                        ThreadQueue.put(dummyProgressInfo)
-
-                        self.myLongTask = TaskThread()
-                        self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
-                        self.myLongTask.start()
-
-                        self.ProgressBar(ProgressBarWidget, progressBar, "Creating Dashboard")
-
-                        del dummyProgressInfo
-
-                        DashboardHTML = ThreadQueue.get()
-
-                        break
-
-                # Creating New Tab for Entity Relationship
-                DashboardWeb = QWebEngineView()
-                DashboardWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-                DashboardWeb.setHtml(DashboardHTML)
-
-                if DataSourceCreateDashboardFlag2:
-                    tabs.tabWidget = DashboardWeb
-                    if tabs.isActive:
-                        self.tabWidget.addTab(DashboardWeb, tabs.TabName)
-                        if tabs.isCurrentWidget:
-                            self.tabWidget.setCurrentWidget(DashboardWeb)
+        for tabs in myFile.TabList:
+            if tabs.DataSourceName == DataSourceName and tabs.TabName == 'Dashboard':
+                if tabs.tabWidget != None:
+                    DataSourceCreateDashboardFlag = True
+                    break
                 else:
-                    # Adding Entity Relationship Tab to QTabWidget
-                    myFile.TabList.append(Tab("Dashboard", DashboardWeb, DataSourceName))
-                    # Adding Entity Relationship Tab to QTabWidget
-                    self.tabWidget.addTab(DashboardWeb, "Dashboard")
-                    self.tabWidget.setCurrentWidget(DashboardWeb)
-                    myFile.requiredSaved = True
+                    DataSourceCreateDashboardFlag2 = True
+                    break
 
-                ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+        if not DataSourceCreateDashboardFlag:
+            for DS in myFile.DataSourceList:
+                if DS.DataSourceName == DataSourceName:
+                    ProgressBarWidget = QDialog()
+                    progressBar = QProgressBar(ProgressBarWidget)
 
-                if len(ItemsWidget) == 0:  # if no Parent Widget
-                    # Adding Parent Query
-                    DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
-                    DSQueryWidget.setText(0, DataSourceName)
-                    DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
-                    DSQueryWidget.setExpanded(True)
+                    dummyProgressInfo = ProgressInfo(DataSourceName, "Dashboard")
+                    dummyProgressInfo.CreateDashboard(DS)
 
-                    # Adding Dashboard Query
-                    DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
-                    DSNewCaseNode.setText(0, 'Dashboard')
-                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                    ThreadQueue.put(dummyProgressInfo)
 
-                else:
-                    for widgets in ItemsWidget:
-                        # Adding Dashboard Query
-                        DSNewCaseNode = QTreeWidgetItem(widgets)
-                        DSNewCaseNode.setText(0, 'Entity Relationship')
-                        DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+                    self.myLongTask = TaskThread()
+                    self.myLongTask.taskFinished.connect(lambda: ProgressBarWidget.close())
+                    self.myLongTask.start()
+
+                    self.ProgressBar(ProgressBarWidget, progressBar, "Creating Dashboard")
+
+                    del dummyProgressInfo
+
+                    DashboardHTML = ThreadQueue.get()
+
+                    break
+
+            # Creating New Tab for Entity Relationship
+            DashboardWeb = QWebEngineView()
+            DashboardWeb.setContextMenuPolicy(Qt.PreventContextMenu)
+            DashboardWeb.setHtml(DashboardHTML)
+
+            if DataSourceCreateDashboardFlag2:
+                tabs.tabWidget = DashboardWeb
+                if tabs.isActive:
+                    self.tabWidget.addTab(DashboardWeb, tabs.TabName)
+                    if tabs.isCurrentWidget:
+                        self.tabWidget.setCurrentWidget(DashboardWeb)
             else:
-                # Adding Dashboard Tab to QTabWidget
-                self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-                self.tabWidget.setCurrentWidget(tabs.tabWidget)
-                tabs.setisActive(True)
+                # Adding Entity Relationship Tab to QTabWidget
+                myFile.TabList.append(Tab("Dashboard", DashboardWeb, DataSourceName))
+                # Adding Entity Relationship Tab to QTabWidget
+                self.tabWidget.addTab(DashboardWeb, "Dashboard")
+                self.tabWidget.setCurrentWidget(DashboardWeb)
                 myFile.requiredSaved = True
 
-        except Exception as e:
-            print(str(e))
+            ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
+
+            if len(ItemsWidget) == 0:  # if no Parent Widget
+                # Adding Parent Query
+                DSQueryWidget = QTreeWidgetItem(self.VisualizationTreeWidget)
+                DSQueryWidget.setText(0, DataSourceName)
+                DSQueryWidget.setToolTip(0, DSQueryWidget.text(0))
+                DSQueryWidget.setExpanded(True)
+
+                # Adding Dashboard Query
+                DSNewCaseNode = QTreeWidgetItem(DSQueryWidget)
+                DSNewCaseNode.setText(0, 'Dashboard')
+                DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+
+            else:
+                for widgets in ItemsWidget:
+                    # Adding Dashboard Query
+                    DSNewCaseNode = QTreeWidgetItem(widgets)
+                    DSNewCaseNode.setText(0, 'Entity Relationship')
+                    DSNewCaseNode.setToolTip(0, DSNewCaseNode.text(0))
+        else:
+            # Adding Dashboard Tab to QTabWidget
+            self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
+            self.tabWidget.setCurrentWidget(tabs.tabWidget)
+            tabs.setisActive(True)
+            myFile.requiredSaved = True
+
     # ****************************************************************************
     # ************************ Data Sources Word Cloud ***************************
     # ****************************************************************************
@@ -11209,19 +11206,18 @@ class Window(QMainWindow):
 
     # License Window
     def AboutWindow(self):
-        QMessageBox().about(self,
-                            "About TextWiz",
+        QMessageBox().about(self, "About TextWiz",
                             '''
-                            <h2 style="text-align:center">TextWiz For Windows</h2>
-                            <br>
-                            <p style="text-align:center;font-size:40px">Version 1.0.0 (32 Bit)</p>
-                            <br>
-                            <p style="text-align:center;font-size:20px">Edition: Community</p>
-                            <br>
-                            <p style="text-align:center;font-size:40px">Copyright @ 1999-2015 QRS International</p>
-                            <br>
-                            <p style="text-align:center;font-size:40px">Ptv Ltd. All rights reserved</p>
-                            <a href='https://www.google.com/'>TextWiz</a>
+                                <h2 style="text-align:center">TextWiz For Windows</h2>
+                                <br>
+                                <h4 style="text-align:center">Version 1.0.0 (32 Bit)</h4>
+                                <br>
+                                <h5 style="text-align:center">Edition: Community</h5>
+                                <br>
+                                <p style="text-align:center;">Copyright @2020 Asad Amir</p>
+                                <br>
+                                <p style="text-align:center;">Ptv Ltd. All rights reserved</p>
+                                <a href='https://mfarmalkhan.github.io/TextWiz_Website/'>TextWiz</a>
                             '''
                             );
 

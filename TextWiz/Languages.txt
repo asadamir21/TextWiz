@@ -9,116 +9,97 @@ be, Belarusian
 bn, Bengali
 bs, Bosnian
 bg, Bulgarian
-my, Burmese
-ca, Catalan/ Valencian
-cs, Czech
+ca, Catalan
 zh, Chinese
-kw, Cornish
 co, Corsican
-cy, Welsh
+hr, Croatian
 cs, Czech
 da, Danish
-de, German
-nl, Dutch/ Flemish
-dz, Dzongkha
-el, Greek Modern 1453-
+nl, Dutch
 en, English
 eo, Esperanto
 et, Estonian
-eu, Basque
-fa, Persian
 fi, Finnish
 fr, French
-fr, French
-fy, Western Frisian
-Ga, Georgian
-gd, Gaelic/ Scottish Gaelic
-ga, Irish
+fy, Frisian
 gl, Galician
-el, Greek Modern 1453-
+ka, Georgian
+de, German
+el, Greek
 gu, Gujarati
-ht, Haitian/ Haitian Creole
+ht, Haitian Creole
 ha, Hausa
 he, Hebrew
 hi, Hindi
-hr, Croatian
 hu, Hungarian
-hy, Armenian
+is, Icelandic
 ig, Igbo
-is, Icelandic
 id, Indonesian
-is, Icelandic
+ga, Irish
 it, Italian
-jv, Javanese
 ja, Japanese
+jv, Javanese
 kn, Kannada
-ka, Georgian
 kk, Kazakh
-km, Central Khmer
-ky, Kirghiz/ Kyrgyz
+km, Khmer
+rw, Kinyarwanda
 ko, Korean
-kj, Kuanyama/ Kwanyama
 ku, Kurdish
+ky, Kyrgyz
 lo, Lao
 la, Latin
 lv, Latvian
 lt, Lithuanian
-lb, Luxembourgish/ Letzeburgesch
-mk, Macedonian
-ml, Malayalam
-mi, Maori
-mr, Marathi
-ms, Malay
-Mi, Micmac
+lb, Luxembourgish
 mk, Macedonian
 mg, Malagasy
-mt, Maltese
-mn, Mongolian
-mi, Maori
 ms, Malay
-my, Burmese
+ml, Malayalam
+mt, Maltese
+mi, Maori
+mr, Marathi
+mn, Mongolian
+my, Myanmar (Burmese)
 ne, Nepali
-nl, Dutch/ Flemish
-nn, Norwegian Nynorsk/ Nynorsk Norwegian
-nb, Bokmål Norwegian/ Norwegian Bokmål
 no, Norwegian
-pa, Panjabi/ Punjabi
+ny, Nyanja (Chichewa)
+or, Odia (Oriya)
+ps, Pashto
 fa, Persian
 pl, Polish
 pt, Portuguese
-ps, Pushto/ Pashto
-ro, Romanian/ Moldavian/ Moldovan
-ro, Romanian/ Moldavian/ Moldovan
+pa, Punjabi
+ro, Romanian
 ru, Russian
-si, Sinhala/ Sinhalese
-sk, Slovak
-sk, Slovak
-sl, Slovenian
 sm, Samoan
+gd, Scots Gaelic
+sr, Serbian
+st, Sesotho
 sn, Shona
 sd, Sindhi
+si, Sinhala (Sinhalese)
+sk, Slovak
+sl, Slovenian
 so, Somali
-st, Sotho Southern
-es, Spanish/ Castilian
-sq, Albanian
-sr, Serbian
+es, Spanish
 su, Sundanese
 sw, Swahili
 sv, Swedish
-ty, Tahitian
-ta, Tamil
-te, Telugu
+tl, Tagalog (Filipino)
 tg, Tajik
-tl, Tagalog
+ta, Tamil
+tt, Tatar
+te, Telugu
 th, Thai
 tr, Turkish
+tk, Turkmen
 uk, Ukrainian
 ur, Urdu
+ug, Uyghur
 uz, Uzbek
 vi, Vietnamese
 cy, Welsh
 xh, Xhosa
 yi, Yiddish
 yo, Yoruba
-zh, Chinese
 zu, Zulu

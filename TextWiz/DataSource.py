@@ -417,6 +417,7 @@ class DataSource():
                     self.CSVData = pd.read_csv(self.DataSourcePath)
                 except UnicodeDecodeError:
                     self.CSVData = pd.read_csv(self.DataSourcePath, engine = 'python')
+
                 self.CSVHeaderLabel = self.CSVData.columns.tolist()
 
             else:
@@ -424,6 +425,7 @@ class DataSource():
                     self.CSVData = pd.read_csv(self.DataSourcePath, header=None)
                 except UnicodeDecodeError:
                     self.CSVData = pd.read_csv(self.DataSourcePath, header=None, engine = 'python')
+
 
                 for i in range(len(self.CSVData.columns)):
                     self.CSVHeaderLabel.append("Column " + str(i + 1))
@@ -437,7 +439,6 @@ class DataSource():
                 except:
                     pass
 
-
             self.DataSourceLoadError = False
             self.DataSourceHTTPError = False
 
@@ -445,7 +446,11 @@ class DataSource():
             self.DataSourceHTTPError = True
             self.DataSourceLoadError = False
 
-        except Exception as e:
+        except FileNotFoundError:
+            self.DataSourceHTTPError = True
+            self.DataSourceLoadError = False
+
+        except:
             self.DataSourceHTTPError = False
             self.DataSourceLoadError = True
 
@@ -512,10 +517,10 @@ class DataSource():
         try:
             self.DataSourceHashtag = Hashtag
 
-            consumer_key = 'Enter Consumer Key'
-            consumer_secret = 'Enter Consumer Secret'
-            access_token = 'Enter Access Token'
-            access_token_secret = 'Enter Token Secret'
+            consumer_key = 'xkl0HmSPUfTDKmsonxMh3mh5N'
+            consumer_secret = 'KsponZZYZ5Uy5WrUAbfnm56qt2PqVlr8VteTwb1yHZkrkSDyvM'
+            access_token = '1115595365380550659-BALvCd9jTihhHT4HDgrA5B30GysyiP'
+            access_token_secret = '1gk09xDAcQ83gU02SaDZANlOfgzry2PuPt2iBGe6ck9su'
 
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
             auth.set_access_token(access_token, access_token_secret)
@@ -732,7 +737,7 @@ class DataSource():
 
         HTMLData = HTMLData + "]"
 
-        EntityHTML = '''
+        return '''
                      <html>
                           <head>
                             <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -742,19 +747,14 @@ class DataSource():
 
                               function drawChart() {
                                 var data = google.visualization.arrayToDataTable(
-                     '''
-
-        EntityHTML = EntityHTML + HTMLData
-        EntityHTML = EntityHTML + '''
+                     ''' + HTMLData + '''
                                             );
 
                                             var options = {
                                               wordtree: {
                                                 format: 'implicit',
                                                 word: 
-                                   '''
-        EntityHTML = EntityHTML + "'" + word + "'"
-        EntityHTML = EntityHTML +     '''         
+                                   '''  + "'" + word + "'"  +     '''         
                                             ,
                                                 type: 'double',
                                               }
@@ -770,7 +770,6 @@ class DataSource():
                                       </body>
                                  </html>   
                                  '''
-        return EntityHTML
 
     # Find Word with Maximum Frequency
     def FindWordWithMaxFrequency(self):
@@ -819,48 +818,6 @@ class DataSource():
         ax1.legend(labels, loc="upper left")
         ax1.axis('equal')
 
-        # data = {
-        #     "Positive": (self.PositiveSentimentCount, QColor("green")),
-        #     "Neutral": (self.NeutralSentimentCount, QColor("yellow")),
-        #     "Negative": (self.NegativeSentimentCount, QColor("red")),
-        # }
-        #
-        # series = QPieSeries()
-        #
-        # series.setLabelsVisible(True)
-        # series.setLabelsPosition(QPieSlice.LabelInsideHorizontal)
-        # series.setLabelsVisible(True)
-        #
-        # _sliceList = []
-        #
-        # for name, (value, color) in data.items():
-        #     _slice = series.append(name, value)
-        #     _slice.setBrush(color)
-        #     _slice.setLabelVisible(False)
-        #     _slice.setLabelPosition(QPieSlice.LabelInsideHorizontal)
-        #     _slice.setLabelFont(QFont("Times", 8, QFont.Bold))
-        #     _sliceList.append(_slice)
-        #
-        # for _slice in _sliceList:
-        #     _slice.setLabel(_slice.label() + " " + str(round(100 * _slice.percentage(), 2)) + "%")
-        #
-        # chart = QChart()
-        # chart.setAnimationOptions(QChart.AllAnimations)
-        #
-        # # chart.setTheme(QChart.ChartThemeBlueNcs)
-        # # chart.setTheme(QChart.ChartThemeHighContrast)
-        # # chart.setTheme(QChart.ChartThemeBlueIcy)
-        # chart.setTheme(QChart.ChartThemeQt)
-        #
-        # chart.addSeries(series)
-        #
-        # chart.legend().setVisible(True)
-        # chart.legend().setAlignment(Qt.AlignRight)
-        # chart.legend().setFont(QFont("Times", 10))
-        #
-        # self.chartview = QChartView(chart)
-        # self.chartview.setRenderHint(QPainter.Antialiasing)
-
         # Bar Chart
         self.BarSentimentFigure = plt.figure(figsize=(10, 5))
         ax2 = self.BarSentimentFigure.add_subplot(111)
@@ -890,14 +847,6 @@ class DataSource():
                     totalweightage += casetext[3]
                 objects.append(cases.CaseTopic)
                 performance.append(totalweightage)
-            # else:
-            #     totalweightage = 0
-            #     for cases2 in self.CasesList:
-            #         if cases == cases2.ParentCase:
-            #             for casetext in cases2.TopicCases:
-            #                 totalweightage += casetext[3]
-            #     objects.append(cases.CaseTopic)
-            #     performance.append(totalweightage)
 
         y_pos = np.arange(len(objects))
         ax2.bar(y_pos, performance, align='center', alpha=0.5, color=np.random.rand(len(objects), 3))

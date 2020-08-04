@@ -45,27 +45,6 @@ class Window(QMainWindow):
         super().__init__()
         self.title = "TextWiz"
 
-        if WindowPlatform:
-            from win32api import GetMonitorInfo, MonitorFromPoint
-            Monitor_Resolution_Info = GetMonitorInfo(MonitorFromPoint((0, 0)))
-            self.width = Monitor_Resolution_Info.get("Work")[2]
-            self.height = Monitor_Resolution_Info.get("Work")[3]
-
-        elif LinuxPlatform:
-            import gi
-            gi.require_version('Gtk', '3.0')
-            gi.require_version('Gtk', '3.0')
-
-            from gi.repository import Gdk, Gtk, GdkX11
-
-            display = Gdk.Display().get_default()
-            for i in range(display.get_n_monitors()):
-                monitor = display.get_monitor(i)
-                w_area = monitor.get_workarea()
-
-                self.width = w_area.width
-                self.height = w_area.height
-
         self.settings = QSettings('TextWiz', 'TextWiz')
 
         # Retrieving Theme from settings
@@ -99,15 +78,14 @@ class Window(QMainWindow):
 
         for row in coordinatecsvreader:
             self.Coordinates.append([row[0], row[1], row[2]])
-
         self.initWindows()
 
     # Initiate Windows
     def initWindows(self):
         self.setWindowIcon(QIcon(WindowTitleLogo))
         self.setWindowTitle(self.title)
-        self.setGeometry(0, 0, self.width, self.height)
-        self.setMinimumSize(self.width/2, self.height/2)
+        self.resize(QApplication.desktop().width(), QApplication.desktop().height())
+        self.setMinimumSize(QApplication.desktop().width()/2, QApplication.desktop().height()/2)
         self.showMaximized()
 
         # *****************************  ToolBar ******************************************
@@ -442,27 +420,17 @@ class Window(QMainWindow):
         AboutButton.triggered.connect(self.AboutWindow)
         helpMenu.addAction(AboutButton)
 
-
-        # ***************************Central WorkSpace***************************
-        self.sizePolicy = QSizePolicy()
-        self.sizePolicy.setVerticalPolicy(QSizePolicy.Minimum)
-        self.sizePolicy.setHorizontalPolicy(QSizePolicy.Minimum)
-        self.sizePolicy.setHeightForWidth(True)
-
+        # ************************** Central WorkSpace **************************
         self.centralwidget = QWidget(self)
-        self.centralwidget.setSizePolicy(self.sizePolicy)
+        self.centralwidgetLayout = QHBoxLayout(self.centralwidget)
 
+        # ****************************** Left Pane *****************************
 
         self.verticalLayoutWidget = QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-
         self.verticalLayout = QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 
-        # *******************************Left Pane******************************
-
-        #DataSource Widget
+        #  ************* DataSource Widget *************
         self.DataSourceLabel = QLabel()
         self.DataSourceLabel.setText("Data Sources")
         self.DataSourceLabel.setAlignment(Qt.AlignCenter)
@@ -475,7 +443,7 @@ class Window(QMainWindow):
         self.DataSourceTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.DataSourceTreeWidget.customContextMenuRequested.connect(lambda: self.FindDataSourceTreeWidgetContextMenu(QContextMenuEvent))
 
-        #DataSource Widget Item
+        # ************* DataSource Widget Item *************
         self.wordTreeWidget = QTreeWidgetItem(self.DataSourceTreeWidget)
         self.wordTreeWidget.setText(0, "Word" + "(" + str(self.wordTreeWidget.childCount()) + ")")
         self.wordTreeWidget.setHidden(True)
@@ -517,7 +485,7 @@ class Window(QMainWindow):
         self.YoutubeTreeWidget.setHidden(True)
         self.verticalLayout.addWidget(self.DataSourceTreeWidget)
 
-        # Query Widget
+        # ************* Query Widget ******************
         self.QueryLabel = QLabel()
         self.QueryLabel.setText("Query")
         self.QueryLabel.setAlignment(Qt.AlignCenter)
@@ -533,7 +501,7 @@ class Window(QMainWindow):
 
         self.verticalLayout.addWidget(self.QueryTreeWidget)
 
-        # Cases Widget
+        # ************* Cases Widget *************
         self.CasesLabel = QLabel()
         self.CasesLabel.setText("Cases")
         self.CasesLabel.setAlignment(Qt.AlignCenter)
@@ -547,7 +515,7 @@ class Window(QMainWindow):
         self.CasesTreeWidget.customContextMenuRequested.connect(lambda: self.FindCasesTreeWidgetContextMenu(QContextMenuEvent))
         self.verticalLayout.addWidget(self.CasesTreeWidget)
 
-        # Sentiment Widget
+        # *************  Sentiment Widget *************
         self.SentimentLabel = QLabel()
         self.SentimentLabel.setText("Sentiments")
         self.SentimentLabel.setAlignment(Qt.AlignCenter)
@@ -562,7 +530,7 @@ class Window(QMainWindow):
 
         self.verticalLayout.addWidget(self.SentimentTreeWidget)
 
-        # Visualiztion Widget
+        # *************  Visualiztion Widget *************
         self.VisualizationLabel = QLabel()
         self.VisualizationLabel.setText("Visualization")
         self.VisualizationLabel.setAlignment(Qt.AlignCenter)
@@ -575,36 +543,18 @@ class Window(QMainWindow):
         self.VisualizationTreeWidget.itemDoubleClicked.connect(self.VisualizationDoubleClickHandler)
         self.VisualizationTreeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.VisualizationTreeWidget.customContextMenuRequested.connect(lambda: self.FindVisualizationTreeWidgetContextMenu(QContextMenuEvent))
-
         self.verticalLayout.addWidget(self.VisualizationTreeWidget)
 
-        # ********************************** Right Tab Widget *******************************
 
-        # Windows Title Bar Size
-        if WindowPlatform:
-            import win32gui
-            rect = win32gui.GetWindowRect(self.winId())
-            clientRect = win32gui.GetClientRect(self.winId())
-            windowOffset = math.floor(((rect[2] - rect[0]) - clientRect[2]) / 2)
-            titleOffset = ((rect[3] - rect[1]) - clientRect[3]) - windowOffset
-        elif LinuxPlatform:
-            titleOffset = 0
-        elif MacPlatform:
-            self.setUnifiedTitleAndToolBarOnMac(True)
-            titleOffset = 0
+        self.centralwidgetLayout.addWidget(self.verticalLayoutWidget, 125)
 
-        self.verticalLayoutWidget.setGeometry(0, 0,
-                                              self.width / 8,
-                                              self.height - titleOffset - self.menuBar().height() - self.toolbar.height() - self.statusBar().height())
+        # ********************** Right Tab Widget ************************
 
-        self.horizontalLayoutWidget = QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setSizePolicy(self.sizePolicy)
-
+        self.horizontalLayoutWidget = QWidget()
         self.horizontalLayout = QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
 
         self.tabWidget = QTabWidget()
-        self.tabWidget.setSizePolicy(self.sizePolicy)
         self.tabWidget.setTabsClosable(True)
         self.tabWidget.setMovable(True)
         self.tabWidget.setElideMode(Qt.ElideRight)
@@ -612,12 +562,10 @@ class Window(QMainWindow):
         self.tabWidget.setUsesScrollButtons(True)
         self.tabWidget.tabCloseRequested.connect(self.tabCloseHandler)
 
-        self.horizontalLayoutWidget.setGeometry(self.verticalLayoutWidget.width(),
-                                                0,
-                                                self.width - self.verticalLayoutWidget.width(),
-                                                self.verticalLayoutWidget.height())
-
         self.horizontalLayout.addWidget(self.tabWidget)
+
+        self.centralwidgetLayout.addWidget(self.tabWidget, 875)
+
         self.tabBoxHeight = self.tabWidget.tabBar().geometry().height()
         self.setCentralWidget(self.centralwidget)
 
@@ -689,49 +637,42 @@ class Window(QMainWindow):
     def ChangeThemeDialog(self):
         ChangeThemeDialog = QDialog()
         ChangeThemeDialog.setWindowTitle("Change Theme Dialog")
-        ChangeThemeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                       self.height / 10)
+        ChangeThemeDialog.setFixedWidth(QApplication.desktop().width()*0.25)
+        ChangeThemeDialog.setFixedHeight(QApplication.desktop().height()*0.1)
         ChangeThemeDialog.setParent(self)
         ChangeThemeDialog.setWindowFlags(Qt.WindowCloseButtonHint)
         ChangeThemeDialog.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
-        # Theme Label
-        Themelabel = QLabel(ChangeThemeDialog)
-        Themelabel.setGeometry(ChangeThemeDialog.width() * 0.125,
-                               ChangeThemeDialog.height() * 0.2,
-                               ChangeThemeDialog.width() / 4,
-                               ChangeThemeDialog.height() * 0.1)
+        ChangeThemeDialogLayout = QVBoxLayout(ChangeThemeDialog)
+        ChangeThemeDialogLayout.setAlignment(Qt.AlignCenter)
+        ChangeThemeDialogLayout.setSpacing(20)
 
+        # ************* Theme ***************
+        ThemeWidget = QWidget()
+        ThemeWidgetLayout = QHBoxLayout(ThemeWidget)
+
+        # Theme Label
+        Themelabel = QLabel()
         Themelabel.setText("Theme")
-        Themelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(Themelabel)
+        Themelabel.setAlignment(Qt.AlignCenter)
+        ThemeWidgetLayout.addWidget(Themelabel, 30)
 
         # Data Source ComboBox
-        ThemeComboBox = QComboBox(ChangeThemeDialog)
-        ThemeComboBox.setGeometry(ChangeThemeDialog.width() * 0.4,
-                                  ChangeThemeDialog.height() * 0.2,
-                                  ChangeThemeDialog.width() / 2,
-                                  ChangeThemeDialog.height() / 10)
-
+        ThemeComboBox = QComboBox()
         ThemeComboBox.addItem('Light')
         ThemeComboBox.addItem('Dark')
         ThemeComboBox.addItem('DarkOrange')
-
         ThemeComboBox.setCurrentText(self.theme)
+        ThemeWidgetLayout.addWidget(ThemeComboBox, 70)
 
-        self.LineEditSizeAdjustment(ThemeComboBox)
+        ChangeThemeDialogLayout.addWidget(ThemeWidget)
 
-        # Change Theme Button Box
-        ChangeThemebuttonBox = QDialogButtonBox(ChangeThemeDialog)
-        ChangeThemebuttonBox.setGeometry(ChangeThemeDialog.width() * 0.125,
-                                         ChangeThemeDialog.height() * 0.7,
-                                         ChangeThemeDialog.width() * 3 / 4,
-                                         ChangeThemeDialog.height() / 5)
+        # *************** Change Theme Button Box ****************
+        ChangeThemebuttonBox = QDialogButtonBox()
         ChangeThemebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         ChangeThemebuttonBox.button(QDialogButtonBox.Ok).setText('Change')
 
-
-        self.LineEditSizeAdjustment(ChangeThemebuttonBox)
+        ChangeThemeDialogLayout.addWidget(ChangeThemebuttonBox)
 
         ChangeThemebuttonBox.accepted.connect(ChangeThemeDialog.accept)
         ChangeThemebuttonBox.rejected.connect(ChangeThemeDialog.reject)
@@ -781,31 +722,16 @@ class Window(QMainWindow):
                 DataSourceSimilarityTabFlag3 = True
 
         if not DataSourceSimilarityTabFlag:
-            # Creating New Tab for Data Sources Similarity
-            DataSourcesSimilarityTab = QWidget()
-
-            # LayoutWidget For within DataSourcesSimilarity Tab
-            DataSourcesSimilarityTabVerticalLayoutWidget = QWidget(DataSourcesSimilarityTab)
-            DataSourcesSimilarityTabVerticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10,
-                                                                     self.tabWidget.width(),
-                                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
-
-            # Box Layout for DataSourcesSimilarity Tab
-            DataSourcesSimilarityTabVerticalLayout = QVBoxLayout(DataSourcesSimilarityTabVerticalLayoutWidget)
-            DataSourcesSimilarityTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            DataSourcesSimilarityTable = QTableWidget(DataSourcesSimilarityTabVerticalLayoutWidget)
+            # Creating Table for Data Sources Similarity
+            DataSourcesSimilarityTable = QTableWidget()
             DataSourcesSimilarityTable.setColumnCount(3)
-            DataSourcesSimilarityTable.setGeometry(0, 0, DataSourcesSimilarityTabVerticalLayoutWidget.width(),
-                                                   DataSourcesSimilarityTabVerticalLayoutWidget.height())
 
-            DataSourcesSimilarityTable.setSizePolicy(self.sizePolicy)
             DataSourcesSimilarityTable.setWindowFlags(
                 DataSourcesSimilarityTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             DataSourcesSimilarityTable.setHorizontalHeaderLabels(
                 ["First Data Source", "Second Data Source", "Similarity Percentage (%)"])
             DataSourcesSimilarityTable.horizontalHeader().setStyleSheet(
-                "::section {""background-color: grey;  color: white;}")
+                "::section {""background-color: black;  color: white;}")
 
             for i in range(DataSourcesSimilarityTable.columnCount()):
                 DataSourcesSimilarityTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -822,7 +748,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         DataSourcesSimilarityTable.setItem(rowList.index(row), row.index(item), intItem)
                         DataSourcesSimilarityTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         DataSourcesSimilarityTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -831,7 +757,6 @@ class Window(QMainWindow):
 
                 DataSourcesSimilarityTable.setSortingEnabled(True)
                 DataSourcesSimilarityTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
                 for i in range(DataSourcesSimilarityTable.columnCount()):
                     DataSourcesSimilarityTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -839,21 +764,21 @@ class Window(QMainWindow):
                 if DataSourceSimilarityTabFlag2:
                     tabs.DataSourceName = len(myFile.DataSourceList)
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
-                    tabs.tabWidget = DataSourcesSimilarityTab
+                    self.tabWidget.addTab(DataSourcesSimilarityTable, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourcesSimilarityTable)
+                    tabs.tabWidget = DataSourcesSimilarityTable
                     tabs.setisActive(True)
                     myFile.requiredSaved = True
 
                 elif DataSourceSimilarityTabFlag3:
-                    tabs.tabWidget = DataSourcesSimilarityTab
+                    tabs.tabWidget = DataSourcesSimilarityTable
                     if tabs.isActive:
-                        self.tabWidget.addTab(DataSourcesSimilarityTab, tabs.TabName)
+                        self.tabWidget.addTab(DataSourcesSimilarityTable, tabs.TabName)
                         if tabs.isCurrentWidget:
-                            self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
+                            self.tabWidget.setCurrentWidget(DataSourcesSimilarityTable)
                 else:
                     # Adding Data Source Similarity Tab to QTabWidget
-                    myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTab, len(myFile.DataSourceList)))
+                    myFile.TabList.append(Tab("Data Sources Similarity", DataSourcesSimilarityTable, len(myFile.DataSourceList)))
 
                     # Adding Data Sources Similarity Query
                     ItemsWidget = self.QueryTreeWidget.findItems("Data Sources Similarity", Qt.MatchExactly, 0)
@@ -863,14 +788,14 @@ class Window(QMainWindow):
                         DSVisualWidget.setText(0, "Data Sources Similarity")
                         DSVisualWidget.setToolTip(0, DSVisualWidget.text(0))
 
-                    self.tabWidget.addTab(DataSourcesSimilarityTab, "Data Sources Similarity")
-                    self.tabWidget.setCurrentWidget(DataSourcesSimilarityTab)
+                    self.tabWidget.addTab(DataSourcesSimilarityTable, "Data Sources Similarity")
+                    self.tabWidget.setCurrentWidget(DataSourcesSimilarityTable)
                     myFile.requiredSaved = True
 
             else:
-                DataSourceLoadErrorBox = QMessageBox.critical(self, "Data Sources Similarity Error",
-                                                              "An Error Occured! Similarity can only be found if Data Sources are more than one",
-                                                              QMessageBox.Ok)
+                QMessageBox.critical(self, "Data Sources Similarity Error",
+                                     "An Error Occured! Similarity can only be found if Data Sources are more than one",
+                                     QMessageBox.Ok)
 
         elif tabs.tabWidget != None:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -930,47 +855,39 @@ class Window(QMainWindow):
                 # Creating New Tab for Data Sources Similarity
                 DataSourceDocumentClusteringTab = QWidget()
 
-                # LayoutWidget For within DataSourcesSimilarity Tab
-                DataSourceDocumentClusteringTabVerticalLayoutWidget = QWidget(DataSourceDocumentClusteringTab)
-                DataSourceDocumentClusteringTabVerticalLayoutWidget.setGeometry(0, 0,
-                                                                          self.tabWidget.width(),
-                                                                          self.tabWidget.height() / 10)
-
-                # Box Layout for DataSourcesSimilarity Tab
-                DataSourceDocumentClusteringTabVerticalLayout = QVBoxLayout(DataSourceDocumentClusteringTabVerticalLayoutWidget)
-                DataSourceDocumentClusteringTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+                # Data Sources Similarity Layout
+                DataSourceDocumentClusteringTabLayout = QVBoxLayout(DataSourceDocumentClusteringTab)
 
                 # Document Clustering ComboBox
-                DocumentClusteringComboBox = QComboBox(DataSourceDocumentClusteringTabVerticalLayoutWidget)
-                DocumentClusteringComboBox.setGeometry(DataSourceDocumentClusteringTabVerticalLayoutWidget.width() * 0.8,
-                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.height() * 0.4,
-                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.width() / 10,
-                                                       DataSourceDocumentClusteringTabVerticalLayoutWidget.height() / 5)
+                DocumentClusteringComboBoxWidget = QWidget()
+                DocumentClusteringComboBoxWidgetLayout = QHBoxLayout(DocumentClusteringComboBoxWidget)
+                DocumentClusteringComboBoxWidgetLayout.setAlignment(Qt.AlignRight)
+
+                DocumentClusteringComboBox = QComboBox()
                 DocumentClusteringComboBox.addItem('Scatter Plot')
                 DocumentClusteringComboBox.addItem('Dendrogram')
-                self.LineEditSizeAdjustment(DocumentClusteringComboBox)
+                DocumentClusteringComboBox.adjustSize()
+                DocumentClusteringComboBoxWidgetLayout.addWidget(DocumentClusteringComboBox)
 
+                DataSourceDocumentClusteringTabLayout.addWidget(DocumentClusteringComboBoxWidget, 10)
 
-                # LayoutWidget For within DataSourcesSimilarity Tab
-                DataSourceDocumentClusteringTabVerticalLayoutWidget2 = QWidget(DataSourceDocumentClusteringTab)
-                DataSourceDocumentClusteringTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
-                                                                         self.tabWidget.width(),
-                                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
+                # ************* Figure Widget ***************
+                FigureWidget = QWidget()
 
-                # Box Layout for DataSourcesSimilarity Tab
-                DataSourceDocumentClusteringTabVerticalLayout2 = QVBoxLayout(DataSourceDocumentClusteringTabVerticalLayoutWidget2)
-                DataSourceDocumentClusteringTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+                # Figure Widget Layout
+                FigureWidgetLayout = QVBoxLayout(FigureWidget)
+                FigureWidgetLayout.setContentsMargins(0, 0, 0, 0)
 
                 canvas = FigureCanvas(myFile.ScatterFigure)
-                DataSourceDocumentClusteringTabVerticalLayout2.addWidget(canvas)
+                FigureWidgetLayout.addWidget(canvas)
 
                 canvas2 = myFile.plot_canvas
-                DataSourceDocumentClusteringTabVerticalLayout2.addWidget(canvas2)
+                FigureWidgetLayout.addWidget(canvas2)
                 canvas2.hide()
 
-                #canvas.draw()
+                DataSourceDocumentClusteringTabLayout.addWidget(FigureWidget, 90)
 
-                DocumentClusteringComboBox.currentTextChanged.connect(lambda: self.toggleDCCanvasView(DataSourceDocumentClusteringTabVerticalLayoutWidget2, canvas, canvas2))
+                DocumentClusteringComboBox.currentTextChanged.connect(lambda: self.toggleDCCanvasView(canvas, canvas2))
 
                 if DataSourceDocumentClusteringTabFlag2:
                     tabs.DataSourceName = len(myFile.DataSourceList)
@@ -1041,7 +958,7 @@ class Window(QMainWindow):
                     break
 
     # Toggle POS View
-    def toggleDCCanvasView(self, LayoutWidget, canvas, canvas2):
+    def toggleDCCanvasView(self, canvas, canvas2):
         ComboBox = self.sender()
 
         if ComboBox.currentText() == 'Scatter Plot':
@@ -1210,26 +1127,6 @@ class Window(QMainWindow):
 
             DataSourceRightClickMenu.popup(DataSourceWidgetPos)
 
-    # Label Size Adjustment
-    def LabelSizeAdjustment(self, label):
-        exWidth = label.width()
-        exHeight = label.height()
-        exX = label.x()
-        exY = label.y()
-
-        label.adjustSize()
-        label.setGeometry(exX + (exWidth - label.width()) / 2, exY + (exHeight - label.height()) / 2, label.width(), label.height())
-
-    # Label Size Adjustment
-    def LineEditSizeAdjustment(self, LineEdit):
-        exWidth = LineEdit.width()
-        exHeight = LineEdit.height()
-        exX = LineEdit.x()
-        exY = LineEdit.y()
-
-        LineEdit.adjustSize()
-        LineEdit.setGeometry(exX, LineEdit.y(), exWidth, LineEdit.height())
-
     # ***************************** Parent Context Method ************************************
 
     #Data Sources Expand/Collapse
@@ -1245,55 +1142,56 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setModal(True)
         DataSourceWidgetDetailDialogBox.setWindowTitle("Details")
         DataSourceWidgetDetailDialogBox.setParent(self)
+        DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width()*0.2)
         DataSourceWidgetDetailDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-        DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3, self.height*0.1)
         DataSourceWidgetDetailDialogBox.setWindowFlags(self.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+
+        # Dialog Layout
+        DataSourceWidgetDetailDialogBoxLayout = QVBoxLayout(DataSourceWidgetDetailDialogBox)
+        DataSourceWidgetDetailDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetDetailDialogBoxLayout.setSpacing(20)
 
         for letter in DataSourceWidgetItemName.text(0):
             if letter == '(':
                 DataSourceStrTypeName = DataSourceWidgetItemName.text(0)[0: int(DataSourceWidgetItemName.text(0).index(letter))]
 
+        # ****************** Data Source Type **********************
+        DataSourceWidgetType = QWidget()
+        DataSourceWidgetTypeLayout = QHBoxLayout(DataSourceWidgetType)
+
         # Data Source Type label
-        DataSourceTypeLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceTypeLabel = QLabel()
         DataSourceTypeLabel.setText("Data Source Type:")
-        DataSourceTypeLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                        DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                        DataSourceWidgetDetailDialogBox.width()/4,
-                                        DataSourceWidgetDetailDialogBox.height()/5)
-        DataSourceTypeLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceTypeLabel)
+        DataSourceTypeLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetTypeLayout.addWidget(DataSourceTypeLabel, 30)
 
         # Data Source Type lineEdit
-        DataSourceTypeName = QLineEdit(DataSourceWidgetDetailDialogBox)
+        DataSourceTypeName = QLineEdit()
         DataSourceTypeName.setText(DataSourceStrTypeName)
         DataSourceTypeName.setReadOnly(True)
-        DataSourceTypeName.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.4,
-                                       DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                       DataSourceWidgetDetailDialogBox.width()/2,
-                                       DataSourceWidgetDetailDialogBox.height()/5)
-        DataSourceTypeName.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceTypeName)
+        DataSourceTypeName.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetTypeLayout.addWidget(DataSourceTypeName, 70)
+
+        DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceWidgetType)
+
+        # ****************** Data Source Child **********************
+        DataSourceChildWidget = QWidget()
+        DataSourceChildWidgetLayout = QHBoxLayout(DataSourceChildWidget)
 
         # Data Source Child label
-        DataSourceChildLabel = QLabel(DataSourceWidgetDetailDialogBox)
+        DataSourceChildLabel = QLabel()
         DataSourceChildLabel.setText("No. of Data Sources:")
-        DataSourceChildLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                         DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                         DataSourceWidgetDetailDialogBox.width()/4,
-                                         DataSourceWidgetDetailDialogBox.height()/5)
-        DataSourceChildLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceChildLabel)
+        DataSourceChildLabel.setAlignment(Qt.AlignCenter)
+        DataSourceChildWidgetLayout.addWidget(DataSourceChildLabel, 30)
 
         # Data Source Child lineEdit
-        DataSourceChildCountLabel = QLineEdit(DataSourceWidgetDetailDialogBox)
+        DataSourceChildCountLabel = QLineEdit()
         DataSourceChildCountLabel.setReadOnly(True)
         DataSourceChildCountLabel.setText(str(DataSourceWidgetItemName.childCount()))
-        DataSourceChildCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.4,
-                                              DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                              DataSourceWidgetDetailDialogBox.width()/2,
-                                              DataSourceWidgetDetailDialogBox.height()/5)
-        DataSourceChildCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceChildCountLabel)
+        DataSourceChildCountLabel.setAlignment(Qt.AlignCenter)
+        DataSourceChildWidgetLayout.addWidget(DataSourceChildCountLabel, 70)
+
+        DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceChildWidget)
 
         DataSourceWidgetDetailDialogBox.exec_()
 
@@ -1322,20 +1220,9 @@ class Window(QMainWindow):
                     break
 
         if not DataSourcePreviewWebTabFlag:
-            # Creating New Tab for Preview Tab
-            PreviewWebTab = QWidget()
-
-            # LayoutWidget For within Preview Tab
-            PreviewWebTabVerticalLayoutWidget = QWidget(PreviewWebTab)
-            PreviewWebTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Preview Tab
-            PreviewWebTabVerticalLayout = QHBoxLayout(PreviewWebTabVerticalLayoutWidget)
-            PreviewWebTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
+            # Creating Preview Web Widget
             PreviewHTMLWebPage = QWebEngineView()
             PreviewHTMLWebPage.setContextMenuPolicy(Qt.PreventContextMenu)
-            PreviewWebTabVerticalLayout.addWidget(PreviewHTMLWebPage)
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -1349,18 +1236,18 @@ class Window(QMainWindow):
                     break
 
             if DataSourcePreviewWebTabFlag2:
-                tabs.tabWidget = PreviewWebTab
+                tabs.tabWidget = PreviewHTMLWebPage
                 if tabs.isActive:
-                    self.tabWidget.addTab(PreviewWebTab, "Web Preview")
+                    self.tabWidget.addTab(PreviewHTMLWebPage, "Web Preview")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(PreviewWebTab)
+                        self.tabWidget.setCurrentWidget(PreviewHTMLWebPage)
             else:
                 # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Web Preview", PreviewWebTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Web Preview", PreviewHTMLWebPage, DataSourceWidgetItemName.text(0)))
 
                 # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(PreviewWebTab, "Web Preview")
-                self.tabWidget.setCurrentWidget(PreviewWebTab)
+                self.tabWidget.addTab(PreviewHTMLWebPage, "Web Preview")
+                self.tabWidget.setCurrentWidget(PreviewHTMLWebPage)
                 myFile.requiredSaved = True
         else:
             # updating tab
@@ -1384,34 +1271,16 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceShowTweetDataTabFlag:
-            ShowTweetDataTab = QWidget()
-            ShowTweetDataTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height()))
-            ShowTweetDataTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Show Tweet Data Tab
-            ShowTweetDataTabverticalLayoutWidget = QWidget(ShowTweetDataTab)
-            ShowTweetDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            ShowTweetDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Show Tweet Data Tab
-            ShowTweetDataTabverticalLayout = QVBoxLayout(ShowTweetDataTabverticalLayoutWidget)
-            ShowTweetDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
             # Table for Show Tweet Data
-            ShowTweetDataTable = QTableWidget(ShowTweetDataTabverticalLayoutWidget)
+            ShowTweetDataTable = QTableWidget()
             ShowTweetDataTable.setColumnCount(12)
-            ShowTweetDataTable.setGeometry(0, 0, ShowTweetDataTabverticalLayoutWidget.width(),
-                                           ShowTweetDataTabverticalLayoutWidget.height())
-            ShowTweetDataTable.setSizePolicy(self.sizePolicy)
 
             ShowTweetDataTable.setWindowFlags(ShowTweetDataTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             ShowTweetDataTable.setHorizontalHeaderLabels(
                 ["Screen Name", "User Name", "Tweet Created At", "Tweet Text", "User Location", "Tweet Coordinates",
                  "Retweet Count", "Retweeted", "Phone Type", "Favorite Count", "Favorited", "Replied"])
-            ShowTweetDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            ShowTweetDataTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
 
             for i in range(ShowTweetDataTable.columnCount()):
                 ShowTweetDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -1435,33 +1304,27 @@ class Window(QMainWindow):
 
                     ShowTweetDataTable.setItem(rowList.index(row), row.index(item), intItem)
                     if row.index(item) != 3:
-                        ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        ShowTweetDataTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignCenter)
                     ShowTweetDataTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
             ShowTweetDataTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
             ShowTweetDataTable.resizeColumnsToContents()
             ShowTweetDataTable.resizeRowsToContents()
-
             ShowTweetDataTable.setSortingEnabled(True)
-            # ShowTweetDataTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
-
-            # for i in range(ShowTweetDataTable.columnCount()):
-            #     ShowTweetDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             if DataSourceShowTweetDataTabFlag2:
-                tabs.tabWidget = ShowTweetDataTab
+                tabs.tabWidget = ShowTweetDataTable
                 if tabs.isActive:
-                    self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
+                    self.tabWidget.addTab(ShowTweetDataTable, "Show Tweet Data")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+                        self.tabWidget.setCurrentWidget(ShowTweetDataTable)
             else:
                 # Adding Show Tweet Data Tab to TabList
-                myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Show Tweet Data", ShowTweetDataTable, DataSourceWidgetItemName.text(0)))
 
                 # Adding Show Tweet Data Tab to QTabWidget
-                self.tabWidget.addTab(ShowTweetDataTab, "Show Tweet Data")
-                self.tabWidget.setCurrentWidget(ShowTweetDataTab)
+                self.tabWidget.addTab(ShowTweetDataTable, "Show Tweet Data")
+                self.tabWidget.setCurrentWidget(ShowTweetDataTable)
 
                 myFile.requiredSaved = True
         else:
@@ -1490,36 +1353,25 @@ class Window(QMainWindow):
                 break
 
         if not DataSourceYoutubeShowVideoTabFlag:
-            # Creating New Tab for Video Tab
-            VideoTab = QWidget()
-
-            # LayoutWidget For within Video Tab
-            VideoTabVerticalLayoutWidget = QWidget(VideoTab)
-            VideoTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Video Tab
-            VideoTabVerticalLayout = QHBoxLayout(VideoTabVerticalLayoutWidget)
-            VideoTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
+            # Creating Video Preview
             VideoTabWebPage = QWebEngineView()
             VideoTabWebPage.setContextMenuPolicy(Qt.PreventContextMenu)
             VideoTabWebPage.setUrl(QUrl(DS.DataSourcePath))
-            VideoTabVerticalLayout.addWidget(VideoTabWebPage)
 
             if DataSourceYoutubeShowVideoTabFlag2:
                 tabs.tabWidget = VideoTabWebPage
                 if tabs.isActive:
-                    self.tabWidget.addTab(VideoTab, "Show Video")
+                    self.tabWidget.addTab(VideoTabWebPage, "Show Video")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(VideoTab)
+                        self.tabWidget.setCurrentWidget(VideoTabWebPage)
 
             else:
                 # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Show Video", VideoTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Show Video", VideoTabWebPage, DataSourceWidgetItemName.text(0)))
 
                 # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(VideoTab, "Show Video")
-                self.tabWidget.setCurrentWidget(VideoTab)
+                self.tabWidget.addTab(VideoTabWebPage, "Show Video")
+                self.tabWidget.setCurrentWidget(VideoTabWebPage)
                 myFile.requiredSaved = True
         else:
             # updating tab
@@ -1543,31 +1395,12 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceShowYoutubeCommentsTabFlag:
-            ShowYoutubeCommentsTab = QWidget()
-            ShowYoutubeCommentsTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height()))
-            ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Show Youtube Comments Tab
-            ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
-            ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Show Youtube Comments Tab
-            ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
-            ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
             # Table for Show Youtube Comments
-            ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
+            ShowYoutubeCommentsTable = QTableWidget()
             ShowYoutubeCommentsTable.setColumnCount(4)
-            ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
-                                                       ShowYoutubeCommentsTabverticalLayoutWidget.height())
-            ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
-
             ShowYoutubeCommentsTable.setWindowFlags(ShowYoutubeCommentsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
             ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Author Name", "Like Count", "Publish At"])
-            ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                 ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -1594,7 +1427,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         ShowYoutubeCommentsTable.setItem(rowList.index(row), row.index(item), intItem)
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -1603,30 +1436,29 @@ class Window(QMainWindow):
             ShowYoutubeCommentsTable.resizeRowsToContents()
 
             ShowYoutubeCommentsTable.setSortingEnabled(True)
-            row_width = 0
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                  ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
             
             if DataSourceShowYoutubeCommentsTabFlag2:
-                tabs.tabWidget = ShowYoutubeCommentsTab
+                tabs.tabWidget = ShowYoutubeCommentsTable
                 if tabs.isActive:
-                    self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                    self.tabWidget.addTab(ShowYoutubeCommentsTable, "Show Youtube Data")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTable)
             else:
                 # Adding Show Youtube Comments Tab to TabList
-                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTable, DataSourceWidgetItemName.text(0)))
     
                 # Adding Show Youtube Comments Tab to QTabWidget
-                self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                self.tabWidget.addTab(ShowYoutubeCommentsTable, "Show Youtube Data")
+                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTable)
                 myFile.requiredSaved = True
 
         else:
             # updating tab
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
-            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+            self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTable)
             tabs.setisActive(True)
             myFile.requiredSaved = True
 
@@ -1645,34 +1477,12 @@ class Window(QMainWindow):
                     break
                     
         if not DataSourceShowYoutubeCommentsTabFlag:
-            ShowYoutubeCommentsTab = QWidget()
-            ShowYoutubeCommentsTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height()))
-            ShowYoutubeCommentsTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Show Youtube Comments Tab
-            ShowYoutubeCommentsTabverticalLayoutWidget = QWidget(ShowYoutubeCommentsTab)
-            ShowYoutubeCommentsTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-            ShowYoutubeCommentsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Show Youtube Comments Tab
-            ShowYoutubeCommentsTabverticalLayout = QVBoxLayout(ShowYoutubeCommentsTabverticalLayoutWidget)
-            ShowYoutubeCommentsTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
             # Table for Show Youtube Comments
-            ShowYoutubeCommentsTable = QTableWidget(ShowYoutubeCommentsTabverticalLayoutWidget)
+            ShowYoutubeCommentsTable = QTableWidget()
             ShowYoutubeCommentsTable.setColumnCount(7)
-            ShowYoutubeCommentsTable.setGeometry(0, 0, ShowYoutubeCommentsTabverticalLayoutWidget.width(),
-                                                 ShowYoutubeCommentsTabverticalLayoutWidget.height())
-            ShowYoutubeCommentsTable.setSizePolicy(self.sizePolicy)
-
-            ShowYoutubeCommentsTable.setWindowFlags(
-                ShowYoutubeCommentsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
+            ShowYoutubeCommentsTable.setWindowFlags(ShowYoutubeCommentsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             ShowYoutubeCommentsTable.setHorizontalHeaderLabels(["Comment", "Video ID", "Video Title", "Video Description", "Channel", "Replies", "Like"])
-            ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet(
-                "::section {""background-color: grey;  color: white;}")
+            ShowYoutubeCommentsTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                 ShowYoutubeCommentsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -1702,7 +1512,7 @@ class Window(QMainWindow):
 
                         ShowYoutubeCommentsTable.setItem(rowList.index(row), row.index(item), intItem)
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         ShowYoutubeCommentsTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -1711,24 +1521,23 @@ class Window(QMainWindow):
             ShowYoutubeCommentsTable.resizeRowsToContents()
 
             ShowYoutubeCommentsTable.setSortingEnabled(True)
-            row_width = 0
 
             for i in range(ShowYoutubeCommentsTable.columnCount()):
                 ShowYoutubeCommentsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
             
             if DataSourceShowYoutubeCommentsTabFlag2:
-                tabs.tabWidget = ShowYoutubeCommentsTab
+                tabs.tabWidget = ShowYoutubeCommentsTable
                 if tabs.isActive:
-                    self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
+                    self.tabWidget.addTab(ShowYoutubeCommentsTable, "Show Youtube Data")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                        self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTable)
             else:
                 # Adding Show Youtube Comments Tab to TabList
-                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Show Youtube Data", ShowYoutubeCommentsTable, DataSourceWidgetItemName.text(0)))
     
                 # Adding Show Youtube Comments Tab to QTabWidget
-                self.tabWidget.addTab(ShowYoutubeCommentsTab, "Show Youtube Data")
-                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTab)
+                self.tabWidget.addTab(ShowYoutubeCommentsTable, "Show Youtube Data")
+                self.tabWidget.setCurrentWidget(ShowYoutubeCommentsTable)
                 myFile.requiredSaved = True
         else:
             # updating tab
@@ -1750,55 +1559,22 @@ class Window(QMainWindow):
                 else:
                     DataSourceShowImagesTabFlag2 = True
                     break
-                    
+
         if not DataSourceShowImagesTabFlag:
             ViewImageTab = QWidget()
-            ViewImageTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height()))
-            ViewImageTab.setSizePolicy(self.sizePolicy)
 
             # LayoutWidget For left Button within View Image Tab
-            ViewImageTabverticalLayoutWidget1 = QWidget(ViewImageTab)
-            ViewImageTabverticalLayoutWidget1.setGeometry(0, 0, self.tabWidget.width() * 0.1, self.tabWidget.height())
-            ViewImageTabverticalLayoutWidget1.setSizePolicy(self.sizePolicy)
+            ViewImageTabLayout = QHBoxLayout(ViewImageTab)
 
-            # Box Layout  For left Button within View Image Tab
-            ViewImageTabverticalLayout1 = QVBoxLayout(ViewImageTabverticalLayoutWidget1)
-            ViewImageTabverticalLayout1.setContentsMargins(0, 0, 0, 0)
-
+            # *************** Left Button ****************
             LeftButton = PicButton(QPixmap('Images/Previous Image.png'))
-            ViewImageTabverticalLayout1.addWidget(LeftButton)
+            ViewImageTabLayout.addWidget(LeftButton, 10)
             LeftButton.hide()
-
-            # LayoutWidget For within View Image Tab
-            ViewImageTabverticalLayoutWidget = QWidget(ViewImageTab)
-            ViewImageTabverticalLayoutWidget.setGeometry(self.tabWidget.width() * 0.1, 0, self.tabWidget.width() * 0.8,
-                                                         self.tabWidget.height())
-            ViewImageTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For Right Button within View Image Tab
-            ViewImageTabverticalLayoutWidget2 = QWidget(ViewImageTab)
-            ViewImageTabverticalLayoutWidget2.setGeometry(self.tabWidget.width() * 0.9, 0, self.tabWidget.width() * 0.1,
-                                                          self.tabWidget.height())
-            ViewImageTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
-
-            # Box Layout  For left Button within View Image Tab
-            ViewImageTabverticalLayout2 = QVBoxLayout(ViewImageTabverticalLayoutWidget2)
-            ViewImageTabverticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-            RightButton = PicButton(QPixmap('Images/Next Image.png'))
-            ViewImageTabverticalLayout2.addWidget(RightButton)
-
-            # Box Layout for View Image Tab
-            ViewImageTabverticalLayout = QVBoxLayout(ViewImageTabverticalLayoutWidget)
-            ViewImageTabverticalLayout.setContentsMargins(0, 0, 0, 0)
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     image_files = DS.DataSourceImage
                     break
-
 
             qpixmap_file = []
 
@@ -1810,31 +1586,29 @@ class Window(QMainWindow):
 
                     qpixmap_file.append(QPixmap(dummyimage))
 
+            # Image Preview Label
+            ImagePreviewLabel = QLabel()
+            ImagePreviewLabel.setAlignment(Qt.AlignCenter)
+            ViewImageTabLayout.addWidget(ImagePreviewLabel, 80)
+
+            self.ImagePreviewPixmap = qpixmap_file[0]
+
+            # Scaling Pixmap image
+            dummypixmap = self.ImagePreviewPixmap.scaled(ImagePreviewLabel.width(),
+                                                         ImagePreviewLabel.height(),
+                                                         Qt.KeepAspectRatio)
+
+            ImagePreviewLabel.setPixmap(dummypixmap)
+
+            # **************** Right Button *******************
+            RightButton = PicButton(QPixmap('Images/Next Image.png'))
+            ViewImageTabLayout.addWidget(RightButton, 10)
 
             if len(qpixmap_file) == 1:
                 RightButton.hide()
 
-            # Image Preview Label
-            ImagePreviewLabel = QLabel(ViewImageTabverticalLayoutWidget)
-
-            # Resizing label to Layout
-            ImagePreviewLabel.resize(ViewImageTabverticalLayoutWidget.width(), ViewImageTabverticalLayoutWidget.height())
-
-            self.ImagePreviewPixmap = qpixmap_file[0]
-            #            ImagePreviewPixmap.scaledToWidth()
-
-            # Scaling Pixmap image
-            dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
-                                                    ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-            ImagePreviewLabel.setPixmap(dummypixmap)
-            ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                          (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                          dummypixmap.width(), dummypixmap.height())
-
-            LeftButton.clicked.connect(lambda: self.PreviousImage(qpixmap_file, ImagePreviewLabel,
-                                                                  ViewImageTabverticalLayoutWidget, RightButton))
-            RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel,
-                                                               ViewImageTabverticalLayoutWidget, LeftButton))
+            LeftButton.clicked.connect(lambda: self.PreviousImage(qpixmap_file, ImagePreviewLabel, RightButton))
+            RightButton.clicked.connect(lambda: self.NextImage(qpixmap_file, ImagePreviewLabel, LeftButton))
 
             if DataSourceShowImagesTabFlag2:
                 tabs.tabWidget = ViewImageTab
@@ -1844,7 +1618,7 @@ class Window(QMainWindow):
                         self.tabWidget.setCurrentWidget(ViewImageTab)
             else:
                 myFile.TabList.append(Tab("View Image", ViewImageTab, DataSourceWidgetItemName.text(0)))
-    
+
                 # Adding View Image Tab to QTabWidget
                 self.tabWidget.addTab(ViewImageTab, "View Image")
                 self.tabWidget.setCurrentWidget(ViewImageTab)
@@ -1876,33 +1650,14 @@ class Window(QMainWindow):
                 break
 
         if not DataSourceViewCSVDataTabFlag:
-            ViewCSVDataTab = QWidget()
-            ViewCSVDataTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0,
-                                                     self.width - self.verticalLayoutWidget.width(),self.horizontalLayoutWidget.height()))
-            ViewCSVDataTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within View CSV Data Tab
-            ViewCSVDataTabverticalLayoutWidget = QWidget(ViewCSVDataTab)
-            ViewCSVDataTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                   self.tabWidget.height())
-            ViewCSVDataTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for View CSV Data Tab
-            ViewCSVDataTabverticalLayout = QVBoxLayout(ViewCSVDataTabverticalLayoutWidget)
-            ViewCSVDataTabverticalLayout.setContentsMargins(0, 0, 0, 0)
-
             # Table for View CSV Data
-            ViewCSVDataTable = QTableWidget(ViewCSVDataTabverticalLayoutWidget)
+            ViewCSVDataTable = QTableWidget()
             ViewCSVDataTable.setColumnCount(len(DS.CSVHeaderLabel))
-            ViewCSVDataTable.setGeometry(0, 0, ViewCSVDataTabverticalLayoutWidget.width(),
-                                                 ViewCSVDataTabverticalLayoutWidget.height())
-            ViewCSVDataTable.setSizePolicy(self.sizePolicy)
-
             ViewCSVDataTable.setWindowFlags(ViewCSVDataTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
 
             ViewCSVDataTable.setHorizontalHeaderLabels(DS.CSVHeaderLabel)
-            ViewCSVDataTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            ViewCSVDataTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
 
             for i in range(ViewCSVDataTable.columnCount()):
                 ViewCSVDataTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -1926,7 +1681,6 @@ class Window(QMainWindow):
                         except:
                             pass
 
-
                     intItem = QTableWidgetItem()
                     intItem.setData(Qt.EditRole, QVariant(newitem))
                     ViewCSVDataTable.setItem(i, j, intItem)
@@ -1938,22 +1692,19 @@ class Window(QMainWindow):
             ViewCSVDataTable.resizeRowsToContents()
             ViewCSVDataTable.setSortingEnabled(True)
 
-            # for i in range(ViewCSVDataTable.columnCount()):
-            #     ViewCSVDataTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
             if DataSourceViewCSVDataTabFlag2:
-                tabs.tabWidget = ViewCSVDataTab
+                tabs.tabWidget = ViewCSVDataTable
                 if tabs.isActive:
-                    self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
+                    self.tabWidget.addTab(ViewCSVDataTable, "CSV Data")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+                        self.tabWidget.setCurrentWidget(ViewCSVDataTable)
             else:
                 # Adding View CSV Data Tab to TabList
-                myFile.TabList.append(Tab("CSV Data", ViewCSVDataTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("CSV Data", ViewCSVDataTable, DataSourceWidgetItemName.text(0)))
 
                 # Adding View CSV Data Tab to QTabWidget
-                self.tabWidget.addTab(ViewCSVDataTab, "CSV Data")
-                self.tabWidget.setCurrentWidget(ViewCSVDataTab)
+                self.tabWidget.addTab(ViewCSVDataTable, "CSV Data")
+                self.tabWidget.setCurrentWidget(ViewCSVDataTable)
                 myFile.requiredSaved = True
         else:
             # Adding View CSV Data Tab to QTabWidget
@@ -1963,7 +1714,7 @@ class Window(QMainWindow):
             myFile.requiredSaved = True
 
     # Previous Image Button
-    def PreviousImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, RightButton):
+    def PreviousImage(self, qpixmap_file, ImagePreviewLabel, RightButton):
         LeftButton = self.sender()
 
         for qpix in qpixmap_file:
@@ -1976,18 +1727,13 @@ class Window(QMainWindow):
                 currentIndex = qpixmap_file.index(qpix)
                 self.ImagePreviewPixmap = qpixmap_file[currentIndex - 1]
 
-                dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
-                                                             ViewImageTabverticalLayoutWidget.height(),
-                                                             Qt.KeepAspectRatio)
-                ImagePreviewLabel.setPixmap(dummypixmap)
-                ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                              (
-                                                      ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                              dummypixmap.width(), dummypixmap.height())
+                ImagePreviewLabel.setPixmap(self.ImagePreviewPixmap.scaled(ImagePreviewLabel.width(),
+                                                                           ImagePreviewLabel.height(),
+                                                                           Qt.KeepAspectRatio))
                 break
 
     # Next Image Button
-    def NextImage(self, qpixmap_file, ImagePreviewLabel, ViewImageTabverticalLayoutWidget, LeftButton):
+    def NextImage(self, qpixmap_file, ImagePreviewLabel, LeftButton):
         RightButton = self.sender()
 
         for qpix in qpixmap_file:
@@ -2000,13 +1746,9 @@ class Window(QMainWindow):
                 currentIndex = qpixmap_file.index(qpix)
                 self.ImagePreviewPixmap = qpixmap_file[currentIndex + 1]
 
-                dummypixmap = self.ImagePreviewPixmap.scaled(ViewImageTabverticalLayoutWidget.width(),
-                                                        ViewImageTabverticalLayoutWidget.height(), Qt.KeepAspectRatio)
-                ImagePreviewLabel.setPixmap(dummypixmap)
-                ImagePreviewLabel.setGeometry((ViewImageTabverticalLayoutWidget.width() - dummypixmap.width()) / 2,
-                                              (ViewImageTabverticalLayoutWidget.height() - dummypixmap.height()) / 2,
-                                              dummypixmap.width(), dummypixmap.height())
-
+                ImagePreviewLabel.setPixmap(self.ImagePreviewPixmap.scaled(ImagePreviewLabel.width(),
+                                                                           ImagePreviewLabel.height(),
+                                                                           Qt.KeepAspectRatio))
                 break
 
     # Data Source PDF Preview
@@ -2024,47 +1766,32 @@ class Window(QMainWindow):
                     break
                     
         if not DataSourcePreviewTabFlag:
-            DataSourcePreviewTab = QWidget()
-
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-
-
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     if os.path.exists(DS.DataSourcePath):
-                        # Box Layout for Data SourceTab
-                        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-                        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-                        PDFPreviewWeb = QWebEngineView()
-                        DataSourceverticalLayout.addWidget(PDFPreviewWeb)
-                        PDFPreviewWeb.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-                        PDFPreviewWeb.setUrl(QUrl(DS.DataSourcePath))
+                        DataSourcePreview = QWebEngineView()
+                        DataSourcePreview.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+                        DataSourcePreview.setUrl(QUrl(DS.DataSourcePath))
                         break
                     else:
-                        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-                        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                        DataSourcePreview = QTextEdit()
                         DataSourcePreview.setReadOnly(True)
                         DataSourcePreview.setText(DS.DataSourcetext)
                         break
 
             if DataSourcePreviewTabFlag2:
-                tabs.tabWidget = DataSourcePreviewTab
+                tabs.tabWidget = DataSourcePreview
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.addTab(DataSourcePreview, "Preview")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                        self.tabWidget.setCurrentWidget(DataSourcePreview)
             else:
                 # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Preview", DataSourcePreview, DataSourceWidgetItemName.text(0)))
 
                 # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                self.tabWidget.addTab(DataSourcePreview, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreview)
                 myFile.requiredSaved = True
         else:
             # updating tab
@@ -2088,48 +1815,33 @@ class Window(QMainWindow):
                     break
 
         if not DataSourcePreviewTabFlag:
-            DataSourcePreviewTab = QWidget()
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-
-
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                     if os.path.exists(DS.DataSourcePath) and WindowPlatform:
-                        # Box Layout for Data SourceTab
-                        DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-                        DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-                        WordActivex = QAxContainer.QAxWidget()
-                        WordActivex.setFocusPolicy(Qt.StrongFocus)
-                        WordActivex.setProperty("DisplayScrollBars", True);
-                        WordActivex.setControl(DS.DataSourcePath)
-
-                        DataSourceverticalLayout.addWidget(WordActivex)
+                        DataSourcePreview = QAxContainer.QAxWidget()
+                        DataSourcePreview.setFocusPolicy(Qt.StrongFocus)
+                        DataSourcePreview.setProperty("DisplayScrollBars", True);
+                        DataSourcePreview.setControl(DS.DataSourcePath)
                         break
                     else:
-                        DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-                        DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                        DataSourcePreview = QTextEdit()
                         DataSourcePreview.setReadOnly(True)
                         DataSourcePreview.setText(DS.DataSourcetext)
                         break
 
             if DataSourcePreviewTabFlag:
-                tabs.tabWidget = DataSourcePreviewTab
+                tabs.tabWidget = DataSourcePreview
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.addTab(DataSourcePreview, "Preview")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                        self.tabWidget.setCurrentWidget(DataSourcePreview)
             else:
                 # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Preview", DataSourcePreview, DataSourceWidgetItemName.text(0)))
 
                 # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                self.tabWidget.addTab(DataSourcePreview, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreview)
                 myFile.requiredSaved = True
 
         else:
@@ -2154,19 +1866,7 @@ class Window(QMainWindow):
                     break
 
         if not DataSourcePreviewTabFlag:
-            DataSourcePreviewTab = QWidget()
-
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourcePreviewTab)
-            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Data SourceTab
-            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            DataSourcePreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourcePreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourcePreview = QTextEdit()
             DataSourcePreview.setReadOnly(True)
 
             for DS in myFile.DataSourceList:
@@ -2175,18 +1875,18 @@ class Window(QMainWindow):
                     break
 
             if DataSourcePreviewTabFlag2:
-                tabs.tabWidget = DataSourcePreviewTab
+                tabs.tabWidget = DataSourcePreview
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
+                    self.tabWidget.addTab(DataSourcePreview, "Preview")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                        self.tabWidget.setCurrentWidget(DataSourcePreview)
             else:
                 # Adding Preview Tab to TabList
-                myFile.TabList.append(Tab("Preview", DataSourcePreviewTab, DataSourceWidgetItemName.text(0)))
+                myFile.TabList.append(Tab("Preview", DataSourcePreview, DataSourceWidgetItemName.text(0)))
 
                 # Adding Preview Tab to QTabWidget
-                self.tabWidget.addTab(DataSourcePreviewTab, "Preview")
-                self.tabWidget.setCurrentWidget(DataSourcePreviewTab)
+                self.tabWidget.addTab(DataSourcePreview, "Preview")
+                self.tabWidget.setCurrentWidget(DataSourcePreview)
                 myFile.requiredSaved = True
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -2243,43 +1943,44 @@ class Window(QMainWindow):
     def DataSourceShowFrequencyTableDialog(self):
         DataSourceShowFrequencyTableDialog = QDialog()
         DataSourceShowFrequencyTableDialog.setWindowTitle("Show Word Frequency Table")
-        DataSourceShowFrequencyTableDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4, self.height / 10)
+        DataSourceShowFrequencyTableDialog.setFixedWidth(QApplication.desktop().width()*0.25)
+        DataSourceShowFrequencyTableDialog.setFixedHeight(QApplication.desktop().height() * 0.1)
         DataSourceShowFrequencyTableDialog.setParent(self)
 
         self.QDialogAddProperties(DataSourceShowFrequencyTableDialog)
 
+        DataSourceShowFrequencyTableLayout = QVBoxLayout(DataSourceShowFrequencyTableDialog)
+        DataSourceShowFrequencyTableLayout.setAlignment(Qt.AlignCenter)
+        DataSourceShowFrequencyTableLayout.setSpacing(20)
+
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
         # Data Source Label
-        DataSourcelabel = QLabel(DataSourceShowFrequencyTableDialog)
-        DataSourcelabel.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.125, DataSourceShowFrequencyTableDialog.height() * 0.2,
-                                    DataSourceShowFrequencyTableDialog.width() / 4, DataSourceShowFrequencyTableDialog.height() * 0.1)
-
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceShowFrequencyTableDialog)
-        DSComboBox.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.4, DataSourceShowFrequencyTableDialog.height() * 0.2,
-                               DataSourceShowFrequencyTableDialog.width() / 2, DataSourceShowFrequencyTableDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        DataSourceShowFrequencyTableLayout.addWidget(DataSourceWidget)
 
-        # Show Word Frequency Button Box
-        DataSourceShowFrequencybuttonBox = QDialogButtonBox(DataSourceShowFrequencyTableDialog)
-        DataSourceShowFrequencybuttonBox.setGeometry(DataSourceShowFrequencyTableDialog.width() * 0.125, DataSourceShowFrequencyTableDialog.height() * 0.7,
-                                      DataSourceShowFrequencyTableDialog.width() * 3 / 4, DataSourceShowFrequencyTableDialog.height() / 5)
+        # *********** Show Word Frequency Button Box ***************
+        DataSourceShowFrequencybuttonBox = QDialogButtonBox()
         DataSourceShowFrequencybuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourceShowFrequencybuttonBox.button(QDialogButtonBox.Ok).setText('Show')
 
+        DataSourceShowFrequencyTableLayout.addWidget(DataSourceShowFrequencybuttonBox)
+
         if len(DSComboBox.currentText()) == 0:
             DataSourceShowFrequencybuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(DataSourceShowFrequencybuttonBox)
 
         DataSourceShowFrequencybuttonBox.accepted.connect(DataSourceShowFrequencyTableDialog.accept)
         DataSourceShowFrequencybuttonBox.rejected.connect(DataSourceShowFrequencyTableDialog.reject)
@@ -2304,76 +2005,45 @@ class Window(QMainWindow):
 
         if not DataSourceShowFrequencyTabFlag:
             WordFrequencyTab = QWidget()
-            WordFrequencyTab.setGeometry(
-                             QRect(self.verticalLayoutWidget.width(),
-                                   self.tabWidget.tabBar().geometry().height(),
-                                   self.width - self.verticalLayoutWidget.width(),
-                                   self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-            WordFrequencyTab.setSizePolicy(self.sizePolicy)
 
             # LayoutWidget For within Word Freuency Tab
-            WordFrequencyTabVerticalLayoutWidget2 = QWidget(WordFrequencyTab)
-            WordFrequencyTabVerticalLayoutWidget2.setGeometry(WordFrequencyTab.width() / 4,
-                                                              0,
-                                                              WordFrequencyTab.width() / 2,
-                                                              WordFrequencyTab.height() / 10)
+            WordFrequencyTabLayout = QVBoxLayout(WordFrequencyTab)
 
-            # Box Layout for Word Freuency Tab
-            WordFrequencyTabVerticalLayout2 = QHBoxLayout(WordFrequencyTabVerticalLayoutWidget2)
-            WordFrequencyTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-            # filter proxy model
-            WordFrequencyTableModel = QSortFilterProxyModel()
-            # WordFrequencyTableModel.setSourceModel(model)
-            WordFrequencyTableModel.setFilterKeyColumn(0)  # First column
+            #  ******************** Top Widget *******************
+            WordFrequencyTabTopWidget = QWidget()
+            WordFrequencyTabTopWidgetLayout = QHBoxLayout(WordFrequencyTabTopWidget)
+            WordFrequencyTabTopWidgetLayout.setAlignment(Qt.AlignCenter | Qt.AlignJustify)
+            WordFrequencyTabTopWidgetLayout.setSpacing(100)
 
             # line edit for filtering
             WordFrequencyTabSearchLineEdit = QLineEdit()
-            WordFrequencyTabSearchLineEdit.textChanged.connect(WordFrequencyTableModel.setFilterRegExp)
-            WordFrequencyTabVerticalLayout2.addWidget(WordFrequencyTabSearchLineEdit)
+            WordFrequencyTabSearchLineEdit.setAlignment(Qt.AlignLeft)
+            WordFrequencyTabSearchLineEdit.setClearButtonEnabled(True)
+            WordFrequencyTabSearchLineEdit.addAction(QIcon("Images/Search.png"), QLineEdit.LeadingPosition)
+            WordFrequencyTabSearchLineEdit.setPlaceholderText("Search...")
+            WordFrequencyTabTopWidgetLayout.insertWidget(0, WordFrequencyTabSearchLineEdit, 0, Qt.AlignLeft)
 
             # Download Button For Frequency Table
             DownloadAsCSVButton = QPushButton('Download')
             DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            WordFrequencyTabTopWidgetLayout.insertWidget(1, DownloadAsCSVButton, 0, Qt.AlignRight)
 
-            DownloadAsCSVButtonFont = QFont("sans-serif")
-            DownloadAsCSVButtonFont.setPixelSize(14)
-            DownloadAsCSVButtonFont.setBold(True)
+            WordFrequencyTabLayout.addWidget(WordFrequencyTabTopWidget)
 
-            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
-
-            WordFrequencyTabVerticalLayout2.addWidget(DownloadAsCSVButton)
-
-            # LayoutWidget For within Word Frequency Tab
-            WordFrequencyTabverticalLayoutWidget = QWidget(WordFrequencyTab)
-            WordFrequencyTabverticalLayoutWidget.setGeometry(0, WordFrequencyTab.height() / 10, WordFrequencyTab.width(),
-                                                             WordFrequencyTab.height() - WordFrequencyTab.height() / 10)
-            WordFrequencyTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Word Frequency Tab
-            WordFrequencyverticalLayout = QVBoxLayout(WordFrequencyTabverticalLayoutWidget)
-            WordFrequencyverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            # Table for Word Frequency
-            WordFrequencyTable = QTableWidget(WordFrequencyTabverticalLayoutWidget)
+            # ******************** Table for Word Frequency ********************
+            WordFrequencyTable = QTableWidget()
             WordFrequencyTable.setColumnCount(7)
-            WordFrequencyTable.setGeometry(0, 0, WordFrequencyTabverticalLayoutWidget.width(),
-                                           WordFrequencyTabverticalLayoutWidget.height())
-
-            WordFrequencyTable.setSizePolicy(self.sizePolicy)
-
             WordFrequencyTable.setWindowFlags(WordFrequencyTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
 
             WordFrequencyTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Percentage", "Definition", "Synonyms", "Antonyms"])
-            WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            WordFrequencyTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+
+            WordFrequencyTabLayout.addWidget(WordFrequencyTable)
 
             for i in range(WordFrequencyTable.columnCount()):
                 WordFrequencyTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
                 WordFrequencyTable.horizontalHeaderItem(i).setFont(
                     QFont(WordFrequencyTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
@@ -2397,7 +2067,7 @@ class Window(QMainWindow):
                     break
 
             DownloadAsCSVButton.clicked.connect(lambda: self.SaveTableAsCSV(WordFrequencyTable))
-
+            WordFrequencyTabSearchLineEdit.textChanged.connect(lambda: self.SearchTable(WordFrequencyTable))
 
             for row in rowList:
                 WordFrequencyTable.insertRow(rowList.index(row))
@@ -2414,7 +2084,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         WordFrequencyTable.setItem(rowList.index(row), row.index(item), intItem)
                         WordFrequencyTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         WordFrequencyTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -2424,7 +2094,6 @@ class Window(QMainWindow):
 
             WordFrequencyTable.setSortingEnabled(True)
             WordFrequencyTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-            row_width = 0
 
             for i in range(WordFrequencyTable.columnCount()):
                 WordFrequencyTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -2469,6 +2138,22 @@ class Window(QMainWindow):
             tabs.setisActive(True)
             myFile.requiredSaved = True
 
+    # Search Table
+    def SearchTable(self, WordFrequencyTable):
+        SearchLineEdit = self.sender()
+
+        if len(SearchLineEdit.text()) == 0:
+            for i in range(WordFrequencyTable.rowCount()):
+                WordFrequencyTable.showRow(i)
+
+        else:
+            items = WordFrequencyTable.findItems(SearchLineEdit.text(), Qt.MatchContains)
+            for i in range(WordFrequencyTable.rowCount()):
+                WordFrequencyTable.hideRow(i)
+
+            for i in items:
+                WordFrequencyTable.showRow(i.row())
+
     # ****************************************************************************
     # *************************** Question Generator *****************************
     # ****************************************************************************
@@ -2477,48 +2162,43 @@ class Window(QMainWindow):
     def DataSourcesGenerateQuestions(self):
         GenerateQuestionsDialog = QDialog()
         GenerateQuestionsDialog.setWindowTitle("Generate Questions")
-        GenerateQuestionsDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                       self.height / 10)
+        GenerateQuestionsDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        GenerateQuestionsDialog.setFixedHeight(QApplication.desktop().height() * 0.1)
         GenerateQuestionsDialog.setParent(self)
+
         self.QDialogAddProperties(GenerateQuestionsDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(GenerateQuestionsDialog)
-        DataSourcelabel.setGeometry(GenerateQuestionsDialog.width() * 0.125,
-                                    GenerateQuestionsDialog.height() * 0.2,
-                                    GenerateQuestionsDialog.width() / 4,
-                                    GenerateQuestionsDialog.height() * 0.1)
+        GenerateQuestionsTableLayout = QVBoxLayout(GenerateQuestionsDialog)
+        GenerateQuestionsTableLayout.setAlignment(Qt.AlignCenter)
+        GenerateQuestionsTableLayout.setSpacing(20)
 
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(GenerateQuestionsDialog)
-        DSComboBox.setGeometry(GenerateQuestionsDialog.width() * 0.4,
-                               GenerateQuestionsDialog.height() * 0.2,
-                               GenerateQuestionsDialog.width() / 2,
-                               GenerateQuestionsDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        GenerateQuestionsTableLayout.addWidget(DataSourceWidget)
 
-        # Generate Questio Button Box
-        GenerateQuestionbuttonBox = QDialogButtonBox(GenerateQuestionsDialog)
-        GenerateQuestionbuttonBox.setGeometry(GenerateQuestionsDialog.width() * 0.125,
-                                                     GenerateQuestionsDialog.height() * 0.7,
-                                                     GenerateQuestionsDialog.width() * 3 / 4,
-                                                     GenerateQuestionsDialog.height() / 5)
+        # *********** Generate Question Button Box ***************
+        GenerateQuestionbuttonBox = QDialogButtonBox()
         GenerateQuestionbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         GenerateQuestionbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+        GenerateQuestionsTableLayout.addWidget(GenerateQuestionbuttonBox)
 
         if len(DSComboBox.currentText()) == 0:
             GenerateQuestionbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(GenerateQuestionbuttonBox)
 
         GenerateQuestionbuttonBox.accepted.connect(GenerateQuestionsDialog.accept)
         GenerateQuestionbuttonBox.rejected.connect(GenerateQuestionsDialog.reject)
@@ -2545,69 +2225,28 @@ class Window(QMainWindow):
         if not GenerateQuestionsTabFlag:
             #Generate Question Tab
             GenerateQuestionsTab = QWidget()
-            GenerateQuestionsTab.setGeometry(
-                QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                             self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-            GenerateQuestionsTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Generate Question Tab
-            GenerateQuestionsTabVerticalLayoutWidget2 = QWidget(GenerateQuestionsTab)
-            GenerateQuestionsTabVerticalLayoutWidget2.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                              self.tabWidget.height() / 10)
-
-            # Box Layout for Generate Question Tab
-            GenerateQuestionsTabVerticalLayout2 = QHBoxLayout(GenerateQuestionsTabVerticalLayoutWidget2)
-            GenerateQuestionsTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
+            GenerateQuestionsTabLayout = QVBoxLayout(GenerateQuestionsTab)
 
             # Download Button For Generate Question Table
             DownloadAsCSVButton = QPushButton('Download')
             DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
-
-            DownloadAsCSVButtonFont = QFont("sans-serif")
-            DownloadAsCSVButtonFont.setPixelSize(14)
-            DownloadAsCSVButtonFont.setBold(True)
-
-            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
-
-            GenerateQuestionsTabVerticalLayout2.addWidget(DownloadAsCSVButton)
-
-            # LayoutWidget For within Generate Question Tab
-            GenerateQuestionsTabverticalLayoutWidget = QWidget(GenerateQuestionsTab)
-            GenerateQuestionsTabverticalLayoutWidget.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                             self.tabWidget.height() - self.tabWidget.height() / 10)
-            GenerateQuestionsTabverticalLayoutWidget.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Generate Question Tab
-            GenerateQuestionsverticalLayout = QVBoxLayout(GenerateQuestionsTabverticalLayoutWidget)
-            GenerateQuestionsverticalLayout.setContentsMargins(0, 0, 0, 0)
+            GenerateQuestionsTabLayout.insertWidget(0, DownloadAsCSVButton, 0, Qt.AlignRight)
 
             # Table for Generate Question
-            GenerateQuestionsTable = QTableWidget(GenerateQuestionsTabverticalLayoutWidget)
+            GenerateQuestionsTable = QTableWidget()
             GenerateQuestionsTable.setColumnCount(1)
-            GenerateQuestionsTable.setGeometry(0, 0, GenerateQuestionsTabverticalLayoutWidget.width(),
-                                           GenerateQuestionsTabverticalLayoutWidget.height())
-
-            GenerateQuestionsTable.setSizePolicy(self.sizePolicy)
-
             GenerateQuestionsTable.setWindowFlags(GenerateQuestionsTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-
-            GenerateQuestionsTable.setHorizontalHeaderLabels(
-                ["Questions"])
-            GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            GenerateQuestionsTable.setHorizontalHeaderLabels(["Questions"])
+            GenerateQuestionsTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            GenerateQuestionsTabLayout.addWidget(GenerateQuestionsTable, 90)
 
             for i in range(GenerateQuestionsTable.columnCount()):
                 GenerateQuestionsTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
                 GenerateQuestionsTable.horizontalHeaderItem(i).setFont(
                     QFont(GenerateQuestionsTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
 
-
-
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
-
-
                     ProgressBarWidget = QDialog()
                     progressBar = QProgressBar(ProgressBarWidget)
 
@@ -2647,7 +2286,6 @@ class Window(QMainWindow):
 
                 GenerateQuestionsTable.setSortingEnabled(True)
                 GenerateQuestionsTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
                 for i in range(GenerateQuestionsTable.columnCount()):
                     GenerateQuestionsTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -2701,52 +2339,47 @@ class Window(QMainWindow):
     def DataSourcesSentimentAnalysis(self):
         SentimentAnalysisDialog = QDialog()
         SentimentAnalysisDialog.setWindowTitle("Sentiment Analysis")
-        SentimentAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                            self.height / 5)
+        SentimentAnalysisDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        SentimentAnalysisDialog.setFixedHeight(QApplication.desktop().height() * 0.2)
         SentimentAnalysisDialog.setParent(self)
+
         self.QDialogAddProperties(SentimentAnalysisDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(SentimentAnalysisDialog)
-        DataSourcelabel.setGeometry(SentimentAnalysisDialog.width() * 0.125,
-                                    SentimentAnalysisDialog.height() * 0.2,
-                                    SentimentAnalysisDialog.width() / 4,
-                                    SentimentAnalysisDialog.height() * 0.1)
+        SentimentAnalysisLayout = QVBoxLayout(SentimentAnalysisDialog)
+        SentimentAnalysisLayout.setAlignment(Qt.AlignCenter)
+        SentimentAnalysisLayout.setSpacing(20)
 
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(SentimentAnalysisDialog)
-        DSComboBox.setGeometry(SentimentAnalysisDialog.width() * 0.4,
-                               SentimentAnalysisDialog.height() * 0.2,
-                               SentimentAnalysisDialog.width() / 2,
-                               SentimentAnalysisDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceext == "Youtube" or DS.DataSourceext == "Tweet" or DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        SentimentAnalysisLayout.addWidget(DataSourceWidget)
 
-        # Data Source Label
-        DataSourceColumnLabel = QLabel(SentimentAnalysisDialog)
-        DataSourceColumnLabel.setGeometry(SentimentAnalysisDialog.width() * 0.125,
-                                          SentimentAnalysisDialog.height() * 0.45,
-                                          SentimentAnalysisDialog.width() / 4,
-                                          SentimentAnalysisDialog.height() * 0.1)
+        # ******************* Column ***********************
+        ColumnWidget = QWidget()
+        ColumnWidgetLayout = QHBoxLayout(ColumnWidget)
 
+        # Column Label
+        DataSourceColumnLabel = QLabel()
         DataSourceColumnLabel.setText("Column")
-        DataSourceColumnLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourceColumnLabel)
+        DataSourceColumnLabel.setAlignment(Qt.AlignCenter)
+        ColumnWidgetLayout.addWidget(DataSourceColumnLabel, 30)
 
         # Data Source ComboBox
-        ColumnComboBox = QComboBox(SentimentAnalysisDialog)
-        ColumnComboBox.setGeometry(SentimentAnalysisDialog.width() * 0.4,
-                                   SentimentAnalysisDialog.height() * 0.45,
-                                   SentimentAnalysisDialog.width() / 2,
-                                   SentimentAnalysisDialog.height() / 10)
+        ColumnComboBox = QComboBox()
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DSComboBox.currentText():
@@ -2760,21 +2393,18 @@ class Window(QMainWindow):
                     for rows in DS.CSVHeaderLabel:
                         ColumnComboBox.addItem(rows)
 
-        self.LineEditSizeAdjustment(ColumnComboBox)
+        ColumnWidgetLayout.addWidget(ColumnComboBox, 70)
 
-        # Sentiment Analysis Button Box
-        SentimentAnalysisbuttonBox = QDialogButtonBox(SentimentAnalysisDialog)
-        SentimentAnalysisbuttonBox.setGeometry(SentimentAnalysisDialog.width() * 0.125,
-                                               SentimentAnalysisDialog.height() * 0.8,
-                                               SentimentAnalysisDialog.width() * 3 / 4,
-                                               SentimentAnalysisDialog.height() / 5)
+        SentimentAnalysisLayout.addWidget(ColumnWidget)
+
+        # *********** Sentiment Analysis Button Box ***************
+        SentimentAnalysisbuttonBox = QDialogButtonBox()
         SentimentAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         SentimentAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+        SentimentAnalysisLayout.addWidget(SentimentAnalysisbuttonBox)
 
         if len(DSComboBox.currentText()) == 0:
             SentimentAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(SentimentAnalysisbuttonBox)
 
         DSComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisDSColumnChange(ColumnComboBox))
 
@@ -2846,103 +2476,74 @@ class Window(QMainWindow):
                     DS.SentimentAnalysisVisualization()
                     break
 
+            # Sentiment Analysis Tab
             SentimentAnalysisTab = QWidget()
-            SentimentAnalysisTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(),
-                                                          self.horizontalLayoutWidget.height() - self.tabWidget.tabBar().geometry().height()))
-            SentimentAnalysisTab.setSizePolicy(self.sizePolicy)
+            SentimentAnalysisTabLayout = QVBoxLayout(SentimentAnalysisTab)
 
-            # LayoutWidget For within SentimentAnalysis Tab
-            SentimentAnalysisTabVerticalLayoutWidget = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                  self.tabWidget.height() / 10)
-            # Box Layout for SentimentAnalysis Tab
-            SentimentAnalysisTabVerticalLayout = QHBoxLayout(SentimentAnalysisTabVerticalLayoutWidget)
-            SentimentAnalysisTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # TopWidget  within Sentiment Analysis Tab
+            SentimentAnalysisTopWidget = QWidget()
+            SentimentAnalysisTopWidgetLayout = QHBoxLayout(SentimentAnalysisTopWidget)
+
+            # ******* Count Widget ********
+            CountWidget = QWidget()
+            CountWidgetLayout = QVBoxLayout(CountWidget)
 
             # Positive_Count Label
-            PositiveCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-            PositiveCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                           SentimentAnalysisTabVerticalLayoutWidget.height() * 0.142,
-                                           SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                           SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            PositiveCountLabel = QLabel()
             PositiveCountLabel.setText("Positive: " + str(DS.PositiveSentimentCount))
             PositiveCountLabel.setAlignment(Qt.AlignVCenter)
-            PositiveCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(PositiveCountLabel)
 
             # Neutral_Count Label
-            NeutralCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-            NeutralCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                          SentimentAnalysisTabVerticalLayoutWidget.height() * 0.428,
-                                          SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                          SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            NeutralCountLabel = QLabel()
             NeutralCountLabel.setText("Neutral: " + str(DS.NeutralSentimentCount))
             NeutralCountLabel.setAlignment(Qt.AlignVCenter)
-            NeutralCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(NeutralCountLabel)
 
             # Negative_Count Label
-            NegativeCountLabel = QLabel(SentimentAnalysisTabVerticalLayoutWidget)
-            NegativeCountLabel.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.05,
-                                           SentimentAnalysisTabVerticalLayoutWidget.height() * 0.714,
-                                           SentimentAnalysisTabVerticalLayoutWidget.width() / 20,
-                                           SentimentAnalysisTabVerticalLayoutWidget.height() / 7)
+            NegativeCountLabel = QLabel()
             NegativeCountLabel.setText("Negative: " + str(DS.NegativeSentimentCount))
             NegativeCountLabel.setAlignment(Qt.AlignVCenter)
-            NegativeCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(NegativeCountLabel)
 
-            # Download Button For Sentiment Analysis Table
-            DownloadAsCSVButton = QPushButton(SentimentAnalysisTabVerticalLayoutWidget)
-            DownloadAsCSVButton.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.6,
-                                            SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                            SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                            SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
-            DownloadAsCSVButton.setText("Download")
-            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsCSVButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
-
-            DownloadAsCSVButtonFont = QFont("sans-serif")
-            DownloadAsCSVButtonFont.setPixelSize(14)
-            DownloadAsCSVButtonFont.setBold(True)
-            DownloadAsCSVButton.setFont(DownloadAsCSVButtonFont)
-
-            self.LineEditSizeAdjustment(DownloadAsCSVButton)
+            SentimentAnalysisTopWidgetLayout.addWidget(CountWidget)
 
             # Data Source Label
             DataSourceLabel = QLabel()
             DataSourceLabel.setText("Sentiment Analysis of " + DS.DataSourceName)
-            DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
-            DataSourceLabel.setAlignment(Qt.AlignVCenter)
+            DataSourceLabel.setStyleSheet("font-size: 16px; font-weight: bold; background: transparent;")
+            DataSourceLabel.setAlignment(Qt.AlignCenter)
             DataSourceLabel.hide()
-            SentimentAnalysisTabVerticalLayout.addWidget(DataSourceLabel)
+            SentimentAnalysisTopWidgetLayout.addWidget(DataSourceLabel)
+
+            RightOptionWidget = QWidget()
+            RightOptionWidgetLayout = QVBoxLayout(RightOptionWidget)
+            RightOptionWidgetLayout.setAlignment(Qt.AlignRight)
+            RightOptionWidgetLayout.setSpacing(50)
+
+            # Download Button For Sentiment Analysis Table
+            DownloadAsCSVButton = QPushButton()
+            DownloadAsCSVButton.setText("Download")
+            DownloadAsCSVButton.setIcon(QIcon("Images/Download Button.png"))
+            RightOptionWidgetLayout.addWidget(DownloadAsCSVButton)
 
             # Data Source Sentiment Analysis  ComboBox
-            DSSAComboBox = QComboBox(SentimentAnalysisTabVerticalLayoutWidget)
-            DSSAComboBox.setGeometry(SentimentAnalysisTabVerticalLayoutWidget.width() * 0.8,
-                                     SentimentAnalysisTabVerticalLayoutWidget.height() * 0.4,
-                                     SentimentAnalysisTabVerticalLayoutWidget.width() * 0.15,
-                                     SentimentAnalysisTabVerticalLayoutWidget.height() * 0.2)
+            DSSAComboBox = QComboBox()
             DSSAComboBox.addItem("Show Table")
             DSSAComboBox.addItem("Show Chart")
-            self.LineEditSizeAdjustment(DSSAComboBox)
+            RightOptionWidgetLayout.addWidget(DSSAComboBox)
+            SentimentAnalysisTopWidgetLayout.addWidget(RightOptionWidget)
 
-            # LayoutWidget For within Sentiment Analysis Tab
-            SentimentAnalysisTabverticalLayoutWidget2 = QWidget(SentimentAnalysisTab)
-            SentimentAnalysisTabverticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
-            SentimentAnalysisTabverticalLayoutWidget2.setSizePolicy(self.sizePolicy)
-
-            # Box Layout for Sentiment Analysis Tab
-            SentimentAnalysisverticalLayout2 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget2)
-            SentimentAnalysisverticalLayout2.setContentsMargins(0, 0, 0, 0)
+            SentimentAnalysisTabLayout.addWidget(SentimentAnalysisTopWidget, 10)
 
             # Table for Sentiment Analysis
-            SentimentAnalysisTable = QTableWidget(SentimentAnalysisTabverticalLayoutWidget2)
+            SentimentAnalysisTable = QTableWidget()
             SentimentAnalysisTable.setColumnCount(2)
-            SentimentAnalysisTable.setGeometry(0, 0, SentimentAnalysisTabverticalLayoutWidget2.width(),
-                                                     SentimentAnalysisTabverticalLayoutWidget2.height())
-            SentimentAnalysisTable.setSizePolicy(self.sizePolicy)
             SentimentAnalysisTable.setWindowFlags(SentimentAnalysisTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             SentimentAnalysisTable.setHorizontalHeaderLabels(["Sentence", "Sentiments"])
-            SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            SentimentAnalysisTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+
+            SentimentAnalysisTabLayout.addWidget(SentimentAnalysisTable, 90)
 
             for i in range(SentimentAnalysisTable.columnCount()):
                 SentimentAnalysisTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -2967,7 +2568,7 @@ class Window(QMainWindow):
                             intItem.setData(Qt.EditRole, QVariant(item))
                             SentimentAnalysisTable.setItem(rowList.index(row), row.index(item), intItem)
                             SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
+                                Qt.AlignCenter)
                             SentimentAnalysisTable.item(rowList.index(row), row.index(item)).setFlags(
                                 Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -2982,45 +2583,23 @@ class Window(QMainWindow):
                     SentimentAnalysisTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
                 # Sentiment Analysis Chart
-
-                # LayoutWidget For within Sentiment Analysis Tab
-                SentimentAnalysisTabverticalLayoutWidget3 = QWidget(SentimentAnalysisTab)
-                SentimentAnalysisTabverticalLayoutWidget3.setGeometry(0, self.tabWidget.height() / 10,
-                                                                      self.tabWidget.width()/2,
-                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
-                SentimentAnalysisTabverticalLayoutWidget3.setSizePolicy(self.sizePolicy)
-
-                # Box Layout for Sentiment Analysis Tab
-                SentimentAnalysisverticalLayout3 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget3)
-                SentimentAnalysisverticalLayout3.setContentsMargins(0, 0, 0, 0)
+                SentimentAnalysisFigureWidget = QWidget()
+                SentimentAnalysisFigureWidget.hide()
+                SentimentAnalysisFigureWidgetLayout = QHBoxLayout(SentimentAnalysisFigureWidget)
 
                 canvas = FigureCanvas(DS.BarSentimentFigure)
-                SentimentAnalysisverticalLayout3.addWidget(canvas)
-                SentimentAnalysisTabverticalLayoutWidget3.hide()
-
-
-                SentimentAnalysisTabverticalLayoutWidget4 = QWidget(SentimentAnalysisTab)
-                SentimentAnalysisTabverticalLayoutWidget4.setGeometry(self.tabWidget.width()/2, self.tabWidget.height() / 10,
-                                                                      self.tabWidget.width()/2,
-                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
-                SentimentAnalysisTabverticalLayoutWidget4.setSizePolicy(self.sizePolicy)
-
-                # Box Layout for Sentiment Analysis Tab
-                SentimentAnalysisverticalLayout4 = QVBoxLayout(SentimentAnalysisTabverticalLayoutWidget4)
-                SentimentAnalysisverticalLayout4.setContentsMargins(0, 0, 0, 0)
+                SentimentAnalysisFigureWidgetLayout.addWidget(canvas)
 
                 canvas2 = FigureCanvas(DS.PieSentimentFigure)
-                SentimentAnalysisverticalLayout4.addWidget(canvas2)
-                SentimentAnalysisTabverticalLayoutWidget4.hide()
+                SentimentAnalysisFigureWidgetLayout.addWidget(canvas2)
+
+                SentimentAnalysisTabLayout.addWidget(SentimentAnalysisFigureWidget, 90)
 
                 DSSAComboBox.currentTextChanged.connect(lambda: self.SentimentAnalysisComboBox(DataSourceLabel,
-                                                                                               PositiveCountLabel,
-                                                                                               NegativeCountLabel,
-                                                                                               NeutralCountLabel,
+                                                                                               CountWidget,
                                                                                                DownloadAsCSVButton,
-                                                                                               SentimentAnalysisTabverticalLayoutWidget2,
-                                                                                               SentimentAnalysisTabverticalLayoutWidget3,
-                                                                                               SentimentAnalysisTabverticalLayoutWidget4))
+                                                                                               SentimentAnalysisTable,
+                                                                                               SentimentAnalysisFigureWidget))
 
                 if DataSourceSentimentAnalysisFlag2:
                     tabs.tabWidget = SentimentAnalysisTab
@@ -3066,28 +2645,21 @@ class Window(QMainWindow):
             myFile.requiredSaved = True
 
     # Sentiment Analysis ComboBox
-    def SentimentAnalysisComboBox(self, DataSourceLabel, PositiveCountLabel, NegativeCountLabel, NeutralCountLabel, DownloadASCSVButton, Layout1, Layout2, Layout3):
+    def SentimentAnalysisComboBox(self, DataSourceLabel, CountWidget, DownloadAsCSVButton, SentimentAnalysisTable, SentimentAnalysisFigureWidget):
         DSSAComboBox = self.sender()
 
         if DSSAComboBox.currentText() == "Show Table":
             DataSourceLabel.hide()
-            PositiveCountLabel.show(),
-            NegativeCountLabel.show(),
-            NeutralCountLabel.show(),
-            DownloadASCSVButton.show()
-            Layout1.show()
-            Layout2.hide()
-            Layout3.hide()
+            CountWidget.show()
+            DownloadAsCSVButton.show()
+            SentimentAnalysisTable.show()
+            SentimentAnalysisFigureWidget.hide()
         else:
             DataSourceLabel.show()
-            PositiveCountLabel.hide(),
-            NegativeCountLabel.hide(),
-            NeutralCountLabel.hide(),
-            DownloadASCSVButton.hide()
-            Layout1.hide()
-            Layout2.show()
-            Layout3.show()
-
+            CountWidget.hide()
+            DownloadAsCSVButton.hide()
+            SentimentAnalysisTable.hide()
+            SentimentAnalysisFigureWidget.show()
 
     # ****************************************************************************
     # ************************** Data Sources Rename *****************************
@@ -3097,32 +2669,41 @@ class Window(QMainWindow):
     def DataSourceRename(self, DataSourceWidgetItemName):
         DataSourceRename = QDialog()
         DataSourceRename.setWindowTitle("Rename")
-        DataSourceRename.setGeometry(self.width * 0.375, self.height * 0.425, self.width/4, self.height*0.15)
+        DataSourceRename.setFixedWidth(QApplication.desktop().width()*0.25)
+        DataSourceRename.setFixedHeight(QApplication.desktop().height() * 0.1)
         DataSourceRename.setParent(self)
         self.QDialogAddProperties(DataSourceRename)
 
+        DataSourceRenameLayout = QVBoxLayout(DataSourceRename)
+        DataSourceRenameLayout.setAlignment(Qt.AlignCenter)
+        DataSourceRenameLayout.setSpacing(20)
+
+        # ************** Rename ***************
+        RenameWidget = QWidget()
+        RenameWidgetLayout = QHBoxLayout(RenameWidget)
+
+        # Rename Label
         RenameLabel = QLabel(DataSourceRename)
-        RenameLabel.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.3, DataSourceRename.width()/4, DataSourceRename.height()*0.15)
         RenameLabel.setText("Rename")
-        RenameLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(RenameLabel)
+        RenameLabel.setAlignment(Qt.AlignCenter)
+        RenameWidgetLayout.addWidget(RenameLabel, 30)
 
+        # Rename LineEdit
         RenameLineEdit = QLineEdit(DataSourceRename)
-        RenameLineEdit.setGeometry(DataSourceRename.width()*0.4, DataSourceRename.height()*0.3, DataSourceRename.width()/2, DataSourceRename.height()*0.15)
         RenameLineEdit.setText(DataSourceWidgetItemName.text(0))
-        self.LineEditSizeAdjustment(RenameLineEdit)
+        RenameWidgetLayout.addWidget(RenameLineEdit, 70)
 
+        DataSourceRenameLayout.addWidget(RenameWidget)
+
+        # ************* Rename Button Box ***************
         RenamebuttonBox = QDialogButtonBox(DataSourceRename)
-        RenamebuttonBox.setGeometry(DataSourceRename.width()*0.125, DataSourceRename.height()*0.7, DataSourceRename.width()*3/4, DataSourceRename.height()/5)
         RenamebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-
         RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        DataSourceRenameLayout.addWidget(RenamebuttonBox)
 
         RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenamebuttonBox, True))
-
         RenamebuttonBox.accepted.connect(DataSourceRename.accept)
         RenamebuttonBox.rejected.connect(DataSourceRename.reject)
-
         RenamebuttonBox.accepted.connect(lambda: self.DSRename(DataSourceWidgetItemName, RenameLineEdit.text()))
 
         DataSourceRename.exec()
@@ -3191,68 +2772,69 @@ class Window(QMainWindow):
     def DataSourceFindStemWords(self):
         DataSourceStemWord = QDialog()
         DataSourceStemWord.setWindowTitle("Find Stem Words")
-        DataSourceStemWord.setGeometry(self.width * 0.375, self.height * 0.4, self.width / 4, self.height / 5)
+        DataSourceStemWord.setFixedWidth(QApplication.desktop().width() * 0.25)
+        DataSourceStemWord.setFixedHeight(QApplication.desktop().height() * 0.2)
         DataSourceStemWord.setParent(self)
         self.QDialogAddProperties(DataSourceStemWord)
 
+        DataSourceStemWordLayout = QVBoxLayout(DataSourceStemWord)
+        DataSourceStemWordLayout.setAlignment(Qt.AlignCenter)
+        DataSourceStemWordLayout.setSpacing(20)
+
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
         # Data Source Label
-        WordStemDSlabel = QLabel(DataSourceStemWord)
-        WordStemDSlabel.setGeometry(DataSourceStemWord.width() * 0.125, DataSourceStemWord.height() * 0.2,
-                                    DataSourceStemWord.width() / 4, DataSourceStemWord.height() * 0.1)
-
-        WordStemDSlabel.setText("Data Source")
-        WordStemDSlabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(WordStemDSlabel)
-
-        # Word Label
-        WordStemlabel = QLabel(DataSourceStemWord)
-        WordStemlabel.setGeometry(DataSourceStemWord.width() * 0.125, DataSourceStemWord.height() * 0.45,
-                                  DataSourceStemWord.width() / 4, DataSourceStemWord.height() * 0.1)
-        WordStemlabel.setText("Word")
-        WordStemlabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(WordStemlabel)
+        DataSourcelabel = QLabel()
+        DataSourcelabel.setText("Data Source")
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        StemWordDSComboBox = QComboBox(DataSourceStemWord)
-        StemWordDSComboBox.setGeometry(DataSourceStemWord.width() * 0.4, DataSourceStemWord.height() * 0.2,
-                                       DataSourceStemWord.width() / 2, DataSourceStemWord.height() / 10)
-
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
-                StemWordDSComboBox.addItem(DS.DataSourceName)
+                DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(StemWordDSComboBox)
+        DataSourceStemWordLayout.addWidget(DataSourceWidget)
+
+        # ******************* Stem Word ***********************
+        StemWordWidget = QWidget()
+        StemWordWidgetLayout = QHBoxLayout(StemWordWidget)
+
+        # Word Label
+        WordStemlabel = QLabel()
+        WordStemlabel.setText("Word")
+        WordStemlabel.setAlignment(Qt.AlignCenter)
+        StemWordWidgetLayout.addWidget(WordStemlabel, 30)
 
         # Stem Word Line Edit
-        StemWordLineEdit = QLineEdit(DataSourceStemWord)
-        StemWordLineEdit.setGeometry(DataSourceStemWord.width() * 0.4, DataSourceStemWord.height() * 0.45,
-                                     DataSourceStemWord.width() / 2, DataSourceStemWord.height() * 0.1)
+        StemWordLineEdit = QLineEdit()
         StemWordCompleter = QCompleter()
         StemWordLineEdit.setCompleter(StemWordCompleter)
         StemWordModel = QStringListModel()
         StemWordCompleter.setModel(StemWordModel)
-        self.LineEditSizeAdjustment(StemWordLineEdit)
+        StemWordWidgetLayout.addWidget(StemWordLineEdit, 70)
 
-        # Stem Word Button Box
-        StemWordbuttonBox = QDialogButtonBox(DataSourceStemWord)
-        StemWordbuttonBox.setGeometry(DataSourceStemWord.width() * 0.125, DataSourceStemWord.height() * 0.7,
-                                      DataSourceStemWord.width() * 3 / 4, DataSourceStemWord.height() / 5)
+        DataSourceStemWordLayout.addWidget(StemWordWidget)
+
+        # *********** Stem Word Button Box ***************
+        StemWordbuttonBox = QDialogButtonBox()
         StemWordbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         StemWordbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(StemWordbuttonBox)
+        DataSourceStemWordLayout.addWidget(StemWordbuttonBox)
 
-        StemWordLineEdit.textChanged.connect(
-            lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), StemWordDSComboBox.currentText()))
+        StemWordLineEdit.textChanged.connect(lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DSComboBox.currentText()))
         StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordbuttonBox, True))
 
-        StemWordDSComboBox.currentTextChanged.connect(StemWordLineEdit.clear)
+        DSComboBox.currentTextChanged.connect(StemWordLineEdit.clear)
 
         StemWordbuttonBox.accepted.connect(DataSourceStemWord.accept)
         StemWordbuttonBox.rejected.connect(DataSourceStemWord.reject)
 
-        StemWordbuttonBox.accepted.connect(
-            lambda: self.mapStemWordonTab(StemWordLineEdit.text(), StemWordDSComboBox.currentText()))
+        StemWordbuttonBox.accepted.connect(lambda: self.mapStemWordonTab(StemWordLineEdit.text(), DSComboBox.currentText()))
 
         DataSourceStemWord.exec()
 
@@ -3273,59 +2855,42 @@ class Window(QMainWindow):
         if not DataSourceStemWordTabFlag:
             # Creating New Tab for Stem Word
             StemWordTab = QWidget()
+            StemWordTabLayout = QVBoxLayout(StemWordTab)
 
-            # LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget.setGeometry(self.tabWidget.width() / 4, 0, self.tabWidget.width() / 2,
-                                                        self.tabWidget.height() / 10)
-
-            # Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout = QHBoxLayout(StemWordTabVerticalLayoutWidget)
-            StemWordTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            StemWordTabTopWidget = QWidget()
+            StemWordTabLayout.addWidget(StemWordTabTopWidget, 10)
+            StemWordTopWidgetLayout = QHBoxLayout(StemWordTabTopWidget)
+            StemWordTopWidgetLayout.setContentsMargins(StemWordTabTopWidget.width()*0.25, 0,
+                                                       StemWordTabTopWidget.width()*0.25, 0)
+            StemWordTopWidgetLayout.setAlignment(Qt.AlignCenter)
 
             # StemWord Text Edit
-            StemWordLineEdit = QLineEdit(StemWordTabVerticalLayoutWidget)
-            StemWordLineEdit.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.25,
-                                         StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                         StemWordTabVerticalLayoutWidget.width() / 4,
-                                         StemWordTabVerticalLayoutWidget.height() / 4)
+            StemWordLineEdit = QLineEdit()
             StemWordCompleter = QCompleter()
             StemWordLineEdit.setCompleter(StemWordCompleter)
             StemWordModel = QStringListModel()
             StemWordCompleter.setModel(StemWordModel)
+            StemWordTopWidgetLayout.addWidget(StemWordLineEdit)
+            StemWordLineEdit.adjustSize()
 
-            StemWordLineEdit.textChanged.connect(
-                lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
+            StemWordLineEdit.textChanged.connect(lambda: self.WordSuggestion(StemWordModel, StemWordLineEdit.text(), DataSourceName))
 
             # StemWord Submit Button
-            StemWordSubmitButton = QPushButton(StemWordTabVerticalLayoutWidget)
-            StemWordSubmitButton.setGeometry(StemWordTabVerticalLayoutWidget.width() * 0.55,
-                                             StemWordTabVerticalLayoutWidget.height() * 0.375,
-                                             StemWordTabVerticalLayoutWidget.width() / 4,
-                                             StemWordTabVerticalLayoutWidget.height() / 4)
+            StemWordSubmitButton = QPushButton()
             StemWordSubmitButton.setText("Find Stem Words")
             StemWordSubmitButton.setEnabled(False)
+            StemWordTopWidgetLayout.addWidget(StemWordSubmitButton)
+            StemWordSubmitButton.adjustSize()
 
             StemWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(StemWordSubmitButton, False))
 
-            # 2nd LayoutWidget For within Stem Word Tab
-            StemWordTabVerticalLayoutWidget2 = QWidget(StemWordTab)
-            StemWordTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                         self.tabWidget.height() - self.tabWidget.height() / 10)
-
-            # 2nd Box Layout for Stem Word Tab
-            StemWordTabVerticalLayout2 = QVBoxLayout(StemWordTabVerticalLayoutWidget2)
-            StemWordTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-            StemWordTable = QTableWidget(StemWordTabVerticalLayoutWidget2)
+            # Stem Word Table
+            StemWordTable = QTableWidget()
             StemWordTable.setColumnCount(2)
-            StemWordTable.setGeometry(0, 0, StemWordTabVerticalLayoutWidget2.width(),
-                                      StemWordTabVerticalLayoutWidget2.height())
-
-            StemWordTable.setSizePolicy(self.sizePolicy)
             StemWordTable.setWindowFlags(StemWordTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             StemWordTable.setHorizontalHeaderLabels(["Word", "Frequency"])
-            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            StemWordTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            StemWordTabLayout.addWidget(StemWordTable, 90)
 
             for i in range(StemWordTable.columnCount()):
                 StemWordTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -3350,7 +2915,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
                         StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -3359,7 +2924,6 @@ class Window(QMainWindow):
 
                 StemWordTable.setSortingEnabled(True)
                 StemWordTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
                 for i in range(StemWordTable.columnCount()):
                     StemWordTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -3438,7 +3002,7 @@ class Window(QMainWindow):
                     intItem.setData(Qt.EditRole, QVariant(item))
                     StemWordTable.setItem(rowList.index(row), row.index(item), intItem)
                     StemWordTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                        Qt.AlignHCenter | Qt.AlignVCenter)
+                        Qt.AlignCenter)
                     StemWordTable.item(rowList.index(row), row.index(item)).setFlags(
                         Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -3466,48 +3030,43 @@ class Window(QMainWindow):
     def DataSourcePOSDialog(self):
         PartOfSpeechDialog = QDialog()
         PartOfSpeechDialog.setWindowTitle("Part of Speech")
-        PartOfSpeechDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                            self.height / 10)
+        PartOfSpeechDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        PartOfSpeechDialog.setFixedHeight(QApplication.desktop().height() * 0.1)
         PartOfSpeechDialog.setParent(self)
         self.QDialogAddProperties(PartOfSpeechDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(PartOfSpeechDialog)
-        DataSourcelabel.setGeometry(PartOfSpeechDialog.width() * 0.125,
-                                    PartOfSpeechDialog.height() * 0.2,
-                                    PartOfSpeechDialog.width() / 4,
-                                    PartOfSpeechDialog.height() * 0.1)
+        PartOfSpeechDialogLayout = QVBoxLayout(PartOfSpeechDialog)
+        PartOfSpeechDialogLayout.setAlignment(Qt.AlignCenter)
+        PartOfSpeechDialogLayout.setSpacing(20)
 
+        # Data Source Label
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(PartOfSpeechDialog)
-        DSComboBox.setGeometry(PartOfSpeechDialog.width() * 0.4,
-                               PartOfSpeechDialog.height() * 0.2,
-                               PartOfSpeechDialog.width() / 2,
-                               PartOfSpeechDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        PartOfSpeechDialogLayout.addWidget(DataSourceWidget)
 
-        # Part Of Speech Button Box
-        PartOfSpeechbuttonBox = QDialogButtonBox(PartOfSpeechDialog)
-        PartOfSpeechbuttonBox.setGeometry(PartOfSpeechDialog.width() * 0.125,
-                                              PartOfSpeechDialog.height() * 0.7,
-                                              PartOfSpeechDialog.width() * 3 / 4,
-                                              PartOfSpeechDialog.height() / 5)
+        # *********** Part Of Speech Button Box ***************
+        PartOfSpeechbuttonBox = QDialogButtonBox()
         PartOfSpeechbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         PartOfSpeechbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+        PartOfSpeechDialogLayout.addWidget(PartOfSpeechbuttonBox)
 
         if len(DSComboBox.currentText()) == 0:
             PartOfSpeechbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(PartOfSpeechbuttonBox)
 
         PartOfSpeechbuttonBox.accepted.connect(PartOfSpeechDialog.accept)
         PartOfSpeechbuttonBox.rejected.connect(PartOfSpeechDialog.reject)
@@ -3556,74 +3115,63 @@ class Window(QMainWindow):
 
             # Creating New Tab for Part of Speech
             POSTab = QWidget()
+            POSTabLayout = QVBoxLayout(POSTab)
 
-            # LayoutWidget For within Part of Speech Tab
-            POSTabVerticalLayoutWidget = QWidget(POSTab)
-            POSTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
+            # Top Widget Part of Speech Tab
+            POSTabTopWidget = QWidget()
+            POSTabLayout.addWidget(POSTabTopWidget, 10)
+            POSTabTopWidgetLayout = QHBoxLayout(POSTabTopWidget)
 
-            # Box Layout for Part of Speech Tab
-            POSTabVerticalLayout = QHBoxLayout(POSTabVerticalLayoutWidget)
-            POSTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # *********** Count Widget *************
+            CountWidget = QWidget()
+            CountWidgetLayout = QVBoxLayout(CountWidget)
 
             # Noun_Count Label
-            POSNounCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSNounCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                          POSTabVerticalLayoutWidget.height() * 0.142,
-                                          POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSNounCountLabel = QLabel()
             POSNounCountLabel.setText("Noun Count: " + str(noun_count))
             POSNounCountLabel.setAlignment(Qt.AlignVCenter)
             POSNounCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(POSNounCountLabel)
 
             # Verb_Count Label
-            POSVerbCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSVerbCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                          POSTabVerticalLayoutWidget.height() * 0.428,
-                                          POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSVerbCountLabel = QLabel()
             POSVerbCountLabel.setText("Verb Count: " + str(verb_count))
             POSVerbCountLabel.setAlignment(Qt.AlignVCenter)
             POSVerbCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(POSVerbCountLabel)
 
             # Adjective_Count Label
-            POSAdjCountLabel = QLabel(POSTabVerticalLayoutWidget)
-            POSAdjCountLabel.setGeometry(POSTabVerticalLayoutWidget.width() * 0.05,
-                                         POSTabVerticalLayoutWidget.height() * 0.714,
-                                         POSTabVerticalLayoutWidget.width() / 20, POSTabVerticalLayoutWidget.height() / 7)
+            POSAdjCountLabel = QLabel()
             POSAdjCountLabel.setText("Adjective Count: " + str(adj_count))
             POSAdjCountLabel.setAlignment(Qt.AlignVCenter)
             POSAdjCountLabel.adjustSize()
+            CountWidgetLayout.addWidget(POSAdjCountLabel)
+
+            POSTabTopWidgetLayout.addWidget(CountWidget)
+
+            # *********** Count Widget *************
+            POSComboBoxWidget = QWidget()
+            POSComboBoxWidgetLayout = QVBoxLayout(POSComboBoxWidget)
 
             # Part of speech ComboBox
-            POSComboBox = QComboBox(POSTabVerticalLayoutWidget)
-            POSComboBox.setGeometry(POSTabVerticalLayoutWidget.width() * 0.8, POSTabVerticalLayoutWidget.height() * 0.4,
-                                    POSTabVerticalLayoutWidget.width() / 10, POSTabVerticalLayoutWidget.height() / 5)
+            POSComboBox = QComboBox()
             POSComboBox.addItem("Show Table")
             POSComboBox.addItem("Show Graph")
-            self.LineEditSizeAdjustment(POSComboBox)
+            POSComboBoxWidgetLayout.addWidget(POSComboBox)
 
-            # 2nd LayoutWidget For within Part Of Speech Tab
-            POSTabVerticalLayoutWidget2 = QWidget(POSTab)
-            POSTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
+            POSTabTopWidgetLayout.addWidget(POSComboBoxWidget)
 
-            # 2nd Box Layout for Part Of Speech Tab
-            POSTabVerticalLayout2 = QVBoxLayout(POSTabVerticalLayoutWidget2)
-            POSTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
-            POSTable = QTableWidget(POSTabVerticalLayoutWidget2)
+            # ********* Part of Speech Table ***********
+            POSTable = QTableWidget()
             POSTable.setColumnCount(3)
-            POSTable.setGeometry(0, 0, POSTabVerticalLayoutWidget2.width(),
-                                 POSTabVerticalLayoutWidget2.height())
-
-            POSTable.setSizePolicy(self.sizePolicy)
             POSTable.setWindowFlags(POSTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             POSTable.setHorizontalHeaderLabels(["Word", "Part of Speech", "Frequency"])
-            POSTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            POSTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            POSTabLayout.addWidget(POSTable, 90)
 
             for i in range(POSTable.columnCount()):
                 POSTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
                 POSTable.horizontalHeaderItem(i).setFont(QFont(POSTable.horizontalHeaderItem(i).text(), weight=QFont.Bold))
-
-            # StemWordSubmitButton.clicked.connect(lambda: self.StemWordWithinTab(StemWordLineEdit.text(), DataSourceWidgetItemName, POSTable))
 
             if len(rowList) != 0:
                 for row in rowList:
@@ -3633,7 +3181,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         POSTable.setItem(rowList.index(row), row.index(item), intItem)
                         POSTable.item(rowList.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         POSTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                 POSTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -3642,25 +3190,20 @@ class Window(QMainWindow):
 
                 POSTable.setSortingEnabled(True)
                 POSTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
-                for i in range(POSTable.columnCount()):
-                    POSTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
-
-            # Label for POSGraph Image
-            POSGraphLabel = QLabel(POSTabVerticalLayoutWidget2)
+            # *********** Label for POSGraph Image ***************
+            POSGraphLabel = QLabel()
+            POSGraphLabel.setAlignment(Qt.AlignCenter)
+            POSTabLayout.addWidget(POSGraphLabel, 90)
 
             # Resizing label to Layout
-            POSGraphLabel.resize(POSTabVerticalLayoutWidget2.width(), POSTabVerticalLayoutWidget2.height())
+            POSGraphLabel.resize(self.tabWidget.width(), self.tabWidget.height()*0.9)
 
 
             # Settinh Scaled Converted Pixmap Image on Label
-            POSGraphLabel.setPixmap(POSGraph.toqpixmap().scaled(POSTabVerticalLayoutWidget2.width(),
-                                                                POSTabVerticalLayoutWidget2.height(),
+            POSGraphLabel.setPixmap(POSGraph.toqpixmap().scaled(POSGraphLabel.width(),
+                                                                POSGraphLabel.height(),
                                                                 Qt.KeepAspectRatio))
-            POSGraphLabel.setGeometry((POSTabVerticalLayoutWidget2.width() - POSGraphLabel.pixmap().width()) / 2,
-                                      (POSTabVerticalLayoutWidget2.height() - POSGraphLabel.pixmap().height()) / 2,
-                                      POSGraphLabel.pixmap().width(), POSGraphLabel.pixmap().height())
             POSGraphLabel.hide()
 
             POSComboBox.currentTextChanged.connect(lambda: self.togglePOSView(POSTable, POSGraphLabel))
@@ -3725,49 +3268,43 @@ class Window(QMainWindow):
     def DataSourceEntityRelationShipDialog(self):
         EntityRelationShipDialog = QDialog()
         EntityRelationShipDialog.setWindowTitle("Entity RelationShip")
-        EntityRelationShipDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                       self.height / 10)
+        EntityRelationShipDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        EntityRelationShipDialog.setFixedHeight(QApplication.desktop().height() * 0.1)
         EntityRelationShipDialog.setParent(self)
-
         self.QDialogAddProperties(EntityRelationShipDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(EntityRelationShipDialog)
-        DataSourcelabel.setGeometry(EntityRelationShipDialog.width() * 0.125,
-                                    EntityRelationShipDialog.height() * 0.2,
-                                    EntityRelationShipDialog.width() / 4,
-                                    EntityRelationShipDialog.height() * 0.1)
+        EntityRelationShipDialogLayout = QVBoxLayout(EntityRelationShipDialog)
+        EntityRelationShipDialogLayout.setAlignment(Qt.AlignCenter)
+        EntityRelationShipDialogLayout.setSpacing(20)
 
+        # Data Source Label
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(EntityRelationShipDialog)
-        DSComboBox.setGeometry(EntityRelationShipDialog.width() * 0.4,
-                               EntityRelationShipDialog.height() * 0.2,
-                               EntityRelationShipDialog.width() / 2,
-                               EntityRelationShipDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        EntityRelationShipDialogLayout.addWidget(DataSourceWidget)
 
-        # Entity RelationShip Button Box
-        EntityRelationShipbuttonBox = QDialogButtonBox(EntityRelationShipDialog)
-        EntityRelationShipbuttonBox.setGeometry(EntityRelationShipDialog.width() * 0.125,
-                                                EntityRelationShipDialog.height() * 0.7,
-                                                EntityRelationShipDialog.width() * 3 / 4,
-                                                EntityRelationShipDialog.height() / 5)
+        # *********** Entity RelationShip Button Box ***************
+        EntityRelationShipbuttonBox = QDialogButtonBox()
         EntityRelationShipbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         EntityRelationShipbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+        EntityRelationShipDialogLayout.addWidget(EntityRelationShipbuttonBox)
 
         if len(DSComboBox.currentText()) == 0:
             EntityRelationShipbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(EntityRelationShipbuttonBox)
 
         EntityRelationShipbuttonBox.accepted.connect(EntityRelationShipDialog.accept)
         EntityRelationShipbuttonBox.rejected.connect(EntityRelationShipDialog.reject)
@@ -3816,41 +3353,33 @@ class Window(QMainWindow):
 
             # Creating New Tab for Entity Relationship
             DSERTab = QWidget()
+            DSERTabLayout = QVBoxLayout(DSERTab)
 
-            # LayoutWidget For within Entity Relationship Tab
-            DSERTabVerticalLayoutWidget = QWidget(DSERTab)
-            DSERTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
-
-            # Box Layout for Entity RelationShip Tab
-            DSERTabVerticalLayout = QHBoxLayout(DSERTabVerticalLayoutWidget)
-            DSERTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            # Top Widget within Entity Relationship Tab
+            DSERTabTopWidget = QWidget()
+            DSERTabVerticalLayout = QHBoxLayout(DSERTabTopWidget)
+            DSERTabVerticalLayout.setAlignment(Qt.AlignRight)
 
             # Part of speech ComboBox
-            DSERComboBox = QComboBox(DSERTabVerticalLayoutWidget)
-            DSERComboBox.setGeometry(DSERTabVerticalLayoutWidget.width() * 0.8, DSERTabVerticalLayoutWidget.height() * 0.4,
-                                     DSERTabVerticalLayoutWidget.width() / 10, DSERTabVerticalLayoutWidget.height() / 5)
+            DSERComboBox = QComboBox()
             DSERComboBox.addItem("Show Table")
             DSERComboBox.addItem("Show Dependency")
             DSERComboBox.addItem("Show Entities")
+            DSERTabVerticalLayout.addWidget(DSERComboBox)
 
-            self.LineEditSizeAdjustment(DSERComboBox)
+            DSERTabLayout.addWidget(DSERTabTopWidget, 10)
 
-            # 2nd LayoutWidget For within Entity Relationship Tab
-            DSERTabVerticalLayoutWidget2 = QWidget(DSERTab)
-            DSERTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                     self.tabWidget.height() - self.tabWidget.height() / 10)
+            # Bottom Widget within Entity Relationship Tab
+            DSERTabBottomWidget = QWidget()
+            DSERTabLayout.addWidget(DSERTabBottomWidget, 90)
+            DSERTabBottomWidgetLayout = QVBoxLayout(DSERTabBottomWidget)
 
-            # 2nd Box Layout for Entity RelationShip Tab
-            DSERTabVerticalLayout2 = QVBoxLayout(DSERTabVerticalLayoutWidget2)
-
-            DSERTable = QTableWidget(DSERTabVerticalLayoutWidget2)
+            DSERTable = QTableWidget()
             DSERTable.setColumnCount(3)
-            DSERTable.setGeometry(0, 0, DSERTabVerticalLayoutWidget2.width(), DSERTabVerticalLayoutWidget2.height())
-
-            DSERTable.setSizePolicy(self.sizePolicy)
             DSERTable.setWindowFlags(DSERTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             DSERTable.setHorizontalHeaderLabels(["Word", "Frequency", "Entity"])
-            DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            DSERTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            DSERTabBottomWidgetLayout.addWidget(DSERTable)
 
             for i in range(DSERTable.columnCount()):
                 DSERTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -3865,7 +3394,7 @@ class Window(QMainWindow):
                         intItem.setData(Qt.EditRole, QVariant(item))
                         DSERTable.setItem(Entity_List.index(row), row.index(item), intItem)
                         DSERTable.item(Entity_List.index(row), row.index(item)).setTextAlignment(
-                            Qt.AlignHCenter | Qt.AlignVCenter)
+                            Qt.AlignCenter)
                         DSERTable.item(Entity_List.index(row), row.index(item)).setFlags(
                             Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
@@ -3875,19 +3404,18 @@ class Window(QMainWindow):
 
                 DSERTable.setSortingEnabled(True)
                 DSERTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
                 for i in range(DSERTable.columnCount()):
                     DSERTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
             EntityHTMLWeb = QWebEngineView()
             EntityHTMLWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-            DSERTabVerticalLayout2.addWidget(EntityHTMLWeb)
+            DSERTabBottomWidgetLayout.addWidget(EntityHTMLWeb)
             EntityHTMLWeb.setHtml(EntityHTML)
             EntityHTMLWeb.hide()
 
             DependencyHTMLWeb = QWebEngineView()
-            DSERTabVerticalLayout2.addWidget(DependencyHTMLWeb)
+            DSERTabBottomWidgetLayout.addWidget(DependencyHTMLWeb)
             DependencyHTMLWeb.setHtml(DependencyHTML)
             DependencyHTMLWeb.hide()
 
@@ -3959,49 +3487,41 @@ class Window(QMainWindow):
     def DataSourceTopicModellingDialog(self):
         TopicModellingDialog = QDialog()
         TopicModellingDialog.setWindowTitle("Topic Modelling")
-        TopicModellingDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                             self.height / 10)
+        TopicModellingDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        TopicModellingDialog.setFixedHeight(QApplication.desktop().height() * 0.1)
         TopicModellingDialog.setParent(self)
-
         self.QDialogAddProperties(TopicModellingDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(TopicModellingDialog)
-        DataSourcelabel.setGeometry(TopicModellingDialog.width() * 0.125,
-                                    TopicModellingDialog.height() * 0.2,
-                                    TopicModellingDialog.width() / 4,
-                                    TopicModellingDialog.height() * 0.1)
+        TopicModellingDialogLayout = QVBoxLayout(TopicModellingDialog)
 
+        # Data Source Label
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
         # Data Source ComboBox
-        DSComboBox = QComboBox(TopicModellingDialog)
-        DSComboBox.setGeometry(TopicModellingDialog.width() * 0.4,
-                               TopicModellingDialog.height() * 0.2,
-                               TopicModellingDialog.width() / 2,
-                               TopicModellingDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        TopicModellingDialogLayout.addWidget(DataSourceWidget)
 
-        # Topic Modelling Button Box
-        TopicModellingbuttonBox = QDialogButtonBox(TopicModellingDialog)
-        TopicModellingbuttonBox.setGeometry(TopicModellingDialog.width() * 0.125,
-                                            TopicModellingDialog.height() * 0.7,
-                                            TopicModellingDialog.width() * 3 / 4,
-                                            TopicModellingDialog.height() / 5)
+        # *********** Topic Modelling Button Box ***************
+        TopicModellingbuttonBox = QDialogButtonBox()
         TopicModellingbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         TopicModellingbuttonBox.button(QDialogButtonBox.Ok).setText('Generate')
+        TopicModellingDialogLayout.addWidget(TopicModellingbuttonBox)
 
         if len(DSComboBox.currentText()) == 0:
             TopicModellingbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(TopicModellingbuttonBox)
 
         TopicModellingbuttonBox.accepted.connect(TopicModellingDialog.accept)
         TopicModellingbuttonBox.rejected.connect(TopicModellingDialog.reject)
@@ -4026,39 +3546,6 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceTotalModellingTabFlag:
-            TopicModellingTab = QWidget()
-            TopicModellingTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
-            TopicModellingTab.setSizePolicy(self.sizePolicy)
-
-            # LayoutWidget For within Topic Modelling Tab
-            TopicModellingTabVerticalLayoutWidget = QWidget(TopicModellingTab)
-            TopicModellingTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height()/10)
-
-            # Box Layout for Topic Modelling Tab
-            TopicModellingTabVerticalLayout = QHBoxLayout(TopicModellingTabVerticalLayoutWidget)
-            TopicModellingTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            # ComboBox for Topic Modelling Tab
-            TopicModellingComboBox = QComboBox(TopicModellingTabVerticalLayoutWidget)
-            TopicModellingComboBox.setGeometry(TopicModellingTabVerticalLayoutWidget.width() * 0.8,
-                                               TopicModellingTabVerticalLayoutWidget.height() * 0.4,
-                                               TopicModellingTabVerticalLayoutWidget.width() / 10,
-                                               TopicModellingTabVerticalLayoutWidget.height() / 5)
-
-            TopicModellingComboBox.addItem("Show Word CLoud")
-            TopicModellingComboBox.addItem("Show Table")
-            TopicModellingComboBox.addItem("Show Word CLoud")
-            self.LineEditSizeAdjustment(TopicModellingComboBox)
-
-
-            # LayoutWidget For within Topic Modelling Tab
-            TopicModellingTabVerticalLayoutWidget2 = QWidget(TopicModellingTab)
-            TopicModellingTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height()/10, self.tabWidget.width(), self.tabWidget.height() - self.tabWidget.height()/10)
-
-            # Box Layout for Topic Modelling Tab
-            TopicModellingTabVerticalLayout2 = QHBoxLayout(TopicModellingTabVerticalLayoutWidget2)
-            TopicModellingTabVerticalLayout2.setContentsMargins(0, 0, 0, 0)
-
             # Data Source Topic Modelling HTML
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
@@ -4083,21 +3570,20 @@ class Window(QMainWindow):
 
             # Topic Modelling HTML Viewer
             TopicModellingHTMLWeb = QWebEngineView()
-            TopicModellingTabVerticalLayout2.addWidget(TopicModellingHTMLWeb)
             TopicModellingHTMLWeb.setHtml(TopicModellingHTML)
 
             if DataSourceTotalModellingTabFlag2:
-                tabs.tabWidget = TopicModellingTab
+                tabs.tabWidget = TopicModellingHTMLWeb
                 if tabs.isActive:
-                    self.tabWidget.addTab(TopicModellingTab, tabs.TabName)
+                    self.tabWidget.addTab(TopicModellingHTMLWeb, tabs.TabName)
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(TopicModellingTab)
+                        self.tabWidget.setCurrentWidget(TopicModellingHTMLWeb)
             else:
                 # Adding Topic Modelling Tab to TabList
-                myFile.TabList.append(Tab("Topic Modelling", TopicModellingTab, DataSourceName))
+                myFile.TabList.append(Tab("Topic Modelling", TopicModellingHTMLWeb, DataSourceName))
                 # Adding Topic Modelling Tab to QTabWidget
-                self.tabWidget.addTab(TopicModellingTab, "Topic Modelling")
-                self.tabWidget.setCurrentWidget(TopicModellingTab)
+                self.tabWidget.addTab(TopicModellingHTMLWeb, "Topic Modelling")
+                self.tabWidget.setCurrentWidget(TopicModellingHTMLWeb)
                 myFile.requiredSaved = True
 
             ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -4147,24 +3633,11 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceCreateCasesTabFlag:
-            DataSourceCreateCasesTab = QWidget()
-
-            # LayoutWidget For within DataSource Preview Tab
-            CreateCasesPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateCasesTab)
-            CreateCasesPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            CreateCasesPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Data SourceTab
-            CreateCasesverticalLayout = QVBoxLayout(CreateCasesPreviewTabverticalLayoutWidget)
-            CreateCasesverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            CreateCasesPreview = QTextEdit(CreateCasesPreviewTabverticalLayoutWidget)
-            CreateCasesPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            CreateCasesPreview = QTextEdit()
             CreateCasesPreview.setReadOnly(True)
 
             CreateCasesPreview.setContextMenuPolicy(Qt.CustomContextMenu)
-            CreateCasesPreview.customContextMenuRequested.connect(
-                lambda checked, index=QContextMenuEvent: self.CreateCasesContextMenu(index, DataSourceWidgetItemName))
+            CreateCasesPreview.customContextMenuRequested.connect(lambda: self.CreateCasesContextMenu(DataSourceWidgetItemName))
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -4172,16 +3645,16 @@ class Window(QMainWindow):
                     break
 
             if DataSourceCreateCasesTabFlag2:
-                tabs.tabWidget = DataSourceCreateCasesTab
+                tabs.tabWidget = CreateCasesPreview
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
+                    self.tabWidget.addTab(CreateCasesPreview, "Create Cases")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+                        self.tabWidget.setCurrentWidget(CreateCasesPreview)
             else:
                 # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Create Cases", DataSourceCreateCasesTab, DataSourceWidgetItemName.text(0)))
-                self.tabWidget.addTab(DataSourceCreateCasesTab, "Create Cases")
-                self.tabWidget.setCurrentWidget(DataSourceCreateCasesTab)
+                myFile.TabList.append(Tab("Create Cases", CreateCasesPreview, DataSourceWidgetItemName.text(0)))
+                self.tabWidget.addTab(CreateCasesPreview, "Create Cases")
+                self.tabWidget.setCurrentWidget(CreateCasesPreview)
                 myFile.requiredSaved = True
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
@@ -4190,7 +3663,7 @@ class Window(QMainWindow):
             myFile.requiredSaved = True
 
     # Data Source Create Cases Context Menu
-    def CreateCasesContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
+    def CreateCasesContextMenu(self, DataSourceWidgetItemName):
         TextEdit = self.sender()
         TextCursor = TextEdit.textCursor()
 
@@ -4225,34 +3698,37 @@ class Window(QMainWindow):
         CreateCaseDialogBox.setWindowTitle("Create New Case")
         CreateCaseDialogBox.setParent(self)
         CreateCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-        CreateCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width*0.3,
-                                                    self.height / 10)
+        CreateCaseDialogBox.setFixedWidth(QApplication.desktop().width()*0.3)
+        CreateCaseDialogBox.setFixedHeight(QApplication.desktop().height() * 0.1)
         self.QDialogAddProperties(CreateCaseDialogBox)
 
-        CaseNameLabel = QLabel(CreateCaseDialogBox)
+        CreateCaseDialogBoxLayout = QVBoxLayout(CreateCaseDialogBox)
+        CreateCaseDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        CreateCaseDialogBoxLayout.setSpacing(20)
+
+        # ************** Case Name *************
+        CaseNameWidget = QWidget()
+        CaseNameWidgetLayout = QHBoxLayout(CaseNameWidget)
+
+        # Case Name Label
+        CaseNameLabel = QLabel()
         CaseNameLabel.setText("Case Name")
-        CaseNameLabel.setGeometry(CreateCaseDialogBox.width() * 0.1,
-                                  CreateCaseDialogBox.height() * 0.15,
-                                  CreateCaseDialogBox.width()/4,
-                                  CreateCaseDialogBox.height()/5)
-        CaseNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(CaseNameLabel)
+        CaseNameLabel.setAlignment(Qt.AlignCenter)
+        CaseNameWidgetLayout.addWidget(CaseNameLabel, 30)
 
-        CaseNameLineEdit = QLineEdit(CreateCaseDialogBox)
-        CaseNameLineEdit.setGeometry(CreateCaseDialogBox.width() * 0.4,
-                                       CreateCaseDialogBox.height() * 0.15,
-                                       CreateCaseDialogBox.width() / 2,
-                                       CreateCaseDialogBox.height() / 5)
+        # Case Name LineEdit
+        CaseNameLineEdit = QLineEdit()
         CaseNameLineEdit.setAlignment(Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(CaseNameLineEdit)
+        CaseNameWidgetLayout.addWidget(CaseNameLineEdit, 70)
 
-        CreateCaseButtonBox = QDialogButtonBox(CreateCaseDialogBox)
-        CreateCaseButtonBox.setGeometry(CreateCaseDialogBox.width() * 0.4, CreateCaseDialogBox.height() * 0.5,
-                                        CreateCaseDialogBox.width() / 2, CreateCaseDialogBox.height()/2)
+        CreateCaseDialogBoxLayout.addWidget(CaseNameWidget)
+
+        # ************** Button Box *************
+        CreateCaseButtonBox = QDialogButtonBox()
         CreateCaseButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         CreateCaseButtonBox.button(QDialogButtonBox.Ok).setText('Create')
         CreateCaseButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(CreateCaseButtonBox)
+        CreateCaseDialogBoxLayout.addWidget(CreateCaseButtonBox)
 
         CaseNameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(CreateCaseButtonBox, True))
 
@@ -4310,40 +3786,40 @@ class Window(QMainWindow):
         AddtoCaseDialogBox.setWindowTitle("Add to Case")
         AddtoCaseDialogBox.setParent(self)
         AddtoCaseDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-        AddtoCaseDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
-                                       self.height / 10)
+        AddtoCaseDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+        AddtoCaseDialogBox.setFixedHeight(QApplication.desktop().height() * 0.1)
+
         self.QDialogAddProperties(AddtoCaseDialogBox)
 
-        AddtoCaseLabel = QLabel(AddtoCaseDialogBox)
+        AddtoCaseDialogBoxLayout = QVBoxLayout(AddtoCaseDialogBox)
+        AddtoCaseDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        AddtoCaseDialogBoxLayout.setSpacing(20)
+
+        # ************** Add to Case *************
+        AddtoCaseWidget = QWidget()
+        AddtoCaseWidgetLayout = QHBoxLayout(AddtoCaseWidget)
+
+        AddtoCaseLabel = QLabel()
         AddtoCaseLabel.setText("Case Name")
-        AddtoCaseLabel.setGeometry(AddtoCaseDialogBox.width() * 0.1,
-                                   AddtoCaseDialogBox.height() * 0.15,
-                                   AddtoCaseDialogBox.width() / 4,
-                                   AddtoCaseDialogBox.height() / 5)
-        AddtoCaseLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(AddtoCaseLabel)
+        AddtoCaseLabel.setAlignment(Qt.AlignCenter)
+        AddtoCaseWidgetLayout.addWidget(AddtoCaseLabel, 30)
 
-        AddtoCaseComboBox = QComboBox(AddtoCaseDialogBox)
-        AddtoCaseComboBox.setGeometry(AddtoCaseDialogBox.width() * 0.4,
-                                      AddtoCaseDialogBox.height() * 0.15,
-                                      AddtoCaseDialogBox.width() / 2,
-                                      AddtoCaseDialogBox.height() / 5)
-
+        AddtoCaseComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for cases in DS.CasesList:
                     if not cases.MergedCase:
                         AddtoCaseComboBox.addItem(cases.CaseTopic)
                 break
+        AddtoCaseWidgetLayout.addWidget(AddtoCaseComboBox, 70)
 
-        self.LineEditSizeAdjustment(AddtoCaseComboBox)
+        AddtoCaseDialogBoxLayout.addWidget(AddtoCaseWidget)
 
+        # ************** Button Box *************
         AddtoCaseButtonBox = QDialogButtonBox(AddtoCaseDialogBox)
-        AddtoCaseButtonBox.setGeometry(AddtoCaseDialogBox.width() * 0.4, AddtoCaseDialogBox.height() * 0.5,
-                                       AddtoCaseDialogBox.width() / 2, AddtoCaseDialogBox.height() / 2)
         AddtoCaseButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         AddtoCaseButtonBox.button(QDialogButtonBox.Ok).setText('Add')
-        self.LineEditSizeAdjustment(AddtoCaseButtonBox)
+        AddtoCaseDialogBoxLayout.addWidget(AddtoCaseButtonBox)
 
         AddtoCaseButtonBox.accepted.connect(AddtoCaseDialogBox.accept)
         AddtoCaseButtonBox.rejected.connect(AddtoCaseDialogBox.reject)
@@ -4399,22 +3875,11 @@ class Window(QMainWindow):
         if not DataSourceCreateSentimentsTabFlag:
             DataSourceCreateSentimentsTab = QWidget()
 
-            # LayoutWidget For within DataSource Preview Tab
-            CreateSentimentsPreviewTabverticalLayoutWidget = QWidget(DataSourceCreateSentimentsTab)
-            CreateSentimentsPreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            CreateSentimentsPreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Data SourceTab
-            CreateSentimentsverticalLayout = QVBoxLayout(CreateSentimentsPreviewTabverticalLayoutWidget)
-            CreateSentimentsverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            CreateSentimentsPreview = QTextEdit(CreateSentimentsPreviewTabverticalLayoutWidget)
-            CreateSentimentsPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            CreateSentimentsPreview = QTextEdit()
             CreateSentimentsPreview.setReadOnly(True)
 
             CreateSentimentsPreview.setContextMenuPolicy(Qt.CustomContextMenu)
-            CreateSentimentsPreview.customContextMenuRequested.connect(
-                lambda checked, index=QContextMenuEvent: self.CreateSentimentsContextMenu(index, DataSourceWidgetItemName))
+            CreateSentimentsPreview.customContextMenuRequested.connect(lambda: self.CreateSentimentsContextMenu(DataSourceWidgetItemName))
 
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceWidgetItemName.text(0):
@@ -4422,16 +3887,16 @@ class Window(QMainWindow):
                     break
 
             if DataSourceCreateSentimentsTabFlag2:
-                tabs.tabWidget = DataSourceCreateSentimentsTab
+                tabs.tabWidget = CreateSentimentsPreview
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
+                    self.tabWidget.addTab(CreateSentimentsPreview, "Create Sentiments")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+                        self.tabWidget.setCurrentWidget(CreateSentimentsPreview)
             else:
                 # Adding Word Cloud Tab to QTabWidget
-                myFile.TabList.append(Tab("Create Sentiments", DataSourceCreateSentimentsTab, DataSourceWidgetItemName.text(0)))
-                self.tabWidget.addTab(DataSourceCreateSentimentsTab, "Create Sentiments")
-                self.tabWidget.setCurrentWidget(DataSourceCreateSentimentsTab)
+                myFile.TabList.append(Tab("Create Sentiments", CreateSentimentsPreview, DataSourceWidgetItemName.text(0)))
+                self.tabWidget.addTab(CreateSentimentsPreview, "Create Sentiments")
+                self.tabWidget.setCurrentWidget(CreateSentimentsPreview)
         else:
             self.tabWidget.addTab(tabs.tabWidget, tabs.TabName)
             self.tabWidget.setCurrentWidget(tabs.tabWidget)
@@ -4439,7 +3904,7 @@ class Window(QMainWindow):
             myFile.requiredSaved = True
 
     # Data Source Create Sentiments Context Menu
-    def CreateSentimentsContextMenu(self, TextEditRightClickEvent, DataSourceWidgetItemName):
+    def CreateSentimentsContextMenu(self, DataSourceWidgetItemName):
         TextEdit = self.sender()
         TextCursor = TextEdit.textCursor()
 
@@ -4463,39 +3928,41 @@ class Window(QMainWindow):
         AddtoSentimentsDialogBox.setWindowTitle("Add to Sentiments")
         AddtoSentimentsDialogBox.setParent(self)
         AddtoSentimentsDialogBox.setWindowFlags(Qt.WindowCloseButtonHint)
-        AddtoSentimentsDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width * 0.3,
-                                       self.height / 10)
+        AddtoSentimentsDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+        AddtoSentimentsDialogBox.setFixedHeight(QApplication.desktop().height() * 0.1)
         self.QDialogAddProperties(AddtoSentimentsDialogBox)
 
-        AddtoSentimentsLabel = QLabel(AddtoSentimentsDialogBox)
+        AddtoSentimentsDialogBoxLayout = QVBoxLayout(AddtoSentimentsDialogBox)
+        AddtoSentimentsDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        AddtoSentimentsDialogBoxLayout.setSpacing(20)
+
+        # ************** Add to Sentiment *************
+        AddtoSentimentsWidget = QWidget()
+        AddtoSentimentsWidgetLayout = QHBoxLayout(AddtoSentimentsWidget)
+
+        # Add to Sentiment Label
+        AddtoSentimentsLabel = QLabel()
         AddtoSentimentsLabel.setText("Sentiment")
-        AddtoSentimentsLabel.setGeometry(AddtoSentimentsDialogBox.width() * 0.1,
-                                         AddtoSentimentsDialogBox.height() * 0.15,
-                                         AddtoSentimentsDialogBox.width() / 4,
-                                         AddtoSentimentsDialogBox.height() / 5)
-        AddtoSentimentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(AddtoSentimentsLabel)
+        AddtoSentimentsLabel.setAlignment(Qt.AlignCenter)
+        AddtoSentimentsWidgetLayout.addWidget(AddtoSentimentsLabel, 30)
 
-        AddtoSentimentsComboBox = QComboBox(AddtoSentimentsDialogBox)
-        AddtoSentimentsComboBox.setGeometry(AddtoSentimentsDialogBox.width() * 0.4,
-                                            AddtoSentimentsDialogBox.height() * 0.15,
-                                            AddtoSentimentsDialogBox.width() / 2,
-                                            AddtoSentimentsDialogBox.height() / 5)
-
+        # Add to Sentiment ComboBox
+        AddtoSentimentsComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 for sentiments in DS.SentimentList:
                     AddtoSentimentsComboBox.addItem(sentiments.SentimentType)
                 break
 
-        self.LineEditSizeAdjustment(AddtoSentimentsComboBox)
+        AddtoSentimentsWidgetLayout.addWidget(AddtoSentimentsComboBox, 30)
 
-        AddtoSentimentsButtonBox = QDialogButtonBox(AddtoSentimentsDialogBox)
-        AddtoSentimentsButtonBox.setGeometry(AddtoSentimentsDialogBox.width() * 0.4, AddtoSentimentsDialogBox.height() * 0.5,
-                                       AddtoSentimentsDialogBox.width() / 2, AddtoSentimentsDialogBox.height() / 2)
+        AddtoSentimentsDialogBoxLayout.addWidget(AddtoSentimentsWidget)
+
+        # ************** Button Box *************
+        AddtoSentimentsButtonBox = QDialogButtonBox()
         AddtoSentimentsButtonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         AddtoSentimentsButtonBox.button(QDialogButtonBox.Ok).setText('Add')
-        self.LineEditSizeAdjustment(AddtoSentimentsButtonBox)
+        AddtoSentimentsDialogBoxLayout.addWidget(AddtoSentimentsButtonBox)
 
         AddtoSentimentsButtonBox.accepted.connect(AddtoSentimentsDialogBox.accept)
         AddtoSentimentsButtonBox.rejected.connect(AddtoSentimentsDialogBox.reject)
@@ -4550,66 +4017,94 @@ class Window(QMainWindow):
         # Summarization Dialog Box
         SummarizeDialog = QDialog()
         SummarizeDialog.setWindowTitle("Summarize")
-        SummarizeDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        SummarizeDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        SummarizeDialog.setFixedHeight(QApplication.desktop().height() * 0.3)
         SummarizeDialog.setParent(self)
-        SummarizeDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(SummarizeDialog)
 
-        # Summarization Data Source Label
+        SummarizeDialogLayout = QVBoxLayout(SummarizeDialog)
+        SummarizeDialogLayout.setAlignment(Qt.AlignCenter)
+        SummarizeDialogLayout.setSpacing(20)
+
+        RadioButtonGroup = QButtonGroup(SummarizeDialog)
+
+        # Data Source Label
+        # ******************* Data Source ***********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Data Source Label
         SummarizeDSLabel = QLabel(SummarizeDialog)
-        SummarizeDSLabel.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.1,
-                                     SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
         SummarizeDSLabel.setText("Data Source")
-        self.LabelSizeAdjustment(SummarizeDSLabel)
+        SummarizeDSLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(SummarizeDSLabel, 30)
 
-        # Summarization Default Radio Button
-        DefaultRadioButton = QRadioButton(SummarizeDialog)
-        DefaultRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.25,
-                                       SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
-        DefaultRadioButton.setText("Default")
-
-        # Summarization Total Word Count Radio Button
-        TotalWordCountRadioButton = QRadioButton(SummarizeDialog)
-        TotalWordCountRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.4,
-                                              SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
-        TotalWordCountRadioButton.setText("Word Count")
-        TotalWordCountRadioButton.adjustSize()
-
-        # Summarization Ratio Radio Button
-        RatioRadioButton = QRadioButton(SummarizeDialog)
-        RatioRadioButton.setGeometry(SummarizeDialog.width() * 0.2, SummarizeDialog.height() * 0.65,
-                                     SummarizeDialog.width() / 5, SummarizeDialog.height() / 15)
-        RatioRadioButton.setText("Ratio")
-        RatioRadioButton.adjustSize()
-
-        # Summarization Data Source ComboBox
-        SummarizeDSComboBox = QComboBox(SummarizeDialog)
-        SummarizeDSComboBox.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.1,
-                                        SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
-
+        # Data Source ComboBox
+        SummarizeDSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 SummarizeDSComboBox.addItem(DS.DataSourceName)
-        self.LineEditSizeAdjustment(SummarizeDSComboBox)
+        DataSourceWidgetLayout.addWidget(SummarizeDSComboBox, 70)
+
+        SummarizeDialogLayout.addWidget(DataSourceWidget)
+
+        # ************ Default Radio Button **************
+        DefaultRadioButton = QRadioButton()
+        DefaultRadioButton.setText("Default")
+        RadioButtonGroup.addButton(DefaultRadioButton)
+        SummarizeDialogLayout.addWidget(DefaultRadioButton)
+
+        #  ************ Total Word Count *****************
+        TotalWordWidget = QWidget()
+        TotalWordWidgetLayout = QHBoxLayout(TotalWordWidget)
+
+        #  Radio Button
+        TotalWordCountRadioButton = QRadioButton()
+        TotalWordCountRadioButton.setText("Word Count")
+        RadioButtonGroup.addButton(TotalWordCountRadioButton)
+        TotalWordWidgetLayout.addWidget(TotalWordCountRadioButton, 30)
 
         # Summarize Word QSpinBox
-        SummarizeWord = QDoubleSpinBox(SummarizeDialog)
-        SummarizeWord.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.4,
-                                  SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
+        SummarizeWord = QDoubleSpinBox()
         SummarizeWord.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
         SummarizeWord.setDecimals(0)
         SummarizeWord.setEnabled(False)
-        self.LineEditSizeAdjustment(SummarizeWord)
+        TotalWordWidgetLayout.addWidget(SummarizeWord, 70)
 
+        SummarizeDialogLayout.addWidget(TotalWordWidget)
 
-        # Max Word Label
-        SummarizeMaxWord = QLabel(SummarizeDialog)
-        SummarizeMaxWord.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.5,
-                                     SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
-        SummarizeMaxWord.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+        # ************* Max Word Label ***************
+        SummarizeMaxWord = QLabel()
+        SummarizeMaxWord.setAlignment(Qt.AlignRight)
         MaxWordFont = QFont()
         MaxWordFont.setPixelSize(9)
         SummarizeMaxWord.setFont(MaxWordFont)
+        SummarizeMaxWord.adjustSize()
+
+        SummarizeDialogLayout.addWidget(SummarizeMaxWord)
+
+        #  **************** Ratio *******************
+        RatioWidget = QWidget()
+        RatioWidgetLayout = QHBoxLayout(RatioWidget)
+
+        #  Radio Button
+        RatioRadioButton = QRadioButton()
+        RatioRadioButton.setText("Ratio")
+        RadioButtonGroup.addButton(RatioRadioButton)
+        RatioWidgetLayout.addWidget(RatioRadioButton, 30)
+
+        # Summarize Ratio QSpinBox
+        SummarizeRatio = QDoubleSpinBox()
+        SummarizeRatio.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
+        SummarizeRatio.setEnabled(False)
+        SummarizeRatio.setDecimals(2)
+        SummarizeRatio.setSingleStep(0.01)
+        SummarizeRatio.setMinimum(.20)
+        SummarizeRatio.setMaximum(1.00)
+
+        RatioWidgetLayout.addWidget(SummarizeRatio, 70)
+
+        SummarizeDialogLayout.addWidget(RatioWidget)
 
         if SummarizeDSComboBox.currentText() != None:
             for DS in myFile.DataSourceList:
@@ -4618,34 +4113,18 @@ class Window(QMainWindow):
                     SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
                     SummarizeWord.setValue(SummarizeWord.minimum())
                     SummarizeMaxWord.setText("(Max. Words: " + str(len(DS.DataSourcetext.split())) + ")")
-                    self.LabelSizeAdjustment(SummarizeMaxWord)
                     break
 
         TotalWordCountRadioButton.toggled.connect(lambda: self.RadioButtonTrigger(SummarizeWord))
-
-        # SummarizeRatio
-        SummarizeRatio = QDoubleSpinBox(SummarizeDialog)
-        SummarizeRatio.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.65,
-                                   SummarizeDialog.width() / 3, SummarizeDialog.height() / 15)
-        SummarizeRatio.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
-        SummarizeRatio.setEnabled(False)
-        SummarizeRatio.setDecimals(2)
-        SummarizeRatio.setSingleStep(0.01)
-        SummarizeRatio.setMinimum(.20)
-        SummarizeRatio.setMaximum(1.00)
-        self.LineEditSizeAdjustment(SummarizeRatio)
-
         RatioRadioButton.toggled.connect(lambda: self.RadioButtonTrigger(SummarizeRatio))
-
         SummarizeDSComboBox.currentTextChanged.connect(lambda: self.ComboBoxTextChange(SummarizeWord, SummarizeMaxWord))
 
-        SummarizebuttonBox = QDialogButtonBox(SummarizeDialog)
-        SummarizebuttonBox.setGeometry(SummarizeDialog.width() * 0.5, SummarizeDialog.height() * 0.8,
-                                       SummarizeDialog.width() / 3, SummarizeDialog.height() / 5)
+        #  ************* Button Box ***************
+        SummarizebuttonBox = QDialogButtonBox()
         SummarizebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         SummarizebuttonBox.button(QDialogButtonBox.Ok).setText('Summarize')
         SummarizebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(SummarizebuttonBox)
+        SummarizeDialogLayout.addWidget(SummarizebuttonBox)
 
         SummarizeDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(SummarizeDSComboBox, SummarizebuttonBox))
 
@@ -4657,10 +4136,7 @@ class Window(QMainWindow):
         SummarizebuttonBox.rejected.connect(SummarizeDialog.reject)
 
 
-        SummarizebuttonBox.accepted.connect(
-            lambda: self.DSSummarizeFromDialog(SummarizeDSComboBox.currentText(), DefaultRadioButton.isChecked(),
-                                               TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),
-                                               SummarizeWord.value(), SummarizeRatio.value()))
+        SummarizebuttonBox.accepted.connect(lambda: self.DSSummarizeFromDialog(SummarizeDSComboBox.currentText(), DefaultRadioButton.isChecked(),TotalWordCountRadioButton.isChecked(), RatioRadioButton.isChecked(),SummarizeWord.value(), SummarizeRatio.value()))
 
         SummarizeDialog.exec()
 
@@ -4709,20 +4185,7 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceSummaryPreviewTabFlag or DataSourceSummaryPreviewTabFlag2:
-            DataSourceSummaryPreviewTab = QWidget()
-
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourcePreviewTabverticalLayoutWidget = QWidget(DataSourceSummaryPreviewTab)
-            DataSourcePreviewTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-            DataSourcePreviewTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Word Cloud Tab
-            DataSourceverticalLayout = QVBoxLayout(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourceverticalLayout.setContentsMargins(0, 0, 0, 0)
-
-
-            DataSourceSummaryPreview = QTextEdit(DataSourcePreviewTabverticalLayoutWidget)
-            DataSourceSummaryPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+            DataSourceSummaryPreview = QTextEdit()
             DataSourceSummaryPreview.setReadOnly(True)
 
             for DS in myFile.DataSourceList:
@@ -4731,30 +4194,30 @@ class Window(QMainWindow):
                     break
 
             if DataSourceSummaryPreviewTabFlag3:
-                tabs.tabWidget = DataSourceSummaryPreviewTab
+                tabs.tabWidget = DataSourceSummaryPreview
                 if tabs.isActive:
                     # Adding Preview Tab to QTabWidget
-                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
+                    self.tabWidget.addTab(DataSourceSummaryPreview, "Summary")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                        self.tabWidget.setCurrentWidget(DataSourceSummaryPreview)
 
             else:
                 if DataSourceSummaryPreviewTabFlag2:
                     tabs.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
-                    tabs.tabWidget = DataSourceSummaryPreviewTab
+                    self.tabWidget.addTab(DataSourceSummaryPreview, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreview)
+                    tabs.tabWidget = DataSourceSummaryPreview
                     tabs.setisActive(True)
                 else:
                     # Adding Preview Tab to TabList
-                    dummyTab = Tab("Summary", DataSourceSummaryPreviewTab, DataSourceName)
+                    dummyTab = Tab("Summary", DataSourceSummaryPreview, DataSourceName)
                     dummyTab.setSummarizeTextLength(len(DataSourceSummaryPreview.toPlainText().split()))
                     myFile.TabList.append(dummyTab)
 
                     # Adding Preview Tab to QTabWidget
-                    self.tabWidget.addTab(DataSourceSummaryPreviewTab, "Summary")
-                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreviewTab)
+                    self.tabWidget.addTab(DataSourceSummaryPreview, "Summary")
+                    self.tabWidget.setCurrentWidget(DataSourceSummaryPreview)
                     myFile.requiredSaved = True
 
             # Adding Summary Preview Query
@@ -4802,47 +4265,49 @@ class Window(QMainWindow):
     def DataSourceTranslateDialog(self):
         DataSourceTranslateDialog = QDialog()
         DataSourceTranslateDialog.setWindowTitle("Translate")
-        DataSourceTranslateDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        DataSourceTranslateDialog.setFixedWidth(QApplication.desktop().width() * 0.3)
+        DataSourceTranslateDialog.setFixedHeight(QApplication.desktop().height() * 0.2)
         DataSourceTranslateDialog.setParent(self)
         DataSourceTranslateDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(DataSourceTranslateDialog)
 
-        # Data Source Label
-        TranslateDSLabel = QLabel(DataSourceTranslateDialog)
-        TranslateDSLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.1,
-                                     DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
+        DataSourceTranslateDialogLayout = QVBoxLayout(DataSourceTranslateDialog)
+        DataSourceTranslateDialogLayout.setAlignment(Qt.AlignCenter)
+        DataSourceTranslateDialogLayout.setSpacing(20)
+
+        # *********** Data Source **************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        # Add to Sentiment Label
+        TranslateDSLabel = QLabel()
         TranslateDSLabel.setText("Data Source")
-        self.LabelSizeAdjustment(TranslateDSLabel)
-
-        # Data Source Original Text Label
-        TranslateOriginalTextLabel = QLabel(DataSourceTranslateDialog)
-        TranslateOriginalTextLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.25,
-                                               DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
-        TranslateOriginalTextLabel.setText("Original Text")
-        self.LabelSizeAdjustment(TranslateOriginalTextLabel)
-
-        # Translate To Label
-        TranslateToLabel = QLabel(DataSourceTranslateDialog)
-        TranslateToLabel.setGeometry(DataSourceTranslateDialog.width() * 0.2, DataSourceTranslateDialog.height() * 0.4,
-                                     DataSourceTranslateDialog.width() / 5, DataSourceTranslateDialog.height() / 15)
-        TranslateToLabel.setText("Translate To:")
-        self.LabelSizeAdjustment(TranslateToLabel)
+        TranslateDSLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(TranslateDSLabel, 30)
 
         # Data Source ComboBox
-        TranslateDSComboBox = QComboBox(DataSourceTranslateDialog)
-        TranslateDSComboBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.1,
-                                        DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
-
+        TranslateDSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 TranslateDSComboBox.addItem(DS.DataSourceName)
-        self.LineEditSizeAdjustment(TranslateDSComboBox)
+
+        DataSourceWidgetLayout.addWidget(TranslateDSComboBox, 70)
+
+        DataSourceTranslateDialogLayout.addWidget(DataSourceWidget)
+
+        # *********** Original Text **************
+        OriginalTextWidget = QWidget()
+        OriginalTextWidgetLayout = QHBoxLayout(OriginalTextWidget)
+
+        # Data Source Original Text Label
+        TranslateOriginalTextLabel = QLabel()
+        TranslateOriginalTextLabel.setText("Original Text")
+        TranslateOriginalTextLabel.setAlignment(Qt.AlignCenter)
+        OriginalTextWidgetLayout.addWidget(TranslateOriginalTextLabel, 30)
 
         # Data Source Original Text LineEdit
-        TranslateOriginalTextLineEdit = QLineEdit(DataSourceTranslateDialog)
-        TranslateOriginalTextLineEdit.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.25,
-                                                  DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
-        TranslateOriginalTextLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+        TranslateOriginalTextLineEdit = QLineEdit()
+        TranslateOriginalTextLineEdit.setAlignment(Qt.AlignCenter)
         TranslateOriginalTextLineEdit.setReadOnly(True)
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == TranslateDSComboBox.currentText():
@@ -4860,26 +4325,38 @@ class Window(QMainWindow):
                         if langcode == DS.OriginalText:
                             TranslateOriginalTextLineEdit.setText(lang)
                             break
-        self.LineEditSizeAdjustment(TranslateOriginalTextLineEdit)
+
+        OriginalTextWidgetLayout.addWidget(TranslateOriginalTextLineEdit, 70)
+
+        DataSourceTranslateDialogLayout.addWidget(OriginalTextWidget)
+
+        # *************** Translate To ****************
+        TranslateToWidget = QWidget()
+        TranslateToWidgetLayout = QHBoxLayout(TranslateToWidget)
+
+        # Translate To Label
+        TranslateToLabel = QLabel()
+        TranslateToLabel.setText("Translate To:")
+        TranslateToLabel.setAlignment(Qt.AlignCenter)
+        TranslateToWidgetLayout.addWidget(TranslateToLabel, 30)
 
         # Translate To ComboBox
-        TranslateToComboBox = QComboBox(DataSourceTranslateDialog)
-        TranslateToComboBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.4,
-                                        DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+        TranslateToComboBox = QComboBox()
         TranslateToComboBox.setLayoutDirection(Qt.LeftToRight)
 
         for langcode, lang in self.languages:
             if not lang == TranslateOriginalTextLineEdit.text():
                 TranslateToComboBox.addItem(lang)
 
-        self.LineEditSizeAdjustment(TranslateToComboBox)
+        TranslateToWidgetLayout.addWidget(TranslateToComboBox, 70)
 
-        TranslatebuttonBox = QDialogButtonBox(DataSourceTranslateDialog)
-        TranslatebuttonBox.setGeometry(DataSourceTranslateDialog.width() * 0.5, DataSourceTranslateDialog.height() * 0.8,
-                                       DataSourceTranslateDialog.width() / 3, DataSourceTranslateDialog.height() / 15)
+        DataSourceTranslateDialogLayout.addWidget(TranslateToWidget)
+
+        # *************** Button Box ****************
+        TranslatebuttonBox = QDialogButtonBox()
         TranslatebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         TranslatebuttonBox.button(QDialogButtonBox.Ok).setText('Translate')
-        self.LineEditSizeAdjustment(TranslatebuttonBox)
+        DataSourceTranslateDialogLayout.addWidget(TranslatebuttonBox)
 
         if len(TranslateDSComboBox.currentText()) == 0 or TranslateOriginalTextLineEdit.text() == "undetectable":
             TranslatebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -4957,38 +4434,25 @@ class Window(QMainWindow):
                         break
 
             if not DataSourceShowTranslationTabFlag:
-                DataSourceShowTranslationTab = QWidget()
-                DataSourceShowTranslationTab.setGeometry(QRect(self.verticalLayoutWidget.width(), 0, self.width - self.verticalLayoutWidget.width(), self.horizontalLayoutWidget.height()))
-                DataSourceShowTranslationTab.setSizePolicy(self.sizePolicy)
-
-                # LayoutWidget For within Translation Tab
-                DataSourceShowTranslationTabVerticalLayoutWidget = QWidget(DataSourceShowTranslationTab)
-                DataSourceShowTranslationTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-                # Box Layout for Translation Tab
-                DataSourceShowTranslationTabVerticalLayout = QHBoxLayout(DataSourceShowTranslationTabVerticalLayoutWidget)
-                DataSourceShowTranslationTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
                 # Data Source Translation Text Edit
-                DataSourceTranslationPreview = QTextEdit(DataSourceShowTranslationTabVerticalLayoutWidget)
-                DataSourceTranslationPreview.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
+                DataSourceTranslationPreview = QTextEdit()
                 DataSourceTranslationPreview.setReadOnly(True)
                 DataSourceTranslationPreview.setText(str(DS.DataSourceTranslatedText))
 
                 if DataSourceShowTranslationTabFlag2:
-                    tabs.tabWidget = DataSourceShowTranslationTab
+                    tabs.tabWidget = DataSourceTranslationPreview
                     if tabs.isActive:
-                        self.tabWidget.addTab(DataSourceShowTranslationTab, tabs.TabName)
+                        self.tabWidget.addTab(DataSourceTranslationPreview, tabs.TabName)
                         if tabs.isCurrentWidget:
-                            self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                            self.tabWidget.setCurrentWidget(DataSourceTranslationPreview)
                 else:
                     # Adding Translation Tab to TabList
-                    dummyTab = Tab("Translated Text", DataSourceShowTranslationTab, DataSourceName)
+                    dummyTab = Tab("Translated Text", DataSourceTranslationPreview, DataSourceName)
                     dummyTab.setTranslateLanguage(TranslateTo)
                     myFile.TabList.append(dummyTab)
                     # Adding Translation Tab to QTabWidget
-                    self.tabWidget.addTab(DataSourceShowTranslationTab, "Translated Text")
-                    self.tabWidget.setCurrentWidget(DataSourceShowTranslationTab)
+                    self.tabWidget.addTab(DataSourceTranslationPreview, "Translated Text")
+                    self.tabWidget.setCurrentWidget(DataSourceTranslationPreview)
                     myFile.requiredSaved = True
 
                 ItemsWidget = self.QueryTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -5089,919 +4553,663 @@ class Window(QMainWindow):
         DataSourceWidgetDetailDialogBox.setParent(self)
         self.QDialogAddProperties(DataSourceWidgetDetailDialogBox)
 
+        DataSourceWidgetDetailDialogBoxLayout = QVBoxLayout(DataSourceWidgetDetailDialogBox)
+        DataSourceWidgetDetailDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetDetailDialogBoxLayout.setSpacing(20)
+
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == DataSourceWidgetItemName.text(0):
                 break
 
-        if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)":
-            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
-                                                        self.height*2/5)
+        if DS.DataSourceext == "Doc files (*.doc *.docx)" or DS.DataSourceext == "Pdf files (*.pdf)" or DS.DataSourceext == "Notepad files (*.txt)" or DS.DataSourceext == "Rich Text Format files (*.rtf)" or DS.DataSourceext == "Audio files (*.wav *.mp3)" or DS.DataSourceext == "CSV files (*.csv)":
 
-            #************************************** Labels *************************************
+            # ***************** Data Source Name ********************
+            DataSourceNameWidget = QWidget()
+            DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
             # Data Source Name Label
-            DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+            DataSourceNameLabel = QLabel()
             DataSourceNameLabel.setText("Name:")
-            DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.width()/4,
-                                            DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNameLabel)
-
-            # Data Source Path Label
-            DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourcePathLabel.setText("Path:")
-            DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                            DataSourceWidgetDetailDialogBox.width()/4,
-                                            DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourcePathLabel)
-
-            # Data Source Ext Label
-            DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceExtLabel.setText("Extension:")
-            DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                           DataSourceWidgetDetailDialogBox.width()/4,
-                                           DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceExtLabel)
-
-            # Data Source Size Label
-            DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceSize.setText("Size:")
-            DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                       DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                       DataSourceWidgetDetailDialogBox.width()/4,
-                                       DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceSize)
-
-
-            # Data Source Access Time Label
-            DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceAccessTime.setText("Last Access Time:")
-            DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                             DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                             DataSourceWidgetDetailDialogBox.width()/4,
-                                             DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceAccessTime)
-
-            # Data Source Modified Time Label
-            DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceModifiedTime.setText("Last Modified Time:")
-            DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.width()/4,
-                                               DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceModifiedTime)
-
-            # Data Source Change Time Label
-            DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceChangeTime.setText("Created Time:")
-            DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                             DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                             DataSourceWidgetDetailDialogBox.width()/4,
-                                             DataSourceWidgetDetailDialogBox.height()/20)
-            DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceChangeTime)
-
-            # Data Source Word Count Label
-            DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceWordCount.setText("Total Words:")
-            DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                            DataSourceWidgetDetailDialogBox.width() / 4,
-                                            DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceWordCount)
-
-            # ************************************** LineEdit *************************************
+            DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
             # Data Source Name LineEdit
-            DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNameLineEdit = QLineEdit()
             DataSourceNameLineEdit.setText(DS.DataSourceName)
             DataSourceNameLineEdit.setReadOnly(True)
-            DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+            DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+            DataSourceNameLineEdit.adjustSize()
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
 
-            # Data Source Path LineEdit
-            DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourcePathLineEdit.setText(DS.DataSourcePath)
-            DataSourcePathLineEdit.setReadOnly(True)
-            DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
 
-            # Data Source Ext LineEdit
-            DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
-            DataSourceExtLineEdit.setReadOnly(True)
-            DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                              DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                              DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+            if DS.DataSourceext == "CSV files (*.csv)" and not DS.CSVPathFlag:
+                DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+                DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
 
-            # Data Source Size LineEdit
-            DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize, binary=True))
-            DataSourceSizeLineEdit.setReadOnly(True)
-            DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
-
-            # Data Source Access Time LineEdit
-            DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
-            DataSourceAccessTimeLineEdit.setReadOnly(True)
-            DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                     DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
-
-            # Data Source Modified Time LineEdit
-            DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
-            DataSourceModifiedTimeLineEdit.setReadOnly(True)
-            DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
-
-            # Data Source Change Time LineEdit
-            DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
-            DataSourceChangeTimeLineEdit.setReadOnly(True)
-            DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                     DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
-
-            # Data Source Word Count LineEdit
-            DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
-            DataSourceWordCountLineEdit.setReadOnly(True)
-            DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                    DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                    DataSourceWidgetDetailDialogBox.height() / 20)
-            DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
-
-            DataSourceWidgetDetailDialogBox.exec_()
-
-        elif DS.DataSourceext == "CSV files (*.csv)":
-            if DS.CSVPathFlag:
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width/3,
-                                                            self.height*2/5)
-
-                #************************************** Labels *************************************
-
-                # Data Source Name Label
-                DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNameLabel.setText("Name:")
-                DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.width()/4,
-                                                DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameLabel)
-
-                # Data Source Path Label
-                DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourcePathLabel.setText("Path:")
-                DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                                DataSourceWidgetDetailDialogBox.width()/4,
-                                                DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourcePathLabel)
-
-                # Data Source Ext Label
-                DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceExtLabel.setText("Extension:")
-                DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                               DataSourceWidgetDetailDialogBox.width()/4,
-                                               DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceExtLabel)
-
-                # Data Source Size Label
-                DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceSize.setText("Size:")
-                DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                           DataSourceWidgetDetailDialogBox.width()/4,
-                                           DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceSize)
-
-
-                # Data Source Access Time Label
-                DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceAccessTime.setText("Last Access Time:")
-                DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                 DataSourceWidgetDetailDialogBox.width()/4,
-                                                 DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceAccessTime)
-
-                # Data Source Modified Time Label
-                DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceModifiedTime.setText("Last Modified Time:")
-                DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.width()/4,
-                                                   DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceModifiedTime)
-
-                # Data Source Change Time Label
-                DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceChangeTime.setText("Created Time:")
-                DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                 DataSourceWidgetDetailDialogBox.width()/4,
-                                                 DataSourceWidgetDetailDialogBox.height()/20)
-                DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceChangeTime)
-
-                # Data Source Word Count Label
-                DataSourceRowsCount = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceRowsCount.setText("Total Rows:")
-                DataSourceRowsCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceRowsCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceRowsCount)
-
-                # ************************************** LineEdit *************************************
-
-                # Data Source Name LineEdit
-                DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNameLineEdit.setText(DS.DataSourceName)
-                DataSourceNameLineEdit.setReadOnly(True)
-                DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNameLineEdit)
-
-                # Data Source Path LineEdit
-                DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourcePathLineEdit.setText(DS.DataSourcePath)
-                DataSourcePathLineEdit.setReadOnly(True)
-                DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourcePathLineEdit)
-
-                # Data Source Ext LineEdit
-                DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
-                DataSourceExtLineEdit.setReadOnly(True)
-                DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceExtLineEdit)
-
-                # Data Source Size LineEdit
-                DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize, binary=True))
-                DataSourceSizeLineEdit.setReadOnly(True)
-                DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
-
-                # Data Source Access Time LineEdit
-                DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
-                DataSourceAccessTimeLineEdit.setReadOnly(True)
-                DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
-
-                # Data Source Modified Time LineEdit
-                DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
-                DataSourceModifiedTimeLineEdit.setReadOnly(True)
-                DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                           DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
-
-                # Data Source Change Time LineEdit
-                DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
-                DataSourceChangeTimeLineEdit.setReadOnly(True)
-                DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
-
-                # Data Source Word Count LineEdit
-                DataSourceRowCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceRowCountLineEdit.setText(str(len(DS.CSVData.index)))
-                DataSourceRowCountLineEdit.setReadOnly(True)
-                DataSourceRowCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceRowCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceRowCountLineEdit)
-
-                DataSourceWidgetDetailDialogBox.exec_()
-
-            else:
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                            self.height / 5)
-
-                # Data Source Label
-                DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceLabel.setText("Name:")
-                DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                            DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                            DataSourceWidgetDetailDialogBox.width() / 4,
-                                            DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceLabel)
+                # ***************** Data Source Row Count ********************
+                DataSourceURLWidget = QWidget()
+                DataSourceURLWidgetLayout = QHBoxLayout(DataSourceURLWidget)
 
                 # Data Source URL Label
                 DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
                 DataSourceNameURLLabel.setText("URL:")
-                DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() / 4,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameURLLabel)
-
-                # Data Source Word Count Label
-                DataSourceRowCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceRowCountLabel.setText("Total Rows:")
-                DataSourceRowCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                    DataSourceWidgetDetailDialogBox.width() / 4,
-                                                    DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceRowCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceRowCountLabel)
-
-                # ************************************** LineEdit *************************************
-
-                # Data Source Name LineEdit
-                DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceLineEdit.setText(DS.DataSourceName)
-                DataSourceLineEdit.setReadOnly(True)
-                DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                               DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                               DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceLineEdit)
+                DataSourceNameURLLabel.setAlignment(Qt.AlignCenter)
+                DataSourceURLWidgetLayout.addWidget(DataSourceNameURLLabel, 30)
 
                 # Data Source URL LineEdit
                 DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
                 DataSourceURLLineEdit.setText(DS.DataSourcePath)
                 DataSourceURLLineEdit.setReadOnly(True)
-                DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+                DataSourceURLLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceURLLineEdit.adjustSize()
+                DataSourceURLWidgetLayout.addWidget(DataSourceURLLineEdit, 70)
 
-                # Data Source Word Count LineEdit
-                DataSourceRowCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceURLWidget)
+
+                # ***************** Data Source Row Count ********************
+                DataSourceRowCountWidget = QWidget()
+                DataSourceRowCountWidgetLayout = QHBoxLayout(DataSourceRowCountWidget)
+
+                # Data Source Row Count Label
+                DataSourceRowsCount = QLabel()
+                DataSourceRowsCount.setText("Total Rows:")
+                DataSourceRowsCount.setAlignment(Qt.AlignCenter)
+                DataSourceRowCountWidgetLayout.addWidget(DataSourceRowsCount, 30)
+
+                # Data Source Row Count LineEdit
+                DataSourceRowCountLineEdit = QLineEdit()
                 DataSourceRowCountLineEdit.setText(str(len(DS.CSVData.index)))
                 DataSourceRowCountLineEdit.setReadOnly(True)
-                DataSourceRowCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceRowCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceRowCountLineEdit)
+                DataSourceRowCountLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceRowCountLineEdit.adjustSize()
+                DataSourceRowCountWidgetLayout.addWidget(DataSourceRowCountLineEdit, 70)
 
-                DataSourceWidgetDetailDialogBox.exec_()
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceRowCountWidget)
+
+            else:
+                DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+                DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.4)
+
+                # ***************** Data Source Path ********************
+                DataSourcePathWidget = QWidget()
+                DataSourcePathWidgetLayout = QHBoxLayout(DataSourcePathWidget)
+
+                # Data Source Path Label
+                DataSourcePathLabel = QLabel()
+                DataSourcePathLabel.setText("Path:")
+                DataSourcePathLabel.setAlignment(Qt.AlignCenter)
+                DataSourcePathWidgetLayout.addWidget(DataSourcePathLabel, 30)
+
+                # Data Source Path LineEdit
+                DataSourcePathLineEdit = QLineEdit()
+                DataSourcePathLineEdit.setText(DS.DataSourcePath)
+                DataSourcePathLineEdit.setReadOnly(True)
+                DataSourcePathLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourcePathWidgetLayout.addWidget(DataSourcePathLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourcePathWidget)
+
+                # ***************** Data Source Ext ********************
+                DataSourceExtWidget = QWidget()
+                DataSourceExtWidgetLayout = QHBoxLayout(DataSourceExtWidget)
+
+                # Data Source Ext Label
+                DataSourceExtLabel = QLabel()
+                DataSourceExtLabel.setText("Extension:")
+                DataSourceExtLabel.setAlignment(Qt.AlignCenter)
+                DataSourceExtWidgetLayout.addWidget(DataSourceExtLabel, 30)
+
+                # Data Source Ext LineEdit
+                DataSourceExtLineEdit = QLineEdit()
+                DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath)[1])
+                DataSourceExtLineEdit.setReadOnly(True)
+                DataSourceExtLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceExtWidgetLayout.addWidget(DataSourceExtLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceExtWidget)
+
+                # ***************** Data Source Size ********************
+                DataSourceSizeWidget = QWidget()
+                DataSourceSizeWidgetLayout = QHBoxLayout(DataSourceSizeWidget)
+
+                # Data Source Size Label
+                DataSourceSize = QLabel()
+                DataSourceSize.setText("Size:")
+                DataSourceSize.setAlignment(Qt.AlignCenter)
+                DataSourceSizeWidgetLayout.addWidget(DataSourceSize, 30)
+
+                # Data Source Size LineEdit
+                DataSourceSizeLineEdit = QLineEdit()
+                DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize, binary=True))
+                DataSourceSizeLineEdit.setReadOnly(True)
+                DataSourceSizeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceSizeWidgetLayout.addWidget(DataSourceSizeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceSizeWidget)
+
+                # ***************** Data Access Time ********************
+                DataSourceAccessTimeWidget = QWidget()
+                DataSourceAccessTimeWidgetLayout = QHBoxLayout(DataSourceAccessTimeWidget)
+
+                # Data Source Access Time Label
+                DataSourceAccessTime = QLabel()
+                DataSourceAccessTime.setText("Last Access Time:")
+                DataSourceAccessTime.setAlignment(Qt.AlignCenter)
+                DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTime, 30)
+
+                # Data Source Access Time LineEdit
+                DataSourceAccessTimeLineEdit = QLineEdit()
+                DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime)
+                DataSourceAccessTimeLineEdit.setReadOnly(True)
+                DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceAccessTimeWidget)
+
+                # ***************** Data Source Modified Time ********************
+                DataSourceModifiedTimeWidget = QWidget()
+                DataSourceModifiedTimeWidgetLayout = QHBoxLayout(DataSourceModifiedTimeWidget)
+
+                # Data Source Modified Time Label
+                DataSourceModifiedTime = QLabel()
+                DataSourceModifiedTime.setText("Last Modified Time:")
+                DataSourceModifiedTime.setAlignment(Qt.AlignCenter)
+                DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTime, 30)
+
+                # Data Source Modified Time LineEdit
+                DataSourceModifiedTimeLineEdit = QLineEdit()
+                DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime)
+                DataSourceModifiedTimeLineEdit.setReadOnly(True)
+                DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceModifiedTimeWidget)
+
+                # ***************** Data Source Change Time ********************
+                DataSourceChangeTimeWidget = QWidget()
+                DataSourceChangeTimeWidgetLayout = QHBoxLayout(DataSourceChangeTimeWidget)
+
+                # Data Source Change Time Label
+                DataSourceChangeTime = QLabel()
+                DataSourceChangeTime.setText("Created Time:")
+                DataSourceChangeTime.setAlignment(Qt.AlignCenter)
+                DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTime, 30)
+
+                # Data Source Change Time LineEdit
+                DataSourceChangeTimeLineEdit = QLineEdit()
+                DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime)
+                DataSourceChangeTimeLineEdit.setReadOnly(True)
+                DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceChangeTimeWidget)
+
+                if DS.DataSourceext == "CSV files (*.csv)":
+                    # ***************** Data Source Row Count ********************
+                    DataSourceRowCountWidget = QWidget()
+                    DataSourceRowCountWidgetLayout = QHBoxLayout(DataSourceRowCountWidget)
+
+                    # Data Source Row Count Label
+                    DataSourceRowsCount = QLabel()
+                    DataSourceRowsCount.setText("Total Rows:")
+                    DataSourceRowsCount.setAlignment(Qt.AlignCenter)
+                    DataSourceRowCountWidgetLayout.addWidget(DataSourceRowsCount, 30)
+
+                    # Data Source Row Count LineEdit
+                    DataSourceRowCountLineEdit = QLineEdit()
+                    DataSourceRowCountLineEdit.setText(str(len(DS.CSVData.index)))
+                    DataSourceRowCountLineEdit.setReadOnly(True)
+                    DataSourceRowCountLineEdit.setAlignment(Qt.AlignCenter)
+                    DataSourceRowCountWidgetLayout.addWidget(DataSourceRowCountLineEdit, 70)
+
+                    DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceRowCountWidget)
+
+                else:
+                    # ***************** Data Source Word Count ********************
+                    DataSourceWordCountWidget = QWidget()
+                    DataSourceWordCountWidgetLayout = QHBoxLayout(DataSourceWordCountWidget)
+
+                    # Data Source Word Count Label
+                    DataSourceWordCount = QLabel()
+                    DataSourceWordCount.setText("Total Words:")
+                    DataSourceWordCount.setAlignment(Qt.AlignCenter)
+                    DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCount, 30)
+
+                    # Data Source Word Count LineEdit
+                    DataSourceWordCountLineEdit = QLineEdit()
+                    DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
+                    DataSourceWordCountLineEdit.setReadOnly(True)
+                    DataSourceWordCountLineEdit.setAlignment(Qt.AlignCenter)
+                    DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCountLineEdit, 70)
+
+                    DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceWordCountWidget)
+
+            DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Image files (*.png *.bmp *.jpeg *.jpg *.webp *.tiff *.tif *.pfm *.jp2 *.hdr *.pic *.exr *.ras *.sr *.pbm *.pgm *.ppm *.pxm *.pnm)":
             if len(DS.DataSourceImage) == 1:
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
-                                                            self.height * 2 / 5)
+                DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+                DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.4)
 
-                # ************************************** Labels *************************************
+                # ***************** Data Source Name ********************
+                DataSourceNameWidget = QWidget()
+                DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
                 # Data Source Name Label
-                DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLabel = QLabel()
                 DataSourceNameLabel.setText("Name:")
-                DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameLabel)
-
-                # Data Source Path Label
-                DataSourcePathLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourcePathLabel.setText("Path:")
-                DataSourcePathLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourcePathLabel)
-
-                # Data Source Ext Label
-                DataSourceExtLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceExtLabel.setText("Extension:")
-                DataSourceExtLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                               DataSourceWidgetDetailDialogBox.width() / 4,
-                                               DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceExtLabel)
-
-                # Data Source Size Label
-                DataSourceSize = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceSize.setText("Size:")
-                DataSourceSize.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                           DataSourceWidgetDetailDialogBox.width() / 4,
-                                           DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceSize)
-
-                # Data Source Access Time Label
-                DataSourceAccessTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceAccessTime.setText("Last Access Time:")
-                DataSourceAccessTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                 DataSourceWidgetDetailDialogBox.width() / 4,
-                                                 DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceAccessTime)
-
-                # Data Source Modified Time Label
-                DataSourceModifiedTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceModifiedTime.setText("Last Modified Time:")
-                DataSourceModifiedTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.width() / 4,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceModifiedTime)
-
-                # Data Source Change Time Label
-                DataSourceChangeTime = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceChangeTime.setText("Created Time:")
-                DataSourceChangeTime.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                 DataSourceWidgetDetailDialogBox.width() / 4,
-                                                 DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceChangeTime)
-
-                # Data Source Word Count Label
-                DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceWordCount.setText("Total Words:")
-                DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceWordCount)
-
-                # ************************************** LineEdit *************************************
+                DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+                DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
                 # Data Source Name LineEdit
-                DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNameLineEdit.setText(ntpath.basename(DS.DataSourcePath[0]))
+                DataSourceNameLineEdit = QLineEdit()
+                DataSourceNameLineEdit.setText(DS.DataSourceName[0])
                 DataSourceNameLineEdit.setReadOnly(True)
-                DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+                DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceNameLineEdit.adjustSize()
+                DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
+
+                # ***************** Data Source Path ********************
+                DataSourcePathWidget = QWidget()
+                DataSourcePathWidgetLayout = QHBoxLayout(DataSourcePathWidget)
+
+                # Data Source Path Label
+                DataSourcePathLabel = QLabel()
+                DataSourcePathLabel.setText("Path:")
+                DataSourcePathLabel.setAlignment(Qt.AlignCenter)
+                DataSourcePathWidgetLayout.addWidget(DataSourcePathLabel, 30)
 
                 # Data Source Path LineEdit
-                DataSourcePathLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourcePathLineEdit = QLineEdit()
                 DataSourcePathLineEdit.setText(DS.DataSourcePath[0])
                 DataSourcePathLineEdit.setReadOnly(True)
-                DataSourcePathLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+                DataSourcePathLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourcePathWidgetLayout.addWidget(DataSourcePathLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourcePathWidget)
+
+                # ***************** Data Source Ext ********************
+                DataSourceExtWidget = QWidget()
+                DataSourceExtWidgetLayout = QHBoxLayout(DataSourceExtWidget)
+
+                # Data Source Ext Label
+                DataSourceExtLabel = QLabel()
+                DataSourceExtLabel.setText("Extension:")
+                DataSourceExtLabel.setAlignment(Qt.AlignCenter)
+                DataSourceExtWidgetLayout.addWidget(DataSourceExtLabel, 30)
 
                 # Data Source Ext LineEdit
-                DataSourceExtLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceExtLineEdit = QLineEdit()
                 DataSourceExtLineEdit.setText(os.path.splitext(DS.DataSourcePath[0])[1])
                 DataSourceExtLineEdit.setReadOnly(True)
-                DataSourceExtLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.3,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+                DataSourceExtLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceExtWidgetLayout.addWidget(DataSourceExtLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceExtWidget)
+
+                # ***************** Data Source Size ********************
+                DataSourceSizeWidget = QWidget()
+                DataSourceSizeWidgetLayout = QHBoxLayout(DataSourceSizeWidget)
+
+                # Data Source Size Label
+                DataSourceSize = QLabel()
+                DataSourceSize.setText("Size:")
+                DataSourceSize.setAlignment(Qt.AlignCenter)
+                DataSourceSizeWidgetLayout.addWidget(DataSourceSize, 30)
 
                 # Data Source Size LineEdit
-                DataSourceSizeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceSizeLineEdit = QLineEdit()
                 DataSourceSizeLineEdit.setText(humanfriendly.format_size(DS.DataSourceSize[0], binary=True))
                 DataSourceSizeLineEdit.setReadOnly(True)
-                DataSourceSizeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
+                DataSourceSizeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceSizeWidgetLayout.addWidget(DataSourceSizeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceSizeWidget)
+
+                # ***************** Data Access Time ********************
+                DataSourceAccessTimeWidget = QWidget()
+                DataSourceAccessTimeWidgetLayout = QHBoxLayout(DataSourceAccessTimeWidget)
+
+                # Data Source Access Time Label
+                DataSourceAccessTime = QLabel()
+                DataSourceAccessTime.setText("Last Access Time:")
+                DataSourceAccessTime.setAlignment(Qt.AlignCenter)
+                DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTime, 30)
 
                 # Data Source Access Time LineEdit
-                DataSourceAccessTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceAccessTimeLineEdit = QLineEdit()
                 DataSourceAccessTimeLineEdit.setText(DS.DataSourceAccessTime[0])
                 DataSourceAccessTimeLineEdit.setReadOnly(True)
-                DataSourceAccessTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.5,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
+                DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceAccessTimeWidget)
+
+                # ***************** Data Source Modified Time ********************
+                DataSourceModifiedTimeWidget = QWidget()
+                DataSourceModifiedTimeWidgetLayout = QHBoxLayout(DataSourceModifiedTimeWidget)
+
+                # Data Source Modified Time Label
+                DataSourceModifiedTime = QLabel()
+                DataSourceModifiedTime.setText("Last Modified Time:")
+                DataSourceModifiedTime.setAlignment(Qt.AlignCenter)
+                DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTime, 30)
 
                 # Data Source Modified Time LineEdit
-                DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceModifiedTimeLineEdit = QLineEdit()
                 DataSourceModifiedTimeLineEdit.setText(DS.DataSourceModifiedTime[0])
                 DataSourceModifiedTimeLineEdit.setReadOnly(True)
-                DataSourceModifiedTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                           DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                           DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
+                DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceModifiedTimeWidget)
+
+                # ***************** Data Source Change Time ********************
+                DataSourceChangeTimeWidget = QWidget()
+                DataSourceChangeTimeWidgetLayout = QHBoxLayout(DataSourceChangeTimeWidget)
+
+                # Data Source Change Time Label
+                DataSourceChangeTime = QLabel()
+                DataSourceChangeTime.setText("Created Time:")
+                DataSourceChangeTime.setAlignment(Qt.AlignCenter)
+                DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTime, 30)
 
                 # Data Source Change Time LineEdit
-                DataSourceChangeTimeLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceChangeTimeLineEdit = QLineEdit()
                 DataSourceChangeTimeLineEdit.setText(DS.DataSourceChangeTime[0])
                 DataSourceChangeTimeLineEdit.setReadOnly(True)
-                DataSourceChangeTimeLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.7,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
+                DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTimeLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceChangeTimeWidget)
+
+                # ***************** Data Source Word Count ********************
+                DataSourceWordCountWidget = QWidget()
+                DataSourceWordCountWidgetLayout = QHBoxLayout(DataSourceWordCountWidget)
+
+                # Data Source Word Count Label
+                DataSourceWordCount = QLabel()
+                DataSourceWordCount.setText("Total Words:")
+                DataSourceWordCount.setAlignment(Qt.AlignCenter)
+                DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCount, 30)
 
                 # Data Source Word Count LineEdit
-                DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceWordCountLineEdit = QLineEdit()
                 DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
                 DataSourceWordCountLineEdit.setReadOnly(True)
-                DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                        DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                        DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                        DataSourceWidgetDetailDialogBox.height() / 20)
-                DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
+                DataSourceWordCountLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCountLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceWordCountWidget)
 
                 DataSourceWidgetDetailDialogBox.exec_()
 
             else:
-                DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                            self.height / 5)
+                DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+                DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
 
-                # ************************************** Labels *************************************
+                # ***************** Data Source Name ********************
+                DataSourceNameWidget = QWidget()
+                DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
                 # Data Source Name Label
-                DataSourceNameLabel = QLabel(DataSourceWidgetDetailDialogBox)
+                DataSourceNameLabel = QLabel()
                 DataSourceNameLabel.setText("Name:")
-                DataSourceNameLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.15,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNameLabel)
-
-                # Data Source No of Images Label
-                DataSourceNoofImagesLabel = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceNoofImagesLabel.setText("No of Images:")
-                DataSourceNoofImagesLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                      DataSourceWidgetDetailDialogBox.height() * 0.35,
-                                                      DataSourceWidgetDetailDialogBox.width() / 4,
-                                                      DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofImagesLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceNoofImagesLabel)
-
-
-                # Data Source Word Count Label
-                DataSourceWordCount = QLabel(DataSourceWidgetDetailDialogBox)
-                DataSourceWordCount.setText("Total Words:")
-                DataSourceWordCount.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                DataSourceWidgetDetailDialogBox.height() * 0.55,
-                                                DataSourceWidgetDetailDialogBox.width() / 4,
-                                                DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceWordCount.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LabelSizeAdjustment(DataSourceWordCount)
-
-                # ************************************** LineEdit *************************************
+                DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+                DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
                 # Data Source Name LineEdit
-                DataSourceNameLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-                DataSourceNameLineEdit.setText(ntpath.basename(DS.DataSourcePath[0]))
+                DataSourceNameLineEdit = QLineEdit()
+                DataSourceNameLineEdit.setText(DS.DataSourceName[0])
                 DataSourceNameLineEdit.setReadOnly(True)
-                DataSourceNameLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.15,
-                                                   DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+                DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceNameLineEdit.adjustSize()
+                DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
+
+                # ***************** No of Images ********************
+                DataSourceNoofImagesWidget = QWidget()
+                DataSourceNoofImagesWidgetLayout = QHBoxLayout(DataSourceNoofImagesWidget)
+
+                # Data Source No of Images Label
+                DataSourceNoofImagesLabel = QLabel()
+                DataSourceNoofImagesLabel.setText("No of Images:")
+                DataSourceNoofImagesLabel.setAlignment(Qt.AlignCenter)
+                DataSourceNoofImagesWidgetLayout.addWidget(DataSourceNoofImagesLabel, 30)
 
                 # Data Source No of Images LineEdit
-                DataSourceNoofImagesLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceNoofImagesLineEdit = QLineEdit()
                 DataSourceNoofImagesLineEdit.setText(str(len(DS.DataSourceImage)))
                 DataSourceNoofImagesLineEdit.setReadOnly(True)
-                DataSourceNoofImagesLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.height() * 0.35,
-                                                         DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                         DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceNoofImagesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceNoofImagesLineEdit)
+                DataSourceNoofImagesLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceNoofImagesWidgetLayout.addWidget(DataSourceNoofImagesLineEdit, 70)
+
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNoofImagesWidget)
+
+                # ***************** Word Count ********************
+                DataSourceWordCountWidget = QWidget()
+                DataSourceWordCountWidgetLayout = QHBoxLayout(DataSourceWordCountWidget)
+
+                # Data Source Word Count Label
+                DataSourceWordCount = QLabel()
+                DataSourceWordCount.setText("Total Words:")
+                DataSourceWordCount.setAlignment(Qt.AlignCenter)
+                DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCount, 30)
 
                 # Data Source Word Count LineEdit
-                DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+                DataSourceWordCountLineEdit = QLineEdit()
                 DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
                 DataSourceWordCountLineEdit.setReadOnly(True)
-                DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                        DataSourceWidgetDetailDialogBox.height() * 0.55,
-                                                        DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                        DataSourceWidgetDetailDialogBox.height() / 10)
-                DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-                self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
+                DataSourceWordCountLineEdit.setAlignment(Qt.AlignCenter)
+                DataSourceWordCountWidgetLayout.addWidget(DataSourceWordCountLineEdit, 70)
 
-                # Data Source Show Image Details
-                DataSourceShowImageDetails = QPushButton(DataSourceWidgetDetailDialogBox)
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceWordCountWidget)
+
+                # ********** Show Image Details ***********
+                DataSourceShowImageDetails = QPushButton()
                 DataSourceShowImageDetails.setText('Show Images Detail')
-                DataSourceShowImageDetails.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.8,
-                                                       DataSourceWidgetDetailDialogBox.width() / 4,
-                                                       DataSourceWidgetDetailDialogBox.height() / 10)
                 DataSourceShowImageDetails.clicked.connect(lambda : self.DataSourceShowImagesDetails(DS, DataSourceWidgetDetailDialogBox))
-                self.LabelSizeAdjustment(DataSourceShowImageDetails)
+                DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceShowImageDetails, Qt.AlignLeft)
+                DataSourceShowImageDetails.adjustSize()
 
                 DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "URL":
-            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+            DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
 
-            # Data Source Label
-            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceLabel.setText("Type:")
-            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                        DataSourceWidgetDetailDialogBox.width() / 4,
-                                        DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceLabel)
+            # ***************** Data Source Name ********************
+            DataSourceNameWidget = QWidget()
+            DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
-            # Data Source URL Label
-            DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceNameURLLabel.setText("URL:")
-            DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                               DataSourceWidgetDetailDialogBox.width() / 4,
-                                               DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNameURLLabel)
-
-            # Data Source Word Count Label
-            DataSourceWordCountLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceWordCountLabel.setText("Word Count:")
-            DataSourceWordCountLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                 DataSourceWidgetDetailDialogBox.width() / 4,
-                                                 DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceWordCountLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceWordCountLabel)
-
-            # ************************************** LineEdit *************************************
+            # Data Source Name Label
+            DataSourceNameLabel = QLabel()
+            DataSourceNameLabel.setText("Name:")
+            DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
             # Data Source Name LineEdit
-            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceLineEdit.setText("Web URL")
-            DataSourceLineEdit.setReadOnly(True)
-            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                           DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceLineEdit)
+            DataSourceNameLineEdit = QLineEdit()
+            DataSourceNameLineEdit.setText(DS.DataSourceName)
+            DataSourceNameLineEdit.setReadOnly(True)
+            DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+            DataSourceNameLineEdit.adjustSize()
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
+
+            # ***************** Data Source Name ********************
+            URLWidget = QWidget()
+            URLWidgetLayout = QHBoxLayout(URLWidget)
+
+            # Data Source URL Label
+            DataSourceNameURLLabel = QLabel()
+            DataSourceNameURLLabel.setText("URL:")
+            DataSourceNameURLLabel.setAlignment(Qt.AlignCenter)
+            URLWidgetLayout.addWidget(DataSourceNameURLLabel, 30)
 
             # Data Source URL LineEdit
-            DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceURLLineEdit = QLineEdit()
             DataSourceURLLineEdit.setText(DS.DataSourcePath)
             DataSourceURLLineEdit.setReadOnly(True)
-            DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                              DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                              DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+            DataSourceURLLineEdit.setAlignment(Qt.AlignCenter)
+            URLWidgetLayout.addWidget(DataSourceURLLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(URLWidget)
+
+            # ***************** Word Count ********************
+            WordCountWidget = QWidget()
+            WordCountWidgetLayout = QHBoxLayout(WordCountWidget)
+
+            # Data Source Word Count Label
+            DataSourceWordCountLabel = QLabel()
+            DataSourceWordCountLabel.setText("Word Count:")
+            DataSourceWordCountLabel.setAlignment(Qt.AlignCenter)
+            WordCountWidgetLayout.addWidget(DataSourceWordCountLabel, 30)
 
             # Data Source Word Count LineEdit
-            DataSourceWordCountLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceWordCountLineEdit = QLineEdit()
             DataSourceWordCountLineEdit.setText(str(len(DS.DataSourcetext.split())))
             DataSourceWordCountLineEdit.setReadOnly(True)
-            DataSourceWordCountLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                    DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                    DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceWordCountLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceWordCountLineEdit)
+            DataSourceWordCountLineEdit.setAlignment(Qt.AlignCenter)
+            WordCountWidgetLayout.addWidget(DataSourceWordCountLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(WordCountWidget)
 
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Tweet":
-            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+            DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
 
-            # Data Source  Label
-            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceLabel.setText("Type:")
-            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                        DataSourceWidgetDetailDialogBox.width() / 4,
-                                        DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceLabel)
+            # ***************** Data Source Name ********************
+            DataSourceNameWidget = QWidget()
+            DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
-            # Data Source Hashtag Label
-            DataSourceNameHashtagLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceNameHashtagLabel.setText("Hashtag:")
-            DataSourceNameHashtagLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                   DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                   DataSourceWidgetDetailDialogBox.width() / 4,
-                                                   DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNameHashtagLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNameHashtagLabel)
-
-            # Data Source No of Tweet Label
-            DataSourceNoofTweetLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceNoofTweetLabel.setText("No of Tweets:")
-            DataSourceNoofTweetLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                 DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                 DataSourceWidgetDetailDialogBox.width() / 4,
-                                                 DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNoofTweetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNoofTweetLabel)
-
-
-            # ************************************** LineEdit *************************************
+            # Data Source Name Label
+            DataSourceNameLabel = QLabel()
+            DataSourceNameLabel.setText("Name:")
+            DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
             # Data Source Name LineEdit
-            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceLineEdit.setText("Twitter")
-            DataSourceLineEdit.setReadOnly(True)
-            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                           DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceLineEdit)
+            DataSourceNameLineEdit = QLineEdit()
+            DataSourceNameLineEdit.setText(DS.DataSourceName)
+            DataSourceNameLineEdit.setReadOnly(True)
+            DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+            DataSourceNameLineEdit.adjustSize()
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
+
+            # ***************** Hashtag ********************
+            HashtagWidget = QWidget()
+            HashtagWidgetLayout = QHBoxLayout(HashtagWidget)
+
+            # Data Source Hashtag Label
+            DataSourceNameHashtagLabel = QLabel()
+            DataSourceNameHashtagLabel.setText("Hashtag:")
+            DataSourceNameHashtagLabel.setAlignment(Qt.AlignCenter)
+            HashtagWidgetLayout.addWidget(DataSourceNameHashtagLabel, 30)
 
             # Data Source Path LineEdit
-            DataSourceHashTagLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceHashTagLineEdit = QLineEdit()
             DataSourceHashTagLineEdit.setText(DS.DataSourceHashtag)
             DataSourceHashTagLineEdit.setReadOnly(True)
-            DataSourceHashTagLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                  DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                                  DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                  DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceHashTagLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceHashTagLineEdit)
+            DataSourceHashTagLineEdit.setAlignment(Qt.AlignCenter)
+            HashtagWidgetLayout.addWidget(DataSourceHashTagLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(HashtagWidget)
+
+            # ***************** No of Tweets ********************
+            NoofTweetWidget = QWidget()
+            NoofTweetWidgetLayout = QHBoxLayout(NoofTweetWidget)
+
+            # Data Source No of Tweet Label
+            DataSourceNoofTweetLabel = QLabel()
+            DataSourceNoofTweetLabel.setText("No of Tweets:")
+            DataSourceNoofTweetLabel.setAlignment(Qt.AlignCenter)
+            NoofTweetWidgetLayout.addWidget(DataSourceNoofTweetLabel, 30)
 
             # Data Source Ext LineEdit
-            DataSourceNoofTweetsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofTweetsLineEdit = QLineEdit()
             DataSourceNoofTweetsLineEdit.setText(str(len(DS.TweetData)))
             DataSourceNoofTweetsLineEdit.setReadOnly(True)
-            DataSourceNoofTweetsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                     DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                     DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceNoofTweetsLineEdit)
+            DataSourceNoofTweetsLineEdit.setAlignment(Qt.AlignCenter)
+            NoofTweetWidgetLayout.addWidget(DataSourceNoofTweetsLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(NoofTweetWidget)
 
             DataSourceWidgetDetailDialogBox.exec_()
 
         elif DS.DataSourceext == "Youtube":
-            DataSourceWidgetDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                                        self.height / 5)
+            DataSourceWidgetDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+            DataSourceWidgetDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
 
-            # Data Source Label
-            DataSourceLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceLabel.setText("Type:")
-            DataSourceLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                        DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                        DataSourceWidgetDetailDialogBox.width() / 4,
-                                        DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceLabel)
+            # ***************** Data Source Name ********************
+            DataSourceNameWidget = QWidget()
+            DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
+
+            # Data Source Name Label
+            DataSourceNameLabel = QLabel()
+            DataSourceNameLabel.setText("Name:")
+            DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
+
+            # Data Source Name LineEdit
+            DataSourceNameLineEdit = QLineEdit()
+            DataSourceNameLineEdit.setText(DS.DataSourceName)
+            DataSourceNameLineEdit.setReadOnly(True)
+            DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+            DataSourceNameLineEdit.adjustSize()
+            DataSourceNameWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(DataSourceNameWidget)
+
+            # ***************** URL ********************
+            URLWidget = QWidget()
+            URLWidgetLayout = QHBoxLayout(URLWidget)
 
             # Data Source URL Label
             DataSourceNameURLLabel = QLabel(DataSourceWidgetDetailDialogBox)
-
             if hasattr(DS, 'YoutubeURLFlag'):
                 DataSourceNameURLLabel.setText("URL:")
             else:
                 DataSourceNameURLLabel.setText("Key Word:")
-
-            DataSourceNameURLLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                               DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                               DataSourceWidgetDetailDialogBox.width() / 4,
-                                               DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNameURLLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNameURLLabel)
-
-            # Data Source No of Comments Label
-            DataSourceNoofCommentsLabel = QLabel(DataSourceWidgetDetailDialogBox)
-            DataSourceNoofCommentsLabel.setText("No of Comments:")
-            DataSourceNoofCommentsLabel.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.1,
-                                                    DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                    DataSourceWidgetDetailDialogBox.width() / 4,
-                                                    DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNoofCommentsLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LabelSizeAdjustment(DataSourceNoofCommentsLabel)
-
-            # ************************************** LineEdit *************************************
-
-            # Data Source Name LineEdit
-            DataSourceLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
-            DataSourceLineEdit.setText("Youtube Comments")
-            DataSourceLineEdit.setReadOnly(True)
-            DataSourceLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                           DataSourceWidgetDetailDialogBox.height() * 0.2,
-                                           DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                           DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceLineEdit)
+            DataSourceNameURLLabel.setAlignment(Qt.AlignCenter)
+            URLWidgetLayout.addWidget(DataSourceNameURLLabel, 30)
 
             # Data Source URL LineEdit
-            DataSourceURLLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceURLLineEdit = QLineEdit()
             DataSourceURLLineEdit.setText(DS.DataSourcePath)
             DataSourceURLLineEdit.setReadOnly(True)
-            DataSourceURLLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                              DataSourceWidgetDetailDialogBox.height() * 0.4,
-                                              DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                              DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceURLLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceURLLineEdit)
+            DataSourceURLLineEdit.setAlignment(Qt.AlignCenter)
+            URLWidgetLayout.addWidget(DataSourceURLLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(URLWidget)
+
+            # ***************** No of Comments ********************
+            NoofCommentsWidget = QWidget()
+            NoofCommentsWidgetLayout = QHBoxLayout(NoofCommentsWidget)
+
+            # Data Source No of Comments Label
+            DataSourceNoofCommentsLabel = QLabel()
+            DataSourceNoofCommentsLabel.setText("No of Comments:")
+            DataSourceNoofCommentsLabel.setAlignment(Qt.AlignCenter)
+            NoofCommentsWidgetLayout.addWidget(DataSourceNoofCommentsLabel, 30)
 
             # Data Source Word Count LineEdit
-            DataSourceNoofCommentsLineEdit = QLineEdit(DataSourceWidgetDetailDialogBox)
+            DataSourceNoofCommentsLineEdit = QLineEdit()
             DataSourceNoofCommentsLineEdit.setText(str(len(DS.YoutubeData)))
             DataSourceNoofCommentsLineEdit.setReadOnly(True)
-            DataSourceNoofCommentsLineEdit.setGeometry(DataSourceWidgetDetailDialogBox.width() * 0.35,
-                                                       DataSourceWidgetDetailDialogBox.height() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.width() * 0.6,
-                                                       DataSourceWidgetDetailDialogBox.height() / 10)
-            DataSourceNoofCommentsLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            self.LineEditSizeAdjustment(DataSourceNoofCommentsLineEdit)
+            DataSourceNoofCommentsLineEdit.setAlignment(Qt.AlignCenter)
+            NoofCommentsWidgetLayout.addWidget(DataSourceNoofCommentsLineEdit, 70)
+
+            DataSourceWidgetDetailDialogBoxLayout.addWidget(NoofCommentsWidget)
 
             DataSourceWidgetDetailDialogBox.exec_()
 
@@ -6012,161 +5220,149 @@ class Window(QMainWindow):
         DataSourceShowImagesDetailsBox.setWindowTitle("Images Details")
         DataSourceShowImagesDetailsBox.setParent(ParentWindow)
 
-        DataSourceShowImagesDetailsBox.setGeometry(self.width * 0.35, self.height * 0.3, self.width / 3,
-                                                    self.height * 2 / 5)
+        DataSourceShowImagesDetailsBox.setFixedWidth(QApplication.desktop().width()*0.3)
+        DataSourceShowImagesDetailsBox.setFixedHeight(QApplication.desktop().height() * 0.4)
         self.QDialogAddProperties(DataSourceShowImagesDetailsBox)
 
-        # ************************************** Labels *************************************
+        DataSourceShowImagesDetailsBoxLayout = QVBoxLayout(DataSourceShowImagesDetailsBox)
+        DataSourceShowImagesDetailsBoxLayout.setAlignment(Qt.AlignCenter)
+        DataSourceShowImagesDetailsBoxLayout.setSpacing(20)
+
+        # ***************** Data Source Name ********************
+        DataSourceNameWidget = QWidget()
+        DataSourceNameWidgetLayout = QHBoxLayout(DataSourceNameWidget)
 
         # Data Source Name Label
-        DataSourceNameLabel = QLabel(DataSourceShowImagesDetailsBox)
+        DataSourceNameLabel = QLabel()
         DataSourceNameLabel.setText("Name:")
-        DataSourceNameLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                        DataSourceShowImagesDetailsBox.height() * 0.1,
-                                        DataSourceShowImagesDetailsBox.width() / 4,
-                                        DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNameLabel)
-
-        # Data Source Path Label
-        DataSourcePathLabel = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourcePathLabel.setText("Path:")
-        DataSourcePathLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                        DataSourceShowImagesDetailsBox.height() * 0.2,
-                                        DataSourceShowImagesDetailsBox.width() / 4,
-                                        DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourcePathLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourcePathLabel)
-
-        # Data Source Ext Label
-        DataSourceExtLabel = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourceExtLabel.setText("Extension:")
-        DataSourceExtLabel.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                       DataSourceShowImagesDetailsBox.height() * 0.3,
-                                       DataSourceShowImagesDetailsBox.width() / 4,
-                                       DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceExtLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceExtLabel)
-
-        # Data Source Size Label
-        DataSourceSize = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourceSize.setText("Size:")
-        DataSourceSize.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                   DataSourceShowImagesDetailsBox.height() * 0.4,
-                                   DataSourceShowImagesDetailsBox.width() / 4,
-                                   DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceSize.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceSize)
-
-        # Data Source Access Time Label
-        DataSourceAccessTime = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourceAccessTime.setText("Last Access Time:")
-        DataSourceAccessTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                         DataSourceShowImagesDetailsBox.height() * 0.5,
-                                         DataSourceShowImagesDetailsBox.width() / 4,
-                                         DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceAccessTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceAccessTime)
-
-        # Data Source Modified Time Label
-        DataSourceModifiedTime = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourceModifiedTime.setText("Last Modified Time:")
-        DataSourceModifiedTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                           DataSourceShowImagesDetailsBox.height() * 0.6,
-                                           DataSourceShowImagesDetailsBox.width() / 4,
-                                           DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceModifiedTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceModifiedTime)
-
-        # Data Source Change Time Label
-        DataSourceChangeTime = QLabel(DataSourceShowImagesDetailsBox)
-        DataSourceChangeTime.setText("Created Time:")
-        DataSourceChangeTime.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.1,
-                                         DataSourceShowImagesDetailsBox.height() * 0.7,
-                                         DataSourceShowImagesDetailsBox.width() / 4,
-                                         DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceChangeTime.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceChangeTime)
-
-        # ************************************** LineEdit *************************************
+        DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+        DataSourceNameWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
         # Data Source Name LineEdit
-        DataSourceNameComboBox = QComboBox(DataSourceShowImagesDetailsBox)
+        DataSourceNameComboBox = QComboBox()
         for DSImage in DataSource.DataSourcePath:
             DataSourceNameComboBox.addItem(ntpath.basename(DSImage))
-        DataSourceNameComboBox.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                           DataSourceShowImagesDetailsBox.height() * 0.1,
-                                           DataSourceShowImagesDetailsBox.width() * 0.6,
-                                           DataSourceShowImagesDetailsBox.height() / 20)
+        DataSourceNameWidgetLayout.addWidget(DataSourceNameComboBox, 70)
 
-        self.LineEditSizeAdjustment(DataSourceNameComboBox)
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceNameWidget)
+
+        # ***************** Data Source Path ********************
+        DataSourcePathWidget = QWidget()
+        DataSourcePathWidgetLayout = QHBoxLayout(DataSourcePathWidget)
+
+        # Data Source Path Label
+        DataSourcePathLabel = QLabel()
+        DataSourcePathLabel.setText("Path:")
+        DataSourcePathLabel.setAlignment(Qt.AlignCenter)
+        DataSourcePathWidgetLayout.addWidget(DataSourcePathLabel, 30)
 
         # Data Source Path LineEdit
-        DataSourcePathLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourcePathLineEdit = QLineEdit()
         DataSourcePathLineEdit.setText(DataSource.DataSourcePath[0])
         DataSourcePathLineEdit.setReadOnly(True)
-        DataSourcePathLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                           DataSourceShowImagesDetailsBox.height() * 0.2,
-                                           DataSourceShowImagesDetailsBox.width() * 0.6,
-                                           DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourcePathLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourcePathLineEdit)
+        DataSourcePathLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourcePathWidgetLayout.addWidget(DataSourcePathLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourcePathWidget)
+
+        # ***************** Data Source Ext ********************
+        DataSourceExtWidget = QWidget()
+        DataSourceExtWidgetLayout = QHBoxLayout(DataSourceExtWidget)
+
+        # Data Source Ext Label
+        DataSourceExtLabel = QLabel()
+        DataSourceExtLabel.setText("Extension:")
+        DataSourceExtLabel.setAlignment(Qt.AlignCenter)
+        DataSourceExtWidgetLayout.addWidget(DataSourceExtLabel, 30)
 
         # Data Source Ext LineEdit
-        DataSourceExtLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceExtLineEdit = QLineEdit()
         DataSourceExtLineEdit.setText(os.path.splitext(DataSource.DataSourcePath[0])[1])
         DataSourceExtLineEdit.setReadOnly(True)
-        DataSourceExtLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                          DataSourceShowImagesDetailsBox.height() * 0.3,
-                                          DataSourceShowImagesDetailsBox.width() * 0.6,
-                                          DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceExtLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceExtLineEdit)
+        DataSourceExtLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceExtWidgetLayout.addWidget(DataSourceExtLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceExtWidget)
+
+        # ***************** Data Source Size ********************
+        DataSourceSizeWidget = QWidget()
+        DataSourceSizeWidgetLayout = QHBoxLayout(DataSourceSizeWidget)
+
+        # Data Source Size Label
+        DataSourceSize = QLabel()
+        DataSourceSize.setText("Size:")
+        DataSourceSize.setAlignment(Qt.AlignCenter)
+        DataSourceSizeWidgetLayout.addWidget(DataSourceSize, 30)
 
         # Data Source Size LineEdit
-        DataSourceSizeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceSizeLineEdit = QLineEdit()
         DataSourceSizeLineEdit.setText(humanfriendly.format_size(DataSource.DataSourceSize[0], binary=True))
         DataSourceSizeLineEdit.setReadOnly(True)
-        DataSourceSizeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                           DataSourceShowImagesDetailsBox.height() * 0.4,
-                                           DataSourceShowImagesDetailsBox.width() * 0.6,
-                                           DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceSizeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceSizeLineEdit)
+        DataSourceSizeLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceSizeWidgetLayout.addWidget(DataSourceSizeLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceSizeWidget)
+
+        # ***************** Data Access Time ********************
+        DataSourceAccessTimeWidget = QWidget()
+        DataSourceAccessTimeWidgetLayout = QHBoxLayout(DataSourceAccessTimeWidget)
+
+        # Data Source Access Time Label
+        DataSourceAccessTime = QLabel()
+        DataSourceAccessTime.setText("Last Access Time:")
+        DataSourceAccessTime.setAlignment(Qt.AlignCenter)
+        DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTime, 30)
 
         # Data Source Access Time LineEdit
-        DataSourceAccessTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceAccessTimeLineEdit = QLineEdit()
         DataSourceAccessTimeLineEdit.setText(DataSource.DataSourceAccessTime[0])
         DataSourceAccessTimeLineEdit.setReadOnly(True)
-        DataSourceAccessTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                                 DataSourceShowImagesDetailsBox.height() * 0.5,
-                                                 DataSourceShowImagesDetailsBox.width() * 0.6,
-                                                 DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceAccessTimeLineEdit)
+        DataSourceAccessTimeLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceAccessTimeWidgetLayout.addWidget(DataSourceAccessTimeLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceAccessTimeWidget)
+
+        # ***************** Data Source Modified Time ********************
+        DataSourceModifiedTimeWidget = QWidget()
+        DataSourceModifiedTimeWidgetLayout = QHBoxLayout(DataSourceModifiedTimeWidget)
+
+        # Data Source Modified Time Label
+        DataSourceModifiedTime = QLabel()
+        DataSourceModifiedTime.setText("Last Modified Time:")
+        DataSourceModifiedTime.setAlignment(Qt.AlignCenter)
+        DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTime, 30)
 
         # Data Source Modified Time LineEdit
-        DataSourceModifiedTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceModifiedTimeLineEdit = QLineEdit()
         DataSourceModifiedTimeLineEdit.setText(DataSource.DataSourceModifiedTime[0])
         DataSourceModifiedTimeLineEdit.setReadOnly(True)
-        DataSourceModifiedTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                                   DataSourceShowImagesDetailsBox.height() * 0.6,
-                                                   DataSourceShowImagesDetailsBox.width() * 0.6,
-                                                   DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceModifiedTimeLineEdit)
+        DataSourceModifiedTimeLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceModifiedTimeWidgetLayout.addWidget(DataSourceModifiedTimeLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceModifiedTimeWidget)
+
+        # ***************** Data Source Change Time ********************
+        DataSourceChangeTimeWidget = QWidget()
+        DataSourceChangeTimeWidgetLayout = QHBoxLayout(DataSourceChangeTimeWidget)
+
+        # Data Source Change Time Label
+        DataSourceChangeTime = QLabel()
+        DataSourceChangeTime.setText("Created Time:")
+        DataSourceChangeTime.setAlignment(Qt.AlignCenter)
+        DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTime, 30)
 
         # Data Source Change Time LineEdit
-        DataSourceChangeTimeLineEdit = QLineEdit(DataSourceShowImagesDetailsBox)
+        DataSourceChangeTimeLineEdit = QLineEdit()
         DataSourceChangeTimeLineEdit.setText(DataSource.DataSourceChangeTime[0])
         DataSourceChangeTimeLineEdit.setReadOnly(True)
-        DataSourceChangeTimeLineEdit.setGeometry(DataSourceShowImagesDetailsBox.width() * 0.35,
-                                                 DataSourceShowImagesDetailsBox.height() * 0.7,
-                                                 DataSourceShowImagesDetailsBox.width() * 0.6,
-                                                 DataSourceShowImagesDetailsBox.height() / 20)
-        DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceChangeTimeLineEdit)
-        DataSourceNameComboBox.currentText()
+        DataSourceChangeTimeLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceChangeTimeWidgetLayout.addWidget(DataSourceChangeTimeLineEdit, 70)
+
+        DataSourceShowImagesDetailsBoxLayout.addWidget(DataSourceChangeTimeWidget)
+
+
+        # # ************************************** LineEdit *************************************
+
         DataSourceNameComboBox.currentTextChanged.connect(lambda: self.DataSourceImageDetailComboBoxtoggle(DataSource, DataSourcePathLineEdit, DataSourceExtLineEdit, DataSourceSizeLineEdit, DataSourceAccessTimeLineEdit, DataSourceModifiedTimeLineEdit, DataSourceChangeTimeLineEdit))
         DataSourceShowImagesDetailsBox.exec_()
 
@@ -6201,6 +5397,7 @@ class Window(QMainWindow):
 
         DataSourceCreateDashboardLayout = QVBoxLayout(DataSourceCreateDashboardDialog)
         DataSourceCreateDashboardLayout.setAlignment(Qt.AlignCenter)
+        DataSourceCreateDashboardLayout.setSpacing(20)
 
         # ******************* Data Source ***********************
         DataSourceWidget = QWidget()
@@ -6328,76 +5525,97 @@ class Window(QMainWindow):
     def DataSourceCreateCloud(self):
         CreateWordCloudDialog = QDialog()
         CreateWordCloudDialog.setWindowTitle("Create Word Cloud")
-        CreateWordCloudDialog.setGeometry(self.width * 0.35, self.height*0.35, self.width/3, self.height/3)
+        CreateWordCloudDialog.setFixedWidth(QApplication.desktop().width()*0.25)
         CreateWordCloudDialog.setParent(self)
         CreateWordCloudDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(CreateWordCloudDialog)
 
-        WordCloudDSLabel = QLabel(CreateWordCloudDialog)
-        WordCloudDSLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
+        CreateWordCloudDialogLayout = QVBoxLayout(CreateWordCloudDialog)
+        CreateWordCloudDialogLayout.setAlignment(Qt.AlignCenter)
+        CreateWordCloudDialogLayout.setSpacing(20)
+
+        # ************** Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        WordCloudDSLabel = QLabel()
         WordCloudDSLabel.setText("Data Source")
-        self.LabelSizeAdjustment(WordCloudDSLabel)
+        WordCloudDSLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(WordCloudDSLabel, 30)
 
-        WordCloudBackgroundLabel = QLabel(CreateWordCloudDialog)
-        WordCloudBackgroundLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudBackgroundLabel.setText("Background Color")
-        self.LabelSizeAdjustment(WordCloudBackgroundLabel)
-
-        WordCloudMaxWordLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaxWordLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudMaxWordLabel.setText("Max Words")
-        self.LabelSizeAdjustment(WordCloudMaxWordLabel)
-
-        WordCloudMaskLabel = QLabel(CreateWordCloudDialog)
-        WordCloudMaskLabel.setGeometry(CreateWordCloudDialog.width() * 0.2, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/5, CreateWordCloudDialog.height()/15)
-        WordCloudMaskLabel.setText("Mask")
-        self.LabelSizeAdjustment(WordCloudMaskLabel)
-
-        WordCloudDSComboBox = QComboBox(CreateWordCloudDialog)
-        WordCloudDSComboBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.1, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
-
+        WordCloudDSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 WordCloudDSComboBox.addItem(DS.DataSourceName)
 
-        self.LineEditSizeAdjustment(WordCloudDSComboBox)
+        DataSourceWidgetLayout.addWidget(WordCloudDSComboBox, 70)
 
-        WordCloudBackgroundColor = QComboBox(CreateWordCloudDialog)
-        WordCloudBackgroundColor.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.25, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        CreateWordCloudDialogLayout.addWidget(DataSourceWidget)
+
+        # ************** Background Color ******************
+        WordCloudBackgroundWidget = QWidget()
+        WordCloudBackgroundWidgetLayout = QHBoxLayout(WordCloudBackgroundWidget)
+
+        WordCloudBackgroundLabel = QLabel()
+        WordCloudBackgroundLabel.setText("Background Color")
+        WordCloudBackgroundLabel.setAlignment(Qt.AlignCenter)
+        WordCloudBackgroundWidgetLayout.addWidget(WordCloudBackgroundLabel, 30)
+
+        WordCloudBackgroundColor = QComboBox()
         WordCloudBackgroundColor.setLayoutDirection(Qt.LeftToRight)
+        WordCloudBackgroundWidgetLayout.addWidget(WordCloudBackgroundColor, 70)
 
         for colorname, colorhex in matplotlib.colors.cnames.items():
             WordCloudBackgroundColor.addItem(colorname)
 
-        self.LineEditSizeAdjustment(WordCloudBackgroundColor)
+        CreateWordCloudDialogLayout.addWidget(WordCloudBackgroundWidget)
 
-        WordCloudMaxWords = QDoubleSpinBox(CreateWordCloudDialog)
-        WordCloudMaxWords.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.4, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        # ************** Max Words ******************
+        WordCloudMaxWordWidget = QWidget()
+        WordCloudMaxWordWidgetLayout = QHBoxLayout(WordCloudMaxWordWidget)
+
+        WordCloudMaxWordLabel = QLabel()
+        WordCloudMaxWordLabel.setText("Max Words")
+        WordCloudMaxWordLabel.setAlignment(Qt.AlignCenter)
+        WordCloudMaxWordWidgetLayout.addWidget(WordCloudMaxWordLabel, 30)
+
+        WordCloudMaxWords = QDoubleSpinBox()
         WordCloudMaxWords.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
         WordCloudMaxWords.setDecimals(0)
         WordCloudMaxWords.setMinimum(10.0)
         WordCloudMaxWords.setMaximum(200.0)
+        WordCloudMaxWordWidgetLayout.addWidget(WordCloudMaxWords, 70)
 
-        self.LineEditSizeAdjustment(WordCloudMaxWords)
+        CreateWordCloudDialogLayout.addWidget(WordCloudMaxWordWidget)
 
-        WordCloudMask = QComboBox(CreateWordCloudDialog)
-        WordCloudMask.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.55, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        # ************************ Mask **************************
+        WordCloudMaskWidget = QWidget()
+        WordCloudMaskWidgetLayout = QHBoxLayout(WordCloudMaskWidget)
 
-        for Imagefilename in glob.glob('Word Cloud Maskes/*.png'):  # assuming gif
+        WordCloudMaskLabel = QLabel()
+        WordCloudMaskLabel.setText("Mask")
+        WordCloudMaskLabel.setAlignment(Qt.AlignCenter)
+        WordCloudMaskWidgetLayout.addWidget(WordCloudMaskLabel, 30)
+
+        WordCloudMask = QComboBox()
+        for Imagefilename in glob.glob('Word Cloud Maskes/*.png'):
             WordCloudMask.addItem(os.path.splitext(ntpath.basename(Imagefilename))[0])
 
-        self.LineEditSizeAdjustment(WordCloudMask)
+        WordCloudMaskWidgetLayout.addWidget(WordCloudMask, 70)
 
-        CreateWorldCloudbuttonBox = QDialogButtonBox(CreateWordCloudDialog)
-        CreateWorldCloudbuttonBox.setGeometry(CreateWordCloudDialog.width() * 0.5, CreateWordCloudDialog.height()*0.8, CreateWordCloudDialog.width()/3, CreateWordCloudDialog.height()/15)
+        CreateWordCloudDialogLayout.addWidget(WordCloudMaskWidget)
+
+        # ****************** Button Box *********************
+        CreateWorldCloudbuttonBox = QDialogButtonBox()
         CreateWorldCloudbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setText('Create')
-        self.LineEditSizeAdjustment(CreateWorldCloudbuttonBox)
 
         if len(WordCloudDSComboBox.currentText()) == 0:
             CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         else:
             CreateWorldCloudbuttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+        CreateWordCloudDialogLayout.addWidget(CreateWorldCloudbuttonBox)
 
         WordCloudDSComboBox.currentTextChanged.connect(lambda: self.OkButtonEnableCombo(WordCloudDSComboBox, CreateWorldCloudbuttonBox))
 
@@ -6443,36 +5661,21 @@ class Window(QMainWindow):
                     self.myLongTask.start()
 
                     self.ProgressBar(ProgressBarWidget, progressBar, "Generating Word Cloud")
-
                     del dummyProgressInfo
-
                     WordCloudImage = ThreadQueue.get()
                     break
 
-            # Creating New Tab for WordCloud
-            WordCloudTab = QWidget()
-
-            # LayoutWidget For within Word Cloud Tab
-            WordCloudTabverticalLayoutWidget = QWidget(WordCloudTab)
-            WordCloudTabverticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Word Cloud Tab
-            WordCloudverticalLayout = QVBoxLayout(WordCloudTabverticalLayoutWidget)
-            WordCloudverticalLayout.setContentsMargins(0, 0, 0, 0)
-
             # Label for Word Cloud Image
-            WordCloudLabel = QLabel(WordCloudTabverticalLayoutWidget)
+            WordCloudLabel = QLabel()
+            WordCloudLabel.setAlignment(Qt.AlignCenter)
 
-            # Resizing label to Layout
-            WordCloudLabel.resize(WordCloudTabverticalLayoutWidget.width(), WordCloudTabverticalLayoutWidget.height())
+            # # Resizing label to Layout
+            WordCloudLabel.resize(self.tabWidget.width(), self.tabWidget.height())
 
             # Setting Scaled Converted Word Cloud Pixamp image on Word Cloud label
-            WordCloudLabel.setPixmap(WordCloudImage.toqpixmap().scaled(WordCloudTabverticalLayoutWidget.width(),
-                                                                       WordCloudTabverticalLayoutWidget.height(),
+            WordCloudLabel.setPixmap(WordCloudImage.toqpixmap().scaled(self.tabWidget.width(),
+                                                                       self.tabWidget.height(),
                                                                        Qt.KeepAspectRatio))
-            WordCloudLabel.setGeometry((WordCloudTabverticalLayoutWidget.width() - WordCloudLabel.pixmap().width()) / 2,
-                                       (WordCloudTabverticalLayoutWidget.height() - WordCloudLabel.pixmap().height()) / 2,
-                                       WordCloudLabel.pixmap().width(), WordCloudLabel.pixmap().height())
 
             # Setting ContextMenu Policies on Label
             WordCloudLabel.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -6480,29 +5683,29 @@ class Window(QMainWindow):
                                                                                                                         WordCloudLabel.pixmap(),
                                                                                                                         WordCloudLabel))
             if DataSourceWordCloudTabFlag3:
-                tabs.tabWidget = WordCloudTab
+                tabs.tabWidget = WordCloudLabel
                 if tabs.isActive:
-                    self.tabWidget.addTab(WordCloudTab, "Word Cloud")
+                    self.tabWidget.addTab(WordCloudLabel, "Word Cloud")
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(WordCloudTab)
+                        self.tabWidget.setCurrentWidget(WordCloudLabel)
             else:
                 if DataSourceWordCloudTabFlag2:
                     tabs.setWordCloud(WCBGColor, maxword, maskname)
                     self.tabWidget.removeTab(self.tabWidget.indexOf(tabs.tabWidget))
-                    self.tabWidget.addTab(WordCloudTab, tabs.TabName)
-                    self.tabWidget.setCurrentWidget(WordCloudTab)
-                    tabs.tabWidget = WordCloudTab
+                    self.tabWidget.addTab(WordCloudLabel, tabs.TabName)
+                    self.tabWidget.setCurrentWidget(WordCloudLabel)
+                    tabs.tabWidget = WordCloudLabel
                     tabs.setisActive(True)
 
                 else:
                     # Adding Word Cloud Tab to QTabWidget
-                    dummyTab = Tab("Word Cloud", WordCloudTab, WCDSName)
+                    dummyTab = Tab("Word Cloud", WordCloudLabel, WCDSName)
                     dummyTab.setWordCloud(WCBGColor, maxword, maskname)
                     myFile.TabList.append(dummyTab)
 
                     # Adding Preview Tab to QTabWidget
-                    self.tabWidget.addTab(WordCloudTab, "Word Cloud")
-                    self.tabWidget.setCurrentWidget(WordCloudTab)
+                    self.tabWidget.addTab(WordCloudLabel, "Word Cloud")
+                    self.tabWidget.setCurrentWidget(WordCloudLabel)
                     myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(WCDSName, Qt.MatchExactly, 0)
@@ -6566,48 +5769,41 @@ class Window(QMainWindow):
     def DataSourceWordTreeDialog(self):
         DataSourceWordTreeDialog = QDialog()
         DataSourceWordTreeDialog.setWindowTitle("Word Tree")
-        DataSourceWordTreeDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                  self.height / 10)
+        DataSourceWordTreeDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
         DataSourceWordTreeDialog.setParent(self)
+        DataSourceWordTreeDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(DataSourceWordTreeDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourceWordTreeDialog)
-        DataSourcelabel.setGeometry(DataSourceWordTreeDialog.width() * 0.125,
-                                    DataSourceWordTreeDialog.height() * 0.2,
-                                    DataSourceWordTreeDialog.width() / 4,
-                                    DataSourceWordTreeDialog.height() * 0.1)
+        DataSourceWordTreeDialogLayout = QVBoxLayout(DataSourceWordTreeDialog)
+        DataSourceWordTreeDialogLayout.setAlignment(Qt.AlignCenter)
+        DataSourceWordTreeDialogLayout.setSpacing(20)
 
+        # ************** Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceWordTreeDialog)
-        DSComboBox.setGeometry(DataSourceWordTreeDialog.width() * 0.4,
-                               DataSourceWordTreeDialog.height() * 0.2,
-                               DataSourceWordTreeDialog.width() / 2,
-                               DataSourceWordTreeDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if not DS.DataSourceext == "Tweet" and not DS.DataSourceext == "Youtube" and not DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        # Word Tree Button Box
-        DataSourceWordTreebuttonBox = QDialogButtonBox(DataSourceWordTreeDialog)
-        DataSourceWordTreebuttonBox.setGeometry(DataSourceWordTreeDialog.width() * 0.125,
-                                                      DataSourceWordTreeDialog.height() * 0.7,
-                                                      DataSourceWordTreeDialog.width() * 3 / 4,
-                                                      DataSourceWordTreeDialog.height() / 5)
+        DataSourceWordTreeDialogLayout.addWidget(DataSourceWidget)
+
+        # ************** Button Box ******************
+        DataSourceWordTreebuttonBox = QDialogButtonBox()
         DataSourceWordTreebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourceWordTreebuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+        DataSourceWordTreeDialogLayout.addWidget(DataSourceWordTreebuttonBox)
 
         if DSComboBox.count() == 0:
             DataSourceWordTreebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(DataSourceWordTreebuttonBox)
 
         DataSourceWordTreebuttonBox.accepted.connect(DataSourceWordTreeDialog.accept)
         DataSourceWordTreebuttonBox.rejected.connect(DataSourceWordTreeDialog.reject)
@@ -6632,7 +5828,6 @@ class Window(QMainWindow):
                     break
 
         if not DataSourceWordTreeTabFlag:
-
             for DS in myFile.DataSourceList:
                 if DS.DataSourceName == DataSourceName:
                     ProgressBarWidget = QDialog()
@@ -6655,33 +5850,22 @@ class Window(QMainWindow):
                     break
 
             # Creating New Tab for Word Tree
-            DataSourceWordTreeTab = QWidget()
-
-            # LayoutWidget For within Word Tree Tab
-            DataSourceWordTreeTabVerticalLayoutWidget = QWidget(DataSourceWordTreeTab)
-            DataSourceWordTreeTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height())
-
-            # Box Layout for Word Tree Tab
-            DataSourceWordTreeTabVerticalLayout = QHBoxLayout(DataSourceWordTreeTabVerticalLayoutWidget)
-            DataSourceWordTreeTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
             WordTreeWeb = QWebEngineView()
             WordTreeWeb.setContextMenuPolicy(Qt.PreventContextMenu)
-            DataSourceWordTreeTabVerticalLayout.addWidget(WordTreeWeb)
             WordTreeWeb.setHtml(WordTreeHTML)
 
             if DataSourceWordTreeTabFlag2:
-                tabs.tabWidget = DataSourceWordTreeTab
+                tabs.tabWidget = WordTreeWeb
                 if tabs.isActive:
-                    self.tabWidget.addTab(DataSourceWordTreeTab, tabs.TabName)
+                    self.tabWidget.addTab(WordTreeWeb, tabs.TabName)
                     if tabs.isCurrentWidget:
-                        self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+                        self.tabWidget.setCurrentWidget(WordTreeWeb)
             else:
                 # Adding Word Tree Tab to QTabWidget
-                myFile.TabList.append(Tab("Word Tree", DataSourceWordTreeTab, DataSourceName))
+                myFile.TabList.append(Tab("Word Tree", WordTreeWeb, DataSourceName))
                 # Adding Word Tree Tab to QTabWidget
-                self.tabWidget.addTab(DataSourceWordTreeTab, "Word Tree")
-                self.tabWidget.setCurrentWidget(DataSourceWordTreeTab)
+                self.tabWidget.addTab(WordTreeWeb, "Word Tree")
+                self.tabWidget.setCurrentWidget(WordTreeWeb)
                 myFile.requiredSaved = True
 
             ItemsWidget = self.VisualizationTreeWidget.findItems(DataSourceName, Qt.MatchExactly, 0)
@@ -6724,103 +5908,52 @@ class Window(QMainWindow):
 
         DataSourceSurveyAnalysisDialog = QDialog()
         DataSourceSurveyAnalysisDialog.setWindowTitle("Survey Analysis")
-        DataSourceSurveyAnalysisDialog.setGeometry(self.width * 0.3,
-                                                   self.height * 0.2,
-                                                   self.width * 0.4,
-                                                   self.height * 0.6)
+        DataSourceSurveyAnalysisDialog.setFixedWidth(QApplication.desktop().width() * 0.4)
+        DataSourceSurveyAnalysisDialog.setFixedHeight(QApplication.desktop().height() * 0.6)
+
         DataSourceSurveyAnalysisDialog.setParent(self)
         self.QDialogAddProperties(DataSourceSurveyAnalysisDialog)
 
-        # ************************* Survey Analysis First Layout *************************
+        DataSourceSurveyAnalysisDialogLayout = QVBoxLayout(DataSourceSurveyAnalysisDialog)
+        DataSourceSurveyAnalysisDialogLayout.setAlignment(Qt.AlignCenter)
+        DataSourceSurveyAnalysisDialogLayout.setSpacing(20)
 
-        # LayoutWidget For within Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayoutWidget = QWidget(DataSourceSurveyAnalysisDialog)
-        DataSourceSurveyAnalysisVerticalLayoutWidget.setGeometry(0, 0,
-                                                                 DataSourceSurveyAnalysisDialog.width(),
-                                                                 DataSourceSurveyAnalysisDialog.height()*0.2)
+        # ************** Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
-        # Box Layout for Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayout = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget)
-        DataSourceSurveyAnalysisVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourceSurveyAnalysisDialog)
-        DataSourcelabel.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget.width() * 0.125,
-                                    DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.2,
-                                    DataSourceSurveyAnalysisVerticalLayoutWidget.width() / 4,
-                                    DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.1)
-
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceSurveyAnalysisVerticalLayoutWidget)
-        DSComboBox.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget.width() * 0.4,
-                               DataSourceSurveyAnalysisVerticalLayoutWidget.height() * 0.2,
-                               DataSourceSurveyAnalysisVerticalLayoutWidget.width() / 2,
-                               DataSourceSurveyAnalysisVerticalLayoutWidget.height() / 10)
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceext == "CSV files (*.csv)":
                 DSComboBox.addItem(DS.DataSourceName)
-        self.LineEditSizeAdjustment(DSComboBox)
 
-        # ************************* Survey Analysis Second Layout *************************
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        # LayoutWidget For within Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayoutWidget2 = QWidget(DataSourceSurveyAnalysisDialog)
-        DataSourceSurveyAnalysisVerticalLayoutWidget2.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.2,
-                                                                 DataSourceSurveyAnalysisDialog.width(),
-                                                                 DataSourceSurveyAnalysisDialog.height() * 0.6)
-        # Box Layout for Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayout2 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget2)
-        DataSourceSurveyAnalysisVerticalLayout2.setContentsMargins(0, 0, 0, 0)
+        DataSourceSurveyAnalysisDialogLayout.addWidget(DataSourceWidget)
 
-        # Scroll Area
-        DataSourceSurveyAnalysisScrollArea = QScrollArea(DataSourceSurveyAnalysisVerticalLayoutWidget2)
-        DataSourceSurveyAnalysisScrollArea.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.1,
-                                                       0,
-                                                       DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.8,
-                                                       DataSourceSurveyAnalysisVerticalLayoutWidget2.height())
 
-        DataSourceSurveyAnalysisScrollArea.setFixedWidth(DataSourceSurveyAnalysisVerticalLayoutWidget2.width() * 0.8)
-        DataSourceSurveyAnalysisScrollArea.setFixedHeight(DataSourceSurveyAnalysisVerticalLayoutWidget2.height())
+        # ************* Scroll Area Widget ****************
+        DataSourceSurveyAnalysisScrollArea = QScrollArea()
 
         DataSourceSurveyAnalysisScrollArea.setWidgetResizable(True)
-        DataSourceSurveyAnalysisVerticalLayout2.addWidget(DataSourceSurveyAnalysisScrollArea)
+        DataSourceSurveyAnalysisDialogLayout.addWidget(DataSourceSurveyAnalysisScrollArea)
 
         # # Scroll Area Widget
-        DataSourceSurveyAnalysisScrollWidget = QWidget(DataSourceSurveyAnalysisVerticalLayoutWidget2)
-        DataSourceSurveyAnalysisScrollWidget.setGeometry(DataSourceSurveyAnalysisScrollArea.width() * 0.1,
-                                                         0,
-                                                         DataSourceSurveyAnalysisScrollArea.width() * 0.8,
-                                                         DataSourceSurveyAnalysisScrollArea.height())
+        DataSourceSurveyAnalysisScrollWidget = QWidget()
+        DataSourceSurveyAnalysisScrollLayout = QVBoxLayout(DataSourceSurveyAnalysisScrollWidget)
+
         DataSourceSurveyAnalysisScrollArea.setWidget(DataSourceSurveyAnalysisScrollWidget)
 
-        # Scroll Area Layout
-        DataSourceSurveyAnalysisScrollLayout = QVBoxLayout(DataSourceSurveyAnalysisScrollWidget)
-        DataSourceSurveyAnalysisScrollLayout.setContentsMargins(0, 0, 0, 0)
-
-
-        # ************************* Survey Analysis Third Layout *************************
-
-        # LayoutWidget For within Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayoutWidget3 = QWidget(DataSourceSurveyAnalysisDialog)
-        DataSourceSurveyAnalysisVerticalLayoutWidget3.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.8,
-                                                                  DataSourceSurveyAnalysisDialog.width(),
-                                                                  DataSourceSurveyAnalysisDialog.height() * 0.1)
-        # Box Layout for Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayout3 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget3)
-        DataSourceSurveyAnalysisVerticalLayout3.setContentsMargins(0, 0, 0, 0)
-
-        AddChartButton = QPushButton(DataSourceSurveyAnalysisVerticalLayoutWidget3)
-        AddChartButton.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget3.width() * 0.75,
-                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.height() * 0.2,
-                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.width() * 0.2,
-                                   DataSourceSurveyAnalysisVerticalLayoutWidget3.height() * 0.8)
+        # ************** Add Chart Button *************
+        AddChartButton = QPushButton()
         AddChartButton.setText("Add Chart")
         AddChartButton.setStyleSheet("Text-align:left");
-        self.LabelSizeAdjustment(AddChartButton)
+        DataSourceSurveyAnalysisDialogLayout.insertWidget(3, AddChartButton, 0, Qt.AlignRight)
 
         AddChartButton.clicked.connect(lambda: self.DataSourceSurveyAnalysisAddChartButtonClicked(DSComboBox, DataSourceSurveyAnalysisScrollLayout, DataSourceSurveyAnalysisScrollWidget))
 
@@ -6831,30 +5964,14 @@ class Window(QMainWindow):
             self.DataSourceSurveyAnalysissetInitialState(DataSourceSurveyAnalysisScrollLayout, AddChartButton,
                                                          DataSourceSurveyAnalysisScrollWidget, DSComboBox)
 
-        # ************************* Survey Analysis Fourth Layout *************************
-
-        # LayoutWidget For within Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayoutWidget4 = QWidget(DataSourceSurveyAnalysisDialog)
-        DataSourceSurveyAnalysisVerticalLayoutWidget4.setGeometry(0, DataSourceSurveyAnalysisDialog.height() * 0.9,
-                                                                  DataSourceSurveyAnalysisDialog.width(),
-                                                                  DataSourceSurveyAnalysisDialog.height() * 0.2)
-        # Box Layout for Survey Analysis Tab
-        DataSourceSurveyAnalysisVerticalLayout4 = QHBoxLayout(DataSourceSurveyAnalysisVerticalLayoutWidget4)
-        DataSourceSurveyAnalysisVerticalLayout4.setContentsMargins(0, 0, 0, 0)
-
-        # Survey Analysis Button Box
-        DataSourceSurveyAnalysisbuttonBox = QDialogButtonBox(DataSourceSurveyAnalysisVerticalLayoutWidget4)
-        DataSourceSurveyAnalysisbuttonBox.setGeometry(DataSourceSurveyAnalysisVerticalLayoutWidget4.width() * 0.5,
-                                                      0,
-                                                      DataSourceSurveyAnalysisVerticalLayoutWidget4.width() * 0.45,
-                                                      DataSourceSurveyAnalysisVerticalLayoutWidget4.height())
+        # ************** Survey Analysis Button Box *****************
+        DataSourceSurveyAnalysisbuttonBox = QDialogButtonBox()
         DataSourceSurveyAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourceSurveyAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Analyze')
+        DataSourceSurveyAnalysisDialogLayout.addWidget(DataSourceSurveyAnalysisbuttonBox)
 
         if DSComboBox.count() == 0:
             DataSourceSurveyAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(DataSourceSurveyAnalysisbuttonBox)
 
         DSComboBox.currentTextChanged.connect(lambda: self.DataSourceSurveyAnalysisDSComboBoxTextChanged(DataSourceSurveyAnalysisScrollLayout, AddChartButton, DataSourceSurveyAnalysisScrollWidget, DSComboBox))
 
@@ -6900,7 +6017,6 @@ class Window(QMainWindow):
         # Chart Label
         ChartLabel = QLabel()
         ChartLabel.setText("Chart Type")
-        self.LabelSizeAdjustment(ChartLabel)
         ChartComboBoxLayout.addWidget(ChartLabel)
         ChartComboBoxLayout.addStretch(1)
 
@@ -6925,13 +6041,11 @@ class Window(QMainWindow):
         # Chart Label
         FirstLabel = QLabel()
         FirstLabel.setText("First Quantity")
-        self.LabelSizeAdjustment(FirstLabel)
         FirstComboBoxLayout.addWidget(FirstLabel)
         FirstComboBoxLayout.addStretch(1)
 
         # First Column ComboBox
         FirstComboBox = QComboBox()
-        self.LineEditSizeAdjustment(FirstComboBox)
 
         FirstComboBoxLayout.addWidget(FirstComboBox)
         FirstComboBoxLayout.addStretch(2)
@@ -6950,13 +6064,11 @@ class Window(QMainWindow):
         SecondLabel = QLabel()
         SecondLabel.setText("Second Quantity")
         SecondLabel.hide()
-        self.LabelSizeAdjustment(SecondLabel)
         SecondComboBoxLayout.addWidget(SecondLabel)
         SecondComboBoxLayout.addStretch(1)
 
         # Second Column ComboBox
         SecondComboBox = QComboBox()
-        self.LineEditSizeAdjustment(SecondComboBox)
 
         SecondComboBoxLayout.addWidget(SecondComboBox)
         SecondComboBoxLayout.addStretch(2)
@@ -7112,33 +6224,26 @@ class Window(QMainWindow):
             if not DataSourceSurveyAnalysisTabFlag or DataSourceSurveyAnalysisTabFlag2:
                 # Creating New Tab for Survey Analysis
                 DataSourceSurveyAnalysisTab = QWidget()
+                DataSourceSurveyAnalysisTabLayout = QVBoxLayout(DataSourceSurveyAnalysisTab)
 
                 # **********************************************************************************************
                 # ************************ Data Source Survey Analysis Setting Widget **************************
                 # **********************************************************************************************
 
-                # LayoutWidget For within Survey Analysis Tab
-                DataSourceSurveyAnalysisTabverticalLayoutWidget = QWidget(DataSourceSurveyAnalysisTab)
-                DataSourceSurveyAnalysisTabverticalLayoutWidget.setGeometry(self.tabWidget.width()*0.2,
-                                                                            0,
-                                                                            self.tabWidget.width()*0.6,
-                                                                            self.tabWidget.height()/20)
-
-                # Box Layout for Survey Analysis Tab
-                DataSourceSurveyAnalysisTabverticalLayout = QHBoxLayout(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                DataSourceSurveyAnalysisTabverticalLayout.setContentsMargins(0, 0, 0, 0)
+                # Option Widget Survey Analysis Tab
+                OptionWidget = QWidget()
+                OptionWidgetLayout = QHBoxLayout(OptionWidget)
+                OptionWidgetLayout.setAlignment(Qt.AlignJustify | Qt.AlignCenter)
 
                 # ********************* Theme *********************
                 # Theme Label
-                ThemeLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                ThemeLabel = QLabel()
                 ThemeLabel.setText("Theme:")
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeLabel)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(1)
+                OptionWidgetLayout.addWidget(ThemeLabel)
 
                 # Theme Combo Box
-                ThemeComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(ThemeComboBox)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(2)
+                ThemeComboBox = QComboBox()
+                OptionWidgetLayout.addWidget(ThemeComboBox)
 
                 # Adding Items to ComboBox
                 ThemeComboBox.addItem("Light")
@@ -7154,13 +6259,11 @@ class Window(QMainWindow):
                 # Animation Label
                 AnimationLabel = QLabel()
                 AnimationLabel.setText("Animation:")
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationLabel)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(3)
+                OptionWidgetLayout.addWidget(AnimationLabel)
 
                 # Animation Combo Box
-                AnimationComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(AnimationComboBox)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(4)
+                AnimationComboBox = QComboBox()
+                OptionWidgetLayout.addWidget(AnimationComboBox)
 
                 # Adding Items to ComboBox
                 AnimationComboBox.addItem("All Animations")
@@ -7170,16 +6273,14 @@ class Window(QMainWindow):
 
                 # ********************* Legend ********************
                 # Legend Label
-                LegendLabel = QLabel(DataSourceSurveyAnalysisTabverticalLayoutWidget)
+                LegendLabel = QLabel()
                 LegendLabel.setText("Legend:")
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendLabel)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(5)
-
+                OptionWidgetLayout.addWidget(LegendLabel)
 
                 # Legend ComboBox
-                LegendComboBox = QComboBox(DataSourceSurveyAnalysisTabverticalLayoutWidget)
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(LegendComboBox)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(6)
+                LegendComboBox = QComboBox()
+                OptionWidgetLayout.addWidget(LegendComboBox)
+
 
                 # Adding Items to ComboBox
                 LegendComboBox.addItem("Bottom")
@@ -7187,9 +6288,6 @@ class Window(QMainWindow):
                 LegendComboBox.addItem("Left")
                 LegendComboBox.addItem("Right")
                 LegendComboBox.addItem("Hide")
-
-                self.LineEditSizeAdjustment(LegendComboBox)
-
 
                 # Download Button
                 DownloadDashboardButton = QPushButton('Download ')
@@ -7201,10 +6299,9 @@ class Window(QMainWindow):
                 DownloadDashboardButtonFont.setBold(True)
                 DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
 
-                DataSourceSurveyAnalysisTabverticalLayout.addWidget(DownloadDashboardButton)
-                DataSourceSurveyAnalysisTabverticalLayout.addStretch(8)
+                OptionWidgetLayout.addWidget(DownloadDashboardButton)
 
-                self.LineEditSizeAdjustment(DownloadDashboardButton)
+                DataSourceSurveyAnalysisTabLayout.addWidget(OptionWidget, 5)
 
                 # *********************************************************************************************
                 # ************************ Data Source Survey Analysis Chart Widgets **************************
@@ -7231,13 +6328,10 @@ class Window(QMainWindow):
 
 
                 # Group Widget For within Survey Analysis Tab
-                DashBoardWidget = QGroupBox(DataSourceSurveyAnalysisTab)
-                DashBoardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
-
-
-                # Box Layout for Survey Analysis Tab
+                DashBoardWidget = QGroupBox()
                 DashBoardWidgetLayout = QGridLayout(DashBoardWidget)
-                DashBoardWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+                DataSourceSurveyAnalysisTabLayout.addWidget(DashBoardWidget, 95)
 
                 colWid = 0
                 if len(chartWidget) >= 5:
@@ -7257,7 +6351,6 @@ class Window(QMainWindow):
 
                     DashBoardWidgetLayout.addWidget(chartWid, rowcounter, colcounter)
                     colcounter += 1
-
 
                 ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashBoardWidget.palette()))
                 AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
@@ -7865,48 +6958,41 @@ class Window(QMainWindow):
     def DataSourceTweetAnalysisDialog(self):
         DataSourceTweetAnalysisDialog = QDialog()
         DataSourceTweetAnalysisDialog.setWindowTitle("Tweet Analysis")
-        DataSourceTweetAnalysisDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                  self.height / 10)
+        DataSourceTweetAnalysisDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
         DataSourceTweetAnalysisDialog.setParent(self)
+        DataSourceTweetAnalysisDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(DataSourceTweetAnalysisDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourceTweetAnalysisDialog)
-        DataSourcelabel.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.125,
-                                    DataSourceTweetAnalysisDialog.height() * 0.2,
-                                    DataSourceTweetAnalysisDialog.width() / 4,
-                                    DataSourceTweetAnalysisDialog.height() * 0.1)
+        DataSourceTweetAnalysisDialogLayout = QVBoxLayout(DataSourceTweetAnalysisDialog)
+        DataSourceTweetAnalysisDialogLayout.setAlignment(Qt.AlignCenter)
+        DataSourceTweetAnalysisDialogLayout.setSpacing(20)
 
+        # ************** Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceTweetAnalysisDialog)
-        DSComboBox.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.4,
-                               DataSourceTweetAnalysisDialog.height() * 0.2,
-                               DataSourceTweetAnalysisDialog.width() / 2,
-                               DataSourceTweetAnalysisDialog.height() / 10)
-
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceext == 'Tweet':
                 DSComboBox.addItem(DS.DataSourceName)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        # Tweet Analysis Button Box
-        DataSourceTweetAnalysisbuttonBox = QDialogButtonBox(DataSourceTweetAnalysisDialog)
-        DataSourceTweetAnalysisbuttonBox.setGeometry(DataSourceTweetAnalysisDialog.width() * 0.125,
-                                                     DataSourceTweetAnalysisDialog.height() * 0.7,
-                                                     DataSourceTweetAnalysisDialog.width() * 3 / 4,
-                                                     DataSourceTweetAnalysisDialog.height() / 5)
+        DataSourceTweetAnalysisDialogLayout.addWidget(DataSourceWidget)
+
+        # ********** Tweet Analysis Button Box **************
+        DataSourceTweetAnalysisbuttonBox = QDialogButtonBox()
         DataSourceTweetAnalysisbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourceTweetAnalysisbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
+        DataSourceTweetAnalysisDialogLayout.addWidget(DataSourceTweetAnalysisbuttonBox)
 
         if DSComboBox.count() == 0:
             DataSourceTweetAnalysisbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-
-        self.LineEditSizeAdjustment(DataSourceTweetAnalysisbuttonBox)
 
         DataSourceTweetAnalysisbuttonBox.accepted.connect(DataSourceTweetAnalysisDialog.accept)
         DataSourceTweetAnalysisbuttonBox.rejected.connect(DataSourceTweetAnalysisDialog.reject)
@@ -7932,18 +7018,17 @@ class Window(QMainWindow):
         if not DataSourceTweetAnalysisTabFlag:
             # Creating New Tab for Survey Analysis
             DataSourceTweetAnalysisTab = QWidget()
+            DataSourceTweetAnalysisTabLayout = QVBoxLayout(DataSourceTweetAnalysisTab)
 
             # **********************************************************************************************
             # ************************ Data Source Survey Analysis Setting Widget **************************
             # **********************************************************************************************
 
-            # LayoutWidget For within Survey Analysis Tab
-            OptionWidget = QWidget(DataSourceTweetAnalysisTab)
-            OptionWidget.setGeometry(self.tabWidget.width() * 0.2, 0, self.tabWidget.width() * 0.6,self.tabWidget.height() / 20)
-
-            # Box Layout for Survey Analysis Tab
+            # Option Widget
+            OptionWidget = QWidget()
+            DataSourceTweetAnalysisTabLayout.addWidget(OptionWidget, 5)
             OptionWidgetLayout = QHBoxLayout(OptionWidget)
-            OptionWidgetLayout.setContentsMargins(0, 0, 0, 0)
+            OptionWidgetLayout.setAlignment(Qt.AlignJustify | Qt.AlignCenter)
 
             # ********************* Theme *********************
 
@@ -7951,15 +7036,13 @@ class Window(QMainWindow):
             ThemeLabel = QLabel(OptionWidget)
             ThemeLabel.setText("Theme:")
             OptionWidgetLayout.addWidget(ThemeLabel)
-            OptionWidgetLayout.addStretch(1)
 
             # Theme Combo Box
             ThemeComboBox = QComboBox(OptionWidget)
             OptionWidgetLayout.addWidget(ThemeComboBox)
-            OptionWidgetLayout.addStretch(2)
 
             # Adding Items to ComboBox
-            ThemeComboBox.addItem("Standard")
+            ThemeComboBox.addItem("Light")
             ThemeComboBox.addItem("Blue Cerulean")
             ThemeComboBox.addItem("Blue Icy")
             ThemeComboBox.addItem("Blue Ncs")
@@ -7973,12 +7056,10 @@ class Window(QMainWindow):
             AnimationLabel = QLabel()
             AnimationLabel.setText("Animation:")
             OptionWidgetLayout.addWidget(AnimationLabel)
-            OptionWidgetLayout.addStretch(3)
 
             # Animation Combo Box
             AnimationComboBox = QComboBox(OptionWidget)
             OptionWidgetLayout.addWidget(AnimationComboBox)
-            OptionWidgetLayout.addStretch(4)
 
             # Adding Items to ComboBox
             AnimationComboBox.addItem("All Animations")
@@ -7991,12 +7072,10 @@ class Window(QMainWindow):
             LegendLabel = QLabel(OptionWidget)
             LegendLabel.setText("Legend:")
             OptionWidgetLayout.addWidget(LegendLabel)
-            OptionWidgetLayout.addStretch(5)
 
             # Legend ComboBox
             LegendComboBox = QComboBox(OptionWidget)
             OptionWidgetLayout.addWidget(LegendComboBox)
-            OptionWidgetLayout.addStretch(6)
 
             # Adding Items to ComboBox
             LegendComboBox.addItem("Bottom")
@@ -8005,17 +7084,12 @@ class Window(QMainWindow):
             LegendComboBox.addItem("Right")
             LegendComboBox.addItem("Hide")
 
-            self.LineEditSizeAdjustment(LegendComboBox)
-
             # Word Cloud ComboBox
             WordCloudComboBox = QComboBox()
             OptionWidgetLayout.addWidget(WordCloudComboBox)
-            OptionWidgetLayout.addStretch(7)
 
             WordCloudComboBox.addItem("Dashboard")
             WordCloudComboBox.addItem("Word Cloud")
-
-            self.LineEditSizeAdjustment(WordCloudComboBox)
 
             # Download Button
             DownloadDashboardButton = QPushButton('Download ')
@@ -8028,9 +7102,6 @@ class Window(QMainWindow):
             DownloadDashboardButton.setFont(DownloadDashboardButtonFont)
 
             OptionWidgetLayout.addWidget(DownloadDashboardButton)
-            OptionWidgetLayout.addStretch(7)
-
-            self.LineEditSizeAdjustment(DownloadDashboardButton)
 
             # *********************************************************************************************
             # ************************ Data Source Survey Analysis Chart Widgets **************************
@@ -8045,13 +7116,11 @@ class Window(QMainWindow):
             chartWidget.append(self.SentimentAnalysisPieChart(DataSourceName))
             chartWidget.append(self.DataSourceSurveyAnalysisLineChart(['LineChart', 'Tweet Created At', ''], DataSourceName))
 
-            # Group Widget For within Survey Analysis Tab
-            DashboardWidget = QGroupBox(DataSourceTweetAnalysisTab)
-            DashboardWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
+            # Group Widget
+            DashboardWidget = QGroupBox()
+            DataSourceTweetAnalysisTabLayout.addWidget(DashboardWidget, 95)
 
-            # Box Layout for Survey Analysis Tab
             DashboardWidgetLayout = QGridLayout(DashboardWidget)
-            DashboardWidgetLayout.setContentsMargins(0, 0, 0, 0)
 
             colWid = 2
 
@@ -8072,31 +7141,24 @@ class Window(QMainWindow):
             # ********************* Word Cloud *********************
             # ******************************************************
 
-            WordCloudWidget = QGroupBox(DataSourceTweetAnalysisTab)
-            WordCloudWidget.setGeometry(0, self.tabWidget.height() * 0.05, self.tabWidget.width(), self.tabWidget.height() * 0.95)
-
-            # Box Layout for Survey Analysis Tab
-            WordCloudWidgetLayout = QGridLayout(WordCloudWidget)
-            WordCloudWidgetLayout.setContentsMargins(0, 0, 0, 0)
-
-            WordCloudLabel = QLabel(WordCloudWidget)
+            WordCloudLabel = QLabel()
+            DataSourceTweetAnalysisTabLayout.addWidget(WordCloudLabel, 95)
+            WordCloudLabel.setAlignment(Qt.AlignCenter)
 
             # Resizing label to Layout
-            WordCloudLabel.resize(WordCloudWidget.width(), WordCloudWidget.height())
+            WordCloudLabel.resize(DataSourceTweetAnalysisTab.width(), DataSourceTweetAnalysisTab.height()*0.95)
 
             # Setting and Scaling Pixmap image on Label
-            WordCloudLabel.setPixmap(self.DataSourceSurveyAnalysisWordCloud(['Word Cloud', 'Tweet Text', ''], DataSourceName).toqpixmap().scaled(WordCloudWidget.width(), WordCloudWidget.height(), Qt.KeepAspectRatio))
-
-            WordCloudLabel.setGeometry((WordCloudWidget.width() - WordCloudLabel.pixmap().width()) / 2,
-                                       (WordCloudWidget.height() - WordCloudLabel.pixmap().height()) / 2,
-                                       WordCloudLabel.pixmap().width(), WordCloudLabel.pixmap().height())
-            WordCloudWidget.hide()
+            WordCloudLabel.setPixmap(self.DataSourceSurveyAnalysisWordCloud(['Word Cloud', 'Tweet Text', ''], DataSourceName).toqpixmap().scaled(WordCloudLabel.width(),
+                                                                                                                                                 WordCloudLabel.height(),
+                                                                                                                                                 Qt.KeepAspectRatio))
+            WordCloudLabel.hide()
 
             # ******************************************************
             # ************** ComboBox Text Changed *****************
             # ******************************************************
 
-            WordCloudComboBox.currentTextChanged.connect(lambda: self.WordCloudComboBoxTextChanged(DashboardWidget, WordCloudWidget))
+            WordCloudComboBox.currentTextChanged.connect(lambda: self.WordCloudComboBoxTextChanged(DashboardWidget, WordCloudLabel))
             ThemeComboBox.currentTextChanged.connect(lambda: self.ThemeComboBoxTextChanged(chartWidget, DashboardWidget.palette()))
             AnimationComboBox.currentTextChanged.connect(lambda: self.AnimationComboBoxTextChanged(chartWidget))
             LegendComboBox.currentTextChanged.connect(lambda: self.LegendComboBoxTextChanged(chartWidget))
@@ -8221,15 +7283,15 @@ class Window(QMainWindow):
         return chartview
 
     # Word CLoud Combo Box Text Change
-    def WordCloudComboBoxTextChanged(self, DashboardWidget, WordCloudWidget):
+    def WordCloudComboBoxTextChanged(self, DashboardWidget, WordCloudLabel):
         WordCloudComboBox = self.sender()
 
         if WordCloudComboBox.currentText() == "Word Cloud":
             DashboardWidget.hide()
-            WordCloudWidget.show()
+            WordCloudLabel.show()
         else:
             DashboardWidget.show()
-            WordCloudWidget.hide()
+            WordCloudLabel.hide()
 
     # ****************************************************************************
     # ********************** Data Source Coordinate Map **************************
@@ -8239,55 +7301,47 @@ class Window(QMainWindow):
     def DataSourceCoordinateMapDialog(self):
         DataSourceCoordinateMapDialog = QDialog()
         DataSourceCoordinateMapDialog.setWindowTitle("Coordinate Map")
-        DataSourceCoordinateMapDialog.setGeometry(self.width * 0.375, self.height * 0.45, self.width / 4,
-                                                     self.height / 10)
+        DataSourceCoordinateMapDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
         DataSourceCoordinateMapDialog.setParent(self)
+        DataSourceCoordinateMapDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(DataSourceCoordinateMapDialog)
 
-        # Data Source Label
-        DataSourcelabel = QLabel(DataSourceCoordinateMapDialog)
-        DataSourcelabel.setGeometry(DataSourceCoordinateMapDialog.width() * 0.125,
-                                    DataSourceCoordinateMapDialog.height() * 0.2,
-                                    DataSourceCoordinateMapDialog.width() / 4,
-                                    DataSourceCoordinateMapDialog.height() * 0.1)
+        DataSourceCoordinateMapDialogLayout = QVBoxLayout(DataSourceCoordinateMapDialog)
+        DataSourceCoordinateMapDialogLayout.setAlignment(Qt.AlignCenter)
+        DataSourceCoordinateMapDialogLayout.setSpacing(20)
 
+        # ************** Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
+
+        DataSourcelabel = QLabel()
         DataSourcelabel.setText("Data Source")
-        DataSourcelabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(DataSourcelabel)
+        DataSourcelabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourcelabel, 30)
 
-        # Data Source ComboBox
-        DSComboBox = QComboBox(DataSourceCoordinateMapDialog)
-        DSComboBox.setGeometry(DataSourceCoordinateMapDialog.width() * 0.4,
-                               DataSourceCoordinateMapDialog.height() * 0.2,
-                               DataSourceCoordinateMapDialog.width() / 2,
-                               DataSourceCoordinateMapDialog.height() / 10)
-        # if len(myFile.DataSourceList) > 1:
-        #     DSComboBox.addItem("All")
+        DSComboBox = QComboBox()
         for DS in myFile.DataSourceList:
             if DS.DataSourceext == 'Tweet':
                 DSComboBox.addItem(DS.DataSourceName)
 
-        self.LineEditSizeAdjustment(DSComboBox)
+        DataSourceWidgetLayout.addWidget(DSComboBox, 70)
 
-        # Coordinate Map Button Box
-        DataSourcesCoordinateMapbuttonBox = QDialogButtonBox(DataSourceCoordinateMapDialog)
-        DataSourcesCoordinateMapbuttonBox.setGeometry(DataSourceCoordinateMapDialog.width() * 0.125,
-                                                        DataSourceCoordinateMapDialog.height() * 0.7,
-                                                        DataSourceCoordinateMapDialog.width() * 3 / 4,
-                                                        DataSourceCoordinateMapDialog.height() / 5)
+        DataSourceCoordinateMapDialogLayout.addWidget(DataSourceWidget)
+
+        # ************** Button Box ******************
+        DataSourcesCoordinateMapbuttonBox = QDialogButtonBox()
         DataSourcesCoordinateMapbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setText('Show')
 
         if DSComboBox.count() == 0:
             DataSourcesCoordinateMapbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
-        self.LineEditSizeAdjustment(DataSourcesCoordinateMapbuttonBox)
+        DataSourceCoordinateMapDialogLayout.addWidget(DataSourcesCoordinateMapbuttonBox)
 
         DataSourcesCoordinateMapbuttonBox.accepted.connect(DataSourceCoordinateMapDialog.accept)
         DataSourcesCoordinateMapbuttonBox.rejected.connect(DataSourceCoordinateMapDialog.reject)
 
-        DataSourcesCoordinateMapbuttonBox.accepted.connect(
-            lambda: self.DataSourceCoordinateMap(DSComboBox.currentText()))
+        DataSourcesCoordinateMapbuttonBox.accepted.connect(lambda: self.DataSourceCoordinateMap(DSComboBox.currentText()))
 
         DataSourceCoordinateMapDialog.exec()
 
@@ -8305,19 +7359,13 @@ class Window(QMainWindow):
                     DataSourceCoordinateMapTabFlag2 = True
                     break
 
-        if not DataSourceCoordinateMapTabFlag:
+        if not DataSourceCoordinateMapTabFlag2:
             DataSourceCoordinateMapTab = QWidget()
+            DataSourceCoordinateMapTabLayout = QVBoxLayout(DataSourceCoordinateMapTab)
+            DataSourceCoordinateMapTabLayout.setAlignment(Qt.AlignCenter)
 
-            # LayoutWidget For within DataSource Preview Tab
-            DataSourceCoordinateMapTabverticalLayoutWidget = QWidget(DataSourceCoordinateMapTab)
-            DataSourceCoordinateMapTabverticalLayoutWidget.setContentsMargins(0, 0, 0, 0)
-
-            if self.tabWidget.width() > 800 and self.tabWidget.height() > 600:
-                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry((self.tabWidget.width() - 800)/2, (self.tabWidget.height() - 600)/2, 800, 600)
-            else:
-                DataSourceCoordinateMapTabverticalLayoutWidget.setGeometry(abs(self.tabWidget.width() - 800)/2, abs(self.tabWidget.height() - 600)/2, self.tabWidget.width(), self.tabWidget.height())
-
-            DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget(DataSourceCoordinateMapTabverticalLayoutWidget)
+            DataSourceCoordinateMap = QtQuickWidgets.QQuickWidget()
+            DataSourceCoordinateMapTabLayout.addWidget(DataSourceCoordinateMap)
             model = MarkerModel(DataSourceCoordinateMap)
             DataSourceCoordinateMap.rootContext().setContextProperty("markermodel", model)
 
@@ -8426,7 +7474,6 @@ class Window(QMainWindow):
                 SummarizeMaxWord.setText("Max. Words: " + str(len(DS.DataSourcetext.split())))
                 SummarizeWord.setMinimum(round(len(DS.DataSourcetext.split()) / 5))
                 SummarizeWord.setValue(SummarizeWord.minimum())
-                self.LabelSizeAdjustment(SummarizeMaxWord)
 
     # Ok Button Enable on Radio Button Toggling
     def EnableOkonRadioButtonToggle(self, SecondButton, ThirdButton, ButtonBox, ComboBox):
@@ -8915,43 +7962,18 @@ class Window(QMainWindow):
 
             # Creating New Tab for Case Structure Tab
             CasesStructureTab = QWidget()
+            CasesStructureTabLayout = QVBoxLayout(CasesStructureTab)
 
-            # ******************************* LayoutWidget For within Case Structure Tab ************************************
-            CasesStructureTabVerticalLayoutWidget = QWidget(CasesStructureTab)
-            CasesStructureTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(),
-                                                                    self.tabWidget.height() / 10)
-
-            # Box Layout for Case Structure Tab
-            CasesStructureTabVerticalLayout = QHBoxLayout(CasesStructureTabVerticalLayoutWidget)
-            CasesStructureTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            DownloadAsPDFButton = QPushButton(CasesStructureTabVerticalLayoutWidget)
+            # Download As A PDF Button
+            DownloadAsPDFButton = QPushButton()
             DownloadAsPDFButton.setText("Download")
-            DownloadAsPDFButton.setGeometry(CasesStructureTabVerticalLayoutWidget.width() * 0.8,
-                                            CasesStructureTabVerticalLayoutWidget.height() * 0.4,
-                                            CasesStructureTabVerticalLayoutWidget.width() * 0.1,
-                                            CasesStructureTabVerticalLayoutWidget.height() * 0.2)
             DownloadAsPDFButton.setIcon(QIcon("Images/Download Button.png"))
-            DownloadAsPDFButton.setStyleSheet('QPushButton {background-color: #0080FF; color: white;}')
+            CasesStructureTabLayout.addWidget(DownloadAsPDFButton, 10, Qt.AlignRight)
+            DownloadAsPDFButton.adjustSize()
 
-            DownloadAsPDFButtonFont = QFont("sans-serif")
-            DownloadAsPDFButtonFont.setPixelSize(14)
-            DownloadAsPDFButtonFont.setBold(True)
-            DownloadAsPDFButton.setFont(DownloadAsPDFButtonFont)
-            self.LineEditSizeAdjustment(DownloadAsPDFButton)
-
-
-            # *************************** 2nd LayoutWidget For within Case Structure Tab *************************************
-            CasesStructureTabVerticalLayoutWidget2 = QWidget(CasesStructureTab)
-            CasesStructureTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10,
-                                                               self.tabWidget.width(),
-                                                               self.tabWidget.height() - self.tabWidget.height() / 10)
-
-            # 2nd Box Layout for Case Structure Tab
-            CasesStructureTabVerticalLayout2 = QVBoxLayout(CasesStructureTabVerticalLayoutWidget2)
+            # ************ Graph ***************
 
             os.environ["PATH"] += os.pathsep + 'Graphviz2.38/bin/'
-
 
             graph = graphviz.Digraph(name="Cases")
             graph.edge_attr.update(arrowhead="vee", arrowsize="1")
@@ -8998,22 +8020,18 @@ class Window(QMainWindow):
             os.remove("Cases.png")
 
             # Label for Word Cloud Image
-            CasesStructureLabel = QLabel(CasesStructureTabVerticalLayoutWidget2)
+            CasesStructureLabel = QLabel()
+            CasesStructureLabel.setAlignment(Qt.AlignCenter)
 
             # Resizing label to Layout
-            CasesStructureLabel.resize(CasesStructureTabVerticalLayoutWidget2.width(), CasesStructureTabVerticalLayoutWidget2.height())
-
-            # Converting WordCloud Image to Pixmap
-            CasesStructurePixmap = CasesStructureImage.toqpixmap()
+            CasesStructureLabel.resize(CasesStructureTab.width(), CasesStructureTab.height() * 0.9)
 
             # Scaling Pixmap image
-            dummypixmap = CasesStructurePixmap.scaled(CasesStructureTabVerticalLayoutWidget2.width(),
-                                                      CasesStructureTabVerticalLayoutWidget2.height(),
-                                                      Qt.KeepAspectRatio)
-            CasesStructureLabel.setPixmap(dummypixmap)
-            CasesStructureLabel.setGeometry((CasesStructureTabVerticalLayoutWidget2.width() - dummypixmap.width()) / 2,
-                                            (CasesStructureTabVerticalLayoutWidget2.height() - dummypixmap.height()) / 2,
-                                            dummypixmap.width(), dummypixmap.height())
+            CasesStructureLabel.setPixmap(CasesStructureImage.toqpixmap().scaled(CasesStructureLabel.width(),
+                                                                                 CasesStructureLabel.height(),
+                                                                                 Qt.KeepAspectRatio))
+
+            CasesStructureTabLayout.addWidget(CasesStructureLabel, 90)
 
             DownloadAsPDFButton.clicked.connect(lambda: self.SaveStructureAsPDF(graph))
 
@@ -9069,29 +8087,33 @@ class Window(QMainWindow):
     def MergeCasesDialog(self, CasesItemName):
         MergeCasesDialog = QDialog()
         MergeCasesDialog.setWindowTitle("Merge Cases")
-        MergeCasesDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width / 3, self.height / 3)
+        MergeCasesDialog.setFixedWidth(QApplication.desktop().width()*0.3)
+        MergeCasesDialog.setFixedHeight(QApplication.desktop().height()*0.3)
         MergeCasesDialog.setParent(self)
         MergeCasesDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(MergeCasesDialog)
 
+        MergeCasesDialogLayout = QVBoxLayout(MergeCasesDialog)
+        MergeCasesDialogLayout.setAlignment(Qt.AlignCenter)
+        MergeCasesDialogLayout.setSpacing(20)
+
+        # ************ Case Name ***************
+        CaseNameWidget = QWidget()
+        CaseNameWidgetLayout = QHBoxLayout(CaseNameWidget)
+
         # Case Name Label
-        CaseNameLabel = QLabel(MergeCasesDialog)
-        CaseNameLabel.setGeometry(MergeCasesDialog.width() * 0.2,
-                                  MergeCasesDialog.height() * 0.1,
-                                  MergeCasesDialog.width() / 5,
-                                  MergeCasesDialog.height() / 15)
+        CaseNameLabel = QLabel()
         CaseNameLabel.setText("Case Name")
-        self.LabelSizeAdjustment(CaseNameLabel)
+        CaseNameLabel.setAlignment(Qt.AlignCenter)
+        CaseNameWidgetLayout.addWidget(CaseNameLabel, 30)
 
         # Case Name LineEdit
-        CaseNameLineEdit = QLineEdit(MergeCasesDialog)
-        CaseNameLineEdit.setGeometry(MergeCasesDialog.width() * 0.5,
-                                     MergeCasesDialog.height() * 0.1,
-                                     MergeCasesDialog.width() * 0.3,
-                                     MergeCasesDialog.height() / 15)
-        self.LineEditSizeAdjustment(CaseNameLineEdit)
+        CaseNameLineEdit = QLineEdit()
+        CaseNameWidgetLayout.addWidget(CaseNameLineEdit, 30)
 
-        # Cases List View
+        MergeCasesDialogLayout.addWidget(CaseNameWidget)
+
+        # ************* Cases List View ****************
         ListModel = QStandardItemModel()
 
         for DS in myFile.DataSourceList:
@@ -9103,23 +8125,17 @@ class Window(QMainWindow):
                         item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
                         ListModel.appendRow(item)
 
-        CasesListView = QListView(MergeCasesDialog)
-        CasesListView.setGeometry(MergeCasesDialog.width() * 0.2,
-                                  MergeCasesDialog.height() * 0.2,
-                                  MergeCasesDialog.width() * 0.6,
-                                  MergeCasesDialog.height() / 2)
+        CasesListView = QListView()
         CasesListView.setModel(ListModel)
 
+        MergeCasesDialogLayout.addWidget(CasesListView)
 
-        MergeCasesbuttonBox = QDialogButtonBox(MergeCasesDialog)
-        MergeCasesbuttonBox.setGeometry(MergeCasesDialog.width() * 0.5,
-                                        MergeCasesDialog.height() * 0.8,
-                                        MergeCasesDialog.width() / 3,
-                                        MergeCasesDialog.height() / 15)
+        # ************* Button Box ****************
+        MergeCasesbuttonBox = QDialogButtonBox()
         MergeCasesbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         MergeCasesbuttonBox.button(QDialogButtonBox.Ok).setText('Merge')
         MergeCasesbuttonBox.button(QDialogButtonBox.Ok).setDisabled(True)
-        self.LineEditSizeAdjustment(MergeCasesbuttonBox)
+        MergeCasesDialogLayout.addWidget(MergeCasesbuttonBox)
 
         CaseNameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(MergeCasesbuttonBox, True))
 
@@ -9361,51 +8377,35 @@ class Window(QMainWindow):
 
             # Creating New Tab for Case Parent Coverage Tab
             CasesParentCoverageTab = QWidget()
+            CasesParentCoverageTabLayout = QVBoxLayout(CasesParentCoverageTab)
 
-            # ******************************* LayoutWidget For within Case Parent Coverage Tab ************************************
-            CasesParentCoverageTabVerticalLayoutWidget = QWidget(CasesParentCoverageTab)
-            CasesParentCoverageTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
 
-            # Box Layout for Case Parent Coverage Tab
-            CasesParentCoverageTabVerticalLayout = QHBoxLayout(CasesParentCoverageTabVerticalLayoutWidget)
-            CasesParentCoverageTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
-
-            # Data Source Label
+            # ******** Data Source Label *********
             DataSourceLabel = QLabel()
             DataSourceLabel.setText(CasesItemName.text(0))
             DataSourceLabel.setStyleSheet("font-size: 20px;font-weight: bold; background: transparent;")
-            DataSourceLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
-            CasesParentCoverageTabVerticalLayout.addWidget(DataSourceLabel)
+            DataSourceLabel.setAlignment(Qt.AlignCenter)
+            CasesParentCoverageTabLayout.addWidget(DataSourceLabel, 10)
 
 
-            # *************************** 2nd LayoutWidget For within Case Parent Coverage Tab *************************************
-            CasesParentCoverageTabVerticalLayoutWidget2 = QWidget(CasesParentCoverageTab)
-            CasesParentCoverageTabVerticalLayoutWidget2.setGeometry(0,
-                                                                    self.tabWidget.height() / 10,
-                                                                    self.tabWidget.width()/4,
-                                                                    self.tabWidget.height() - self.tabWidget.height() / 10)
+            # ******** Bottom Widget ********
+            CasesParentCoverageTabBottomWidget = QWidget()
+            CasesParentCoverageTabBottomWidgetLayout = QHBoxLayout(CasesParentCoverageTabBottomWidget)
+            CasesParentCoverageTabLayout.addWidget(CasesParentCoverageTabBottomWidget, 90)
 
-            # 2nd Box Layout for Case Parent Coverage Tab
-            CasesParentCoverageTabVerticalLayout2 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget2)
-
-            CasesList = QListWidget(CasesParentCoverageTabVerticalLayoutWidget2)
-            CasesList.setGeometry(0, 0,
-                                  self.tabWidget.width()/4,
-                                  self.tabWidget.height() - self.tabWidget.height() / 10)
-
+            # Cases List
+            CasesList = QListWidget()
 
             for cases in DS.CasesList:
                 if not cases.MergedCase:
                     CasesList.addItem(cases.CaseTopic)
 
-            # *************************** 3rd LayoutWidget For within Case Parent Coverage Tab *************************************
-            CasesParentCoverageTabVerticalLayoutWidget3 = QWidget(CasesParentCoverageTab)
-            CasesParentCoverageTabVerticalLayoutWidget3.setGeometry(self.tabWidget.width()*0.25,
-                                                                    self.tabWidget.height()*0.1,
-                                                                    self.tabWidget.width()*0.75,
-                                                                    self.tabWidget.height()*0.45)
-            # 3rd Box Layout for Case Parent Coverage Tab
-            CasesParentCoverageTabVerticalLayout3 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget3)
+            CasesParentCoverageTabBottomWidgetLayout.addWidget(CasesList, 25)
+
+            # ****** Rigth Widget ***********
+            CasesParentCoverageTabRightWidget = QWidget()
+            CasesParentCoverageTabRightWidgetLayout = QVBoxLayout(CasesParentCoverageTabRightWidget)
+            CasesParentCoverageTabBottomWidgetLayout.addWidget(CasesParentCoverageTabRightWidget, 75)
 
             dummyQuery = Query()
             TempText = ""
@@ -9416,15 +8416,12 @@ class Window(QMainWindow):
             rowList = dummyQuery.FindSimpleFrequency(TempText)
 
             # Table for Cases Parent Coverage
-            CasesParentCoverageTable = QTableWidget(CasesParentCoverageTabVerticalLayoutWidget3)
+            CasesParentCoverageTable = QTableWidget()
             CasesParentCoverageTable.setColumnCount(4)
-            CasesParentCoverageTable.setGeometry(0, 0,
-                                                 CasesParentCoverageTabVerticalLayoutWidget3.width(),
-                                                 CasesParentCoverageTabVerticalLayoutWidget3.height())
-            CasesParentCoverageTable.setSizePolicy(self.sizePolicy)
             CasesParentCoverageTable.setWindowFlags(CasesParentCoverageTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
             CasesParentCoverageTable.setHorizontalHeaderLabels(["Word", "Length", "Frequency", "Weighted Average"])
-            CasesParentCoverageTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            CasesParentCoverageTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            CasesParentCoverageTabRightWidgetLayout.addWidget(CasesParentCoverageTable, 50)
 
             for i in range(CasesParentCoverageTable.columnCount()):
                 CasesParentCoverageTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -9438,7 +8435,7 @@ class Window(QMainWindow):
                         intItem = QTableWidgetItem()
                         intItem.setData(Qt.EditRole, QVariant(item))
                         CasesParentCoverageTable.setItem(rowList.index(row), row.index(item), intItem)
-                        CasesParentCoverageTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        CasesParentCoverageTable.item(rowList.index(row), row.index(item)).setTextAlignment(Qt.AlignCenter)
                         CasesParentCoverageTable.item(rowList.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                 CasesParentCoverageTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -9451,17 +8448,9 @@ class Window(QMainWindow):
                 for i in range(CasesParentCoverageTable.columnCount()):
                     CasesParentCoverageTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
 
-            # *************************** 4th LayoutWidget For within Case Parent Coverage Tab *************************************
-            CasesParentCoverageTabVerticalLayoutWidget4 = QWidget(CasesParentCoverageTab)
-            CasesParentCoverageTabVerticalLayoutWidget4.setGeometry(self.tabWidget.width()*0.25,
-                                                                    self.tabWidget.height()*0.55,
-                                                                    self.tabWidget.width()*0.75,
-                                                                    self.tabWidget.height()*0.45)
-            # 4th Box Layout for Case Parent Coverage Tab
-            CasesParentCoverageTabVerticalLayout4 = QVBoxLayout(CasesParentCoverageTabVerticalLayoutWidget4)
-
+            # ********* Figure Canvas ********
             canvas = FigureCanvas(DS.BarCasesCoverageFigure)
-            CasesParentCoverageTabVerticalLayout4.addWidget(canvas)
+            CasesParentCoverageTabRightWidgetLayout.addWidget(canvas, 50)
 
             if CasesParentCoverageTabFlag3:
                 tabs.tabWidget = CasesParentCoverageTab
@@ -9538,59 +8527,53 @@ class Window(QMainWindow):
         CasesParentDetailDialogBox.setModal(True)
         CasesParentDetailDialogBox.setWindowTitle("Details")
         CasesParentDetailDialogBox.setParent(self)
-        CasesParentDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
-                                                    self.height / 10)
+        CasesParentDetailDialogBox.setFixedWidth(QApplication.desktop().width()*0.3)
+        CasesParentDetailDialogBox.setFixedHeight(QApplication.desktop().height()*0.1)
         self.QDialogAddProperties(CasesParentDetailDialogBox)
+
+        CasesParentDetailDialogBoxLayout = QVBoxLayout(CasesParentDetailDialogBox)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == CasesItemName.text(0):
                 break
 
-        # ************************************** Labels *************************************
+        # ******************* Data Source *********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
         # Data Source Name Label
-        DataSourceNameLabel = QLabel(CasesParentDetailDialogBox)
+        DataSourceNameLabel = QLabel()
         DataSourceNameLabel.setText("Name:")
-        DataSourceNameLabel.setGeometry(CasesParentDetailDialogBox.width() * 0.1,
-                                        CasesParentDetailDialogBox.height() * 0.2,
-                                        CasesParentDetailDialogBox.width() / 4,
-                                        CasesParentDetailDialogBox.height() / 5)
-        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNameLabel)
-
-        # Data Source Path Label
-        DataSourceNoofCasesLabel = QLabel(CasesParentDetailDialogBox)
-        DataSourceNoofCasesLabel.setText("No of Cases")
-        DataSourceNoofCasesLabel.setGeometry(CasesParentDetailDialogBox.width() * 0.1,
-                                             CasesParentDetailDialogBox.height() * 0.6,
-                                             CasesParentDetailDialogBox.width() / 4,
-                                             CasesParentDetailDialogBox.height() / 5)
-        DataSourceNoofCasesLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNoofCasesLabel)
-
-        # ************************************** LineEdit *************************************
+        DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
         # Data Source Name LineEdit
-        DataSourceNameLineEdit = QLineEdit(CasesParentDetailDialogBox)
+        DataSourceNameLineEdit = QLineEdit()
         DataSourceNameLineEdit.setText(CasesItemName.text(0))
         DataSourceNameLineEdit.setReadOnly(True)
-        DataSourceNameLineEdit.setGeometry(CasesParentDetailDialogBox.width() * 0.35,
-                                           CasesParentDetailDialogBox.height() * 0.2,
-                                           CasesParentDetailDialogBox.width() * 0.6,
-                                           CasesParentDetailDialogBox.height() / 5)
-        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+        CasesParentDetailDialogBoxLayout.addWidget(DataSourceWidget)
+
+        # ******************* Cases *********************
+        CasesWidget = QWidget()
+        CasesWidgetLayout = QHBoxLayout(CasesWidget)
+
+        # Data Source Path Label
+        DataSourceNoofCasesLabel = QLabel()
+        DataSourceNoofCasesLabel.setText("No of Cases")
+        DataSourceNoofCasesLabel.setAlignment(Qt.AlignCenter)
+        CasesWidgetLayout.addWidget(DataSourceNoofCasesLabel, 30)
 
         # Data Source Path LineEdit
-        DataSourceNoofCasesLineEdit = QLineEdit(CasesParentDetailDialogBox)
+        DataSourceNoofCasesLineEdit = QLineEdit()
         DataSourceNoofCasesLineEdit.setText(str(len(DS.CasesList)))
         DataSourceNoofCasesLineEdit.setReadOnly(True)
-        DataSourceNoofCasesLineEdit.setGeometry(CasesParentDetailDialogBox.width() * 0.35,
-                                                CasesParentDetailDialogBox.height() * 0.6,
-                                                CasesParentDetailDialogBox.width() * 0.6,
-                                                CasesParentDetailDialogBox.height() / 5)
-        DataSourceNoofCasesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNoofCasesLineEdit)
+        DataSourceNoofCasesLineEdit.setAlignment(Qt.AlignCenter)
+        CasesWidgetLayout.addWidget(DataSourceNoofCasesLineEdit, 70)
+
+        CasesParentDetailDialogBoxLayout.addWidget(CasesWidget)
 
         CasesParentDetailDialogBox.exec_()
 
@@ -9618,45 +8601,25 @@ class Window(QMainWindow):
             # Creating New Tab for Case Show Component
             CaseShowComponentTab = QWidget()
 
-            # LayoutWidget For within Case Show Component Tab
-            CaseShowComponentTabVerticalLayoutWidget = QWidget(CaseShowComponentTab)
-            CaseShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
-
-            # Box Layout for Case Show Component Tab
-            CaseShowComponentTabVerticalLayout = QHBoxLayout(CaseShowComponentTabVerticalLayoutWidget)
-            CaseShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+            CaseShowComponentLayout = QVBoxLayout(CaseShowComponentTab)
 
             # Case Name label
-            CaseNameLabel = QLabel(CaseShowComponentTabVerticalLayoutWidget)
-            CaseNameLabel.setGeometry(0, 0,
-                                      CaseShowComponentTabVerticalLayoutWidget.width(),
-                                      CaseShowComponentTabVerticalLayoutWidget.height())
+            CaseNameLabel = QLabel()
             CaseNameLabel.setText(CasesItemName.text(0))
             CaseNameLabel.setStyleSheet("font-size: 16px;font-weight: bold; background: transparent;")
-            CaseNameLabel.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
+            CaseNameLabel.setAlignment(Qt.AlignCenter)
+            CaseShowComponentLayout.addWidget(CaseNameLabel, 10)
 
-            # 2nd LayoutWidget For within Case Show Component Tab
-            CaseShowComponentTabVerticalLayoutWidget2 = QWidget(CaseShowComponentTab)
-            CaseShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                  self.tabWidget.height() - self.tabWidget.height() / 10)
-
-            # 2nd Box Layout for Case Show Component Tab
-            CaseShowComponentTabVerticalLayout2 = QVBoxLayout(CaseShowComponentTabVerticalLayoutWidget2)
-
-            CaseShowComponentTable = QTableWidget(CaseShowComponentTabVerticalLayoutWidget2)
+            # Cases Component Table
+            CaseShowComponentTable = QTableWidget()
             CaseShowComponentTable.setColumnCount(5)
-            CaseShowComponentTable.setGeometry(0, 0, CaseShowComponentTabVerticalLayoutWidget2.width(),
-                                               CaseShowComponentTabVerticalLayoutWidget2.height())
             CaseShowComponentTable.setUpdatesEnabled(True)
             CaseShowComponentTable.setDragEnabled(True)
             CaseShowComponentTable.setMouseTracking(True)
-
-            CaseShowComponentTable.setSizePolicy(self.sizePolicy)
-            CaseShowComponentTable.setWindowFlags(
-                CaseShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
-            CaseShowComponentTable.setHorizontalHeaderLabels(
-                ["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
-            CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+            CaseShowComponentTable.setWindowFlags(CaseShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
+            CaseShowComponentTable.setHorizontalHeaderLabels(["Case", "Word Count", "Character Count", "Weighted Average", "Action"])
+            CaseShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
+            CaseShowComponentLayout.addWidget(CaseShowComponentTable, 90)
 
             for i in range(CaseShowComponentTable.columnCount()):
                 CaseShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -9685,13 +8648,12 @@ class Window(QMainWindow):
                             intItem.setData(Qt.EditRole, QVariant(item))
                             CaseShowComponentTable.setItem(Case_List.index(row), row.index(item), intItem)
                             CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
+                                Qt.AlignCenter)
                             CaseShowComponentTable.item(Case_List.index(row), row.index(item)).setFlags(
                                 Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                             deleteButton = QPushButton("Remove")
                             deleteButton.clicked.connect(lambda: self.deleteCaseComponentRow(CasesItemName, CaseShowComponentTable))
-                            self.LabelSizeAdjustment(deleteButton)
                             CaseShowComponentTable.setCellWidget(Case_List.index(row), 4, deleteButton)
 
                 CaseShowComponentTable.resizeColumnsToContents()
@@ -9699,7 +8661,6 @@ class Window(QMainWindow):
 
                 CaseShowComponentTable.setSortingEnabled(True)
                 CaseShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                row_width = 0
 
                 for i in range(CaseShowComponentTable.columnCount()):
                     CaseShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -9776,29 +8737,37 @@ class Window(QMainWindow):
     def CasesRename(self, CasesItemName):
         CaseRenameDialog = QDialog()
         CaseRenameDialog.setWindowTitle("Rename")
-        CaseRenameDialog.setGeometry(self.width * 0.375, self.height * 0.425, self.width / 4, self.height * 0.15)
+        CaseRenameDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        CaseRenameDialog.setFixedHeight(QApplication.desktop().height() * 0.10)
         CaseRenameDialog.setParent(self)
         self.QDialogAddProperties(CaseRenameDialog)
 
-        RenameLabel = QLabel(CaseRenameDialog)
-        RenameLabel.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.3,
-                                CaseRenameDialog.width() / 4, CaseRenameDialog.height() * 0.15)
+        CaseRenameDialogLayout = QVBoxLayout(CaseRenameDialog)
+        CaseRenameDialogLayout.setAlignment(Qt.AlignCenter)
+        CaseRenameDialogLayout.setSpacing(20)
+
+        # ****************** Rename ******************
+        RenameWidget = QWidget()
+        RenameWidgetLayout = QHBoxLayout(RenameWidget)
+
+        # Rename Label
+        RenameLabel = QLabel()
         RenameLabel.setText("Rename")
-        RenameLabel.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
-        self.LabelSizeAdjustment(RenameLabel)
+        RenameLabel.setAlignment(Qt.AlignCenter)
+        RenameWidgetLayout.addWidget(RenameLabel, 30)
 
-        RenameLineEdit = QLineEdit(CaseRenameDialog)
-        RenameLineEdit.setGeometry(CaseRenameDialog.width() * 0.4, CaseRenameDialog.height() * 0.3,
-                                   CaseRenameDialog.width() / 2, CaseRenameDialog.height() * 0.15)
+        # Rename LineEdit
+        RenameLineEdit = QLineEdit()
         RenameLineEdit.setText(CasesItemName.text(0))
-        self.LineEditSizeAdjustment(RenameLineEdit)
+        RenameWidgetLayout.addWidget(RenameLineEdit, 70)
 
-        RenamebuttonBox = QDialogButtonBox(CaseRenameDialog)
-        RenamebuttonBox.setGeometry(CaseRenameDialog.width() * 0.125, CaseRenameDialog.height() * 0.7,
-                                    CaseRenameDialog.width() * 3 / 4, CaseRenameDialog.height() / 5)
+        CaseRenameDialogLayout.addWidget(RenameWidget)
+
+        # *************** Button Box ****************
+        RenamebuttonBox = QDialogButtonBox()
         RenamebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-
         RenamebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        CaseRenameDialogLayout.addWidget(RenamebuttonBox)
 
         RenameLineEdit.textChanged.connect(lambda: self.OkButtonEnable(RenamebuttonBox, True))
 
@@ -9895,9 +8864,13 @@ class Window(QMainWindow):
         CasesChildDetailDialogBox.setModal(True)
         CasesChildDetailDialogBox.setWindowTitle("Details")
         CasesChildDetailDialogBox.setParent(self)
-        CasesChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                               self.height / 5)
+        CasesChildDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+        CasesChildDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.2)
         self.QDialogAddProperties(CasesChildDetailDialogBox)
+
+        CasesChildDetailDialogBoxLayout = QVBoxLayout(CasesChildDetailDialogBox)
+        CasesChildDetailDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        CasesChildDetailDialogBoxLayout.setSpacing(20)
 
         tempWidget = CasesItemName
 
@@ -9912,64 +8885,57 @@ class Window(QMainWindow):
             if case.CaseTopic == CasesItemName.text(0):
                 break
 
-        # ************************************** Labels *************************************
+        # ******************* Data Source *********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
         # Data Source Name Label
-        DataSourceNameLabel = QLabel(CasesChildDetailDialogBox)
+        DataSourceNameLabel = QLabel()
         DataSourceNameLabel.setText("Data Source Name:")
-        DataSourceNameLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
-                                        CasesChildDetailDialogBox.height() * 0.2,
-                                        CasesChildDetailDialogBox.width() / 4,
-                                        CasesChildDetailDialogBox.height() / 10)
-        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNameLabel)
-
-        # Case Name Label
-        CaseNameLabel = QLabel(CasesChildDetailDialogBox)
-        CaseNameLabel.setText("Case Name:")
-        CaseNameLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
-                                  CasesChildDetailDialogBox.height() * 0.4,
-                                  CasesChildDetailDialogBox.width() / 4,
-                                  CasesChildDetailDialogBox.height() / 10)
-        CaseNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(CaseNameLabel)
-
-        # No of Case Component Label
-        DataSourceNoofComponentLabel = QLabel(CasesChildDetailDialogBox)
-        DataSourceNoofComponentLabel.setText("No of Components")
-        DataSourceNoofComponentLabel.setGeometry(CasesChildDetailDialogBox.width() * 0.1,
-                                                 CasesChildDetailDialogBox.height() * 0.6,
-                                                 CasesChildDetailDialogBox.width() / 4,
-                                                 CasesChildDetailDialogBox.height() / 10)
-        DataSourceNoofComponentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNoofComponentLabel)
-
-        # ************************************** LineEdit *************************************
+        DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
         # Data Source Name LineEdit
-        DataSourceNameLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        DataSourceNameLineEdit = QLineEdit()
         DataSourceNameLineEdit.setText(DS.DataSourceName)
         DataSourceNameLineEdit.setReadOnly(True)
-        DataSourceNameLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
-                                           CasesChildDetailDialogBox.height() * 0.2,
-                                           CasesChildDetailDialogBox.width() * 0.6,
-                                           CasesChildDetailDialogBox.height() / 10)
-        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+        CasesChildDetailDialogBoxLayout.addWidget(DataSourceWidget)
+
+        # ******************* Case Name *********************
+        CaseNameWidget = QWidget()
+        CaseNameWidgetLayout = QHBoxLayout(CaseNameWidget)
+
+        # Case Name Label
+        CaseNameLabel = QLabel()
+        CaseNameLabel.setText("Case Name:")
+        CaseNameLabel.setAlignment(Qt.AlignCenter)
+        CaseNameWidgetLayout.addWidget(CaseNameLabel, 30)
 
         # Case Name LineEdit
-        DataSourceCaseNameLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        DataSourceCaseNameLineEdit = QLineEdit()
         DataSourceCaseNameLineEdit.setText(CasesItemName.text(0))
         DataSourceCaseNameLineEdit.setReadOnly(True)
-        DataSourceCaseNameLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
-                                               CasesChildDetailDialogBox.height() * 0.4,
-                                               CasesChildDetailDialogBox.width() * 0.6,
-                                               CasesChildDetailDialogBox.height() / 10)
-        DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
+        DataSourceCaseNameLineEdit.setAlignment(Qt.AlignCenter)
+        CaseNameWidgetLayout.addWidget(DataSourceCaseNameLineEdit, 70)
+
+        CasesChildDetailDialogBoxLayout.addWidget(CaseNameWidget)
+
+        # ***************** No of Component ******************
+        NoofComponentWidget = QWidget()
+        NoofComponentWidgetLayout = QHBoxLayout(NoofComponentWidget)
+
+
+        # No of Case Component Label
+        DataSourceNoofComponentLabel = QLabel()
+        DataSourceNoofComponentLabel.setText("No of Components")
+        DataSourceNoofComponentLabel.setAlignment(Qt.AlignCenter)
+        NoofComponentWidgetLayout.addWidget(DataSourceNoofComponentLabel, 30)
 
         # No of Cases LineEdit
-        NoofCasesLineEdit = QLineEdit(CasesChildDetailDialogBox)
+        NoofCasesLineEdit = QLineEdit()
 
         if case.MergedCase:
             TotalComponent = 0
@@ -9981,12 +8947,10 @@ class Window(QMainWindow):
             NoofCasesLineEdit.setText(str(len(case.TopicCases)))
 
         NoofCasesLineEdit.setReadOnly(True)
-        NoofCasesLineEdit.setGeometry(CasesChildDetailDialogBox.width() * 0.35,
-                                      CasesChildDetailDialogBox.height() * 0.6,
-                                      CasesChildDetailDialogBox.width() * 0.6,
-                                      CasesChildDetailDialogBox.height() / 10)
-        NoofCasesLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(NoofCasesLineEdit)
+        NoofCasesLineEdit.setAlignment(Qt.AlignCenter)
+        NoofComponentWidgetLayout.addWidget(NoofCasesLineEdit, 70)
+
+        CasesChildDetailDialogBoxLayout.addWidget(NoofComponentWidget)
 
         CasesChildDetailDialogBox.exec_()
 
@@ -10091,12 +9055,12 @@ class Window(QMainWindow):
                 break
 
         if all([v for v in SentimentTextEmptyFlagList]):
-            SentimenShowComponentErrorBox = QMessageBox.critical(self, "No Sentiment Error",
-                                                                "No Sentiment Component to Show of Data source: " + DS.DataSourceName,
-                                                                QMessageBox.Ok)
+            QMessageBox.critical(self, "No Sentiment Error",
+                                 "No Sentiment Component to Show of Data source: " + DS.DataSourceName,
+                                 QMessageBox.Ok)
         else:
             SentimentsShowComponentTabFlag = False
-            SentimentsShowComponentTabFlag = False
+            SentimentsShowComponentTabFlag2 = False
 
             for tabs in myFile.TabList:
                 if tabs.DataSourceName == SentimentsItemName.parent().text(0) and tabs.TabName == 'Sentiments Component' and tabs.tabSentiment == SentimentsItemName.text(0):
@@ -10117,24 +9081,13 @@ class Window(QMainWindow):
 
                 # Creating New Tab for Sentiment Show Component
                 SentimentsShowComponentTab = QWidget()
-
-                # LayoutWidget For within Sentiments Show Component Tab
-                SentimentsShowComponentTabVerticalLayoutWidget = QWidget(SentimentsShowComponentTab)
-                SentimentsShowComponentTabVerticalLayoutWidget.setGeometry(0, 0, self.tabWidget.width(), self.tabWidget.height() / 10)
-
-                # Box Layout for Sentiments Show Component Tab
-                SentimentsShowComponentTabVerticalLayout = QHBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget)
-                SentimentsShowComponentTabVerticalLayout.setContentsMargins(0, 0, 0, 0)
+                SentimentsShowComponentTabLayout = QVBoxLayout(SentimentsShowComponentTab)
 
                 # Sentiments ComboBox
-
-                SentimentsComboBox = QComboBox(SentimentsShowComponentTabVerticalLayoutWidget)
-                SentimentsComboBox.setGeometry(SentimentsShowComponentTabVerticalLayoutWidget.width() * 0.8,
-                                               SentimentsShowComponentTabVerticalLayoutWidget.height() * 0.4,
-                                               SentimentsShowComponentTabVerticalLayoutWidget.width() / 10,
-                                               SentimentsShowComponentTabVerticalLayoutWidget.height() / 5)
+                SentimentsComboBox = QComboBox()
                 SentimentsComboBox.addItem(SentimentsItemName.text(0))
                 SentimentsComboBox.setCurrentText(SentimentsItemName.text(0))
+                SentimentsShowComponentTabLayout.insertWidget(0, SentimentsComboBox, 0, Qt.AlignRight)
 
                 for DS in myFile.DataSourceList:
                     if DS.DataSourceName == SentimentsItemName.parent().text(0):
@@ -10142,30 +9095,19 @@ class Window(QMainWindow):
                             if not sentiments.SentimentType == SentimentsItemName.text(0):
                                 SentimentsComboBox.addItem(sentiments.SentimentType)
 
-                self.LineEditSizeAdjustment(SentimentsComboBox)
-
-                # 2nd LayoutWidget For within Sentiments Show Component Tab
-                SentimentsShowComponentTabVerticalLayoutWidget2 = QWidget(SentimentsShowComponentTab)
-                SentimentsShowComponentTabVerticalLayoutWidget2.setGeometry(0, self.tabWidget.height() / 10, self.tabWidget.width(),
-                                                                      self.tabWidget.height() - self.tabWidget.height() / 10)
-
-                # 2nd Box Layout for Sentiments Show Component Tab
-                SentimentsShowComponentTabVerticalLayout2 = QVBoxLayout(SentimentsShowComponentTabVerticalLayoutWidget2)
-
-                SentimentsShowComponentTable = QTableWidget(SentimentsShowComponentTabVerticalLayoutWidget2)
+                # Sentiments Show Component Table
+                SentimentsShowComponentTable = QTableWidget()
                 SentimentsShowComponentTable.setColumnCount(5)
-                SentimentsShowComponentTable.setGeometry(0, 0, SentimentsShowComponentTabVerticalLayoutWidget2.width(),
-                                                               SentimentsShowComponentTabVerticalLayoutWidget2.height())
                 SentimentsShowComponentTable.setUpdatesEnabled(True)
                 SentimentsShowComponentTable.setDragEnabled(True)
                 SentimentsShowComponentTable.setMouseTracking(True)
+                SentimentsShowComponentTabLayout.addWidget(SentimentsShowComponentTable)
 
-                SentimentsShowComponentTable.setSizePolicy(self.sizePolicy)
                 SentimentsShowComponentTable.setWindowFlags(
                     SentimentsShowComponentTable.windowFlags() | Qt.MSWindowsFixedSizeDialogHint)
                 SentimentsShowComponentTable.setHorizontalHeaderLabels(
                     ["Sentiment", "Word Count", "Character Count", "Weighted Average", "Action"])
-                SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: grey;  color: white;}")
+                SentimentsShowComponentTable.horizontalHeader().setStyleSheet("::section {""background-color: black;  color: white;}")
 
                 for i in range(SentimentsShowComponentTable.columnCount()):
                     SentimentsShowComponentTable.horizontalHeaderItem(i).setFont(QFont("Ariel Black", 11))
@@ -10181,13 +9123,12 @@ class Window(QMainWindow):
                             intItem.setData(Qt.EditRole, QVariant(item))
                             SentimentsShowComponentTable.setItem(Sentiments_List.index(row), row.index(item), intItem)
                             SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(
-                                Qt.AlignHCenter | Qt.AlignVCenter)
+                                Qt.AlignCenter)
                             SentimentsShowComponentTable.item(Sentiments_List.index(row), row.index(item)).setFlags(
                                 Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                             deleteButton = QPushButton("Remove")
                             deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, SentimentsShowComponentTable, None))
-                            self.LabelSizeAdjustment(deleteButton)
                             SentimentsShowComponentTable.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
 
                     SentimentsShowComponentTable.resizeColumnsToContents()
@@ -10195,7 +9136,6 @@ class Window(QMainWindow):
 
                     SentimentsShowComponentTable.setSortingEnabled(True)
                     SentimentsShowComponentTable.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-                    row_width = 0
 
                     for i in range(SentimentsShowComponentTable.columnCount()):
                         SentimentsShowComponentTable.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -10242,12 +9182,11 @@ class Window(QMainWindow):
                 intItem = QTableWidgetItem()
                 intItem.setData(Qt.EditRole, QVariant(item))
                 Table.setItem(Sentiments_List.index(row), row.index(item), intItem)
-                Table.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                Table.item(Sentiments_List.index(row), row.index(item)).setTextAlignment(Qt.AlignCenter)
                 Table.item(Sentiments_List.index(row), row.index(item)).setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
 
                 deleteButton = QPushButton("Remove")
                 deleteButton.clicked.connect(lambda: self.deleteSentimentsComponentRow(SentimentsItemName, Table, ComboBox.currentText()))
-                self.LabelSizeAdjustment(deleteButton)
                 Table.setCellWidget(Sentiments_List.index(row), 4, deleteButton)
 
         Table.resizeColumnsToContents()
@@ -10255,7 +9194,6 @@ class Window(QMainWindow):
 
         Table.setSortingEnabled(True)
         Table.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        row_width = 0
 
         for i in range(Table.columnCount()):
             Table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)
@@ -10315,9 +9253,13 @@ class Window(QMainWindow):
         SentimentsChildDetailDialogBox.setModal(True)
         SentimentsChildDetailDialogBox.setWindowTitle("Details")
         SentimentsChildDetailDialogBox.setParent(self)
-        SentimentsChildDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.4, self.width / 3,
-                                              self.height / 5)
+        SentimentsChildDetailDialogBox.setFixedWidth(QApplication.desktop().width()*0.3)
+        SentimentsChildDetailDialogBox.setFixedWidth(QApplication.desktop().height() * 0.4)
         self.QDialogAddProperties(SentimentsChildDetailDialogBox)
+
+        SentimentsChildDetailDialogBoxLayout = QVBoxLayout(SentimentsChildDetailDialogBox)
+        SentimentsChildDetailDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        SentimentsChildDetailDialogBoxLayout.setSpacing(20)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == SentimentsItemName.parent().text(0):
@@ -10325,82 +9267,64 @@ class Window(QMainWindow):
                     if sentiment.SentimentType == SentimentsItemName.text(0):
                         break
 
-        # ************************************** Labels *************************************
+        # ******************* Data Source ******************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
         # Data Source Name Label
-        DataSourceNameLabel = QLabel(SentimentsChildDetailDialogBox)
+        DataSourceNameLabel = QLabel()
         DataSourceNameLabel.setText("Data Source Name:")
-        DataSourceNameLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
-                                        SentimentsChildDetailDialogBox.height() * 0.2,
-                                        SentimentsChildDetailDialogBox.width() / 4,
-                                        SentimentsChildDetailDialogBox.height() / 10)
-        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNameLabel)
-
-        # Sentiment Name Label
-        SentimentNameLabel = QLabel(SentimentsChildDetailDialogBox)
-        SentimentNameLabel.setText("Case Name:")
-        SentimentNameLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
-                                       SentimentsChildDetailDialogBox.height() * 0.4,
-                                       SentimentsChildDetailDialogBox.width() / 4,
-                                       SentimentsChildDetailDialogBox.height() / 10)
-        SentimentNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(SentimentNameLabel)
-
-        # No of Sentiments Component Label
-        DataSourceNoofComponentLabel = QLabel(SentimentsChildDetailDialogBox)
-        DataSourceNoofComponentLabel.setText("No of Components")
-        DataSourceNoofComponentLabel.setGeometry(SentimentsChildDetailDialogBox.width() * 0.1,
-                                                 SentimentsChildDetailDialogBox.height() * 0.6,
-                                                 SentimentsChildDetailDialogBox.width() / 4,
-                                                 SentimentsChildDetailDialogBox.height() / 10)
-        DataSourceNoofComponentLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNoofComponentLabel)
-
-        # ************************************** LineEdit *************************************
+        DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
         # Data Source Name LineEdit
-        DataSourceNameLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
+        DataSourceNameLineEdit = QLineEdit()
         DataSourceNameLineEdit.setText(DS.DataSourceName)
         DataSourceNameLineEdit.setReadOnly(True)
-        DataSourceNameLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
-                                           SentimentsChildDetailDialogBox.height() * 0.2,
-                                           SentimentsChildDetailDialogBox.width() * 0.6,
-                                           SentimentsChildDetailDialogBox.height() / 10)
-        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+        SentimentsChildDetailDialogBoxLayout.addWidget(DataSourceWidget)
+
+        # ******************* Sentiment ******************
+        SentimentWidget = QWidget()
+        SentimentWidgetLayout = QHBoxLayout(SentimentWidget)
+
+        # Sentiment Name Label
+        SentimentNameLabel = QLabel()
+        SentimentNameLabel.setText("Case Name:")
+        SentimentNameLabel.setAlignment(Qt.AlignCenter)
+        SentimentWidgetLayout.addWidget(SentimentNameLabel, 30)
 
         # Sentiment Name LineEdit
-        DataSourceCaseNameLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
-        DataSourceCaseNameLineEdit.setText(SentimentsItemName.text(0))
-        DataSourceCaseNameLineEdit.setReadOnly(True)
-        DataSourceCaseNameLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
-                                               SentimentsChildDetailDialogBox.height() * 0.4,
-                                               SentimentsChildDetailDialogBox.width() * 0.6,
-                                               SentimentsChildDetailDialogBox.height() / 10)
-        DataSourceCaseNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceCaseNameLineEdit)
+        DataSourceSentimentNameLineEdit = QLineEdit()
+        DataSourceSentimentNameLineEdit.setText(SentimentsItemName.text(0))
+        DataSourceSentimentNameLineEdit.setReadOnly(True)
+        DataSourceSentimentNameLineEdit.setAlignment(Qt.AlignCenter)
+        SentimentWidgetLayout.addWidget(DataSourceSentimentNameLineEdit, 70)
+
+        SentimentsChildDetailDialogBoxLayout.addWidget(SentimentWidget)
+
+        # ************** No of Component **************
+        NoofComponentWidget = QWidget()
+        NoofComponentWidgetLayout = QHBoxLayout(NoofComponentWidget)
+
+        # No of Sentiments Component Label
+        DataSourceNoofComponentLabel = QLabel()
+        DataSourceNoofComponentLabel.setText("No of Components")
+        DataSourceNoofComponentLabel.setAlignment(Qt.AlignCenter)
+        NoofComponentWidgetLayout.addWidget(DataSourceNoofComponentLabel, 30)
 
         # No of Sentiments LineEdit
-        NoofSentimentTextLineEdit = QLineEdit(SentimentsChildDetailDialogBox)
+        NoofSentimentTextLineEdit = QLineEdit()
         NoofSentimentTextLineEdit.setText(str(len(sentiment.SentimentTextList)))
         NoofSentimentTextLineEdit.setReadOnly(True)
-        NoofSentimentTextLineEdit.setGeometry(SentimentsChildDetailDialogBox.width() * 0.35,
-                                              SentimentsChildDetailDialogBox.height() * 0.6,
-                                              SentimentsChildDetailDialogBox.width() * 0.6,
-                                              SentimentsChildDetailDialogBox.height() / 10)
-        NoofSentimentTextLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(NoofSentimentTextLineEdit)
+        NoofSentimentTextLineEdit.setAlignment(Qt.AlignCenter)
+        NoofComponentWidgetLayout.addWidget(NoofSentimentTextLineEdit, 70)
+
+        SentimentsChildDetailDialogBoxLayout.addWidget(NoofComponentWidget)
 
         SentimentsChildDetailDialogBox.exec_()
-        for DS in myFile.DataSourceList:
-            if DS.DataSourceName == SentimentsItemName.text(0):
-                self.SentimentTreeWidget.invisibleRootItem().removeChild(SentimentsItemName)
-
-                for sentiments in DS.SentimentList:
-                    sentiments.SentimentTextList.clear()
-
-                break
 
     # ****************************************************************************
     # *********************** Visualization Context Menu *************************
@@ -10552,62 +9476,58 @@ class Window(QMainWindow):
         VisualizationDetailDialogBox.setModal(True)
         VisualizationDetailDialogBox.setWindowTitle("Details")
         VisualizationDetailDialogBox.setParent(self)
-        VisualizationDetailDialogBox.setGeometry(self.width * 0.35, self.height * 0.45, self.width / 3,
-                                               self.height / 10)
+        VisualizationDetailDialogBox.setFixedWidth(QApplication.desktop().width() * 0.3)
+        VisualizationDetailDialogBox.setFixedHeight(QApplication.desktop().height() * 0.1)
         self.QDialogAddProperties(VisualizationDetailDialogBox)
+
+        VisualizationDetailDialogBoxLayout = QVBoxLayout(VisualizationDetailDialogBox)
+        VisualizationDetailDialogBoxLayout.setAlignment(Qt.AlignCenter)
+        VisualizationDetailDialogBoxLayout.setSpacing(20)
 
         for DS in myFile.DataSourceList:
             if DS.DataSourceName == VisualizationItemName.text(0):
                 break
 
-        # ************************************** Labels *************************************
+        # ******************* Data Source *********************
+        DataSourceWidget = QWidget()
+        DataSourceWidgetLayout = QHBoxLayout(DataSourceWidget)
 
         # Data Source Name Label
-        DataSourceNameLabel = QLabel(VisualizationDetailDialogBox)
-        DataSourceNameLabel.setText("Name:")
-        DataSourceNameLabel.setGeometry(VisualizationDetailDialogBox.width() * 0.1,
-                                        VisualizationDetailDialogBox.height() * 0.2,
-                                        VisualizationDetailDialogBox.width() / 4,
-                                        VisualizationDetailDialogBox.height() / 5)
-        DataSourceNameLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNameLabel)
-
-        # Data Source Path Label
-        DataSourceNoofVisualizationLabel = QLabel(VisualizationDetailDialogBox)
-        DataSourceNoofVisualizationLabel.setText("No of Visualizations:")
-        DataSourceNoofVisualizationLabel.setGeometry(VisualizationDetailDialogBox.width() * 0.1,
-                                                     VisualizationDetailDialogBox.height() * 0.6,
-                                                     VisualizationDetailDialogBox.width() / 4,
-                                                     VisualizationDetailDialogBox.height() / 5)
-        DataSourceNoofVisualizationLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(DataSourceNoofVisualizationLabel)
-
-        # ************************************** LineEdit *************************************
+        DataSourceNameLabel = QLabel()
+        DataSourceNameLabel.setText("Data Source Name:")
+        DataSourceNameLabel.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLabel, 30)
 
         # Data Source Name LineEdit
-        DataSourceNameLineEdit = QLineEdit(VisualizationDetailDialogBox)
-        DataSourceNameLineEdit.setText(VisualizationItemName.text(0))
+        DataSourceNameLineEdit = QLineEdit()
+        DataSourceNameLineEdit.setText(DS.DataSourceName)
         DataSourceNameLineEdit.setReadOnly(True)
-        DataSourceNameLineEdit.setGeometry(VisualizationDetailDialogBox.width() * 0.35,
-                                           VisualizationDetailDialogBox.height() * 0.2,
-                                           VisualizationDetailDialogBox.width() * 0.6,
-                                           VisualizationDetailDialogBox.height() / 5)
-        DataSourceNameLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNameLineEdit)
+        DataSourceNameLineEdit.setAlignment(Qt.AlignCenter)
+        DataSourceWidgetLayout.addWidget(DataSourceNameLineEdit, 70)
+
+        VisualizationDetailDialogBoxLayout.addWidget(DataSourceWidget)
+
+        # *************** No of Visualization *******************
+        NoofVisualizationWidget = QWidget()
+        NoofVisualizationWidgetLayout = QHBoxLayout(NoofVisualizationWidget)
+
+        # Data Source Path Label
+        DataSourceNoofVisualizationLabel = QLabel()
+        DataSourceNoofVisualizationLabel.setText("No of Visualizations:")
+        DataSourceNoofVisualizationLabel.setAlignment(Qt.AlignCenter)
+        NoofVisualizationWidgetLayout.addWidget(DataSourceNoofVisualizationLabel, 30)
 
         # Data Source Path LineEdit
-        DataSourceNoofVisualizationLineEdit = QLineEdit(VisualizationDetailDialogBox)
+        DataSourceNoofVisualizationLineEdit = QLineEdit()
 
         for VisualTreeItems in self.VisualizationTreeWidget.findItems(DS.DataSourceName, Qt.MatchExactly, 0):
             DataSourceNoofVisualizationLineEdit.setText(str(VisualTreeItems.childCount()))
 
         DataSourceNoofVisualizationLineEdit.setReadOnly(True)
-        DataSourceNoofVisualizationLineEdit.setGeometry(VisualizationDetailDialogBox.width() * 0.35,
-                                                        VisualizationDetailDialogBox.height() * 0.6,
-                                                        VisualizationDetailDialogBox.width() * 0.6,
-                                                        VisualizationDetailDialogBox.height() / 5)
-        DataSourceNoofVisualizationLineEdit.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(DataSourceNoofVisualizationLineEdit)
+        DataSourceNoofVisualizationLineEdit.setAlignment(Qt.AlignCenter)
+        NoofVisualizationWidgetLayout.addWidget(DataSourceNoofVisualizationLineEdit, 70)
+
+        VisualizationDetailDialogBoxLayout.addWidget(NoofVisualizationWidget)
 
         VisualizationDetailDialogBox.exec_()
 
@@ -11132,32 +10052,26 @@ class Window(QMainWindow):
     # ProgressBar
     def ProgressBar(self, ProgressBarWidget, progressBar, ProgressBarLabel):
         # ProgressBar Widget
-        if ProgressBarLabel == "Importing" or ProgressBarLabel == "Retrieving Tweets":
-            ProgressBarWidget.setGeometry(self.width * 0.375, self.height * 0.4875,
-                                          self.width * 0.25, self.height * 0.025)
-        else:
-            ProgressBarWidget.setGeometry((self.width - self.tabWidget.width()) +  self.tabWidget.width()* 0.375,
-                                          (self.height - self.horizontalLayoutWidget.height()) + self.tabWidget.height()*0.4875,
-                                          self.tabWidget.width() * 0.25,
-                                          self.tabWidget.height() * 0.025)
+        ProgressBarWidget.setFixedWidth(QApplication.desktop().width() * 0.25)
+        ProgressBarWidget.setFixedHeight(QApplication.desktop().height() * 0.025)
 
         ProgressBarWidget.setParent(self)
         ProgressBarWidget.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(ProgressBarWidget)
+        
         ProgressBarWidget.setWindowFlags(ProgressBarWidget.windowFlags() | Qt.FramelessWindowHint)
 
         # ProgressBar
-        progressBar.setGeometry(0, 0, ProgressBarWidget.width(), ProgressBarWidget.height())
+        progressBar.resize(ProgressBarWidget.width(), ProgressBarWidget.height())
         progressBar.setMaximum(0)
         progressBar.setMinimum(0)
 
         # ProgressBarLabel
         progressBarLabel = QLabel(ProgressBarWidget)
-        progressBarLabel.setGeometry(0, 0, ProgressBarWidget.width(), ProgressBarWidget.height())
+        progressBarLabel.resize(ProgressBarWidget.width(), ProgressBarWidget.height())
         progressBarLabel.setStyleSheet("background-color: rgba(0,0,0,0%)");
         progressBarLabel.setText(ProgressBarLabel + "...")
-        progressBarLabel.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.LabelSizeAdjustment(progressBarLabel)
+        progressBarLabel.setAlignment(Qt.AlignCenter)
 
         ProgressBarWidget.exec_()
 
@@ -11166,7 +10080,6 @@ class Window(QMainWindow):
         printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
         self.Printdialog = QtPrintSupport.QPrintDialog(printer, self)
         self.Printdialog.setWindowTitle('Print')
-        self.Printdialog.setGeometry(self.width * 0.25, self.height * 0.25, self.width/2, self.height/2)
 
         if self.Printdialog.exec_() == QtPrintSupport.QPrintDialog.Accepted:
             if self.tabWidget.currentWidget() is not None:
@@ -11627,64 +10540,64 @@ class Window(QMainWindow):
     def ImportCSVWindowDialog(self):
         CSVDialog = QDialog()
         CSVDialog.setWindowTitle("Import CSV File")
-        CSVDialog.setGeometry(self.width * 0.375, self.height * 0.3, self.width / 3, self.height *0.4)
+        CSVDialog.setFixedWidth(QApplication.desktop().width()*0.25)
         CSVDialog.setParent(self)
         CSVDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(CSVDialog)
 
-        # CSV Path Radio Button
-        PathRadioButton = QRadioButton(CSVDialog)
-        PathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.1,
-                                    CSVDialog.width() / 5, CSVDialog.height() / 10)
+        CSVDialogLayout = QVBoxLayout(CSVDialog)
+        CSVDialogLayout.setAlignment(Qt.AlignVCenter)
+        CSVDialogLayout.setContentsMargins(50,50,50,50)
+        CSVDialogLayout.setSpacing(20)
+
+        # ****************** CSV Path Radio Button ******************
+        PathRadioButton = QRadioButton()
         PathRadioButton.setText("Computer")
-        PathRadioButton.adjustSize()
+        CSVDialogLayout.addWidget(PathRadioButton)
+
+        # ********************** CSV Path Radio  ********************
+        CSVPathWidget = QWidget()
+        CSVPathWidgetLayout = QHBoxLayout(CSVPathWidget)
 
         # CSV Path LineEdit
-        CSVPathLineEdit = QLineEdit(CSVDialog)
-        CSVPathLineEdit.setGeometry(CSVDialog.width() * 0.15, CSVDialog.height() * 0.2,
-                                    CSVDialog.width() * 0.5, CSVDialog.height() / 10)
+        CSVPathLineEdit = QLineEdit()
         CSVPathLineEdit.setReadOnly(True)
         CSVPathLineEdit.setEnabled(False)
-        self.LineEditSizeAdjustment(CSVPathLineEdit)
+        CSVPathWidgetLayout.addWidget(CSVPathLineEdit)
 
         # CSV Browse Button
-        CSVBrowseButton = QPushButton(CSVDialog)
+        CSVBrowseButton = QPushButton()
         CSVBrowseButton.setText("Browse")
-        CSVBrowseButton.setGeometry(CSVDialog.width() * 0.8, CSVDialog.height() * 0.2,
-                                    CSVDialog.width() / 10, CSVDialog.height() / 10)
         CSVBrowseButton.setEnabled(False)
-        self.LineEditSizeAdjustment(CSVBrowseButton)
+        CSVPathWidgetLayout.addWidget(CSVBrowseButton)
 
-        # CSV URL Radio Button
-        URLPathRadioButton = QRadioButton(CSVDialog)
-        URLPathRadioButton.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.3,
-                                       CSVDialog.width() / 5, CSVDialog.height() / 10)
+        CSVDialogLayout.addWidget(CSVPathWidget)
+
+        # ****************** CSV URL Radio Button ******************
+        URLPathRadioButton = QRadioButton()
         URLPathRadioButton.setText("URL")
         URLPathRadioButton.adjustSize()
+        CSVDialogLayout.addWidget(URLPathRadioButton)
 
-        # CSV URL Path LineEdit
-        CSVURLPathLineEdit = QLineEdit(CSVDialog)
-        CSVURLPathLineEdit.setGeometry(CSVDialog.width() * 0.15, CSVDialog.height() * 0.4,
-                                       CSVDialog.width() * 0.7, CSVDialog.height() / 10)
+        # ****************** CSV URL Path LineEdit ******************
+        CSVURLPathLineEdit = QLineEdit()
         CSVURLPathLineEdit.setEnabled(False)
-        self.LineEditSizeAdjustment(CSVURLPathLineEdit)
+        CSVDialogLayout.addWidget(CSVURLPathLineEdit)
 
-        # CSV Header CheckBox
-        CSVHeaderCheckBox = QCheckBox(CSVDialog)
+        # ****************** CSV Header CheckBox ******************
+        CSVHeaderCheckBox = QCheckBox()
         CSVHeaderCheckBox.setChecked(True)
         CSVHeaderCheckBox.setText("Contains Header")
-        CSVHeaderCheckBox.setGeometry(CSVDialog.width() * 0.1, CSVDialog.height() * 0.6,
-                                      CSVDialog.width() / 10, CSVDialog.height() / 10)
         CSVHeaderCheckBox.adjustSize()
+        CSVDialogLayout.addWidget(CSVHeaderCheckBox)
 
-        # CSV ButtonBox
-        CSVbuttonBox = QDialogButtonBox(CSVDialog)
-        CSVbuttonBox.setGeometry(CSVDialog.width() * 0.6, CSVDialog.height() * 0.75,
-                                 CSVDialog.width() / 3, CSVDialog.height() / 10)
+        # ****************** CSV ButtonBox ******************
+        CSVbuttonBox = QDialogButtonBox()
         CSVbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         CSVbuttonBox.button(QDialogButtonBox.Ok).setText('Import')
         CSVbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(CSVbuttonBox)
+        CSVDialogLayout.addWidget(CSVbuttonBox)
+
 
         CSVBrowseButton.clicked.connect(lambda: self.CSVBrowseButtonAction(CSVPathLineEdit))
         CSVPathLineEdit.textChanged.connect(lambda: self.OkButtonEnable(CSVbuttonBox, True))
@@ -11737,115 +10650,126 @@ class Window(QMainWindow):
 
             dummyDataSource = ThreadQueue.get()
 
-            if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.CSVData.index) == 0:
-                myFile.setDataSources(dummyDataSource)
-                newNode = QTreeWidgetItem(self.CSVTreeWidget)
-                if CSVPathFlag:
-                    newNode.setText(0, ntpath.basename(CSVPath))
+            if not dummyDataSource.DataSourceHTTPError:
+                if not dummyDataSource.DataSourceLoadError and not len(dummyDataSource.CSVData.index) == 0:
+                    myFile.setDataSources(dummyDataSource)
+                    newNode = QTreeWidgetItem(self.CSVTreeWidget)
+                    if CSVPathFlag:
+                        newNode.setText(0, ntpath.basename(CSVPath))
+                    else:
+                        newNode.setText(0, ntpath.basename(CSVURLPath))
+
+                    self.statusBar().showMessage('CSV File Uploaded')
+                    self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
+
+                    if self.CSVTreeWidget.isHidden():
+                        self.CSVTreeWidget.setHidden(False)
+                        self.CSVTreeWidget.setExpanded(True)
+
+                    newNode.setToolTip(0, newNode.text(0))
+
+                    self.DataSourceSimilarityUpdate()
+                    self.DataSourceDocumentClusteringUpdate()
+                    myFile.requiredSaved = True
+
                 else:
-                    newNode.setText(0, ntpath.basename(CSVURLPath))
+                    if len(dummyDataSource.CSVData.index) == 0 and not dummyDataSource.DataSourceLoadError:
+                        QMessageBox.critical(self, "Import Error",
+                                             dummyDataSource.DataSourceName + " doesnot contains any row",
+                                             QMessageBox.Ok)
 
-                self.statusBar().showMessage('CSV File Uploaded')
-                self.CSVTreeWidget.setText(0, "CSV" + "(" + str(self.CSVTreeWidget.childCount()) + ")")
-
-                if self.CSVTreeWidget.isHidden():
-                    self.CSVTreeWidget.setHidden(False)
-                    self.CSVTreeWidget.setExpanded(True)
-
-                newNode.setToolTip(0, newNode.text(0))
-
-                self.DataSourceSimilarityUpdate()
-                self.DataSourceDocumentClusteringUpdate()
-                myFile.requiredSaved = True
+                    elif dummyDataSource.DataSourceLoadError:
+                        QMessageBox.critical(self, "Load Error",
+                                             "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
+                                             QMessageBox.Ok)
+                    del dummyDataSource
             else:
-                if len(dummyDataSource.CSVData.index) == 0 and not dummyDataSource.DataSourceLoadError:
-                    DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                        dummyDataSource.DataSourceName + " doesnot contains any row",
-                                                                        QMessageBox.Ok)
-                elif dummyDataSource.DataSourceHTTPError:
-                    QMessageBox.critical(self, "Load Error",
-                                         "Error 404: \n CSV URL Not found!",
-                                         QMessageBox.Ok)
-
-                elif dummyDataSource.DataSourceLoadError:
-                    QMessageBox.critical(self, "Load Error",
-                                         "Any Error occurred. There was a Problem, the File " + dummyDataSource.DataSourceName + " is Unable to load",
-                                         QMessageBox.Ok)
-
+                QMessageBox.critical(self, "Load Error",
+                                     "Error 404: \n CSV URL Not found!",
+                                     QMessageBox.Ok)
 
                 del dummyDataSource
         else:
             del dummyDataSource
-            DataSourceImportNameErrorBox = QMessageBox.critical(self, "Import Error",
-                                                                "A Data Source with Similar Name Exist! Please Rename the File then try Again",
-                                                                QMessageBox.Ok)
+            QMessageBox.critical(self, "Import Error",
+                                 "A Data Source with Similar Name Exist! Please Rename the File then try Again",
+                                 QMessageBox.Ok)
 
     # Import Tweet Window
     def ImportTweetWindow(self):
         TweetDialog = QDialog()
         TweetDialog.setWindowTitle("Import From Twitter")
-        TweetDialog.setGeometry(self.width * 0.35, self.height * 0.35, self.width * 0.3, self.height * 0.3)
+        TweetDialog.setFixedWidth(QApplication.desktop().width()/5)
         TweetDialog.setParent(self)
         TweetDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(TweetDialog)
 
-        # Tweet HashTag Label
-        TweetHashtagLabel = QLabel(TweetDialog)
-        TweetHashtagLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.1,
-                                      TweetDialog.width() / 5, TweetDialog.height() / 10)
+        TweetDialogLayout = QVBoxLayout(TweetDialog)
+        TweetDialogLayout.setAlignment(Qt.AlignCenter)
+        TweetDialogLayout.setSpacing(20)
+
+        # ************* Tweet HashTag **************
+        TweetHashtagWidget = QWidget()
+        TweetHashtagWidgetLayout = QHBoxLayout(TweetHashtagWidget)
+
+        TweetHashtagLabel = QLabel()
         TweetHashtagLabel.setText("Hastag")
-        self.LabelSizeAdjustment(TweetHashtagLabel)
-
-        # Tweet Date Label
-        DateLabel = QLabel(TweetDialog)
-        DateLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.3,
-                              TweetDialog.width() / 5, TweetDialog.height() / 10)
-        DateLabel.setText("Since")
-        self.LabelSizeAdjustment(DateLabel)
-
-        # No. of Tweets Label
-        NTweetLabel = QLabel(TweetDialog)
-        NTweetLabel.setGeometry(TweetDialog.width() * 0.2, TweetDialog.height() * 0.5,
-                                TweetDialog.width() / 5, TweetDialog.height() / 10)
-        NTweetLabel.setText("No of Tweets")
-        self.LabelSizeAdjustment(NTweetLabel)
+        TweetHashtagLabel.setAlignment(Qt.AlignCenter)
+        TweetHashtagWidgetLayout.addWidget(TweetHashtagLabel, 30)
 
         # Twitter HashTag LineEdit
         TweetHashtagLineEdit = QLineEdit(TweetDialog)
-        TweetHashtagLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.1,
-                                         TweetDialog.width() * 0.3, TweetDialog.height() / 10)
         TweetHashtagLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        self.LineEditSizeAdjustment(TweetHashtagLineEdit)
+        TweetHashtagWidgetLayout.addWidget(TweetHashtagLineEdit, 70)
+
+        TweetDialogLayout.addWidget(TweetHashtagWidget)
+
+        # ************* Tweet Date *************
+        DateWidget = QWidget()
+        DateWidgetLayout = QHBoxLayout(DateWidget)
+
+        DateLabel = QLabel()
+        DateLabel.setText("Since")
+        DateLabel.setAlignment(Qt.AlignCenter)
+        DateWidgetLayout.addWidget(DateLabel, 30)
 
         # Tweet Since Date
-        DateCalendar = QDateEdit(TweetDialog)
-        DateCalendar.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.3,
-                                 TweetDialog.width() * 0.3, TweetDialog.height() / 10)
+        DateCalendar = QDateEdit()
         DateCalendar.setCalendarPopup(True)
         DateCalendar.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         DateCalendar.setMaximumDate(QDate(datetime.datetime.today()))
         DateCalendar.setMinimumDate(datetime.datetime.now() - datetime.timedelta(days=365))
         DateCalendar.setDate(datetime.datetime.today())
-        self.LineEditSizeAdjustment(DateCalendar)
+        DateWidgetLayout.addWidget(DateCalendar, 70)
+
+        TweetDialogLayout.addWidget(DateWidget)
+
+        # *********** No of Tweet *****************
+        NTweetWidget = QWidget()
+        NTweetWidgetLayout = QHBoxLayout(NTweetWidget)
+
+        # No. of Tweets Label
+        NTweetLabel = QLabel()
+        NTweetLabel.setText("No of Tweets")
+        NTweetLabel.setAlignment(Qt.AlignCenter)
+        NTweetWidgetLayout.addWidget(NTweetLabel, 30)
 
         # Tweet No Label
-        NTweetLineEdit = QDoubleSpinBox(TweetDialog)
-        NTweetLineEdit.setGeometry(TweetDialog.width() * 0.5, TweetDialog.height() * 0.5,
-                                   TweetDialog.width() * 0.3, TweetDialog.height() / 10)
+        NTweetLineEdit = QDoubleSpinBox()
         NTweetLineEdit.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         NTweetLineEdit.setDecimals(0)
         NTweetLineEdit.setMinimum(10)
         NTweetLineEdit.setMaximum(1000)
-        self.LineEditSizeAdjustment(NTweetLineEdit)
+        NTweetWidgetLayout.addWidget(NTweetLineEdit, 70)
 
-        # TweetDialog ButtonBox
-        TweetbuttonBox = QDialogButtonBox(TweetDialog)
-        TweetbuttonBox.setGeometry(TweetDialog.width() * 0.4, TweetDialog.height() * 0.75,
-                                   TweetDialog.width() * 0.4, TweetDialog.height() / 10)
+        TweetDialogLayout.addWidget(NTweetWidget)
+
+        # ************** TweetDialog ButtonBox ****************
+        TweetbuttonBox = QDialogButtonBox()
         TweetbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         TweetbuttonBox.button(QDialogButtonBox.Ok).setText('Get')
         TweetbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(TweetbuttonBox)
+        TweetDialogLayout.addWidget(TweetbuttonBox)
 
         TweetHashtagLineEdit.textChanged.connect(lambda: self.GetButtonEnableTweet(TweetbuttonBox))
 
@@ -11932,33 +10856,38 @@ class Window(QMainWindow):
     def ImportURLWindow(self):
         URLDialog = QDialog()
         URLDialog.setWindowTitle("Import From URL")
-        URLDialog.setGeometry(self.width * 0.3, self.height * 0.425, self.width*2/5 , self.height*0.15)
+        URLDialog.setFixedWidth(QApplication.desktop().width()*0.25)
         URLDialog.setParent(self)
         URLDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(URLDialog)
 
+        URLDialogLayout = QVBoxLayout(URLDialog)
+        URLDialogLayout.setAlignment(Qt.AlignCenter)
+        URLDialogLayout.setSpacing(20)
+
+        # ************ URL **************
+        URLWidget = QWidget()
+        URLWidgetLayout = QHBoxLayout(URLWidget)
+
         # URL Label
-        URLLabel = QLabel(URLDialog)
-        URLLabel.setGeometry(URLDialog.width() * 0.1, URLDialog.height() * 0.3,
-                             URLDialog.width()/10 , URLDialog.height() / 10)
+        URLLabel = QLabel()
         URLLabel.setText("URL")
-        self.LabelSizeAdjustment(URLLabel)
+        URLLabel.setAlignment(Qt.AlignCenter)
+        URLWidgetLayout.addWidget(URLLabel, 30)
 
         # URL LineEdit
-        URLLineEdit = QLineEdit(URLDialog)
-        URLLineEdit.setGeometry(URLDialog.width() * 0.25, URLDialog.height() * 0.3,
-                                URLDialog.width() * 0.7, URLDialog.height() /10)
+        URLLineEdit = QLineEdit()
         URLLineEdit.setAlignment(Qt.AlignVCenter)
-        self.LineEditSizeAdjustment(URLLineEdit)
+        URLWidgetLayout.addWidget(URLLineEdit, 70)
 
-        # URL ButtonBox
-        URLbuttonBox = QDialogButtonBox(URLDialog)
-        URLbuttonBox.setGeometry(URLDialog.width() * 0.5, URLDialog.height() * 0.7,
-                                 URLDialog.width() / 3, URLDialog.height() / 10)
+        URLDialogLayout.addWidget(URLWidget)
+
+        # ************ URL ButtonBox ************
+        URLbuttonBox = QDialogButtonBox()
         URLbuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         URLbuttonBox.button(QDialogButtonBox.Ok).setText('Get Data')
         URLbuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(URLbuttonBox)
+        URLDialogLayout.addWidget(URLbuttonBox)
 
         URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(URLbuttonBox, True))
 
@@ -12037,49 +10966,60 @@ class Window(QMainWindow):
     def ImportYoutubeWindow(self):
         YoutubeDialog = QDialog()
         YoutubeDialog.setWindowTitle("Import Youtube Comments")
-        YoutubeDialog.setGeometry(self.width * 0.3, self.height * 0.4, self.width * 2 / 5, self.height * 0.20)
+        YoutubeDialog.setFixedWidth(QApplication.desktop().width() * 0.25)
+        YoutubeDialog.setFixedHeight(QApplication.desktop().height() * 0.2)
         YoutubeDialog.setParent(self)
         YoutubeDialog.setAttribute(Qt.WA_DeleteOnClose)
         self.QDialogAddProperties(YoutubeDialog)
 
+        YoutubeDialogLayout = QVBoxLayout(YoutubeDialog)
+        YoutubeDialogLayout.setAlignment(Qt.AlignCenter)
+        YoutubeDialogLayout.setSpacing(20)
+
+        RadioButtonGroup = QButtonGroup(YoutubeDialog)
+
+        # *********** URL Radio Button **********
+        URLWidget = QWidget()
+        URLWidgetLayout = QHBoxLayout(URLWidget)
+
         # Youtube URL Radio Button
-        VideoURLRadioButton = QRadioButton(YoutubeDialog)
-        VideoURLRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.2,
-                                       YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
+        VideoURLRadioButton = QRadioButton()
         VideoURLRadioButton.setText("Video URL")
+        RadioButtonGroup.addButton(VideoURLRadioButton)
+        URLWidgetLayout.addWidget(VideoURLRadioButton, 30)
 
         # Youtube URL LineEdit
-        URLLineEdit = QLineEdit(YoutubeDialog)
-        URLLineEdit.setGeometry(YoutubeDialog.width() * 0.3, YoutubeDialog.height() * 0.2,
-                                YoutubeDialog.width() * 0.6, YoutubeDialog.height() / 10)
+        URLLineEdit = QLineEdit()
         URLLineEdit.setAlignment(Qt.AlignVCenter)
         URLLineEdit.setEnabled(False)
-        self.LineEditSizeAdjustment(URLLineEdit)
+        URLWidgetLayout.addWidget(URLLineEdit, 70)
+
+        YoutubeDialogLayout.addWidget(URLWidget)
+
+        # *********** KeyWord Radio Button **********
+        KeyWordWidget = QWidget()
+        KeyWordWidgetLayout = QHBoxLayout(KeyWordWidget)
 
         # Youtube Keyword Radio Button
-        KeyWordRadioButton = QRadioButton(YoutubeDialog)
-        KeyWordRadioButton.setGeometry(YoutubeDialog.width() * 0.1, YoutubeDialog.height() * 0.4,
-                                       YoutubeDialog.width() / 5, YoutubeDialog.height() / 10)
+        KeyWordRadioButton = QRadioButton()
         KeyWordRadioButton.setText("Key Word")
-        KeyWordRadioButton.adjustSize()
+        RadioButtonGroup.addButton(KeyWordRadioButton)
+        KeyWordWidgetLayout.addWidget(KeyWordRadioButton, 30)
 
         # Twitter KeyWord LineEdit
-        KeyWordLineEdit = QLineEdit(YoutubeDialog)
-        KeyWordLineEdit.setGeometry(YoutubeDialog.width() * 0.6, YoutubeDialog.height() * 0.4,
-                                    YoutubeDialog.width() * 0.3, YoutubeDialog.height() / 10)
+        KeyWordLineEdit = QLineEdit()
         KeyWordLineEdit.setAlignment(Qt.AlignVCenter)
         KeyWordLineEdit.setEnabled(False)
-        self.LineEditSizeAdjustment(KeyWordLineEdit)
+        KeyWordWidgetLayout.addWidget(KeyWordLineEdit, 70)
 
-        # Youtube ButtonBox
-        YoutubebuttonBox = QDialogButtonBox(YoutubeDialog)
-        YoutubebuttonBox.setGeometry(YoutubeDialog.width() * 0.5, YoutubeDialog.height() * 0.8,
-                                     YoutubeDialog.width() / 3, YoutubeDialog.height() / 10)
+        YoutubeDialogLayout.addWidget(KeyWordWidget)
+
+        # ************** ButtonBox **************
+        YoutubebuttonBox = QDialogButtonBox()
         YoutubebuttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
-
         YoutubebuttonBox.button(QDialogButtonBox.Ok).setText('Get Comments')
         YoutubebuttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.LineEditSizeAdjustment(YoutubebuttonBox)
+        YoutubeDialogLayout.addWidget(YoutubebuttonBox)
 
         URLLineEdit.textChanged.connect(lambda: self.OkButtonEnable(YoutubebuttonBox, True))
         KeyWordLineEdit.textChanged.connect(lambda: self.OkButtonEnable(YoutubebuttonBox, True))
@@ -12183,20 +11123,20 @@ if __name__ == "__main__":
     App = QApplication(sys.argv)
 
     # TextWizSplash = QSplashScreen()
-    # TextWizSplash.resize(200, 100)
-    # TextWizSplashPixmap = QPixmap("Images/TextWizSplash.png")
-    # TextWizSplash.setPixmap(TextWizSplashPixmap)
+    # TextWizSplash.setPixmap(QPixmap("Images/TextWizSplash.png"))
     #
-    # SplahScreenProgressBar = QProgressBar(TextWizSplash)
-    # SplahScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
-    #                         TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
-    # SplahScreenProgressBar.setTextVisible(False)
-    # SplahScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
+    # SplashScreenProgressBar = QProgressBar(TextWizSplash)
+    # SplashScreenProgressBar.setGeometry(TextWizSplash.width() / 10, TextWizSplash.height() * 0.9,
+    #                                     TextWizSplash.width() * 0.8, TextWizSplash.height() * 0.035)
+    #
+    # SplashScreenProgressBar.setAlignment(Qt.AlignCenter)
+    # SplashScreenProgressBar.setTextVisible(False)
+    # SplashScreenProgressBar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}")
     #
     # TextWizSplash.show()
     #
     # for i in range(0, 100):
-    #     SplahScreenProgressBar.setValue(i)
+    #     SplashScreenProgressBar.setValue(i)
     #     t = time.time()
     #     while time.time() < t + 0.05:
     #         App.processEvents()

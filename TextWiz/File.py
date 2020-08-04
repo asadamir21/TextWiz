@@ -4,6 +4,7 @@ from sklearn.cluster import KMeans
 import pandas as pd
 from scipy.cluster.hierarchy import ward, dendrogram, linkage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from sklearn.feature_extraction.text import TfidfVectorizer
 from DataSource import *
 from Tab import *
@@ -157,7 +158,6 @@ class MyMplCanvas(FigureCanvas):
 
         FigureCanvas.__init__(self, fig)
 
-        #FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
 class MyStaticMplCanvas(MyMplCanvas):
